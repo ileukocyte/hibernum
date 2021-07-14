@@ -36,21 +36,24 @@ dependencies {
     // Discord
     implementation(group = "net.dv8tion", name = "JDA", version = jdaVersion) { exclude(module = "opus-java") }
     implementation(group = "com.sedmelluq", name = "lavaplayer", version = "1.3.77")
+
     // Logging
     implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.2.3")
     implementation(group = "io.github.microutils", name = "kotlin-logging-jvm", version = "2.0.8")
+
     // APIs
     implementation(group = "com.github.markozajc", name = "akiwrapper", version = "1.5.1.1")
     implementation(group = "org.reflections", name = "reflections", version = "0.9.12")
     implementation(group = "org.json", name = "json", version = "20210307")
+
     // Kotlin
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
-    implementation(kotlinx("coroutines-core", version = coroutinesVersion))
+    implementation(kotlin("compiler"))
     implementation(kotlin("scripting-jsr223"))
-    api(kotlin("script-util"))
-    api(kotlin("compiler"))
-    api(kotlin("scripting-compiler"))
+    implementation(kotlin("scripting-compiler"))
+    implementation(kotlinx("coroutines-core", version = coroutinesVersion))
+
     // Testing
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
     testImplementation(kotlin("test-junit"))
