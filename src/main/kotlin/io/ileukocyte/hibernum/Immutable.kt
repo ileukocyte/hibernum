@@ -15,7 +15,7 @@ object Immutable {
     val EVAL_KOTLIN_ENGINE = ScriptEngineManager().getEngineByExtension("kts")
         ?: throw UninitializedPropertyAccessException()
 
-    val VERSION = Version(major = 1, minor = 0, stability = Version.Stability.Alpha, unstable = 12)
+    val VERSION = Version(major = 1, minor = 0, stability = Version.Stability.Alpha, unstable = 13)
 
     val SUCCESS = Color(140, 190, 218)
     val FAILURE = Color(239, 67, 63)

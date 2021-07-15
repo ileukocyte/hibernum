@@ -31,10 +31,13 @@ inline fun waiterProcess(block: WaiterProcess.Builder.() -> Unit)  = WaiterProce
 
 fun JDA.getProcessById(id: String) = WaiterProcess.currentlyRunning.keys.firstOrNull { it.id == id }
 
-fun JDA.getProcessByEntities(users: Set<User>, channel: MessageChannel) = WaiterProcess.currentlyRunning.keys.firstOrNull {
-    it.users.containsAll(users.map { u -> u.idLong }) && it.channel == channel.idLong
+fun JDA.getProcessByEntitiesIds(usersIds: Set<Long>, channelId: Long) = WaiterProcess.currentlyRunning.keys.firstOrNull {
+    it.users.containsAll(usersIds) && it.channel == channelId
 }
+fun JDA.getProcessByEntities(users: Set<User>, channel: MessageChannel) =
+    getProcessByEntitiesIds(users.map { it.idLong }.toSet(), channel.idLong)
 
+fun JDA.getProcessByEntitiesIds(userId: Long, channelId: Long) = getProcessByEntitiesIds(setOf(userId), channelId)
 fun JDA.getProcessByEntities(user: User, channel: MessageChannel) = getProcessByEntities(setOf(user), channel)
 
 fun WaiterProcess.kill(jda: JDA) = WaiterProcess.currentlyRunning[this]?.kill(jda, true)
@@ -64,7 +67,8 @@ data class WaiterProcess(
     val id: String = "%04d".format((1..9999).filter {
         "%04d".format(it) !in currentlyRunning.keys.map { p -> p.id }
     }.random()),
-    val timeCreated: OffsetDateTime = OffsetDateTime.now(ZoneId.of("Etc/GMT0"))
+    val timeCreated: OffsetDateTime = OffsetDateTime.now(ZoneId.of("Etc/GMT0")),
+    var eventType: KClass<out GenericEvent>? = null
 ) {
     @DslMarker
     private annotation class WaiterDslMarker
@@ -74,6 +78,7 @@ data class WaiterProcess(
         val users = mutableListOf<Long>()
         var channel = 0L
         var command: Command? = null
+
         operator fun invoke() = WaiterProcess(
             users = users,
             channel = channel,
@@ -147,6 +152,8 @@ suspend inline fun <reified E : GenericEvent> JDA.awaitEvent(
     waiterProcess: WaiterProcess? = null,
     noinline condition: suspend (E) -> Boolean
 ): E? {
+    waiterProcess?.eventType = E::class
+
     val deferred = CompletableDeferred<E?>()
     val listener = AwaitableEventListener(E::class, deferred, waiterProcess, condition)
 

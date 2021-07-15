@@ -10,13 +10,11 @@ import io.ileukocyte.hibernum.builders.buildAkiwrapper
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.UniversalCommand
 import io.ileukocyte.hibernum.extensions.*
-import io.ileukocyte.hibernum.utils.awaitEvent
-import io.ileukocyte.hibernum.utils.getProcessByEntities
-import io.ileukocyte.hibernum.utils.kill
-import io.ileukocyte.hibernum.utils.waiterProcess
+import io.ileukocyte.hibernum.utils.*
 
 import kotlinx.coroutines.TimeoutCancellationException
 
+import net.dv8tion.jda.api.entities.Emoji
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.Event
@@ -93,7 +91,8 @@ class AkinatorCommand : UniversalCommand {
                         .create("$name-${id.first()}-lang")
                         .addOptions(
                             *availableLanguages.map { SelectOption.of(it.name.capitalizeAll(), it.name) }.toTypedArray(),
-                            SelectOption.of("Exit!", "exit")
+                            SelectOption.of("Return", "return").withEmoji(Emoji.fromUnicode("\u25C0\uFE0F")),
+                            SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C"))
                         ).build()
 
                     val message = event.channel.sendConfirmation("Choose your language!")
@@ -107,6 +106,16 @@ class AkinatorCommand : UniversalCommand {
                     }) { it.user.idLong == event.user.idLong && it.message == message } // used to block other commands
                 }
                 "lang" -> {
+                    if (optionValue == "return") {
+                        event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda)
+
+                        event.message?.delete()?.await()
+
+                        sendGuessTypeMenu(event.channel.idLong, event.user.idLong, event)
+
+                        return
+                    }
+
                     val lang = optionValue?.let { Language.valueOf(it) } ?: Language.ENGLISH
 
                     try {
@@ -424,6 +433,8 @@ class AkinatorCommand : UniversalCommand {
     }
 
     private suspend fun <E : Event> sendGuessTypeMenu(channelId: Long, playerId: Long, event: E) {
+        event.jda.getProcessByEntitiesIds(playerId, channelId)?.kill(event.jda) // just in case
+
         val description = "Choose your guess type!"
         val menu = SelectionMenu
             .create("$name-$playerId-type")
@@ -439,7 +450,7 @@ class AkinatorCommand : UniversalCommand {
                             it.name
                         )
                     }.toTypedArray(),
-                SelectOption.of("Exit!", "exit")
+                SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C"))
             ).build()
 
         val restAction = when (event) {
@@ -447,6 +458,8 @@ class AkinatorCommand : UniversalCommand {
                 event.channel.sendConfirmation(description).setActionRow(menu)
             is SlashCommandEvent ->
                 event.replyConfirmation(description).addActionRow(menu)
+            is SelectionMenuEvent ->
+                event.channel.sendConfirmation(description).setActionRow(menu)
             else -> null // must never occur
         }
 
