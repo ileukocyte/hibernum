@@ -1,7 +1,5 @@
 package io.ileukocyte.hibernum
 
-import io.ileukocyte.hibernum.annotations.HibernumExperimental
-
 import mu.KotlinLogging
 
 import java.awt.Color
@@ -14,10 +12,10 @@ object Immutable {
     val DISCORD_TOKEN: String = System.getenv("DISCORD_TOKEN")
     val LOGGER = KotlinLogging.logger("Hibernum")
 
-    @HibernumExperimental
     val EVAL_KOTLIN_ENGINE = ScriptEngineManager().getEngineByExtension("kts")
+        ?: throw UninitializedPropertyAccessException()
 
-    val VERSION = Version(major = 1, minor = 0, stability = Version.Stability.Alpha, unstable = 10)
+    val VERSION = Version(major = 1, minor = 0, stability = Version.Stability.Alpha, unstable = 11)
 
     val SUCCESS = Color(140, 190, 218)
     val FAILURE = Color(239, 67, 63)

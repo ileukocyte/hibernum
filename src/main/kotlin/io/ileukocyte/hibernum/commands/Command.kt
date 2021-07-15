@@ -20,9 +20,7 @@ interface Command {
         CommandCategory[name] ?: CommandCategory.Unknown
     } ?: CommandCategory.Unknown
     val isDeveloper: Boolean get() = category == CommandCategory.Developer
-    val isNonSlashOnly: Boolean get() = false
-    val isSlashAndSupportTextMode: Boolean get() = true
-    //val requiresButtonClick: Boolean get() = false
+    val type: CommandType get() = CommandType.UNIVERSAL
     val botPermissions: Set<Permission> get() = emptySet()
     val memberPermissions: Set<Permission> get() = emptySet()
     val usages: Set<String> get() = emptySet()
@@ -33,6 +31,8 @@ interface Command {
     /** DO NOT OVERRIDE */
     val id: Int get() = name.hashCode()
 
+    suspend operator fun invoke(event: GuildMessageReceivedEvent, args: String?) {}
+
     @HibernumExperimental
     suspend operator fun invoke(event: SlashCommandEvent) {}
 
@@ -42,5 +42,7 @@ interface Command {
     @HibernumExperimental
     suspend operator fun invoke(event: SelectionMenuEvent) {}
 
-    suspend operator fun invoke(event: GuildMessageReceivedEvent, args: String?) {}
+    enum class CommandType {
+        UNIVERSAL, TEXT_ONLY, SLASH_ONLY
+    }
 }

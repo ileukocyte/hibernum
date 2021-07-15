@@ -2,6 +2,7 @@ package io.ileukocyte.hibernum.commands.developer
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.commands.Command
+import io.ileukocyte.hibernum.commands.Command.CommandType
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.extensions.sendSuccess
@@ -18,13 +19,17 @@ class EvalCommand : Command {
     override val name = "eval"
     override val description = "The command executes the attached Kotlin code"
     override val usages = setOf("<Kotlin code>")
-    override val isNonSlashOnly = true
+    override val type = CommandType.TEXT_ONLY
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
-        val code = args
-            ?.removeSurrounding("```")
-            ?.removePrefix("kotlin")
-            ?: throw NoArgumentsException
+        val code = args?.run {
+            takeIf { it.startsWith("```") }
+                ?.removeSurrounding("```")
+                ?.removePrefix("kt\n")
+                ?.removePrefix("kotlin\n")
+                ?: this
+        } ?: throw NoArgumentsException
+
         val packages = buildString {
             for ((key, value) in imports) {
                 if (value.isNotEmpty()) {

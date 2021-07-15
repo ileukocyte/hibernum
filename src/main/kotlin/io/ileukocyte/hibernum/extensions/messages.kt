@@ -64,7 +64,8 @@ suspend fun Message.awaitConfirmationWithReactions(
     return name?.let { it == CHECK_MARK }
 }
 
-fun Message.replyEmbed(block: KEmbedBuilder.() -> Unit) = replyEmbeds(KEmbedBuilder().apply(block)())
+inline fun Message.replyEmbed(block: KEmbedBuilder.() -> Unit) =
+    replyEmbeds(KEmbedBuilder().apply(block)())
 
 fun Message.replySuccess(desc: String) = replyEmbed {
     color = Immutable.SUCCESS

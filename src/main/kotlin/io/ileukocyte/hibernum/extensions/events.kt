@@ -8,7 +8,8 @@ import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 
 /* SlashCommandEvent extensions */
-fun SlashCommandEvent.replyEmbed(block: KEmbedBuilder.() -> Unit) = replyEmbeds(KEmbedBuilder().apply(block)())
+inline fun SlashCommandEvent.replyEmbed(block: KEmbedBuilder.() -> Unit) =
+    replyEmbeds(KEmbedBuilder().apply(block)())
 
 fun SlashCommandEvent.replySuccess(desc: String) = replyEmbed {
     color = Immutable.SUCCESS
@@ -35,7 +36,8 @@ fun SlashCommandEvent.replyWarning(desc: String) = replyEmbed {
 }
 
 /* ButtonClickEvent extensions */
-fun ButtonClickEvent.replyEmbed(block: KEmbedBuilder.() -> Unit) = replyEmbeds(KEmbedBuilder().apply(block)())
+inline fun ButtonClickEvent.replyEmbed(block: KEmbedBuilder.() -> Unit) =
+    replyEmbeds(KEmbedBuilder().apply(block)())
 
 fun ButtonClickEvent.replySuccess(desc: String) = replyEmbed {
     color = Immutable.SUCCESS
@@ -62,7 +64,8 @@ fun ButtonClickEvent.replyWarning(desc: String) = replyEmbed {
 }
 
 /* SelectionMenuEvent extensions */
-fun SelectionMenuEvent.replyEmbed(block: KEmbedBuilder.() -> Unit) = replyEmbeds(KEmbedBuilder().apply(block)())
+inline fun SelectionMenuEvent.replyEmbed(block: KEmbedBuilder.() -> Unit) =
+    replyEmbeds(KEmbedBuilder().apply(block)())
 
 fun SelectionMenuEvent.replySuccess(desc: String) = replyEmbed {
     color = Immutable.SUCCESS

@@ -86,7 +86,7 @@ data class WaiterProcess(
     }
 }
 
-class AwaitableEventListener<E: GenericEvent>(
+class AwaitableEventListener<E : GenericEvent>(
     private val type: KClass<E>,
     private val deferred: CompletableDeferred<E?>,
     private val waiterProcess: WaiterProcess? = null,
@@ -141,7 +141,7 @@ class AwaitableEventListener<E: GenericEvent>(
  */
 @OptIn(ExperimentalTime::class)
 @Throws(TimeoutCancellationException::class)
-suspend inline fun <reified E: GenericEvent> JDA.awaitEvent(
+suspend inline fun <reified E : GenericEvent> JDA.awaitEvent(
     delay: Long = -1,
     unit: DurationUnit = DurationUnit.MILLISECONDS,
     waiterProcess: WaiterProcess? = null,

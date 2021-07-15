@@ -7,7 +7,8 @@ import kotlinx.coroutines.delay
 
 import net.dv8tion.jda.api.requests.RestAction
 
-import java.util.concurrent.TimeUnit
+import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
 
 /**
  * Suspends the current coroutine while submitting the request
@@ -27,9 +28,10 @@ suspend fun <T> RestAction<T>.await() = suspendCoroutine<T> {
  *
  * Returns the response value
  */
+@OptIn(ExperimentalTime::class)
 suspend fun <T> RestAction<T>.awaitAfter(
     delay: Long,
-    unit: TimeUnit
+    unit: DurationUnit
 ): T {
     delay(unit.toMillis(delay))
     return await()

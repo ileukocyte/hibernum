@@ -13,7 +13,8 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
 
-fun MessageChannel.sendEmbed(block: KEmbedBuilder.() -> Unit) = sendMessageEmbeds(KEmbedBuilder().apply(block)())
+inline fun MessageChannel.sendEmbed(block: KEmbedBuilder.() -> Unit) =
+    sendMessageEmbeds(KEmbedBuilder().apply(block)())
 
 fun MessageChannel.sendSuccess(desc: String) = sendEmbed {
     color = Immutable.SUCCESS

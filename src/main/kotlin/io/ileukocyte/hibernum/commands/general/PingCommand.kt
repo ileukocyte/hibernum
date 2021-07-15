@@ -1,11 +1,11 @@
 package io.ileukocyte.hibernum.commands.general
 
 import io.ileukocyte.hibernum.Immutable
+import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.extensions.await
-import io.ileukocyte.hibernum.extensions.replyEmbed
-import io.ileukocyte.hibernum.extensions.sendEmbed
 
+import net.dv8tion.jda.api.events.Event
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 
@@ -13,15 +13,19 @@ class PingCommand : Command {
     override val name = "ping"
     override val description = "The command sends Hibernum's current response time separately from the statistics"
 
-    override suspend fun invoke(event: SlashCommandEvent) {
-        val restPing = event.jda.restPing.await()
+    override suspend fun invoke(event: SlashCommandEvent) =
+        sendPing(event)
 
-        event.replyEmbed {
+    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) =
+        sendPing(event)
+
+    private suspend fun <E : Event> sendPing(event: E) {
+        val embed = buildEmbed {
             color = Immutable.SUCCESS
 
             field {
                 title = "Rest Ping"
-                description = "$restPing ms"
+                description = "${event.jda.restPing.await()} ms"
                 isInline = true
             }
 
@@ -30,26 +34,14 @@ class PingCommand : Command {
                 description = "${event.jda.gatewayPing} ms"
                 isInline = true
             }
-        }.queue()
-    }
+        }
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
-        val restPing = event.jda.restPing.await()
+        val restAction = when (event) {
+            is GuildMessageReceivedEvent -> event.channel.sendMessageEmbeds(embed)
+            is SlashCommandEvent -> event.replyEmbeds(embed)
+            else -> null // must never occur
+        }
 
-        event.channel.sendEmbed {
-            color = Immutable.SUCCESS
-
-            field {
-                title = "Rest Ping"
-                description = "$restPing ms"
-                isInline = true
-            }
-
-            field {
-                title = "WebSocket Ping"
-                description = "${event.jda.gatewayPing} ms"
-                isInline = true
-            }
-        }.queue()
+        restAction?.queue()
     }
 }
