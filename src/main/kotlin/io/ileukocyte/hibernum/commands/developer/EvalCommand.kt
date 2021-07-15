@@ -1,10 +1,9 @@
 package io.ileukocyte.hibernum.commands.developer
 
 import io.ileukocyte.hibernum.Immutable
-import io.ileukocyte.hibernum.commands.Command
-import io.ileukocyte.hibernum.commands.Command.CommandType
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
+import io.ileukocyte.hibernum.commands.TextOnlyCommand
 import io.ileukocyte.hibernum.extensions.sendSuccess
 
 import net.dv8tion.jda.api.EmbedBuilder
@@ -15,11 +14,10 @@ import net.dv8tion.jda.api.requests.RestAction
 
 import org.json.JSONObject
 
-class EvalCommand : Command {
+class EvalCommand : TextOnlyCommand {
     override val name = "eval"
     override val description = "The command executes the attached Kotlin code"
     override val usages = setOf("<Kotlin code>")
-    override val type = CommandType.TEXT_ONLY
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val code = args?.run {

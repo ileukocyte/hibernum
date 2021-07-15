@@ -7,8 +7,8 @@ import com.markozajc.akiwrapper.core.entities.Server.Language
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildAkiwrapper
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.UniversalCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.awaitEvent
 import io.ileukocyte.hibernum.utils.getProcessByEntities
@@ -28,7 +28,7 @@ import net.dv8tion.jda.api.interactions.components.Button
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
 
-class AkinatorCommand : Command {
+class AkinatorCommand : UniversalCommand {
     private lateinit var akiwrapper: Akiwrapper
     private lateinit var _type: GuessType
     private val declinedGuesses = mutableSetOf<Long>()
@@ -67,24 +67,38 @@ class AkinatorCommand : Command {
 
     override suspend fun invoke(event: SelectionMenuEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
+        val optionValue = event.selectedOptions?.firstOrNull()?.value
 
         if (event.user.id == id.first()) {
+            if (optionValue == "exit") {
+                event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda)
+
+                event
+                    .replySuccess("The Akinator session has been finished!")
+                    .setEphemeral(true)
+                    .flatMap { event.message?.delete() }
+                    .queue()
+
+                return
+            }
+
             when (id.last()) {
                 "type" -> {
-                    _type = event.selectedOptions?.firstOrNull()
-                        ?.value?.let { GuessType.valueOf(it) } ?: GuessType.CHARACTER
+                    event.message?.delete()?.await()
+
+                    _type = optionValue?.let { GuessType.valueOf(it) } ?: GuessType.CHARACTER
                     val availableLanguages = languagesAvailableForTypes[_type] ?: Language.values().toSortedSet()
+
                     val menu = SelectionMenu
                         .create("$name-${id.first()}-lang")
                         .addOptions(
-                            availableLanguages.map { SelectOption.of(it.name.capitalizeAll(), it.name) }
+                            *availableLanguages.map { SelectOption.of(it.name.capitalizeAll(), it.name) }.toTypedArray(),
+                            SelectOption.of("Exit!", "exit")
                         ).build()
 
                     val message = event.channel.sendConfirmation("Choose your language!")
                         .setActionRow(menu)
                         .await()
-
-                    event.message?.delete()?.queue()
 
                     event.jda.awaitEvent<SelectionMenuEvent>(waiterProcess = waiterProcess {
                         channel = event.channel.idLong
@@ -93,10 +107,11 @@ class AkinatorCommand : Command {
                     }) { it.user.idLong == event.user.idLong && it.message == message } // used to block other commands
                 }
                 "lang" -> {
-                    val lang = event.selectedOptions?.firstOrNull()
-                        ?.value?.let { Language.valueOf(it) } ?: Language.ENGLISH
+                    val lang = optionValue?.let { Language.valueOf(it) } ?: Language.ENGLISH
 
                     try {
+                        event.message?.delete()?.await()
+
                         akiwrapper = buildAkiwrapper {
                             guessType = _type
                             language = lang
@@ -116,9 +131,7 @@ class AkinatorCommand : Command {
                                     if (event.textChannel.isNSFW) append(" | NSFW mode")
                                 }
                             }
-                        }
-                            .flatMap { event.message?.delete() }
-                            .await()
+                        }.await()
 
                         awaitAnswer(event.channel, event.user)
                     } catch (e: Exception) {
@@ -257,7 +270,9 @@ class AkinatorCommand : Command {
                 "debug" -> {
                     if (player.isDeveloper)
                         message.reply(akiwrapper.guesses.filter { it.idLong !in declinedGuesses }
-                            .joinToString("\n") { "${it.name}: ${it.probability}" }.ifEmpty { "No guesses available" }
+                            .joinToString("\n") { "${it.name}: ${it.probability}" }
+                            .ifEmpty { "No guesses available" }
+                            .let { "$it\n\nCurrent server: ${akiwrapper.server.url}" }
                         ).await()
 
                     awaitAnswer(messageChannel, player)
@@ -413,7 +428,7 @@ class AkinatorCommand : Command {
         val menu = SelectionMenu
             .create("$name-$playerId-type")
             .addOptions(
-                GuessType.values()
+                *GuessType.values()
                     .filter { it != GuessType.PLACE }
                     .map {
                         SelectOption.of(
@@ -423,7 +438,8 @@ class AkinatorCommand : Command {
                                 it.name.lowercase().capitalizeAll(),
                             it.name
                         )
-                    }
+                    }.toTypedArray(),
+                SelectOption.of("Exit!", "exit")
             ).build()
 
         val restAction = when (event) {

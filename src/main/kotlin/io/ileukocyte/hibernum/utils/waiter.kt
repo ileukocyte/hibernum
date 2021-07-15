@@ -45,7 +45,7 @@ fun WaiterProcess.kill(jda: JDA) = WaiterProcess.currentlyRunning[this]?.kill(jd
  * @property users
  * A mutable list containing the ID's of the users being involved
  * @property channel
- * An ID of the channel the process is currently running in
+ * The ID of the channel the process is currently running in
  * @property command
  * The command the process was launched from or by
  * @property id

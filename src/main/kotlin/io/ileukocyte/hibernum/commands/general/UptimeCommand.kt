@@ -2,7 +2,7 @@ package io.ileukocyte.hibernum.commands.general
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.Command
+import io.ileukocyte.hibernum.commands.UniversalCommand
 import io.ileukocyte.hibernum.extensions.startDate
 import io.ileukocyte.hibernum.extensions.uptime
 import io.ileukocyte.hibernum.utils.asText
@@ -11,7 +11,7 @@ import net.dv8tion.jda.api.events.Event
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 
-class UptimeCommand : Command {
+class UptimeCommand : UniversalCommand {
     override val name = "uptime"
     override val description = "The command sends Hibernum's uptime separately from the statistics"
 

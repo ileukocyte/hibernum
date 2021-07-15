@@ -2,9 +2,7 @@ package io.ileukocyte.hibernum.handlers
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.annotations.HibernumExperimental
-import io.ileukocyte.hibernum.commands.Command
-import io.ileukocyte.hibernum.commands.Command.CommandType
-import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.*
 import io.ileukocyte.hibernum.extensions.isDeveloper
 import io.ileukocyte.hibernum.extensions.replyFailure
 import io.ileukocyte.hibernum.extensions.sendFailure
@@ -33,7 +31,7 @@ object CommandHandler : MutableSet<Command> {
     private val registeredCommands = mutableSetOf<Command>()
 
     val asSlashCommands get() =
-        filter { it.type != CommandType.TEXT_ONLY }.map { CommandData(it.name, it.description).addOptions(it.options) }
+        filter { it !is TextOnlyCommand }.map { CommandData(it.name, it.description).addOptions(it.options) }
 
     // Stuff overriden from MutableSet
     override val size get() = registeredCommands.size
@@ -59,7 +57,8 @@ object CommandHandler : MutableSet<Command> {
             if (event.message.contentRaw.trim().startsWith(Immutable.DEFAULT_PREFIX)) {
                 val args = event.message.contentRaw.split("\\s+".toRegex(), 2)
                 this[args.first().removePrefix(Immutable.DEFAULT_PREFIX).lowercase()]
-                    ?.takeIf { it.type != CommandType.SLASH_ONLY }
+                    ?.takeIf { it !is SlashOnlyCommand }
+                    ?.let { it as? TextOnlyCommand ?: it as? UniversalCommand }
                     ?.let { command ->
                         CoroutineScope(CommandContext).launch {
                             if (event.jda.getProcessByEntities(event.author, event.channel) === null) {
@@ -98,47 +97,49 @@ object CommandHandler : MutableSet<Command> {
     @HibernumExperimental
     operator fun invoke(event: SlashCommandEvent) {
         if (event.isFromGuild) {
-            this[event.name]?.takeIf { it.type != CommandType.TEXT_ONLY }?.let { command ->
-                CoroutineScope(CommandContext).launch {
-                    if (event.jda.getProcessByEntities(event.user, event.channel) === null) {
-                        if (command.isDeveloper && !event.user.isDeveloper) {
-                            event.replyFailure("You cannot execute the command!").queue()
-                        } else {
-                            try {
-                                command(event)
-                            } catch (e: Exception) {
-                                when (e) {
-                                    is CommandException -> event.replyFailure(
-                                        e.message ?: "CommandException has occurred!"
-                                    )
-                                        .queue()
-                                    is InsufficientPermissionException -> {
-                                    } // ignored
-                                    else -> {
-                                        event.replyFailure(
-                                            """
+            this[event.name]?.takeIf { it !is TextOnlyCommand }
+                ?.let { it as? SlashOnlyCommand ?: it as? UniversalCommand }
+                ?.let { command ->
+                    CoroutineScope(CommandContext).launch {
+                        if (event.jda.getProcessByEntities(event.user, event.channel) === null) {
+                            if (command.isDeveloper && !event.user.isDeveloper) {
+                                event.replyFailure("You cannot execute the command!").queue()
+                            } else {
+                                try {
+                                    command(event)
+                                } catch (e: Exception) {
+                                    when (e) {
+                                        is CommandException -> event.replyFailure(
+                                            e.message ?: "CommandException has occurred!"
+                                        )
+                                            .queue()
+                                        is InsufficientPermissionException -> {
+                                        } // ignored
+                                        else -> {
+                                            event.replyFailure(
+                                                """
                                            |${e::class.simpleName ?: "An unknown exception"} has occurred:
                                            |${e.message ?: "No message provided"}
                                            |""".trimMargin()
-                                        ).queue()
-                                        e.printStackTrace()
+                                            ).queue()
+                                            e.printStackTrace()
+                                        }
                                     }
                                 }
                             }
-                        }
-                    } else
-                        event.replyFailure("You have some other processes running right now!")
-                            .setEphemeral(true)
-                            .queue()
+                        } else
+                            event.replyFailure("You have some other processes running right now!")
+                                .setEphemeral(true)
+                                .queue()
+                    }
                 }
-            }
         }
     }
 
     @HibernumExperimental
     operator fun invoke(event: ButtonClickEvent) {
         if (event.isFromGuild) {
-            this[event.componentId.split("-").first()]//?.takeIf { it.requiresButtonClick }
+            this[event.componentId.split("-").first()]
             ?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     try {

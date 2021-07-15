@@ -10,7 +10,7 @@ import io.ileukocyte.hibernum.annotations.HibernumExperimental
 import io.ileukocyte.hibernum.builders.buildActivity
 import io.ileukocyte.hibernum.builders.buildJDA
 import io.ileukocyte.hibernum.commands.Command
-import io.ileukocyte.hibernum.commands.Command.CommandType
+import io.ileukocyte.hibernum.commands.TextOnlyCommand
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.handlers.EventHandler
@@ -56,6 +56,7 @@ fun main() = runBlocking {
     val handlerInit = launch {
         Reflections("io.ileukocyte.hibernum.commands")
             .getSubtypesOf<Command>()
+            .filter { !it.isInterface }
             .map { it.kotlin }
             .forEach { CommandHandler += it.createInstance() }
     }
@@ -70,7 +71,7 @@ fun main() = runBlocking {
         discord.updateCommands().addCommands(CommandHandler.asSlashCommands).queue()
 
     discord.retrieveCommands().queue { cmds ->
-        val nonSlashRegisteredAsSlash = cmds.filter { CommandHandler[it.name]?.type == CommandType.TEXT_ONLY }
+        val nonSlashRegisteredAsSlash = cmds.filter { CommandHandler[it.name] is TextOnlyCommand }
         nonSlashRegisteredAsSlash.takeUnless { it.isEmpty() }?.forEach { discord.deleteCommandById(it.id).queue() }
     }
 

@@ -20,29 +20,68 @@ interface Command {
         CommandCategory[name] ?: CommandCategory.Unknown
     } ?: CommandCategory.Unknown
     val isDeveloper: Boolean get() = category == CommandCategory.Developer
-    val type: CommandType get() = CommandType.UNIVERSAL
     val botPermissions: Set<Permission> get() = emptySet()
     val memberPermissions: Set<Permission> get() = emptySet()
+
+    // may be implemented via Command#options soon
     val usages: Set<String> get() = emptySet()
 
+    /**
+     * A property containing a set of data that is used for option-requiring slash commands
+     */
     @HibernumExperimental
     val options: Set<OptionData> get() = emptySet()
 
     /** DO NOT OVERRIDE */
     val id: Int get() = name.hashCode()
 
+    /**
+     * The function that is executed when the command is invoked as a classic text command
+     *
+     * @param event
+     * [GuildMessageReceivedEvent] occurring once the command is invoked
+     * @param args
+     * The arguments that may be attached to the command request
+     */
     suspend operator fun invoke(event: GuildMessageReceivedEvent, args: String?) {}
 
+    /**
+     * EXPERIMENTAL: The function that is executed when the command is invoked as a slash command
+     *
+     * @param event
+     * The [SlashCommandEvent] occurring once the command is invoked
+     */
     @HibernumExperimental
     suspend operator fun invoke(event: SlashCommandEvent) {}
 
+    /**
+     * EXPERIMENTAL: The function that is executed when the command's button menu is utilized by a user
+     *
+     * @param event
+     * The [ButtonClickEvent] occurring once the command is invoked
+     */
     @HibernumExperimental
     suspend operator fun invoke(event: ButtonClickEvent) {}
 
+    /**
+     * EXPERIMENTAL: The function that is executed when the command's selection menu is utilized by a user
+     *
+     * @param event
+     * The [SelectionMenuEvent] occurring once the command is invoked
+     */
     @HibernumExperimental
     suspend operator fun invoke(event: SelectionMenuEvent) {}
+}
 
-    enum class CommandType {
-        UNIVERSAL, TEXT_ONLY, SLASH_ONLY
-    }
+interface UniversalCommand : Command {
+    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?)
+    override suspend fun invoke(event: SlashCommandEvent)
+}
+
+interface TextOnlyCommand : Command {
+    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?)
+}
+
+interface SlashOnlyCommand : Command {
+    override suspend fun invoke(event: SlashCommandEvent)
 }

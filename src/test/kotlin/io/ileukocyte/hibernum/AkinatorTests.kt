@@ -48,6 +48,7 @@ class AkinatorTests {
                 }
             }
         }
+
         val wrapper = AkiwrapperBuilder().apply {
             guessType = Server.GuessType.OBJECT
             setFilterProfanity(false)
