@@ -13,7 +13,7 @@ import kotlin.time.ExperimentalTime
 /**
  * Suspends the current coroutine while submitting the request
  *
- * Returns the response value
+ * @return the response value
  */
 suspend fun <T> RestAction<T>.await() = suspendCoroutine<T> {
     queue(
@@ -26,7 +26,12 @@ suspend fun <T> RestAction<T>.await() = suspendCoroutine<T> {
  * Suspends the current coroutine for the specified delay while submitting the request
  * and calls [RestAction#await()][io.ileukocyte.hibernum.extensions.await] once the delay is reached
  *
- * Returns the response value
+ * @param delay
+ * A period after which the action must be completed
+ * @param unit
+ * A time unit for the aforementioned parameter
+ *
+ * @return the response value
  */
 @OptIn(ExperimentalTime::class)
 suspend fun <T> RestAction<T>.awaitAfter(

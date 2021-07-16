@@ -1,13 +1,14 @@
 package io.ileukocyte.hibernum.utils
 
 import java.time.Instant
+import java.time.OffsetDateTime
 import java.time.ZoneId
 
 import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
 import kotlin.time.toDuration
 
-fun Long.millisToDate(zone: ZoneId = ZoneId.of("Etc/GMT0")) =
+fun Long.millisToDate(zone: ZoneId = ZoneId.of("Etc/GMT0")): OffsetDateTime =
     Instant.ofEpochMilli(this).atZone(zone).toOffsetDateTime()
 
 @OptIn(ExperimentalTime::class)

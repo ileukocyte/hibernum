@@ -21,6 +21,8 @@ const val CROSS_MARK = "\u274E"
  * The extension bringing a faster way
  * to obtain the user's willing to do something with reactions rather than using raw event receiving.
  *
+ * @receiver The [Message] that the confirmation reactions are going to be added to
+ *
  * @param user
  * The user who the reactions are being received from
  * @param processCommand
@@ -30,9 +32,9 @@ const val CROSS_MARK = "\u274E"
  * @param unit
  * A time unit for the aforementioned parameter
  *
- * Returns a nullable Boolean value (whether or not the user selected the check mark emoji) received via event awaiting
+ * @return a nullable Boolean value (whether or not the user selected the check mark emoji) received via event awaiting
  *
- * Throws [TimeoutCancellationException] in the case of no event being obtained
+ * @throws [TimeoutCancellationException] in case of no event obtained
  *
  * @author Alexander Oksanich
  */

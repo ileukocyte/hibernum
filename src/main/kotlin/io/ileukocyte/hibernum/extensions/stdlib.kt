@@ -8,7 +8,6 @@ fun String.containsAll(vararg args: CharSequence): Boolean {
 
     return true
 }
-
 fun String.containsAll(elements: Collection<CharSequence>) = containsAll(*elements.toTypedArray())
 fun String.containsAll(vararg args: Char) = containsAll(args.map { it.toString() })
 

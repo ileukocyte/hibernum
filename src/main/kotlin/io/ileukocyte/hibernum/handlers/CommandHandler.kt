@@ -30,8 +30,11 @@ object CommandContext : CoroutineContext by commandContextDispatcher, AutoClosea
 object CommandHandler : MutableSet<Command> {
     private val registeredCommands = mutableSetOf<Command>()
 
+    /**
+     * A property that returns non-text-only commands registered by [CommandHandler] as a set of JDA's [CommandData] instances
+     */
     val asSlashCommands get() =
-        filter { it !is TextOnlyCommand }.map { CommandData(it.name, it.description).addOptions(it.options) }
+        filter { it !is TextOnlyCommand }.map { CommandData(it.name, it.description).addOptions(it.options) }.toSet()
 
     // Stuff overriden from MutableSet
     override val size get() = registeredCommands.size
@@ -52,6 +55,14 @@ object CommandHandler : MutableSet<Command> {
     operator fun get(id: Int) = registeredCommands
         .firstOrNull { it.id == id }
 
+    /**
+     * A function that handles [GuildMessageReceivedEvent] that may contain a text command
+     *
+     * @param event
+     * [GuildMessageReceivedEvent] occurring once the command is invoked
+     *
+     * @author Alexander Oksanich
+     */
     operator fun invoke(event: GuildMessageReceivedEvent) {
         if (!event.author.isBot && !event.author.isSystem && event.message.type == MessageType.DEFAULT && event.message.isFromGuild) {
             if (event.message.contentRaw.trim().startsWith(Immutable.DEFAULT_PREFIX)) {
@@ -94,6 +105,14 @@ object CommandHandler : MutableSet<Command> {
         }
     }
 
+    /**
+     * EXPERIMENTAL: A function that handles [SlashCommandEvent] that contains a slash command
+     *
+     * @param event
+     * [SlashCommandEvent] occurring once the command is invoked
+     *
+     * @author Alexander Oksanich
+     */
     @HibernumExperimental
     operator fun invoke(event: SlashCommandEvent) {
         if (event.isFromGuild) {
@@ -136,6 +155,15 @@ object CommandHandler : MutableSet<Command> {
         }
     }
 
+    /**
+     * EXPERIMENTAL: A function that handles [ButtonClickEvent] that occurs
+     * when a command's button menu is utilized by a user
+     *
+     * @param event
+     * [ButtonClickEvent] occurring once the command's button menu is used
+     *
+     * @author Alexander Oksanich
+     */
     @HibernumExperimental
     operator fun invoke(event: ButtonClickEvent) {
         if (event.isFromGuild) {
@@ -165,6 +193,15 @@ object CommandHandler : MutableSet<Command> {
         }
     }
 
+    /**
+     * EXPERIMENTAL: A function that handles [SelectionMenuEvent] that occurs
+     * when a command's selection menu is utilized by a user
+     *
+     * @param event
+     * [SelectionMenuEvent] occurring once the command's selection menu is used
+     *
+     * @author Alexander Oksanich
+     */
     @HibernumExperimental
     operator fun invoke(event: SelectionMenuEvent) {
         if (event.isFromGuild) {

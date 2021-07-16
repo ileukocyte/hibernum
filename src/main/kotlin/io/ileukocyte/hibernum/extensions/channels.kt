@@ -43,6 +43,8 @@ fun MessageChannel.sendWarning(desc: String) = sendEmbed {
 /**
  * The extension bringing a faster way to obtain an awaited message rather than using raw event receiving.
  *
+ * @receiver The [MessageChannel] in which the message is going to be awaited
+ *
  * @param authors
  * A set of users who the message is being received from
  * @param processCommand
@@ -52,10 +54,10 @@ fun MessageChannel.sendWarning(desc: String) = sendEmbed {
  * @param unit
  * A time unit for the aforementioned parameter
  *
- * Returns a nullable (in the case of the process being manually terminated) [Message][net.dv8tion.jda.api.entities.Message] entity
+ * @return a nullable (in the case of the process being manually terminated) [Message][net.dv8tion.jda.api.entities.Message] entity
  * received via event awaiting
  *
- * Throws [TimeoutCancellationException] in the case of no event being obtained
+ * @throws [TimeoutCancellationException] in the case of no event being obtained
  *
  * @author Alexander Oksanich
  */
@@ -79,6 +81,8 @@ suspend inline fun MessageChannel.awaitMessage(
 /**
  * The extension bringing a faster way to obtain an awaited message rather than using raw event receiving.
  *
+ * @receiver The [MessageChannel] in which the message is going to be awaited
+ *
  * @param author
  * A user who the message is being received from
  * @param processCommand
@@ -88,10 +92,10 @@ suspend inline fun MessageChannel.awaitMessage(
  * @param unit
  * A time unit for the aforementioned parameter
  *
- * Returns a nullable (in the case of the process being manually terminated) [Message][net.dv8tion.jda.api.entities.Message] entity
+ * @return a nullable (in case of the process being manually terminated) [Message][net.dv8tion.jda.api.entities.Message] entity
  * received via event awaiting
  *
- * Throws [TimeoutCancellationException] in the case of no event being obtained
+ * @throws [TimeoutCancellationException] in the case of no event being obtained
  *
  * @author Alexander Oksanich
  */
