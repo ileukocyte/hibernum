@@ -1,3 +1,4 @@
+@file:JvmName("RestActionExtensions")
 package io.ileukocyte.hibernum.extensions
 
 import kotlin.coroutines.resume

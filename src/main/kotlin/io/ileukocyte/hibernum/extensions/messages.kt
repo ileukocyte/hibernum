@@ -1,6 +1,6 @@
+@file:JvmName("MessageExtensions")
 package io.ileukocyte.hibernum.extensions
 
-import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.KEmbedBuilder
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.utils.awaitEvent
@@ -69,26 +69,14 @@ suspend fun Message.awaitConfirmationWithReactions(
 inline fun Message.replyEmbed(block: KEmbedBuilder.() -> Unit) =
     replyEmbeds(KEmbedBuilder().apply(block)())
 
-fun Message.replySuccess(desc: String) = replyEmbed {
-    color = Immutable.SUCCESS
-    author { name = "Success!" }
-    description = desc
-}
+fun Message.replySuccess(desc: String) =
+    replyEmbeds(defaultEmbed(desc, EmbedType.SUCCESS))
 
-fun Message.replyFailure(desc: String) = replyEmbed {
-    color = Immutable.FAILURE
-    author { name = "Failure!" }
-    description = desc
-}
+fun Message.replyFailure(desc: String) =
+    replyEmbeds(defaultEmbed(desc, EmbedType.FAILURE))
 
-fun Message.replyConfirmation(desc: String) = replyEmbed {
-    color = Immutable.CONFIRMATION
-    author { name = "Confirmation!" }
-    description = desc
-}
+fun Message.replyConfirmation(desc: String) =
+    replyEmbeds(defaultEmbed(desc, EmbedType.CONFIRMATION))
 
-fun Message.replyWarning(desc: String) = replyEmbed {
-    color = Immutable.WARNING
-    author { name = "Warning!" }
-    description = desc
-}
+fun Message.replyWarning(desc: String) =
+    replyEmbeds(defaultEmbed(desc, EmbedType.WARNING))

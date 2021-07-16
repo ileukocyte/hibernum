@@ -1,3 +1,4 @@
+@file:JvmName("EventWaiter")
 @file:Suppress("UNCHECKED_CAST", "UNUSED")
 package io.ileukocyte.hibernum.utils
 

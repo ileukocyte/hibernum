@@ -1,3 +1,4 @@
+@file:JvmName("JDAExtensions")
 package io.ileukocyte.hibernum.extensions
 
 import io.ileukocyte.hibernum.utils.millisToDate

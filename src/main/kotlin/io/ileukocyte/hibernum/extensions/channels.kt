@@ -1,44 +1,33 @@
+@file:JvmName("ChannelExtensions")
 package io.ileukocyte.hibernum.extensions
 
-import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.KEmbedBuilder
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.utils.awaitEvent
 import io.ileukocyte.hibernum.utils.waiterProcess
+
+import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.TimeoutCancellationException
 
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
 
 inline fun MessageChannel.sendEmbed(block: KEmbedBuilder.() -> Unit) =
     sendMessageEmbeds(KEmbedBuilder().apply(block)())
 
-fun MessageChannel.sendSuccess(desc: String) = sendEmbed {
-    color = Immutable.SUCCESS
-    author { name = "Success!" }
-    description = desc
-}
+fun MessageChannel.sendSuccess(desc: String) =
+    sendMessageEmbeds(defaultEmbed(desc, EmbedType.SUCCESS))
 
-fun MessageChannel.sendFailure(desc: String) = sendEmbed {
-    color = Immutable.FAILURE
-    author { name = "Failure!" }
-    description = desc
-}
+fun MessageChannel.sendFailure(desc: String) =
+    sendMessageEmbeds(defaultEmbed(desc, EmbedType.FAILURE))
 
-fun MessageChannel.sendConfirmation(desc: String) = sendEmbed {
-    color = Immutable.CONFIRMATION
-    author { name = "Confirmation!" }
-    description = desc
-}
+fun MessageChannel.sendConfirmation(desc: String) =
+    sendMessageEmbeds(defaultEmbed(desc, EmbedType.CONFIRMATION))
 
-fun MessageChannel.sendWarning(desc: String) = sendEmbed {
-    color = Immutable.WARNING
-    author { name = "Warning!" }
-    description = desc
-}
+fun MessageChannel.sendWarning(desc: String) =
+    sendMessageEmbeds(defaultEmbed(desc, EmbedType.WARNING))
 
 /**
  * The extension bringing a faster way to obtain an awaited message rather than using raw event receiving.

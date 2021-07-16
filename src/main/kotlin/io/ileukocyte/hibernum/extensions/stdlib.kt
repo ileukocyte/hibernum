@@ -1,3 +1,4 @@
+@file:JvmName("StandardLibraryExtensions")
 package io.ileukocyte.hibernum.extensions
 
 // kotlin.String

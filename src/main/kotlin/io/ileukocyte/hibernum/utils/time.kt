@@ -1,3 +1,4 @@
+@file:JvmName("TimeUtils")
 package io.ileukocyte.hibernum.utils
 
 import java.time.Instant
@@ -11,6 +12,24 @@ import kotlin.time.toDuration
 fun Long.millisToDate(zone: ZoneId = ZoneId.of("Etc/GMT0")): OffsetDateTime =
     Instant.ofEpochMilli(this).atZone(zone).toOffsetDateTime()
 
+/**
+ * A function that formats time of the specified unit as a text
+ *
+ * **Example**:
+ * ```
+ * val millisExample = "ileukocyte/hibernum".hashCode() // 884095017
+ * val text = asText(millisExample) // "10 days, 5 hours, 34 minutes, and 55 seconds"
+ * ```
+ *
+ * @param time
+ * The amount of time to be formatted
+ * @param unit
+ * A time unit for the aforementioned parameter
+ *
+ * @return A textual representation of the specified amount of time
+ *
+ * @author Alexander Oksanich
+ */
 @OptIn(ExperimentalTime::class)
 fun asText(time: Long, unit: DurationUnit = DurationUnit.MILLISECONDS): String {
     fun String.singularOrPlural(long: Long) = this + "s".takeIf { long > 1L }.orEmpty()
@@ -34,8 +53,12 @@ fun asText(time: Long, unit: DurationUnit = DurationUnit.MILLISECONDS): String {
             if (alreadyPresent && (minutes != 0L || seconds != 0L))
                 append(", ")
 
-            if (toString().isNotEmpty() && (minutes == 0L && seconds == 0L))
+            if (isNotEmpty() && (minutes == 0L && seconds == 0L)) {
+                if (", " in this)
+                    append(",")
+
                 append(" and ")
+            }
 
             append("$hours ${"hour".singularOrPlural(hours)}")
             alreadyPresent = true
@@ -45,22 +68,29 @@ fun asText(time: Long, unit: DurationUnit = DurationUnit.MILLISECONDS): String {
             if (alreadyPresent && seconds != 0L)
                 append(", ")
 
-            if (toString().isNotEmpty() && seconds == 0L)
+            if (isNotEmpty() && seconds == 0L) {
+                if (", " in this)
+                    append(",")
+
                 append(" and ")
+            }
 
             alreadyPresent = true
             append("$minutes ${"minute".singularOrPlural(minutes)}")
         }
 
         if (seconds > 0L) {
-            if (alreadyPresent)
+            if (alreadyPresent) {
+                if (", " in this)
+                    append(",")
+
                 append(" and ")
+            }
 
             append("$seconds ${"second".singularOrPlural(seconds)}")
         }
 
-        if (toString().isEmpty() && !alreadyPresent) {
+        if (isEmpty() && !alreadyPresent)
             append("0 seconds")
-        }
     }
 }

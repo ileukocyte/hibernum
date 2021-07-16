@@ -1,3 +1,4 @@
+@file:JvmName("JSONExtensions")
 @file:Suppress("UNUSED")
 package io.ileukocyte.hibernum.extensions
 

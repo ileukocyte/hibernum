@@ -1,3 +1,4 @@
+@file:JvmName("UserExtensions")
 package io.ileukocyte.hibernum.extensions
 
 import io.ileukocyte.hibernum.Immutable

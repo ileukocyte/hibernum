@@ -1,3 +1,4 @@
+@file:JvmName("Commands")
 @file:Suppress("UNNECESSARY_SAFE_CALL")
 
 package io.ileukocyte.hibernum.commands
@@ -14,11 +15,11 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 /**
  * A generic type that is to be implemented by all the bot's command classes
  *
+ * @author Alexander Oksanich
+ *
  * @see UniversalCommand
  * @see TextOnlyCommand
  * @see SlashOnlyCommand
- *
- * @author Alexander Oksanich
  */
 @Suppress("UNUSED")
 interface Command {
@@ -87,11 +88,11 @@ interface Command {
 /**
  * A type of command that can be used universally (as both a text command and a slash one)
  *
+ * @author Alexander Oksanich
+ *
  * @see Command
  * @see TextOnlyCommand
  * @see SlashOnlyCommand
- *
- * @author Alexander Oksanich
  */
 interface UniversalCommand : Command {
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?)
@@ -101,11 +102,11 @@ interface UniversalCommand : Command {
 /**
  * A type of command that can be used exclusively as a text command
  *
+ * @author Alexander Oksanich
+ *
  * @see Command
  * @see UniversalCommand
  * @see SlashOnlyCommand
- *
- * @author Alexander Oksanich
  */
 interface TextOnlyCommand : Command {
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?)
@@ -114,11 +115,11 @@ interface TextOnlyCommand : Command {
 /**
  * A type of command that can be used exclusively as a text command
  *
+ * @author Alexander Oksanich
+ *
  * @see Command
  * @see UniversalCommand
  * @see TextOnlyCommand
- *
- * @author Alexander Oksanich
  */
 interface SlashOnlyCommand : Command {
     override suspend fun invoke(event: SlashCommandEvent)
