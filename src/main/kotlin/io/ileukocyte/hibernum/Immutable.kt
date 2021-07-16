@@ -5,7 +5,6 @@ import mu.KotlinLogging
 import java.awt.Color
 import javax.script.ScriptEngineManager
 
-@Suppress("UNUSED")
 object Immutable {
     const val DEFAULT_PREFIX = "&"
 
@@ -36,11 +35,7 @@ data class Version(
         major,
         minor,
         patch.takeUnless { it == 0 }
-    ).filterNotNull().joinToString(separator = ".") + stability.run {
-        if (suffix !== null) {
-            "-$suffix$unstable"
-        } else ""
-    }
+    ).filterNotNull().joinToString(separator = ".") + stability.suffix?.let { "-$it$unstable" }.orEmpty()
 
     sealed class Stability(val suffix: String? = null) {
         object Stable : Stability()

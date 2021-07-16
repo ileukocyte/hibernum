@@ -75,7 +75,7 @@ build.apply {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.freeCompilerArgs += "-Xuse-experimental=kotlin.Experimental"
+    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
 }
 
 tasks.getByName<Test>("test") {
@@ -93,11 +93,7 @@ data class Version(
         major,
         minor,
         patch.takeUnless { it == 0 }
-    ).filterNotNull().joinToString(separator = ".") + stability.run {
-        if (suffix !== null) {
-            "-$suffix$unstable"
-        } else ""
-    }
+    ).filterNotNull().joinToString(separator = ".") + stability.suffix?.let { "-$it$unstable" }.orEmpty()
 
     sealed class Stability(val suffix: String? = null) {
         object Stable : Stability()
