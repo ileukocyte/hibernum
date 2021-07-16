@@ -21,7 +21,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
  * @see SlashOnlyCommand
  */
 @Suppress("UNUSED")
-interface Command {
+interface Command : Comparable<Command> {
     val name: String
     val description: String
     val aliases: Set<String> get() = emptySet()
@@ -84,6 +84,8 @@ interface Command {
      */
     @HibernumExperimental
     suspend operator fun invoke(event: SelectionMenuEvent) {}
+
+    override fun compareTo(other: Command) = name.compareTo(other.name)
 }
 
 /**
@@ -95,7 +97,9 @@ interface Command {
  * @see SlashOnlyCommand
  */
 interface TextOnlyCommand : Command {
-    override suspend fun invoke(event: SlashCommandEvent) {}
+    override suspend fun invoke(event: SlashCommandEvent) {
+        // must be left empty
+    }
 }
 
 /**
@@ -107,5 +111,7 @@ interface TextOnlyCommand : Command {
  * @see TextOnlyCommand
  */
 interface SlashOnlyCommand : Command {
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {}
+    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+        // must be left empty
+    }
 }
