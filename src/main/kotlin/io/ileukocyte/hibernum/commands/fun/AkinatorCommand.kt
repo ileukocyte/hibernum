@@ -56,6 +56,7 @@ class AkinatorCommand : Command {
 
     override val name = "akinator"
     override val description = "The command launches a new Akinator game session"
+    override val aliases = setOf("aki")
 
     override suspend fun invoke(event: SlashCommandEvent) =
         sendGuessTypeMenu(event.channel.idLong, event.user.idLong, event)

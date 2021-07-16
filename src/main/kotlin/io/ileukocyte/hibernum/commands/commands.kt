@@ -24,6 +24,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 interface Command {
     val name: String
     val description: String
+    val aliases: Set<String> get() = emptySet()
     val category: CommandCategory get() =
         javaClass.`package`.name?.let { CommandCategory[it.split(".").last()] } ?: CommandCategory.UNKNOWN
 
@@ -31,6 +32,7 @@ interface Command {
      * A property that shows whether or not the command can only be used by a developer of the bot
      */
     val isDeveloper: Boolean get() = category == CommandCategory.DEVELOPER
+    val cooldown: Long get() = 0
     val botPermissions: Set<Permission> get() = emptySet()
     val memberPermissions: Set<Permission> get() = emptySet()
 

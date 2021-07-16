@@ -17,6 +17,7 @@ import org.json.JSONObject
 class EvalCommand : TextOnlyCommand {
     override val name = "eval"
     override val description = "The command executes the attached Kotlin code"
+    override val aliases = setOf("exec")
     override val usages = setOf("<Kotlin code>")
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {

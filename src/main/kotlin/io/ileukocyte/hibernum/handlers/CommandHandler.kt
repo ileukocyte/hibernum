@@ -9,9 +9,12 @@ import io.ileukocyte.hibernum.commands.TextOnlyCommand
 import io.ileukocyte.hibernum.extensions.isDeveloper
 import io.ileukocyte.hibernum.extensions.replyFailure
 import io.ileukocyte.hibernum.extensions.sendFailure
+import io.ileukocyte.hibernum.utils.asText
 import io.ileukocyte.hibernum.utils.getProcessByEntities
 
 import kotlin.coroutines.CoroutineContext
+import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
@@ -24,6 +27,8 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 
+import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
 import java.util.concurrent.Executors.newFixedThreadPool
 
 private val commandContextDispatcher = newFixedThreadPool(3).asCoroutineDispatcher()
@@ -32,6 +37,7 @@ object CommandContext : CoroutineContext by commandContextDispatcher, AutoClosea
 
 object CommandHandler : MutableSet<Command> {
     private val registeredCommands = mutableSetOf<Command>()
+    private val cooldowns = mutableMapOf<String, OffsetDateTime>()
 
     /**
      * A property that returns non-text-only commands registered by [CommandHandler] as a set of JDA's [CommandData] instances
@@ -53,11 +59,40 @@ object CommandHandler : MutableSet<Command> {
     override fun retainAll(elements: Collection<Command>) = registeredCommands.retainAll(elements)
     override fun clear() = registeredCommands.clear()
 
-    operator fun get(name: String) = registeredCommands
-        .firstOrNull { it.name.equals(name, ignoreCase = true) }
+    operator fun get(name: String): Command? {
+        fun checkPriority(actual: String, expected: Command) = when (actual) {
+            expected.name -> 2
+            in expected.aliases -> 1
+            else -> 0
+        }
+
+        return registeredCommands
+            .filter { checkPriority(name, it) > 0 }
+            .maxByOrNull { checkPriority(name, it) }
+    }
 
     operator fun get(id: Int) = registeredCommands
         .firstOrNull { it.id == id }
+
+    // Command cooldown extensions
+    private fun Command.getRemainingCooldown(userId: Long) =
+        cooldowns["$name|$userId"]?.let { cooldown ->
+            val time = OffsetDateTime.now().until(cooldown, ChronoUnit.SECONDS)
+
+            if (time <= 0) {
+                cooldowns -= name
+                0
+            } else time
+        } ?: 0
+
+    @OptIn(ExperimentalTime::class)
+    private fun Command.getCooldownError(userId: Long) = getRemainingCooldown(userId)
+        .takeUnless { it <= 0 }
+        ?.let { "Wait for ${asText(it, DurationUnit.SECONDS)} before using the command again!" }
+
+    private fun Command.applyCooldown(userId: Long) {
+        cooldowns += "$name|$userId" to OffsetDateTime.now().plusSeconds(cooldown)
+    }
 
     /**
      * A function that handles [GuildMessageReceivedEvent] that may contain a text command
@@ -67,7 +102,7 @@ object CommandHandler : MutableSet<Command> {
      *
      * @author Alexander Oksanich
      */
-    operator fun invoke(event: GuildMessageReceivedEvent) {
+    internal operator fun invoke(event: GuildMessageReceivedEvent) {
         if (!event.author.isBot && !event.author.isSystem && event.message.type == MessageType.DEFAULT && event.message.isFromGuild) {
             if (event.message.contentRaw.trim().startsWith(Immutable.DEFAULT_PREFIX)) {
                 val args = event.message.contentRaw.split("\\s+".toRegex(), 2)
@@ -80,7 +115,14 @@ object CommandHandler : MutableSet<Command> {
                                     event.channel.sendFailure("You cannot execute the command!").queue()
                                 } else {
                                     try {
-                                        command(event, args.getOrNull(1))
+                                        if (command.cooldown > 0) {
+                                            command.getCooldownError(event.author.idLong)
+                                                ?.let { event.channel.sendFailure(it).queue() }
+                                                ?: command.let {
+                                                    it.applyCooldown(event.author.idLong)
+                                                    it(event, args.getOrNull(1))
+                                                }
+                                        } else command(event, args.getOrNull(1))
                                     } catch (e: Exception) {
                                         when (e) {
                                             is CommandException -> {
@@ -117,7 +159,7 @@ object CommandHandler : MutableSet<Command> {
      * @author Alexander Oksanich
      */
     @HibernumExperimental
-    operator fun invoke(event: SlashCommandEvent) {
+    internal operator fun invoke(event: SlashCommandEvent) {
         if (event.isFromGuild) {
             this[event.name]?.takeIf { it !is TextOnlyCommand }?.let { command ->
                 CoroutineScope(CommandContext).launch {
@@ -126,7 +168,14 @@ object CommandHandler : MutableSet<Command> {
                             event.replyFailure("You cannot execute the command!").queue()
                         } else {
                             try {
-                                command(event)
+                                if (command.cooldown > 0) {
+                                    command.getCooldownError(event.user.idLong)
+                                        ?.let { event.replyFailure(it).setEphemeral(true).queue() }
+                                        ?: command.let {
+                                            it.applyCooldown(event.user.idLong)
+                                            it(event)
+                                        }
+                                } else command(event)
                             } catch (e: Exception) {
                                 when (e) {
                                     is CommandException -> event.replyFailure(
@@ -166,7 +215,7 @@ object CommandHandler : MutableSet<Command> {
      * @author Alexander Oksanich
      */
     @HibernumExperimental
-    operator fun invoke(event: ButtonClickEvent) {
+    internal operator fun invoke(event: ButtonClickEvent) {
         if (event.isFromGuild) {
             this[event.componentId.split("-").first()]
             ?.let { command ->
@@ -204,7 +253,7 @@ object CommandHandler : MutableSet<Command> {
      * @author Alexander Oksanich
      */
     @HibernumExperimental
-    operator fun invoke(event: SelectionMenuEvent) {
+    internal operator fun invoke(event: SelectionMenuEvent) {
         if (event.isFromGuild) {
             this[event.componentId.split("-").first()]?.let {
                     command ->

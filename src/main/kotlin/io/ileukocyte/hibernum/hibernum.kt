@@ -91,7 +91,7 @@ fun main() = runBlocking {
     with(discord.presence) {
         activity = buildActivity {
             name = VERSION.toString()
-            url = "https://twitch.tv/discordapp"
+            url = "https://twitch.tv/discord"
             type = ActivityType.STREAMING
         }
 
