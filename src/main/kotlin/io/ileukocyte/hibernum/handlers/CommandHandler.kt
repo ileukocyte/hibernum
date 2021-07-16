@@ -2,7 +2,10 @@ package io.ileukocyte.hibernum.handlers
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.annotations.HibernumExperimental
-import io.ileukocyte.hibernum.commands.*
+import io.ileukocyte.hibernum.commands.Command
+import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.SlashOnlyCommand
+import io.ileukocyte.hibernum.commands.TextOnlyCommand
 import io.ileukocyte.hibernum.extensions.isDeveloper
 import io.ileukocyte.hibernum.extensions.replyFailure
 import io.ileukocyte.hibernum.extensions.sendFailure
@@ -33,8 +36,9 @@ object CommandHandler : MutableSet<Command> {
     /**
      * A property that returns non-text-only commands registered by [CommandHandler] as a set of JDA's [CommandData] instances
      */
-    val asSlashCommands get() =
-        filter { it !is TextOnlyCommand }.map { CommandData(it.name, it.description).addOptions(it.options) }.toSet()
+    val asSlashCommands get() = filter { it !is TextOnlyCommand }
+        .map { CommandData(it.name, it.description).addOptions(it.options) }
+        .toSet()
 
     // Stuff overriden from MutableSet
     override val size get() = registeredCommands.size
@@ -69,7 +73,6 @@ object CommandHandler : MutableSet<Command> {
                 val args = event.message.contentRaw.split("\\s+".toRegex(), 2)
                 this[args.first().removePrefix(Immutable.DEFAULT_PREFIX).lowercase()]
                     ?.takeIf { it !is SlashOnlyCommand }
-                    ?.let { it as? TextOnlyCommand ?: it as? UniversalCommand }
                     ?.let { command ->
                         CoroutineScope(CommandContext).launch {
                             if (event.jda.getProcessByEntities(event.author, event.channel) === null) {
@@ -116,42 +119,40 @@ object CommandHandler : MutableSet<Command> {
     @HibernumExperimental
     operator fun invoke(event: SlashCommandEvent) {
         if (event.isFromGuild) {
-            this[event.name]?.takeIf { it !is TextOnlyCommand }
-                ?.let { it as? SlashOnlyCommand ?: it as? UniversalCommand }
-                ?.let { command ->
-                    CoroutineScope(CommandContext).launch {
-                        if (event.jda.getProcessByEntities(event.user, event.channel) === null) {
-                            if (command.isDeveloper && !event.user.isDeveloper) {
-                                event.replyFailure("You cannot execute the command!").queue()
-                            } else {
-                                try {
-                                    command(event)
-                                } catch (e: Exception) {
-                                    when (e) {
-                                        is CommandException -> event.replyFailure(
-                                            e.message ?: "CommandException has occurred!"
-                                        )
-                                            .queue()
-                                        is InsufficientPermissionException -> {
-                                        } // ignored
-                                        else -> {
-                                            event.replyFailure(
-                                                """
+            this[event.name]?.takeIf { it !is TextOnlyCommand }?.let { command ->
+                CoroutineScope(CommandContext).launch {
+                    if (event.jda.getProcessByEntities(event.user, event.channel) === null) {
+                        if (command.isDeveloper && !event.user.isDeveloper) {
+                            event.replyFailure("You cannot execute the command!").queue()
+                        } else {
+                            try {
+                                command(event)
+                            } catch (e: Exception) {
+                                when (e) {
+                                    is CommandException -> event.replyFailure(
+                                        e.message ?: "CommandException has occurred!"
+                                    )
+                                        .queue()
+                                    is InsufficientPermissionException -> {
+                                    } // ignored
+                                    else -> {
+                                        event.replyFailure(
+                                            """
                                            |${e::class.simpleName ?: "An unknown exception"} has occurred:
                                            |${e.message ?: "No message provided"}
                                            |""".trimMargin()
-                                            ).queue()
-                                            e.printStackTrace()
-                                        }
+                                        ).queue()
+                                        e.printStackTrace()
                                     }
                                 }
                             }
-                        } else
-                            event.replyFailure("You have some other processes running right now!")
-                                .setEphemeral(true)
-                                .queue()
-                    }
+                        }
+                    } else
+                        event.replyFailure("You have some other processes running right now!")
+                            .setEphemeral(true)
+                            .queue()
                 }
+            }
         }
     }
 

@@ -1,6 +1,6 @@
 package io.ileukocyte.hibernum.commands.developer
 
-import io.ileukocyte.hibernum.commands.UniversalCommand
+import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.extensions.replyConfirmation
 import io.ileukocyte.hibernum.extensions.replyFailure
 import io.ileukocyte.hibernum.extensions.replySuccess
@@ -14,7 +14,7 @@ import net.dv8tion.jda.api.interactions.components.Button
 
 import kotlin.system.exitProcess
 
-class ShutdownCommand : UniversalCommand {
+class ShutdownCommand : Command {
     override val name = "shutdown"
     override val description = "The command shuts Hibernum down"
 

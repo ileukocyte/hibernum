@@ -7,8 +7,8 @@ import com.markozajc.akiwrapper.core.entities.Server.Language
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildAkiwrapper
+import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.commands.UniversalCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.*
 
@@ -26,7 +26,7 @@ import net.dv8tion.jda.api.interactions.components.Button
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
 
-class AkinatorCommand : UniversalCommand {
+class AkinatorCommand : Command {
     private lateinit var akiwrapper: Akiwrapper
     private lateinit var _type: GuessType
     private val declinedGuesses = mutableSetOf<Long>()

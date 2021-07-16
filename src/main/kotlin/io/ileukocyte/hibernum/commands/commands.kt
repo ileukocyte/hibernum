@@ -17,7 +17,6 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
  *
  * @author Alexander Oksanich
  *
- * @see UniversalCommand
  * @see TextOnlyCommand
  * @see SlashOnlyCommand
  */
@@ -26,12 +25,12 @@ interface Command {
     val name: String
     val description: String
     val category: CommandCategory get() =
-        javaClass.`package`.name?.let { CommandCategory[it.split(".").last()] } ?: CommandCategory.Unknown
+        javaClass.`package`.name?.let { CommandCategory[it.split(".").last()] } ?: CommandCategory.UNKNOWN
 
     /**
      * A property that shows whether or not the command can only be used by a developer of the bot
      */
-    val isDeveloper: Boolean get() = category == CommandCategory.Developer
+    val isDeveloper: Boolean get() = category == CommandCategory.DEVELOPER
     val botPermissions: Set<Permission> get() = emptySet()
     val memberPermissions: Set<Permission> get() = emptySet()
 
@@ -55,7 +54,7 @@ interface Command {
      * @param args
      * The arguments that may be attached to the command request
      */
-    suspend operator fun invoke(event: GuildMessageReceivedEvent, args: String?) {}
+    suspend operator fun invoke(event: GuildMessageReceivedEvent, args: String?)
 
     /**
      * EXPERIMENTAL: A function that is executed when the command is invoked as a slash command
@@ -64,7 +63,7 @@ interface Command {
      * The [SlashCommandEvent] occurring once the command is invoked
      */
     @HibernumExperimental
-    suspend operator fun invoke(event: SlashCommandEvent) {}
+    suspend operator fun invoke(event: SlashCommandEvent)
 
     /**
      * EXPERIMENTAL: A function that is executed when the command's button menu is utilized by a user
@@ -86,30 +85,15 @@ interface Command {
 }
 
 /**
- * A type of command that can be used universally (as both a text command and a slash one)
- *
- * @author Alexander Oksanich
- *
- * @see Command
- * @see TextOnlyCommand
- * @see SlashOnlyCommand
- */
-interface UniversalCommand : Command {
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?)
-    override suspend fun invoke(event: SlashCommandEvent)
-}
-
-/**
  * A type of command that can be used exclusively as a text command
  *
  * @author Alexander Oksanich
  *
  * @see Command
- * @see UniversalCommand
  * @see SlashOnlyCommand
  */
 interface TextOnlyCommand : Command {
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?)
+    override suspend fun invoke(event: SlashCommandEvent) {}
 }
 
 /**
@@ -118,9 +102,8 @@ interface TextOnlyCommand : Command {
  * @author Alexander Oksanich
  *
  * @see Command
- * @see UniversalCommand
  * @see TextOnlyCommand
  */
 interface SlashOnlyCommand : Command {
-    override suspend fun invoke(event: SlashCommandEvent)
+    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {}
 }
