@@ -32,7 +32,7 @@ import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
 
 class AkinatorCommand : Command {
-    private val akiwrappers = mutableMapOf<Long, Pair<Akiwrapper, Long>>()
+    private val akiwrappers = mutableMapOf<Long, Akiwrapper>()
     private val declinedGuesses = mutableMapOf<Long, MutableSet<Long>>()
     private val types = mutableMapOf<Long, GuessType>()
 
@@ -139,7 +139,7 @@ class AkinatorCommand : Command {
                         }
 
                         declinedGuesses += event.user.idLong to mutableSetOf()
-                        akiwrappers += event.user.idLong to (akiwrapper to event.channel.idLong)
+                        akiwrappers += event.user.idLong to akiwrapper
 
                         event.channel.sendEmbed {
                             color = Immutable.SUCCESS
@@ -173,7 +173,7 @@ class AkinatorCommand : Command {
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
-            val (akiwrapper, _) = akiwrappers[event.user.idLong] ?: return
+            val akiwrapper = akiwrappers[event.user.idLong] ?: return
 
             when (id.last()) {
                 "exit" -> {
