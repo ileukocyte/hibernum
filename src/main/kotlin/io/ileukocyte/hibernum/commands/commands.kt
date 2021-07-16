@@ -99,7 +99,7 @@ interface TextOnlyCommand : Command {
 }
 
 /**
- * A type of command that can be used exclusively as a text command
+ * A type of command that can be used exclusively as a slash command
  *
  * @author Alexander Oksanich
  *
