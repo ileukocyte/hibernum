@@ -7,6 +7,7 @@ import javax.script.ScriptEngineManager
 
 object Immutable {
     const val DEFAULT_PREFIX = "&"
+    const val INVITE_PERMISSIONS = 4294967287L
 
     val DISCORD_TOKEN: String = System.getenv("DISCORD_TOKEN")
     val LOGGER = KotlinLogging.logger("Hibernum")
