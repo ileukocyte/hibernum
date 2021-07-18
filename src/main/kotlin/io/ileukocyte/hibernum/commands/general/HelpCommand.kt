@@ -151,12 +151,11 @@ class HelpCommand : Command {
                     iconUrl = author.effectiveAvatarUrl
                 }
 
-            for (command in CommandHandler) {
-                val category = command.category
-                val edit = categories[category] ?: mutableSetOf()
-                edit += command
-                categories += category to edit
-            }
+            for (category in CommandCategory.values().filter { CommandHandler.any { cmd -> cmd.category == it } })
+                categories += category to mutableSetOf()
+
+            for (command in CommandHandler)
+                categories[command.category]?.let { it += command }
 
             val commandFields = mutableSetOf<Pair<String, String>>()
 
