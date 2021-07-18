@@ -14,7 +14,7 @@ plugins {
 }
 
 group = "io.ileukocyte"
-version = Version(major = 1, minor = 0, stability = Version.Stability.Alpha, unstable = 17)
+version = Version(major = 1, minor = 0, stability = Version.Stability.Alpha, unstable = 18)
 
 repositories {
     mavenCentral()
@@ -74,6 +74,11 @@ build.apply {
     dependsOn(shadowJar)
 
     jar.mustRunAfter(clean)
+}
+
+tasks.withType<ShadowJar> {
+    archiveBaseName.set("hibernum")
+    archiveClassifier.set("")
 }
 
 tasks.withType<KotlinCompile> {
