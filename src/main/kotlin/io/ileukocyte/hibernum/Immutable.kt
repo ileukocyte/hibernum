@@ -18,6 +18,8 @@ object Immutable {
 
     val VERSION = Version(major = 1, minor = 0, stability = Version.Stability.Alpha, unstable = 16)
 
+    val USER_AGENT = "User-Agent: DiscordBot ($GITHUB_REPOSITORY, $VERSION)"
+
     val SUCCESS = Color(140, 190, 218)
     val FAILURE = Color(239, 67, 63)
     val CONFIRMATION = Color(118, 255, 3)
