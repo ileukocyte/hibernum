@@ -24,14 +24,41 @@ import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.Event
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
+import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.interactions.commands.Command.Choice
+import net.dv8tion.jda.api.interactions.commands.OptionType
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.Button
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
 
 class AkinatorCommand : Command {
+    override val name = "akinator"
+    override val description = "Launches a new Akinator game session"
+    override val aliases = setOf("aki")
+    override val options by lazy {
+        val choices = GuessType.values()
+            .filter { it != GuessType.PLACE }
+            .map {
+                Choice(
+                    if (it == GuessType.MOVIE_TV_SHOW)
+                        "Movie/TV Show"
+                    else
+                        it.name.lowercase().capitalizeAll(),
+                    it.name
+                )
+            }
+
+        val option =
+            OptionData(OptionType.STRING, "type", "Akinator's guess type (\"Character\" is the default one)")
+                .addChoices(choices)
+
+        setOf(option)
+    }
+
     private val akiwrappers = mutableMapOf<Long, Akiwrapper>()
     private val declinedGuesses = mutableMapOf<Long, MutableSet<Long>>()
     private val types = mutableMapOf<Long, GuessType>()
@@ -61,12 +88,8 @@ class AkinatorCommand : Command {
             GuessType.OBJECT to setOf(Language.ENGLISH, Language.FRENCH)
         )
 
-    override val name = "akinator"
-    override val description = "Launches a new Akinator game session"
-    override val aliases = setOf("aki")
-
     override suspend fun invoke(event: SlashCommandEvent) =
-        sendGuessTypeMenu(event.channel.idLong, event.user.idLong, event)
+        sendLanguagesMenu(event, event.getOption("type")?.asString, true)
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) =
         sendGuessTypeMenu(event.channel.idLong, event.author.idLong, event)
@@ -92,29 +115,7 @@ class AkinatorCommand : Command {
                 "type" -> {
                     event.message?.delete()?.await()
 
-                    val type = optionValue?.let { GuessType.valueOf(it) } ?: GuessType.CHARACTER
-
-                    types += event.user.idLong to type
-
-                    val availableLanguages = languagesAvailableForTypes[type] ?: Language.values().toSortedSet()
-
-                    val menu = SelectionMenu
-                        .create("$name-${id.first()}-lang")
-                        .addOptions(
-                            *availableLanguages.map { SelectOption.of(it.name.capitalizeAll(), it.name) }.toTypedArray(),
-                            SelectOption.of("Return", "return").withEmoji(Emoji.fromUnicode("\u25C0\uFE0F")),
-                            SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C"))
-                        ).build()
-
-                    val message = event.channel.sendConfirmation("Choose your language!")
-                        .setActionRow(menu)
-                        .await()
-
-                    event.jda.awaitEvent<SelectionMenuEvent>(waiterProcess = waiterProcess {
-                        channel = event.channel.idLong
-                        users += event.user.idLong
-                        command = this@AkinatorCommand
-                    }) { it.user.idLong == event.user.idLong && it.message == message } // used to block other commands
+                    sendLanguagesMenu(event, optionValue, false)
                 }
                 "lang" -> {
                     if (optionValue == "return") {
@@ -483,6 +484,52 @@ class AkinatorCommand : Command {
             users += playerId
             command = this@AkinatorCommand
         }) { it.user.idLong == playerId && it.message == message } // used to block other commands
+    }
+
+    private suspend fun sendLanguagesMenu(
+        event: GenericInteractionCreateEvent,
+        optionValue: String?,
+        isFromSlashCommand: Boolean
+    ) {
+        if (isFromSlashCommand) {
+            if (event.jda.processes.any { it.command is AkinatorCommand
+                        && event.user.idLong in it.users
+                        && it.channel != event.messageChannel.idLong }) {
+                event
+                    .replyFailure("You have another Akinator command running somewhere else! Finish the process first!")
+                    .setEphemeral(true)
+                    .queue()
+
+                return
+            }
+        }
+
+        val type = optionValue?.let { GuessType.valueOf(it) } ?: GuessType.CHARACTER
+
+        types += event.user.idLong to type
+
+        val availableLanguages = languagesAvailableForTypes[type] ?: Language.values().toSortedSet()
+
+        val menu = SelectionMenu
+            .create("$name-${event.user.idLong}-lang")
+            .addOptions(
+                *availableLanguages.map { SelectOption.of(it.name.capitalizeAll(), it.name) }.toTypedArray(),
+                SelectOption.of("Return", "return").withEmoji(Emoji.fromUnicode("\u25C0\uFE0F")),
+                SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C"))
+            ).build()
+
+        val message = event.let {
+            if (!isFromSlashCommand)
+                it.messageChannel.sendConfirmation("Choose your language!").setActionRow(menu)
+            else
+                it.replyConfirmation("Choose your language!").addActionRow(menu)
+        }.await()
+
+        event.jda.awaitEvent<SelectionMenuEvent>(waiterProcess = waiterProcess {
+            channel = event.messageChannel.idLong
+            users += event.user.idLong
+            command = this@AkinatorCommand
+        }) { it.user.idLong == event.user.idLong && it.message == message } // used to block other commands
     }
 
     private suspend fun guessMessage(

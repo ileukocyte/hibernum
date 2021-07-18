@@ -14,6 +14,8 @@ import io.ileukocyte.hibernum.commands.TextOnlyCommand
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.handlers.EventHandler
+import io.ileukocyte.hibernum.utils.isEqualTo
+import io.ileukocyte.hibernum.utils.toOptionData
 
 import kotlin.reflect.full.createInstance
 import kotlinx.coroutines.async
@@ -22,7 +24,6 @@ import kotlinx.coroutines.runBlocking
 
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Activity.ActivityType
-import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.commands.Command.Option
 
 import org.reflections.Reflections
@@ -70,13 +71,14 @@ fun main() = runBlocking {
 
     // updating global slash commands
     discord.retrieveCommands().queue { discordCommands ->
-        fun Option.toOptionData() =
-            OptionData(type, name, description, isRequired).addChoices(choices)
+
 
         val predicate = { cmd: Command ->
             cmd.name !in discordCommands.map { it.name }
                     || cmd.description !in discordCommands.map { it.description.removePrefix("(Developer-only) ") }
-                    || discordCommands.any { cmd.name == it.name && cmd.options != it.options.map(Option::toOptionData).toSet() }
+                    || discordCommands.any {
+                        cmd.name == it.name && !cmd.options.toList().isEqualTo(it.options.map(Option::toOptionData))
+                    }
         }
 
         if (CommandHandler.filter { it !is TextOnlyCommand }.any(predicate))
