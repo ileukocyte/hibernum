@@ -68,7 +68,13 @@ fun main() = runBlocking {
 
     // updating global slash commands
     discord.retrieveCommands().queue { discordCommands ->
-        if (CommandHandler.any { c -> c.name !in discordCommands.map { it.name } || c.description !in discordCommands.map { it.description } })
+        val predicate = { cmd: Command ->
+            cmd.name !in discordCommands.map { it.name }
+                    || cmd.description !in discordCommands.map { it.description }
+                    || !discordCommands.any { cmd.options == it.options }
+        }
+
+        if (CommandHandler.any(predicate))
             discord.updateCommands().addCommands(CommandHandler.asSlashCommands).queue { commands ->
                 LOGGER.info("UPDATE: Discord has loaded the following slash commands: ${commands.map { it.name }}")
             }
