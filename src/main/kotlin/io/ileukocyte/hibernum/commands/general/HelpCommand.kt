@@ -4,6 +4,8 @@ import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandCategory
+import io.ileukocyte.hibernum.commands.SlashOnlyCommand
+import io.ileukocyte.hibernum.commands.TextOnlyCommand
 import io.ileukocyte.hibernum.extensions.sendFailure
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asText
@@ -109,7 +111,9 @@ class HelpCommand : Command {
             }
 
         author {
-            name = nameWithPrefix
+            name = nameWithPrefix +
+                    " (text-only)".takeIf { this@commandHelp is TextOnlyCommand }.orEmpty() +
+                    " (slash-only)".takeIf { this@commandHelp is SlashOnlyCommand }.orEmpty()
             iconUrl = jda.selfUser.effectiveAvatarUrl
         }
     }
