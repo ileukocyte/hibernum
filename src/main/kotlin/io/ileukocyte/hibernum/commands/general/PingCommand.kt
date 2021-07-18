@@ -30,7 +30,7 @@ class PingCommand : Command {
             }
 
             field {
-                title = "WebSocket Ping"
+                title = "Gateway Ping"
                 description = "${event.jda.gatewayPing} ms"
                 isInline = true
             }

@@ -8,6 +8,7 @@ import javax.script.ScriptEngineManager
 object Immutable {
     const val DEFAULT_PREFIX = "&"
     const val INVITE_PERMISSIONS = 4294967287L
+    const val GITHUB_REPOSITORY = "https://github.com/ileukocyte/hibernum"
 
     val DISCORD_TOKEN: String = System.getenv("DISCORD_TOKEN")
     val LOGGER = KotlinLogging.logger("Hibernum")

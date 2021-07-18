@@ -36,7 +36,7 @@ class KJDABuilder {
     @PublishedApi
     internal operator fun invoke() = if (::token.isInitialized) {
         JDABuilder
-            .createLight(token)
+            .createDefault(token)
             .setEventManager(eventManager)
             .addEventListeners(*eventListeners.toTypedArray())
             .setActivity(_activity)

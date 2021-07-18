@@ -67,12 +67,18 @@ fun main() = runBlocking {
         LOGGER.info("CommandHandler has successfully loaded ${CommandHandler.size} commands!")
 
     // updating global slash commands
-    if (CommandHandler.any { it.name !in discord.retrieveCommands().await().map { c -> c.name } })
-        discord.updateCommands().addCommands(CommandHandler.asSlashCommands).queue()
+    if (CommandHandler.any { it.name !in discord.retrieveCommands().await().map { c -> c.name } } )
+        discord.updateCommands().addCommands(CommandHandler.asSlashCommands).queue { cmds ->
+            LOGGER.info("Discord has loaded the following slash commands: ${cmds.map { it.name }}")
+        }
 
     discord.retrieveCommands().queue { cmds ->
         val nonSlashRegisteredAsSlash = cmds.filter { CommandHandler[it.name] is TextOnlyCommand }
-        nonSlashRegisteredAsSlash.takeUnless { it.isEmpty() }?.forEach { discord.deleteCommandById(it.id).queue() }
+        nonSlashRegisteredAsSlash.takeUnless { it.isEmpty() }?.forEach {
+            discord.deleteCommandById(it.id).queue { _ ->
+                LOGGER.info("${it.name} is no longer a slash command!")
+            }
+        }
     }
 
     // adding an event listener

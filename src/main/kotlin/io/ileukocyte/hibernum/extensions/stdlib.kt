@@ -30,3 +30,6 @@ fun String.capitalizeAll(isForce: Boolean = true): String {
 
     return String(chars)
 }
+
+fun String.singularOrPlural(int: Int) = singularOrPlural(int.toLong())
+fun String.singularOrPlural(long: Long) = this + "s".takeIf { long > 1L }.orEmpty()

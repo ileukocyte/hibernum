@@ -1,6 +1,8 @@
 @file:JvmName("TimeUtils")
 package io.ileukocyte.hibernum.utils
 
+import io.ileukocyte.hibernum.extensions.singularOrPlural
+
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -32,8 +34,6 @@ fun Long.millisToDate(zone: ZoneId = ZoneId.of("Etc/GMT0")): OffsetDateTime =
  */
 @OptIn(ExperimentalTime::class)
 fun asText(time: Long, unit: DurationUnit = DurationUnit.MILLISECONDS): String {
-    fun String.singularOrPlural(long: Long) = this + "s".takeIf { long > 1L }.orEmpty()
-
     val duration = time.toDuration(unit)
 
     val days = duration.inWholeDays
