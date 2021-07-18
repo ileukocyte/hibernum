@@ -6,6 +6,7 @@ import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
 import io.ileukocyte.hibernum.commands.TextOnlyCommand
+import io.ileukocyte.hibernum.commands.developer.ShutdownCommand
 import io.ileukocyte.hibernum.extensions.isDeveloper
 import io.ileukocyte.hibernum.extensions.replyFailure
 import io.ileukocyte.hibernum.extensions.sendFailure
@@ -110,7 +111,7 @@ object CommandHandler : MutableSet<Command> {
                     ?.takeIf { it !is SlashOnlyCommand }
                     ?.let { command ->
                         CoroutineScope(CommandContext).launch {
-                            if (event.jda.getProcessByEntities(event.author, event.channel) === null) {
+                            if (event.jda.getProcessByEntities(event.author, event.channel) === null || command is ShutdownCommand) {
                                 if (command.isDeveloper && !event.author.isDeveloper) {
                                     event.channel.sendFailure("You cannot execute the command!").queue()
                                 } else {
@@ -163,7 +164,7 @@ object CommandHandler : MutableSet<Command> {
         if (event.isFromGuild) {
             this[event.name]?.takeIf { it !is TextOnlyCommand }?.let { command ->
                 CoroutineScope(CommandContext).launch {
-                    if (event.jda.getProcessByEntities(event.user, event.channel) === null) {
+                    if (event.jda.getProcessByEntities(event.user, event.channel) === null || command is ShutdownCommand) {
                         if (command.isDeveloper && !event.user.isDeveloper) {
                             event.replyFailure("You cannot execute the command!").queue()
                         } else {
