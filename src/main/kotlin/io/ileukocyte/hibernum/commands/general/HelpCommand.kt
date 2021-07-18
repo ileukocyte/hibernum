@@ -11,7 +11,7 @@ import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asText
 
 import net.dv8tion.jda.api.JDA
-import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
@@ -50,10 +50,13 @@ class HelpCommand : Command {
             action.queue()
         } else {
             event.author.openPrivateChannel().queue {
-                it.sendMessageEmbeds(commandList(event.jda)).queue({
+                it.sendMessageEmbeds(commandList(event.jda, event.author, false)).queue({
                     event.message.addReaction("\u2705").queue(null) {}
                 }) {
-                    event.channel.sendMessageEmbeds(commandList(event.jda)).queue()
+                    event.channel.sendMessageEmbeds(commandList(event.jda, event.author,
+                        isFromSlashCommand = false,
+                        isInDm = false
+                    )).queue()
                 }
             }
         }
@@ -66,7 +69,9 @@ class HelpCommand : Command {
             CommandHandler[option.asString]
                 ?.let { event.replyEmbeds(it.commandHelp(event.jda)).queue() }
         } else {
-            event.replyEmbeds(commandList(event.jda)).setEphemeral(true).queue()
+            event.replyEmbeds(commandList(event.jda, event.user, true, isInDm = false))
+                .setEphemeral(true)
+                .queue()
         }
     }
 
@@ -118,32 +123,50 @@ class HelpCommand : Command {
         }
     }
 
-    private fun commandList(jda: JDA) = buildEmbed {
-        val categories = mutableMapOf<CommandCategory, MutableSet<Command>>()
+    private fun commandList(jda: JDA, author: User, isFromSlashCommand: Boolean, isInDm: Boolean = true) =
+        buildEmbed {
+            val categories = mutableMapOf<CommandCategory, MutableSet<Command>>()
 
-        color = Immutable.SUCCESS
+            color = Immutable.SUCCESS
 
-        author {
-            name = "${jda.selfUser.name} Help"
-            iconUrl = jda.selfUser.effectiveAvatarUrl
-        }
+            description = buildString {
+                val inviteLink = "https://discord.com/api/oauth2/authorize?client_id=${jda.selfUser.idLong}" +
+                        "&permissions=${Immutable.INVITE_PERMISSIONS}" +
+                        "&scope=applications.commands%20bot"
 
-        for (command in CommandHandler) {
-            val category = command.category
-            val edit = categories[category] ?: mutableSetOf()
-            edit += command
-            categories += category to edit
-        }
+                if (!isFromSlashCommand)
+                    appendLine("*Try using ${jda.selfUser.name}'s slash command menu via typing \"/\" on a server!*\n")
 
-        val commandFields = mutableSetOf<Pair<String, String>>()
-
-        for ((category, commands) in categories)
-            commandFields += "$category Commands:" to commands.sorted().joinToString { it.name }
-
-        for ((name, value) in commandFields.sortedBy { it.first })
-            field {
-                title = name
-                description = value
+                appendLine("**[Invite Link]($inviteLink)** • **[GitHub Repository](${Immutable.GITHUB_REPOSITORY})**")
             }
-    }
+
+            author {
+                name = "${jda.selfUser.name} Help"
+                iconUrl = jda.selfUser.effectiveAvatarUrl
+            }
+
+            if (!isInDm && !isFromSlashCommand)
+                footer {
+                    text = "Requested by ${author.asTag}"
+                    iconUrl = author.effectiveAvatarUrl
+                }
+
+            for (command in CommandHandler) {
+                val category = command.category
+                val edit = categories[category] ?: mutableSetOf()
+                edit += command
+                categories += category to edit
+            }
+
+            val commandFields = mutableSetOf<Pair<String, String>>()
+
+            for ((category, commands) in categories)
+                commandFields += "$category Commands:" to commands.sorted().joinToString { it.name }
+
+            for ((name, value) in commandFields.sortedBy { it.first })
+                field {
+                    title = name
+                    description = value
+                }
+        }
 }
