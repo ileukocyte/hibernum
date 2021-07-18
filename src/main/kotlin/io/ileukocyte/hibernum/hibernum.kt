@@ -71,8 +71,6 @@ fun main() = runBlocking {
 
     // updating global slash commands
     discord.retrieveCommands().queue { discordCommands ->
-
-
         val predicate = { cmd: Command ->
             cmd.name !in discordCommands.map { it.name }
                     || cmd.description !in discordCommands.map { it.description.removePrefix("(Developer-only) ") }
@@ -81,10 +79,11 @@ fun main() = runBlocking {
                     }
         }
 
-        if (CommandHandler.filter { it !is TextOnlyCommand }.any(predicate))
-            discord.updateCommands().addCommands(CommandHandler.asSlashCommands).queue { commands ->
-                LOGGER.info("UPDATE: Discord has loaded the following slash commands: ${commands.map { it.name }}")
+        CommandHandler.filter { it !is TextOnlyCommand }.filter(predicate).forEach {
+            discord.upsertCommand(it.asSlashCommand!!).queue { cmd ->
+                LOGGER.info("UPDATE: Discord has updated the following slash command: ${cmd.name}")
             }
+        }
 
         discordCommands.filter { CommandHandler[it.name] is TextOnlyCommand }.takeUnless { it.isEmpty() }?.forEach {
             discord.deleteCommandById(it.id).queue { _ ->
