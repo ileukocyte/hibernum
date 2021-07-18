@@ -98,7 +98,7 @@ interface Command : Comparable<Command> {
 }
 
 /**
- * A type of command that can be used exclusively as a text command
+ * A type of command that can be used as a text command exclusively
  *
  * @author Alexander Oksanich
  *
@@ -114,7 +114,7 @@ interface TextOnlyCommand : Command {
 }
 
 /**
- * A type of command that can be used exclusively as a slash command
+ * A type of command that can be used as a slash command exclusively
  *
  * @author Alexander Oksanich
  *

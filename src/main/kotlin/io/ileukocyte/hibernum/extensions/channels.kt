@@ -48,10 +48,10 @@ fun MessageChannel.sendActionRow(vararg components: Component) =
  * @param unit
  * A time unit for the aforementioned parameter
  *
- * @return a nullable (in the case of the process being manually terminated) [Message][net.dv8tion.jda.api.entities.Message] entity
+ * @return a nullable (in case of the process being manually terminated) [Message][net.dv8tion.jda.api.entities.Message] entity
  * received via event awaiting
  *
- * @throws [TimeoutCancellationException] in the case of no event being obtained
+ * @throws [TimeoutCancellationException] in case of no event being obtained
  *
  * @author Alexander Oksanich
  */
@@ -89,7 +89,7 @@ suspend inline fun MessageChannel.awaitMessage(
  * @return a nullable (in case of the process being manually terminated) [Message][net.dv8tion.jda.api.entities.Message] entity
  * received via event awaiting
  *
- * @throws [TimeoutCancellationException] in the case of no event being obtained
+ * @throws [TimeoutCancellationException] in case of no event being obtained
  *
  * @author Alexander Oksanich
  */

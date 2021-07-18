@@ -135,10 +135,10 @@ class AwaitableEventListener<E : GenericEvent>(
  * @param condition
  * The filter accepting only proper events while awaiting them
  *
- * Returns a nullable (in the case of the process being manually terminated) instance
+ * Returns a nullable (in case of the process being manually terminated) instance
  * of the needed event extracted from its [CompletableDeferred]
  *
- * Throws [TimeoutCancellationException] in the case of no event being obtained
+ * Throws [TimeoutCancellationException] in case of no event being obtained
  *
  * @author Alexander Oksanich
  *
