@@ -30,9 +30,9 @@ val JDA.processes get() = WaiterProcess.currentlyRunning.keys
 
 inline fun waiterProcess(block: WaiterProcess.Builder.() -> Unit)  = WaiterProcess.Builder().apply(block)()
 
-fun JDA.getProcessById(id: String) = WaiterProcess.currentlyRunning.keys.firstOrNull { it.id == id }
+fun JDA.getProcessById(id: String) = processes.firstOrNull { it.id == id }
 
-fun JDA.getProcessByEntitiesIds(usersIds: Set<Long>, channelId: Long) = WaiterProcess.currentlyRunning.keys.firstOrNull {
+fun JDA.getProcessByEntitiesIds(usersIds: Set<Long>, channelId: Long) = processes.firstOrNull {
     it.users.containsAll(usersIds) && it.channel == channelId
 }
 fun JDA.getProcessByEntities(users: Set<User>, channel: MessageChannel) =
@@ -40,6 +40,9 @@ fun JDA.getProcessByEntities(users: Set<User>, channel: MessageChannel) =
 
 fun JDA.getProcessByEntitiesIds(userId: Long, channelId: Long) = getProcessByEntitiesIds(setOf(userId), channelId)
 fun JDA.getProcessByEntities(user: User, channel: MessageChannel) = getProcessByEntities(setOf(user), channel)
+
+fun JDA.getUserProcesses(user: User) = processes.filter { user.idLong in it.users }
+fun JDA.getUserProcesses(userId: Long) = processes.filter { userId in it.users }
 
 fun WaiterProcess.kill(jda: JDA) = WaiterProcess.currentlyRunning[this]?.kill(jda, true)
 

@@ -432,7 +432,7 @@ class AkinatorCommand : Command {
     private suspend fun <E : Event> sendGuessTypeMenu(channelId: Long, playerId: Long, event: E) {
         event.jda.getProcessByEntitiesIds(playerId, channelId)?.kill(event.jda) // just in case
 
-        if (event.jda.processes.any { it.command is AkinatorCommand && playerId in it.users && it.channel != channelId }) {
+        if (event.jda.getUserProcesses(playerId).any { it.command is AkinatorCommand && it.channel != channelId }) {
             val description =
                 "You have another Akinator command running somewhere else! Finish the process first!"
 
@@ -492,9 +492,7 @@ class AkinatorCommand : Command {
         isFromSlashCommand: Boolean
     ) {
         if (isFromSlashCommand) {
-            if (event.jda.processes.any { it.command is AkinatorCommand
-                        && event.user.idLong in it.users
-                        && it.channel != event.messageChannel.idLong }) {
+            if (event.jda.getUserProcesses(event.user).any { it.command is AkinatorCommand && it.channel != event.messageChannel.idLong }) {
                 event
                     .replyFailure("You have another Akinator command running somewhere else! Finish the process first!")
                     .setEphemeral(true)
