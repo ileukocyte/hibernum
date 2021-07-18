@@ -10,9 +10,11 @@ import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.TimeoutCancellationException
 
+import net.dv8tion.jda.api.EmbedBuilder.ZERO_WIDTH_SPACE
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.interactions.components.Component
 
 inline fun MessageChannel.sendEmbed(block: KEmbedBuilder.() -> Unit) =
     sendMessageEmbeds(KEmbedBuilder().apply(block)())
@@ -28,6 +30,9 @@ fun MessageChannel.sendConfirmation(desc: String) =
 
 fun MessageChannel.sendWarning(desc: String) =
     sendMessageEmbeds(defaultEmbed(desc, EmbedType.WARNING))
+
+fun MessageChannel.sendActionRow(vararg components: Component) =
+    sendMessage(ZERO_WIDTH_SPACE).setActionRow(*components)
 
 /**
  * The extension bringing a faster way to obtain an awaited message rather than using raw event receiving.

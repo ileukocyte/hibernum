@@ -3,9 +3,13 @@ package io.ileukocyte.hibernum.extensions
 
 import io.ileukocyte.hibernum.builders.KEmbedBuilder
 
+import net.dv8tion.jda.api.EmbedBuilder.ZERO_WIDTH_SPACE
+import net.dv8tion.jda.api.MessageBuilder
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
+import net.dv8tion.jda.api.interactions.components.ActionRow
+import net.dv8tion.jda.api.interactions.components.Component
 
 /* SlashCommandEvent extensions */
 inline fun SlashCommandEvent.replyEmbed(block: KEmbedBuilder.() -> Unit) =
@@ -23,6 +27,9 @@ fun SlashCommandEvent.replyConfirmation(desc: String) =
 fun SlashCommandEvent.replyWarning(desc: String) =
     replyEmbeds(defaultEmbed(desc, EmbedType.WARNING))
 
+fun SlashCommandEvent.replyActionRow(vararg components: Component) =
+    reply(ZERO_WIDTH_SPACE).addActionRow(*components)
+
 /* ButtonClickEvent extensions */
 inline fun ButtonClickEvent.replyEmbed(block: KEmbedBuilder.() -> Unit) =
     replyEmbeds(KEmbedBuilder().apply(block)())
@@ -39,6 +46,9 @@ fun ButtonClickEvent.replyConfirmation(desc: String) =
 fun ButtonClickEvent.replyWarning(desc: String) =
     replyEmbeds(defaultEmbed(desc, EmbedType.WARNING))
 
+fun ButtonClickEvent.replyActionRow(vararg components: Component) =
+    reply(ZERO_WIDTH_SPACE).addActionRow(*components)
+
 /* SelectionMenuEvent extensions */
 inline fun SelectionMenuEvent.replyEmbed(block: KEmbedBuilder.() -> Unit) =
     replyEmbeds(KEmbedBuilder().apply(block)())
@@ -54,3 +64,6 @@ fun SelectionMenuEvent.replyConfirmation(desc: String) =
 
 fun SelectionMenuEvent.replyWarning(desc: String) =
     replyEmbeds(defaultEmbed(desc, EmbedType.WARNING))
+
+fun SelectionMenuEvent.replyActionRow(vararg components: Component) =
+    reply(ZERO_WIDTH_SPACE).addActionRow(*components)
