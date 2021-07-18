@@ -23,7 +23,7 @@ import kotlin.time.ExperimentalTime
 
 class HelpCommand : Command {
     override val name = "help"
-    override val description = "Sends a list of all Hibernum's commands and provides their documentation"
+    override val description = "Sends a list of all Hibernum's commands and provides the user with their documentation"
     override val usages = setOf("command name (optional)")
     override val options by lazy {
         val commands = CommandHandler
@@ -67,7 +67,7 @@ class HelpCommand : Command {
 
         if (option !== null) {
             CommandHandler[option.asString]
-                ?.let { event.replyEmbeds(it.commandHelp(event.jda)).queue() }
+                ?.let { event.replyEmbeds(it.commandHelp(event.jda)).setEphemeral(true).queue() }
         } else {
             event.replyEmbeds(commandList(event.jda, event.user, true, isInDm = false))
                 .setEphemeral(true)
