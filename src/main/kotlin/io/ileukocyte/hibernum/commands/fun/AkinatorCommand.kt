@@ -492,7 +492,7 @@ class AkinatorCommand : Command {
         isFromSlashCommand: Boolean
     ) {
         if (isFromSlashCommand) {
-            if (event.jda.getUserProcesses(event.user).any { it.command is AkinatorCommand && it.channel != event.messageChannel.idLong }) {
+            if (event.user.processes.any { it.command is AkinatorCommand && it.channel != event.messageChannel.idLong }) {
                 event
                     .replyFailure("You have another Akinator command running somewhere else! Finish the process first!")
                     .setEphemeral(true)

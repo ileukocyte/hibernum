@@ -27,6 +27,7 @@ object WaiterContext : CoroutineContext by waiterContextDispatcher, AutoCloseabl
 
 // Process management functions
 val JDA.processes get() = WaiterProcess.currentlyRunning.keys
+val User.processes get() = jda.getUserProcesses(this)
 
 inline fun waiterProcess(block: WaiterProcess.Builder.() -> Unit)  = WaiterProcess.Builder().apply(block)()
 
