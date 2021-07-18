@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
 /**
@@ -44,6 +45,14 @@ interface Command : Comparable<Command> {
      */
     @HibernumExperimental
     val options: Set<OptionData> get() = emptySet()
+
+    /**
+     * EXPERIMENTAL: A [CommandData] instance of this slash command
+     */
+    @HibernumExperimental
+    val asSlashCommand: CommandData? get() =
+        CommandData(name, "(Developer-only) ".takeIf { isDeveloper }.orEmpty() + description)
+            .addOptions(options)
 
     /** **DO NOT OVERRIDE!** */
     val id: Int get() = name.hashCode()
@@ -97,6 +106,8 @@ interface Command : Comparable<Command> {
  * @see SlashOnlyCommand
  */
 interface TextOnlyCommand : Command {
+    override val asSlashCommand: CommandData? get() = null
+
     override suspend fun invoke(event: SlashCommandEvent) {
         // must be left empty
     }

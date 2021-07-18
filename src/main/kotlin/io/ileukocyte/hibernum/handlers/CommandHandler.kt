@@ -43,7 +43,7 @@ object CommandHandler : MutableSet<Command> {
      * A property that returns non-text-only commands registered by [CommandHandler] as a set of JDA's [CommandData] instances
      */
     val asSlashCommands get() = filter { it !is TextOnlyCommand }
-        .map { CommandData(it.name, it.description).addOptions(it.options) }
+        .map { it.asSlashCommand }
         .toSet()
 
     // Stuff overriden from MutableSet
