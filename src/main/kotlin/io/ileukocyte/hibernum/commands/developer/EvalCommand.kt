@@ -18,7 +18,7 @@ class EvalCommand : TextOnlyCommand {
     override val name = "eval"
     override val description = "Executes the attached Kotlin code"
     override val aliases = setOf("exec")
-    override val usages = setOf("<Kotlin code>")
+    override val usages = setOf("Kotlin code")
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val code = args?.run {
