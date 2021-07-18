@@ -14,17 +14,11 @@ class InviteCommand : Command {
     override val description = "Sends the link for inviting the bot to your server"
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) =
-        event.channel.sendActionRow(linkButtonButton(event.jda.selfUser.idLong)).queue()
+        event.channel.sendActionRow(linkButtonButton(event.jda.selfUser.id)).queue()
 
     override suspend fun invoke(event: SlashCommandEvent) =
-        event.replyActionRow(linkButtonButton(event.jda.selfUser.idLong)).queue()
+        event.replyActionRow(linkButtonButton(event.jda.selfUser.id)).queue()
 
-    private fun linkButtonButton(botId: Long): Button {
-        val link = "https://discord.com/api/oauth2/authorize?client_id=$botId" +
-                "&permissions=${Immutable.INVITE_PERMISSIONS}" +
-                "&scope=applications.commands%20bot"
-
-
-        return Button.link(link, "Invite Link")
-    }
+    private fun linkButtonButton(botId: String) =
+        Button.link(Immutable.INVITE_LINK_FORMAT.format(botId), "Invite Link")
 }

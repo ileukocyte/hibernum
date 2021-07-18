@@ -8,11 +8,14 @@ import javax.script.ScriptEngineManager
 import kotlin.script.experimental.jvmhost.jsr223.KotlinJsr223ScriptEngineImpl
 
 object Immutable {
-    const val DEFAULT_PREFIX = "&"
-    const val INVITE_PERMISSIONS = 4294967287L
-    const val GITHUB_REPOSITORY = "https://github.com/ileukocyte/hibernum"
-
     val DISCORD_TOKEN: String = System.getenv("DISCORD_TOKEN")
+
+    const val DEFAULT_PREFIX = "&"
+    const val GITHUB_REPOSITORY = "https://github.com/ileukocyte/hibernum"
+    const val INVITE_LINK_FORMAT = "https://discord.com/api/oauth2/authorize?client_id=%s" +
+            "&permissions=4294967287" +
+            "&scope=applications.commands%%20bot"
+
     val LOGGER = KotlinLogging.logger("Hibernum")
 
     val EVAL_KOTLIN_ENGINE = ScriptEngineManager().getEngineByExtension("kts") as KotlinJsr223ScriptEngineImpl

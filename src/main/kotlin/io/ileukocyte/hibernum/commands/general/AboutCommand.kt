@@ -31,9 +31,7 @@ class AboutCommand : Command {
 
         description = buildString {
             val restPing = jda.restPing.await()
-            val inviteLink = "https://discord.com/api/oauth2/authorize?client_id=${jda.selfUser.idLong}" +
-                    "&permissions=${Immutable.INVITE_PERMISSIONS}" +
-                    "&scope=applications.commands%20bot"
+            val inviteLink = Immutable.INVITE_LINK_FORMAT.format(jda.selfUser.id)
             val musicStreamingServersCount = jda.guildCache.count { it.selfMember.voiceState?.inVoiceChannel() == true }
 
             appendLine("${jda.selfUser.name} is a modern Discord multi-purpose bot coded in 100% [Kotlin](https://kotlinlang.org/)")

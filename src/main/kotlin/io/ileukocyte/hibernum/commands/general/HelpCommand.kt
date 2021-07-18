@@ -130,9 +130,7 @@ class HelpCommand : Command {
             color = Immutable.SUCCESS
 
             description = buildString {
-                val inviteLink = "https://discord.com/api/oauth2/authorize?client_id=${jda.selfUser.idLong}" +
-                        "&permissions=${Immutable.INVITE_PERMISSIONS}" +
-                        "&scope=applications.commands%20bot"
+                val inviteLink = Immutable.INVITE_LINK_FORMAT.format(jda.selfUser.id)
 
                 if (!isFromSlashCommand)
                     appendLine("*Try using ${jda.selfUser.name}'s slash command menu via typing \"/\" on a server!*\n")
