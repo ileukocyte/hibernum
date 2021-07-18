@@ -5,6 +5,8 @@ import mu.KotlinLogging
 import java.awt.Color
 import javax.script.ScriptEngineManager
 
+import kotlin.script.experimental.jvmhost.jsr223.KotlinJsr223ScriptEngineImpl
+
 object Immutable {
     const val DEFAULT_PREFIX = "&"
     const val INVITE_PERMISSIONS = 4294967287L
@@ -13,8 +15,7 @@ object Immutable {
     val DISCORD_TOKEN: String = System.getenv("DISCORD_TOKEN")
     val LOGGER = KotlinLogging.logger("Hibernum")
 
-    val EVAL_KOTLIN_ENGINE = ScriptEngineManager().getEngineByExtension("kts")
-        ?: throw UninitializedPropertyAccessException()
+    val EVAL_KOTLIN_ENGINE = ScriptEngineManager().getEngineByExtension("kts") as KotlinJsr223ScriptEngineImpl
 
     val VERSION = Version(major = 1, minor = 0, stability = Version.Stability.Alpha, unstable = 16)
 

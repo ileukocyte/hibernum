@@ -44,7 +44,7 @@ class EvalCommand : TextOnlyCommand {
         try {
             val engine = Immutable.EVAL_KOTLIN_ENGINE
 
-            //with(engine.state.history) { if (isNotEmpty()) reset() }
+            with(engine.state.history) { if (isNotEmpty()) reset() }
 
             engine.put("event", event)
 

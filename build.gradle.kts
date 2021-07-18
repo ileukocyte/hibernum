@@ -50,8 +50,10 @@ dependencies {
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
     implementation(kotlin("compiler"))
-    implementation(kotlin("scripting-jsr223"))
+    implementation(kotlin("script-util"))
     implementation(kotlin("scripting-compiler"))
+    implementation(kotlin("scripting-jsr223"))
+    implementation(kotlin("scripting-jvm-host"))
     implementation(kotlinx("coroutines-core", version = coroutinesVersion))
 
     // Testing

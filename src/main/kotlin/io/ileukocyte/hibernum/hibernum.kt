@@ -22,6 +22,8 @@ import kotlinx.coroutines.runBlocking
 
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Activity.ActivityType
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.commands.Command.Option
 
 import org.reflections.Reflections
 
@@ -68,13 +70,16 @@ fun main() = runBlocking {
 
     // updating global slash commands
     discord.retrieveCommands().queue { discordCommands ->
+        fun Option.toOptionData() =
+            OptionData(type, name, description, isRequired).addChoices(choices)
+
         val predicate = { cmd: Command ->
             cmd.name !in discordCommands.map { it.name }
-                    || cmd.description !in discordCommands.map { it.description }
-                    || !discordCommands.any { cmd.options == it.options }
+                    || cmd.description !in discordCommands.map { it.description.removePrefix("(Developer-only) ") }
+                    || discordCommands.any { cmd.name == it.name && cmd.options != it.options.map(Option::toOptionData).toSet() }
         }
 
-        if (CommandHandler.any(predicate))
+        if (CommandHandler.filter { it !is TextOnlyCommand }.any(predicate))
             discord.updateCommands().addCommands(CommandHandler.asSlashCommands).queue { commands ->
                 LOGGER.info("UPDATE: Discord has loaded the following slash commands: ${commands.map { it.name }}")
             }
