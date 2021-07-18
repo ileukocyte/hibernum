@@ -103,7 +103,7 @@ object CommandHandler : MutableSet<Command> {
      * @author Alexander Oksanich
      */
     internal operator fun invoke(event: GuildMessageReceivedEvent) {
-        if (!event.author.isBot && !event.author.isSystem && event.message.type == MessageType.DEFAULT && event.message.isFromGuild) {
+        if (!event.author.isBot && !event.author.isSystem && event.message.type == MessageType.DEFAULT) {
             if (event.message.contentRaw.trim().startsWith(Immutable.DEFAULT_PREFIX)) {
                 val args = event.message.contentRaw.split("\\s+".toRegex(), 2)
                 this[args.first().removePrefix(Immutable.DEFAULT_PREFIX).lowercase()]
