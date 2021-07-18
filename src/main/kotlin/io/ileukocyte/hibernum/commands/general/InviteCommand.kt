@@ -11,7 +11,7 @@ import net.dv8tion.jda.api.interactions.components.Button
 
 class InviteCommand : Command {
     override val name = "invite"
-    override val description = "The command that sends the link for inviting the bot to your server"
+    override val description = "Sends the link for inviting the bot to your server"
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) =
         event.channel.sendActionRow(linkButtonButton(event.jda.selfUser.idLong)).queue()

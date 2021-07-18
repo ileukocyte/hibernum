@@ -16,7 +16,7 @@ import kotlin.system.exitProcess
 
 class ShutdownCommand : Command {
     override val name = "shutdown"
-    override val description = "The command shuts Hibernum down"
+    override val description = "Shuts the bot down"
 
     override suspend fun invoke(event: SlashCommandEvent) =
         sendShutdownConfirmation(event.user.idLong, event)

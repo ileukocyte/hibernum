@@ -11,7 +11,7 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 
 class PingCommand : Command {
     override val name = "ping"
-    override val description = "The command sends Hibernum's current response time separately from the statistics"
+    override val description = "Sends Hibernum's current response latency separately from the statistics"
 
     override suspend fun invoke(event: SlashCommandEvent) =
         sendPing(event)

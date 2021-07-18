@@ -62,7 +62,7 @@ class AkinatorCommand : Command {
         )
 
     override val name = "akinator"
-    override val description = "The command launches a new Akinator game session"
+    override val description = "Launches a new Akinator game session"
     override val aliases = setOf("aki")
 
     override suspend fun invoke(event: SlashCommandEvent) =

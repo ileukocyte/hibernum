@@ -15,7 +15,7 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 
 class AboutCommand : Command {
     override val name = "about"
-    override val description = "The command that sends the bot's detailed technical statistics"
+    override val description = "Sends the bot's detailed technical statistics"
     override val aliases = setOf("info", "stats")
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) =

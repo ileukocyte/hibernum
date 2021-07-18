@@ -13,7 +13,7 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 
 class UptimeCommand : Command {
     override val name = "uptime"
-    override val description = "The command sends Hibernum's uptime separately from the statistics"
+    override val description = "Sends Hibernum's uptime separately from the statistics"
 
     override suspend fun invoke(event: SlashCommandEvent) =
         sendUptime(event)
