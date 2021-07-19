@@ -2,6 +2,7 @@ package io.ileukocyte.hibernum.commands.music
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.audio.GuildMusicManager
+import io.ileukocyte.hibernum.audio.TrackUserData
 import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.audio.getProgressBar
 import io.ileukocyte.hibernum.builders.buildEmbed
@@ -15,6 +16,8 @@ import io.ileukocyte.hibernum.utils.asDuration
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+
+import org.jetbrains.kotlin.utils.addToStdlib.cast
 
 class PlayingCommand : Command {
     override val name = "playing"
@@ -41,7 +44,7 @@ class PlayingCommand : Command {
 
     private fun playingEmbed(jda: JDA, musicManager: GuildMusicManager) = buildEmbed {
         val track = musicManager.player.playingTrack
-        val requester = (track.userData as? Long)?.let { jda.getUserById(it) }
+        //val requester = track.userData.cast<TrackUserData>().user
 
         color = Immutable.SUCCESS
         thumbnail = jda.selfUser.effectiveAvatarUrl
@@ -51,12 +54,12 @@ class PlayingCommand : Command {
             description = "**[${track.info.title}](${track.info.uri})**"
         }
 
-        requester?.let {
+        //requester.let {
             field {
                 title = "Track Requester"
-                description = it.asMention
+                description = track.userData.cast<TrackUserData>().user.asMention
             }
-        }
+        //}
 
         field {
             title = "Looping Mode"

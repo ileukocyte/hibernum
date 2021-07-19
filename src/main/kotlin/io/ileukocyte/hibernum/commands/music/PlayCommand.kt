@@ -7,6 +7,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 
 import io.ileukocyte.hibernum.audio.MusicContext
 import io.ileukocyte.hibernum.audio.PLAYER_MANAGER
+import io.ileukocyte.hibernum.audio.TrackUserData
 import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.Command
@@ -26,6 +27,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 class PlayCommand : Command {
     override val name = "play"
     override val description = "Plays the specified media in a voice channel"
+    override val aliases = setOf("p")
     override val options = setOf(
         OptionData(OptionType.STRING, "query", "A link or a search term", true))
     override val usages = setOf("query")
@@ -44,7 +46,7 @@ class PlayCommand : Command {
                             event.channel.sendSuccess("[${track.info.title}](${track.info.uri}) " +
                                     "has been successfully added to queue!").queue()
 
-                            track.userData = event.author.idLong
+                            track.userData = TrackUserData(event.author, event.channel)
                             musicManager.scheduler += track
                         }
                     }
@@ -55,7 +57,7 @@ class PlayCommand : Command {
                                     "has been successfully added to queue!").queue()
 
                             for (track in playlist.tracks) {
-                                track.userData = event.author.idLong
+                                track.userData = TrackUserData(event.author, event.channel)
                                 musicManager.scheduler += track
                             }
                         }
@@ -86,26 +88,26 @@ class PlayCommand : Command {
 
                 PLAYER_MANAGER.loadItemOrdered(musicManager, url, object : AudioLoadResultHandler {
                     override fun trackLoaded(track: AudioTrack) {
-                        CoroutineScope(MusicContext).launch {
+                        //CoroutineScope(MusicContext).launch {
                             event.replySuccess("[${track.info.title}](${track.info.uri}) " +
                                     "has been successfully added to queue!").queue()
 
-                            track.userData = event.user.idLong
+                            track.userData = TrackUserData(event.user, event.channel)
                             musicManager.scheduler += track
-                        }
+                        //}
                     }
 
                     override fun playlistLoaded(playlist: AudioPlaylist) {
-                        CoroutineScope(MusicContext).launch {
+                        //CoroutineScope(MusicContext).launch {
                             event.replySuccess(
                                 "${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else playlist.name} " +
                                         "has been successfully added to queue!").queue()
 
                             for (track in playlist.tracks) {
-                                track.userData = event.user.idLong
+                                track.userData = TrackUserData(event.user, event.channel)
                                 musicManager.scheduler += track
                             }
-                        }
+                        //}
                     }
 
                     override fun noMatches() =

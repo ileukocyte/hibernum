@@ -7,6 +7,8 @@ import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.asCoroutineDispatcher
 
 import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.MessageChannel
+import net.dv8tion.jda.api.entities.User
 
 import java.util.concurrent.Executors
 
@@ -35,7 +37,7 @@ fun GuildMusicManager.stop() {
     player.isPaused = false
     player.volume = 100
     scheduler.loopMode = LoopMode.DISABLED
-    scheduler.queue.close()
+    scheduler.queue.clear()
 }
 
 fun getProgressBar(currentTime: Long, totalDuration: Long, blocks: Int = 15): String {
@@ -55,3 +57,5 @@ fun getProgressBar(currentTime: Long, totalDuration: Long, blocks: Int = 15): St
             append("\u25AC".takeUnless { passed >= i }.orEmpty())
     }
 }
+
+data class TrackUserData(val user: User, val channel: MessageChannel)

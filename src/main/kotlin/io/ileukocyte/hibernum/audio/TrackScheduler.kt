@@ -6,50 +6,43 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.toList
 import kotlinx.coroutines.launch
 
+import java.util.concurrent.ConcurrentLinkedQueue
+
 class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
-    var queue = Channel<AudioTrack?>()
+    var queue = ConcurrentLinkedQueue<AudioTrack>()
     var loopMode = LoopMode.DISABLED
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    suspend operator fun plusAssign(track: AudioTrack?) {
-        if (!queue.isClosedForSend) {
-            if (!player.startTrack(track, true))
-                queue.send(track)
-        } else {
-            queue = Channel()
-
-            plusAssign(track)
-        }
+    operator fun plusAssign(track: AudioTrack) {
+        if (!player.startTrack(track, true))
+            queue.offer(track)
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    suspend fun nextTrack() {
-        if (!queue.isEmpty) {
-            player.startTrack(queue.receive(), false)
-        } else {
-            queue.close()
+    fun nextTrack() {
+        if (queue.isNotEmpty())
+            player.startTrack(queue.poll(), false)
+        else
             player.destroy()
-        }
     }
 
-    suspend fun shuffle() {
-        queue = Channel<AudioTrack?>()
-            .apply { queue.toList().shuffled().forEach { send(it) } }
+    fun shuffle() {
+        queue = ConcurrentLinkedQueue(queue.shuffled())
     }
+
+    /*override fun onTrackStart(player: AudioPlayer, track: AudioTrack) =
+        track.userData.cast<TrackUserData>().channel
+            .sendMessage("DEBUG: starting ${track.info.title}")
+            .queue()*/
 
     override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
         if (endReason.mayStartNext) {
             CoroutineScope(MusicContext).launch {
                 when (loopMode) {
                     LoopMode.SONG ->
-                        this@TrackScheduler += track.makeClone().apply { userData = track.userData }
+                        player.playTrack(track.makeClone().apply { userData = track.userData })
                     LoopMode.QUEUE -> {
-                        queue.send(track.makeClone().apply { userData = track.userData })
+                        queue.offer(track.makeClone().apply { userData = track.userData })
 
                         nextTrack()
                     }
