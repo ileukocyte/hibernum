@@ -1,7 +1,7 @@
 package io.ileukocyte.hibernum.commands.music
 
 import io.ileukocyte.hibernum.audio.audioPlayer
-import io.ileukocyte.hibernum.commands.TextOnlyCommand
+import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.extensions.replyFailure
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendFailure
@@ -10,7 +10,7 @@ import io.ileukocyte.hibernum.extensions.sendSuccess
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 
-class ResumeCommand : TextOnlyCommand {
+class ResumeCommand : Command {
     override val name = "resume"
     override val description = "Resume the music after a pause"
 

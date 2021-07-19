@@ -2,7 +2,7 @@ package io.ileukocyte.hibernum.commands.music
 
 import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.audio.stop
-import io.ileukocyte.hibernum.commands.TextOnlyCommand
+import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.extensions.replyFailure
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendFailure
@@ -11,7 +11,7 @@ import io.ileukocyte.hibernum.extensions.sendSuccess
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 
-class LeaveCommand : TextOnlyCommand {
+class LeaveCommand : Command {
     override val name = "leave"
     override val description = "Makes the bot leave your voice channel"
 

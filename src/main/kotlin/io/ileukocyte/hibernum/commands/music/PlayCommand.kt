@@ -9,7 +9,7 @@ import io.ileukocyte.hibernum.audio.MusicContext
 import io.ileukocyte.hibernum.audio.PLAYER_MANAGER
 import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.commands.NoArgumentsException
-import io.ileukocyte.hibernum.commands.TextOnlyCommand
+import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.extensions.replyFailure
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendFailure
@@ -23,7 +23,7 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
-class PlayCommand : TextOnlyCommand {
+class PlayCommand : Command {
     override val name = "play"
     override val description = "Plays the specified media in a voice channel"
     override val options = setOf(
