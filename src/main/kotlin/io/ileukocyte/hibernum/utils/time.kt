@@ -98,6 +98,30 @@ fun asText(time: Long, unit: DurationUnit = DurationUnit.MILLISECONDS): String {
     }
 }
 
+/**
+ * A function that formats time of the specified unit into a duration format
+ *
+ * **Example**:
+ * ```
+ * val millisExample = "ileukocyte/hibernum".hashCode() // 884095017
+ * val text = asText(millisExample.toLong()) // "10:05:34:55"
+ * ```
+ *
+ * @param time
+ * The amount of time to be formatted
+ * @param unit
+ * A time unit for the aforementioned parameter
+ * @param prependZeroDays
+ * A boolean value that tells if "00" should be prepended to the output in case of days' count equaling to zero
+ * (default: false)
+ * @param prependZeroHours
+ * A boolean value that tells if "00" should be prepended to the output in case of hours' count equaling to zero
+ * (default: false OR true if [prependZeroDays] is enabled)
+ *
+ * @return A textual representation of the specified amount of time in a duration format
+ *
+ * @author Alexander Oksanich
+ */
 @OptIn(ExperimentalTime::class)
 fun asDuration(
     time: Long,
@@ -124,6 +148,24 @@ fun asDuration(
     }
 }
 
+/**
+ * A function that gets time from the specified [String] time code and returns it as milliseconds
+ *
+ * **Example**:
+ * ```
+ * val timeCode = "05:34:55"
+ * val millis = timeCodeToMillis(timeCode) // 20095000
+ *
+ * val check = asText(millis) // "5 hours, 34 minutes, and 55 seconds"
+ * ```
+ *
+ * @param timeCode
+ * The amount of time as a [String] time code
+ *
+ * @return An amount of milliseconds that corresponds to the amount of time in the specified time code
+ *
+ * @author Alexander Oksanich
+ */
 @OptIn(ExperimentalTime::class)
 fun timeCodeToMillis(timeCode: String) = TIME_CODE_REGEX.find(timeCode)?.let {
     data class Time(
