@@ -2,9 +2,8 @@ package io.ileukocyte.hibernum.commands.music
 
 import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.commands.Command
-import io.ileukocyte.hibernum.extensions.replyFailure
+import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.replySuccess
-import io.ileukocyte.hibernum.extensions.sendFailure
 import io.ileukocyte.hibernum.extensions.sendSuccess
 
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
@@ -18,16 +17,14 @@ class PauseCommand : Command {
         val audioPlayer = event.guild.audioPlayer ?: return
 
         if (audioPlayer.player.playingTrack !== null) {
-            if (event.member?.voiceState?.channel != event.guild.selfMember.voiceState?.channel) {
-                event.channel.sendFailure("You are not connected to the required voice channel!").queue()
-            } else {
+            if (event.member?.voiceState?.channel == event.guild.selfMember.voiceState?.channel) {
                 if (!audioPlayer.player.isPaused) {
                     audioPlayer.player.isPaused = true
 
                     event.channel.sendSuccess("The track has been successfully paused!").queue()
-                } else event.channel.sendFailure("The track is already paused!").queue()
-            }
-        } else event.channel.sendFailure("No track is currently playing!").queue()
+                } else throw CommandException("The track is already paused!")
+            } else throw CommandException("You are not connected to the required voice channel!")
+        } else throw CommandException("No track is currently playing!")
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
@@ -35,15 +32,13 @@ class PauseCommand : Command {
         val audioPlayer = guild.audioPlayer ?: return
 
         if (audioPlayer.player.playingTrack !== null) {
-            if (!audioPlayer.player.isPaused) {
-                audioPlayer.player.isPaused = true
+            if (event.member?.voiceState?.channel == guild.selfMember.voiceState?.channel) {
+                if (!audioPlayer.player.isPaused) {
+                    audioPlayer.player.isPaused = true
 
-                event.replySuccess("The track has been successfully paused!").queue()
-            } else event.replyFailure("The track is already paused!")
-                .setEphemeral(true)
-                .queue()
-        } else event.replyFailure("No track is currently playing!")
-            .setEphemeral(true)
-            .queue()
+                    event.replySuccess("The track has been successfully paused!").queue()
+                } else throw CommandException("The track is already paused!")
+            } else throw CommandException("You are not connected to the required voice channel!")
+        } else throw CommandException("No track is currently playing!")
     }
 }

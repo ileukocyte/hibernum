@@ -1,5 +1,6 @@
 package io.ileukocyte.hibernum.commands.music
 
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.audio.GuildMusicManager
 import io.ileukocyte.hibernum.audio.TrackUserData
@@ -9,8 +10,6 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.capitalizeAll
-import io.ileukocyte.hibernum.extensions.replyFailure
-import io.ileukocyte.hibernum.extensions.sendFailure
 import io.ileukocyte.hibernum.utils.asDuration
 
 import net.dv8tion.jda.api.JDA
@@ -26,26 +25,19 @@ class PlayingCommand : Command {
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
+        val track = audioPlayer.player.playingTrack ?: throw CommandException("No track is currently playing!")
 
-        if (audioPlayer.player.playingTrack !== null) {
-            event.channel.sendMessageEmbeds(playingEmbed(event.jda, audioPlayer)).queue()
-        } else event.channel.sendFailure("No track is currently playing!").queue()
+        event.channel.sendMessageEmbeds(playingEmbed(event.jda, audioPlayer, track)).queue()
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
         val audioPlayer = event.guild?.audioPlayer ?: throw CommandException()
+        val track = audioPlayer.player.playingTrack ?: throw CommandException("No track is currently playing!")
 
-        if (audioPlayer.player.playingTrack !== null) {
-            event.replyEmbeds(playingEmbed(event.jda, audioPlayer)).queue()
-        } else event.replyFailure("No track is currently playing!")
-            .setEphemeral(true)
-            .queue()
+        event.replyEmbeds(playingEmbed(event.jda, audioPlayer, track)).queue()
     }
 
-    private fun playingEmbed(jda: JDA, musicManager: GuildMusicManager) = buildEmbed {
-        val track = musicManager.player.playingTrack
-        //val requester = track.userData.cast<TrackUserData>().user
-
+    private fun playingEmbed(jda: JDA, musicManager: GuildMusicManager, track: AudioTrack) = buildEmbed {
         color = Immutable.SUCCESS
         thumbnail = jda.selfUser.effectiveAvatarUrl
 
@@ -54,12 +46,10 @@ class PlayingCommand : Command {
             description = "**[${track.info.title}](${track.info.uri})**"
         }
 
-        //requester.let {
-            field {
-                title = "Track Requester"
-                description = track.userData.cast<TrackUserData>().user.asMention
-            }
-        //}
+        field {
+            title = "Track Requester"
+            description = track.userData.cast<TrackUserData>().user.asMention
+        }
 
         field {
             title = "Looping Mode"

@@ -11,9 +11,8 @@ import io.ileukocyte.hibernum.audio.TrackUserData
 import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.Command
-import io.ileukocyte.hibernum.extensions.replyFailure
+import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.replySuccess
-import io.ileukocyte.hibernum.extensions.sendFailure
 import io.ileukocyte.hibernum.extensions.sendSuccess
 
 import kotlinx.coroutines.CoroutineScope
@@ -52,28 +51,26 @@ class PlayCommand : Command {
                     }
 
                     override fun playlistLoaded(playlist: AudioPlaylist) {
-                        CoroutineScope(MusicContext).launch {
-                            event.channel.sendSuccess("${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else playlist.name} " +
+                        event.channel.sendSuccess("${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else playlist.name} " +
                                     "has been successfully added to queue!").queue()
 
                             for (track in playlist.tracks) {
                                 track.userData = TrackUserData(event.author, event.channel)
                                 musicManager.scheduler += track
                             }
-                        }
                     }
 
                     override fun noMatches() =
-                        event.channel.sendFailure("No results have been found by the query!").queue()
+                        throw CommandException("No results have been found by the query!")
 
                     override fun loadFailed(exception: FriendlyException) {
-                        event.channel.sendFailure("The track is unable to be played!").queue()
-
                         exception.printStackTrace()
+
+                        throw CommandException("The track is unable to be played!")
                     }
                 })
             }
-        } ?: event.channel.sendFailure("You are not connected to a voice channel!").queue()
+        } ?: throw CommandException("You are not connected to a voice channel!")
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
@@ -88,39 +85,31 @@ class PlayCommand : Command {
 
                 PLAYER_MANAGER.loadItemOrdered(musicManager, url, object : AudioLoadResultHandler {
                     override fun trackLoaded(track: AudioTrack) {
-                        //CoroutineScope(MusicContext).launch {
-                            event.replySuccess("[${track.info.title}](${track.info.uri}) " +
-                                    "has been successfully added to queue!").queue()
+                        event.replySuccess("[${track.info.title}](${track.info.uri}) " +
+                                "has been successfully added to queue!").queue()
 
-                            track.userData = TrackUserData(event.user, event.channel)
-                            musicManager.scheduler += track
-                        //}
+                        track.userData = TrackUserData(event.user, event.channel)
+                        musicManager.scheduler += track
                     }
 
                     override fun playlistLoaded(playlist: AudioPlaylist) {
-                        //CoroutineScope(MusicContext).launch {
-                            event.replySuccess(
-                                "${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else playlist.name} " +
-                                        "has been successfully added to queue!").queue()
+                        event.replySuccess(
+                            "${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else playlist.name} " +
+                                    "has been successfully added to queue!").queue()
 
-                            for (track in playlist.tracks) {
-                                track.userData = TrackUserData(event.user, event.channel)
-                                musicManager.scheduler += track
-                            }
-                        //}
+                        for (track in playlist.tracks) {
+                            track.userData = TrackUserData(event.user, event.channel)
+                            musicManager.scheduler += track
+                        }
                     }
 
                     override fun noMatches() =
-                        event.replyFailure("No results have been found by the query!")
-                            .setEphemeral(true)
-                            .queue()
+                        throw CommandException("No results have been found by the query!")
 
                     override fun loadFailed(exception: FriendlyException) =
-                        event.replyFailure("The track is unable to be played!")
-                            .setEphemeral(true)
-                            .queue()
+                        throw CommandException("The track is unable to be played!")
                 })
             }
-        } ?: event.channel.sendFailure("You are not connected to a voice channel!").queue()
+        } ?: throw CommandException("You are not connected to a voice channel!")
     }
 }

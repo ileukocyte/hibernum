@@ -2,12 +2,7 @@ package io.ileukocyte.hibernum.commands.general
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.Command
-import io.ileukocyte.hibernum.commands.CommandCategory
-import io.ileukocyte.hibernum.commands.SlashOnlyCommand
-import io.ileukocyte.hibernum.commands.TextOnlyCommand
-import io.ileukocyte.hibernum.extensions.replyFailure
-import io.ileukocyte.hibernum.extensions.sendFailure
+import io.ileukocyte.hibernum.commands.*
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asText
 
@@ -38,7 +33,7 @@ class HelpCommand : Command {
             }
 
             val action = command?.let { event.channel.sendMessageEmbeds(it.commandHelp(event.jda)) }
-                ?: event.channel.sendFailure("The specified command has not been found!")
+                ?: throw CommandException("The specified command has not been found!")
 
             action.queue()
         } else {
@@ -61,9 +56,7 @@ class HelpCommand : Command {
         if (option !== null) {
             CommandHandler[option.asString]
                 ?.let { event.replyEmbeds(it.commandHelp(event.jda)).setEphemeral(true).queue() }
-                ?: event.replyFailure("The specified command name is invalid!")
-                    .setEphemeral(true)
-                    .queue()
+                ?: throw CommandException("The specified command name is invalid!")
         } else {
             event.replyEmbeds(commandList(event.jda, event.user, true, isInDm = false))
                 .setEphemeral(true)

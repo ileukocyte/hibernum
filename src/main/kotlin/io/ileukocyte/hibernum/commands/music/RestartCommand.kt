@@ -3,9 +3,7 @@ package io.ileukocyte.hibernum.commands.music
 import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.extensions.replyFailure
 import io.ileukocyte.hibernum.extensions.replySuccess
-import io.ileukocyte.hibernum.extensions.sendFailure
 import io.ileukocyte.hibernum.extensions.sendSuccess
 
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
@@ -19,14 +17,12 @@ class RestartCommand : Command {
         val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
 
         if (audioPlayer.player.playingTrack !== null) {
-            if (event.member?.voiceState?.channel != event.guild.selfMember.voiceState?.channel) {
-                event.channel.sendFailure("You are not connected to the required voice channel!").queue()
-            } else {
+            if (event.member?.voiceState?.channel == event.guild.selfMember.voiceState?.channel) {
                 audioPlayer.player.playingTrack.position = 0
 
                 event.channel.sendSuccess("The track has been successfully restarted!").queue()
-            }
-        } else event.channel.sendFailure("No track is currently playing!").queue()
+            } else throw CommandException("You are not connected to the required voice channel!")
+        } else throw CommandException("No track is currently playing!")
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
@@ -34,11 +30,11 @@ class RestartCommand : Command {
         val audioPlayer = guild.audioPlayer ?: throw CommandException()
 
         if (audioPlayer.player.playingTrack !== null) {
-            audioPlayer.player.playingTrack.position = 0
+            if (event.member?.voiceState?.channel == guild.selfMember.voiceState?.channel) {
+                audioPlayer.player.playingTrack.position = 0
 
-            event.replySuccess("The track has been successfully restarted!").queue()
-        } else event.replyFailure("No track is currently playing!")
-            .setEphemeral(true)
-            .queue()
+                event.replySuccess("The track has been successfully restarted!").queue()
+            } else throw CommandException("You are not connected to the required voice channel!")
+        } else throw CommandException("No track is currently playing!")
     }
 }

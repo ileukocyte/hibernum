@@ -126,12 +126,10 @@ object CommandHandler : MutableSet<Command> {
                                         } else command(event, args.getOrNull(1))
                                     } catch (e: Exception) {
                                         when (e) {
-                                            is CommandException -> {
+                                            is CommandException ->
                                                 event.channel.sendFailure(e.message ?: "CommandException has occurred!")
                                                     .queue()
-                                            }
-                                            is InsufficientPermissionException -> {
-                                            } // ignored
+                                            is InsufficientPermissionException -> { } // ignored
                                             else -> {
                                                 event.channel.sendFailure(
                                                     """
@@ -139,6 +137,7 @@ object CommandHandler : MutableSet<Command> {
                                            |${e.message ?: "No message provided"}
                                            |""".trimMargin()
                                                 ).queue()
+
                                                 e.printStackTrace()
                                             }
                                         }
@@ -179,12 +178,11 @@ object CommandHandler : MutableSet<Command> {
                                 } else command(event)
                             } catch (e: Exception) {
                                 when (e) {
-                                    is CommandException -> event.replyFailure(
-                                        e.message ?: "CommandException has occurred!"
-                                    )
-                                        .queue()
-                                    is InsufficientPermissionException -> {
-                                    } // ignored
+                                    is CommandException ->
+                                        event.replyFailure(e.message ?: "CommandException has occurred!")
+                                            .setEphemeral(true)
+                                            .queue()
+                                    is InsufficientPermissionException -> {} // ignored
                                     else -> {
                                         event.replyFailure(
                                             """
@@ -192,6 +190,7 @@ object CommandHandler : MutableSet<Command> {
                                            |${e.message ?: "No message provided"}
                                            |""".trimMargin()
                                         ).queue()
+
                                         e.printStackTrace()
                                     }
                                 }
@@ -226,6 +225,7 @@ object CommandHandler : MutableSet<Command> {
                     } catch (e: Exception) {
                         when (e) {
                             is CommandException -> event.replyFailure(e.message ?: "CommandException has occurred!")
+                                .setEphemeral(true)
                                 .queue()
                             is InsufficientPermissionException -> {} // ignored
                             else -> {
@@ -235,6 +235,7 @@ object CommandHandler : MutableSet<Command> {
                                            |${e.message ?: "No message provided"}
                                            |""".trimMargin()
                                 ).queue()
+                                
                                 e.printStackTrace()
                             }
                         }
@@ -264,6 +265,7 @@ object CommandHandler : MutableSet<Command> {
                     } catch (e: Exception) {
                         when (e) {
                             is CommandException -> event.replyFailure(e.message ?: "CommandException has occurred!")
+                                .setEphemeral(true)
                                 .queue()
                             is InsufficientPermissionException -> {
                             } // ignored

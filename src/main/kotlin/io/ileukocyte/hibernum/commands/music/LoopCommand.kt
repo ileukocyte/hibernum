@@ -18,9 +18,7 @@ class LoopCommand : Command {
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         if (event.guild.selfMember.voiceState?.channel !== null) {
-            if (event.member?.voiceState?.channel != event.guild.selfMember.voiceState?.channel) {
-                event.channel.sendFailure("You are not connected to the required voice channel!").queue()
-            } else {
+            if (event.member?.voiceState?.channel == event.guild.selfMember.voiceState?.channel) {
                 val buttons = LoopMode.values()
                     .filter { it != event.guild.audioPlayer?.scheduler?.loopMode }
                     .map { Button.secondary("$name-${event.author.idLong}-${it.name}", it.toString().removeSuffix("d")) }
@@ -28,17 +26,13 @@ class LoopCommand : Command {
                 event.channel.sendConfirmation("Choose a repeating mode to set!")
                     .setActionRow(*buttons.toTypedArray(), Button.danger("$name-${event.author.idLong}-exit", "Exit"))
                     .queue()
-            }
-        } else event.channel.sendFailure("${event.jda.selfUser.name} is not connected to a voice channel!").queue()
+            } else throw CommandException("You are not connected to the required voice channel!")
+        } else throw CommandException("${event.jda.selfUser.name} is not connected to a voice channel!")
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
         if (event.guild?.selfMember?.voiceState?.channel !== null) {
-            if (event.member?.voiceState?.channel != event.guild?.selfMember?.voiceState?.channel) {
-                event.replyFailure("You are not connected to the required voice channel!")
-                    .setEphemeral(true)
-                    .queue()
-            } else {
+            if (event.member?.voiceState?.channel == event.guild?.selfMember?.voiceState?.channel) {
                 val buttons = LoopMode.values()
                     .filter { it != event.guild?.audioPlayer?.scheduler?.loopMode }
                     .map { Button.secondary("$name-${event.user.idLong}-${it.name}", it.toString().removeSuffix("d")) }
@@ -46,10 +40,8 @@ class LoopCommand : Command {
                 event.replyConfirmation("Choose a repeating mode to set!")
                     .addActionRow(*buttons.toTypedArray(), Button.danger("$name-${event.user.idLong}-exit", "Exit"))
                     .queue()
-            }
-        } else event.replyFailure("${event.jda.selfUser.name} is not connected to a voice channel!")
-            .setEphemeral(true)
-            .queue()
+            } else throw CommandException("You are not connected to the required voice channel!")
+        } else throw CommandException("${event.jda.selfUser.name} is not connected to a voice channel!")
     }
 
     override suspend fun invoke(event: ButtonClickEvent) {

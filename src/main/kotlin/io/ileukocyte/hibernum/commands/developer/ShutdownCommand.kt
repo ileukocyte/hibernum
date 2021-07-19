@@ -1,8 +1,8 @@
 package io.ileukocyte.hibernum.commands.developer
 
 import io.ileukocyte.hibernum.commands.Command
+import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.replyConfirmation
-import io.ileukocyte.hibernum.extensions.replyFailure
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendConfirmation
 
@@ -45,7 +45,7 @@ class ShutdownCommand : Command {
                     event.replySuccess("Successfully canceled!").setEphemeral(true).queue()
                 }
             }
-        } else event.replyFailure("You did not invoke the initial command!").setEphemeral(true).queue()
+        } else throw CommandException("You did not invoke the initial command!")
     }
 
     private fun <E : Event> sendShutdownConfirmation(userId: Long, event: E) {

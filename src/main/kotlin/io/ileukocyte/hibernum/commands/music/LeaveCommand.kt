@@ -3,9 +3,8 @@ package io.ileukocyte.hibernum.commands.music
 import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.audio.stop
 import io.ileukocyte.hibernum.commands.Command
-import io.ileukocyte.hibernum.extensions.replyFailure
+import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.replySuccess
-import io.ileukocyte.hibernum.extensions.sendFailure
 import io.ileukocyte.hibernum.extensions.sendSuccess
 
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
@@ -23,11 +22,9 @@ class LeaveCommand : Command {
                     event.guild.audioManager.closeAudioConnection()
 
                     event.channel.sendSuccess("Left the voice channel!").queue()
-                } else {
-                    event.channel.sendFailure("You are not connected to the required voice channel!").queue()
-                }
-            } ?: event.channel.sendFailure("You are not connected to a voice channel!").queue()
-        } ?: event.channel.sendFailure("${event.jda.selfUser.name} is not connected to a voice channel!").queue()
+                } else throw CommandException("You are not connected to the required voice channel!")
+            } ?: throw CommandException("You are not connected to a voice channel!")
+        } ?: throw CommandException("${event.jda.selfUser.name} is not connected to a voice channel!")
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
@@ -40,16 +37,8 @@ class LeaveCommand : Command {
                     event.replySuccess("Left the voice channel!")
                         .setEphemeral(true)
                         .queue()
-                } else {
-                    event.replyFailure("You are not connected to the required voice channel!")
-                        .setEphemeral(true)
-                        .queue()
-                }
-            } ?: event.replyFailure("You are not connected to a voice channel!")
-                .setEphemeral(true)
-                .queue()
-        } ?: event.replyFailure("${event.jda.selfUser.name} is not connected to a voice channel!")
-            .setEphemeral(true)
-            .queue()
+                } else throw CommandException("You are not connected to the required voice channel!")
+            } ?: throw CommandException("You are not connected to a voice channel!")
+        } ?: throw CommandException("${event.jda.selfUser.name} is not connected to a voice channel!")
     }
 }

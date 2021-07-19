@@ -78,6 +78,7 @@ class EvalCommand : TextOnlyCommand {
             "io.ileukocyte" to setOf(
                 "hibernum",
                 "hibernum.annotations",
+                "hibernum.audio",
                 "hibernum.builders",
                 "hibernum.commands",
                 "hibernum.commands.developer",

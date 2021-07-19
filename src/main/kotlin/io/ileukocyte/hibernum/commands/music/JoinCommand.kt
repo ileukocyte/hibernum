@@ -3,9 +3,8 @@ package io.ileukocyte.hibernum.commands.music
 import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.audio.stop
 import io.ileukocyte.hibernum.commands.Command
-import io.ileukocyte.hibernum.extensions.replyFailure
+import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.replySuccess
-import io.ileukocyte.hibernum.extensions.sendFailure
 import io.ileukocyte.hibernum.extensions.sendSuccess
 
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
@@ -17,37 +16,31 @@ class JoinCommand : Command {
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         event.member?.voiceState?.channel?.let {
-            if (it == event.guild.selfMember.voiceState?.channel) {
-                event.channel.sendFailure("${event.jda.selfUser.name} is already connected to the voice channel!").queue()
-            } else {
-                if (event.guild.selfMember.voiceState?.channel === null)
-                    event.guild.audioPlayer?.stop()
+            if (it == event.guild.selfMember.voiceState?.channel)
+                throw CommandException("${event.jda.selfUser.name} is already connected to the voice channel!")
 
-                event.guild.audioManager.openAudioConnection(it)
+            if (event.guild.selfMember.voiceState?.channel === null)
+                event.guild.audioPlayer?.stop()
 
-                event.channel.sendSuccess("Joined the voice channel!").queue()
-            }
-        } ?: event.channel.sendFailure("You are not connected to a voice channel!").queue()
+            event.guild.audioManager.openAudioConnection(it)
+
+            event.channel.sendSuccess("Joined the voice channel!").queue()
+        } ?: throw CommandException("You are not connected to a voice channel!")
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
         event.member?.voiceState?.channel?.let {
-            if (it == event.guild?.selfMember?.voiceState?.channel) {
-                event.replyFailure("${event.jda.selfUser.name} is already connected to the voice channel!")
-                    .setEphemeral(true)
-                    .queue()
-            } else {
-                if (event.guild?.selfMember?.voiceState?.channel === null)
-                    event.guild?.audioPlayer?.stop()
+            if (it == event.guild?.selfMember?.voiceState?.channel)
+                throw CommandException("${event.jda.selfUser.name} is already connected to the voice channel!")
 
-                event.guild?.audioManager?.openAudioConnection(it)
+            if (event.guild?.selfMember?.voiceState?.channel === null)
+                event.guild?.audioPlayer?.stop()
 
-                event.replySuccess("Joined the voice channel!")
-                    .setEphemeral(true)
-                    .queue()
-            }
-        } ?: event.replyFailure("You are not connected to a voice channel!")
-            .setEphemeral(true)
-            .queue()
+            event.guild?.audioManager?.openAudioConnection(it)
+
+            event.replySuccess("Joined the voice channel!")
+                .setEphemeral(true)
+                .queue()
+        } ?: throw CommandException("You are not connected to a voice channel!")
     }
 }

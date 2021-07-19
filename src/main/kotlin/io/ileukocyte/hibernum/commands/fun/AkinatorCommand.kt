@@ -102,8 +102,7 @@ class AkinatorCommand : Command {
             if (optionValue == "exit") {
                 event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda)
 
-                event
-                    .replySuccess("The Akinator session has been finished!")
+                event.replySuccess("The Akinator session has been finished!")
                     .setEphemeral(true)
                     .flatMap { event.message?.delete() }
                     .queue()
@@ -163,11 +162,11 @@ class AkinatorCommand : Command {
                         types -= event.user.idLong
                         akiwrappers -= event.user.idLong
 
-                        event.channel.sendFailure(e.message ?: "Something went wrong!").queue()
+                        throw CommandException(e.message ?: "Something went wrong!")
                     }
                 }
             }
-        } else event.replyFailure("You did not invoke the initial command!").setEphemeral(true).queue()
+        } else throw CommandException("You did not invoke the initial command!")
     }
 
     override suspend fun invoke(event: ButtonClickEvent) {
@@ -232,8 +231,7 @@ class AkinatorCommand : Command {
                         val nextQuestion = akiwrapper.answerCurrentQuestion(previousAnswer)
 
                         if (nextQuestion !== null) {
-                            event
-                                .replySuccess("Let's go on!")
+                            event.replySuccess("Let's go on!")
                                 .setEphemeral(true)
                                 .flatMap { event.message?.delete() }
                                 .await()
@@ -272,7 +270,7 @@ class AkinatorCommand : Command {
                     }
                 }
             }
-        } else event.replyFailure("You did not invoke the initial command!").setEphemeral(true).queue()
+        } else throw CommandException("You did not invoke the initial command!")
     }
 
     @OptIn(ExperimentalTime::class)
@@ -423,31 +421,17 @@ class AkinatorCommand : Command {
 
             messageChannel.jda.getProcessByEntities(player, messageChannel)?.kill(messageChannel.jda) // just in case
 
-            messageChannel.sendFailure(
+            throw CommandException(
                 if (e is TimeoutCancellationException) "Time is out!" else (e.message ?: "Something went wrong!")
-            ).queue()
+            )
         }
     }
 
     private suspend fun <E : Event> sendGuessTypeMenu(channelId: Long, playerId: Long, event: E) {
         event.jda.getProcessByEntitiesIds(playerId, channelId)?.kill(event.jda) // just in case
 
-        if (event.jda.getUserProcesses(playerId).any { it.command is AkinatorCommand && it.channel != channelId }) {
-            val description =
-                "You have another Akinator command running somewhere else! Finish the process first!"
-
-            val restAction = when (event) {
-                is GuildMessageReceivedEvent ->
-                    event.channel.sendFailure(description)
-                is SlashCommandEvent ->
-                    event.replyFailure(description)
-                else -> null // must never occur
-            }
-
-            restAction?.queue()
-
-            return
-        }
+        if (event.jda.getUserProcesses(playerId).any { it.command is AkinatorCommand && it.channel != channelId })
+            throw CommandException("You have another Akinator command running somewhere else! Finish the process first!")
 
         val description = "Choose your guess type!"
         val menu = SelectionMenu
@@ -491,16 +475,9 @@ class AkinatorCommand : Command {
         optionValue: String?,
         isFromSlashCommand: Boolean
     ) {
-        if (isFromSlashCommand) {
-            if (event.user.processes.any { it.command is AkinatorCommand && it.channel != event.messageChannel.idLong }) {
-                event
-                    .replyFailure("You have another Akinator command running somewhere else! Finish the process first!")
-                    .setEphemeral(true)
-                    .queue()
-
-                return
-            }
-        }
+        if (isFromSlashCommand)
+            if (event.user.processes.any { it.command is AkinatorCommand && it.channel != event.messageChannel.idLong })
+                throw CommandException("You have another Akinator command running somewhere else! Finish the process first!")
 
         val type = optionValue?.let { GuessType.valueOf(it) } ?: GuessType.CHARACTER
 
