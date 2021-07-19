@@ -11,6 +11,9 @@ import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
 import kotlin.time.toDuration
 
+val TIME_CODE_REGEX =
+    Regex("(?:(?<hours>\\d{1,2}):)?(?:(?<minutes>\\d{1,2}):)?(?<seconds>\\d{1,2})")
+
 fun Long.millisToDate(zone: ZoneId = ZoneId.of("Etc/GMT0")): OffsetDateTime =
     Instant.ofEpochMilli(this).atZone(zone).toOffsetDateTime()
 
@@ -120,3 +123,36 @@ fun asDuration(
         append("0$seconds".takeIf { seconds < 10 } ?: "$seconds")
     }
 }
+
+@OptIn(ExperimentalTime::class)
+fun timeCodeToMillis(timeCode: String) = TIME_CODE_REGEX.find(timeCode)?.let {
+    data class Time(
+        val seconds: ParsingTimeUnit,
+        var minutes: ParsingTimeUnit,
+        var hours: ParsingTimeUnit
+    ) {
+        init {
+            hours.first?.also {
+                if (minutes.first === null) {
+                    minutes = hours.first to minutes.second
+                    hours = null to hours.second
+                }
+            }
+        }
+
+        val millisSum = setOf(seconds, minutes, hours)
+            .filter { (t, _) -> t !== null }
+            .sumOf { (t, u) -> u.toMillis(t!!) }
+    }
+
+    val timeData = Time(
+        it.groups["seconds"]?.value?.toLongOrNull() to DurationUnit.SECONDS,
+        it.groups["minutes"]?.value?.toLongOrNull() to DurationUnit.MINUTES,
+        it.groups["hours"]?.value?.toLongOrNull() to DurationUnit.HOURS
+    )
+
+    timeData.millisSum
+} ?: throw IllegalArgumentException("You have entered an argument of a wrong format!")
+
+@ExperimentalTime
+private typealias ParsingTimeUnit = Pair<Long?, DurationUnit>

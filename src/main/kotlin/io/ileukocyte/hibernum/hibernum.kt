@@ -8,6 +8,7 @@ import io.ileukocyte.hibernum.Immutable.EVAL_KOTLIN_ENGINE
 import io.ileukocyte.hibernum.Immutable.LOGGER
 import io.ileukocyte.hibernum.Immutable.VERSION
 import io.ileukocyte.hibernum.annotations.HibernumExperimental
+import io.ileukocyte.hibernum.audio.loadGuildMusicManagers
 import io.ileukocyte.hibernum.builders.buildActivity
 import io.ileukocyte.hibernum.builders.buildJDA
 import io.ileukocyte.hibernum.commands.Command
@@ -47,14 +48,16 @@ fun main() = runBlocking {
     LOGGER.info("JDA has been successfully initialized!")
 
     // first evaluation
-    val jsr223Init = launch {
-        val deferred = async { EVAL_KOTLIN_ENGINE.eval("Unit") as? Unit }
-        deferred.await()
+    val jsr223Deferred = async { EVAL_KOTLIN_ENGINE.eval("Unit") }
 
-        LOGGER.info("Kotlin JSR-223 engine is ready to use!")
-    }
+    jsr223Deferred.await()
 
-    jsr223Init.join()
+    LOGGER.info("Kotlin JSR-223 engine is ready to use!")
+
+    // loading guild music managers
+    discord.loadGuildMusicManagers()
+
+    LOGGER.info("All the guilds have loaded their music managers!")
 
     // registering commands
     val handlerInit = launch {

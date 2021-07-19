@@ -5,6 +5,7 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.asCoroutineDispatcher
+import net.dv8tion.jda.api.JDA
 
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.MessageChannel
@@ -25,12 +26,13 @@ val MUSIC_MANAGERS = hashMapOf<Long, GuildMusicManager>()
 
 val Guild.audioPlayer: GuildMusicManager? get() {
     val manager = MUSIC_MANAGERS[idLong]
-        ?: MUSIC_MANAGERS.put(idLong, GuildMusicManager(PLAYER_MANAGER ))
 
     audioManager.sendingHandler = manager?.sendHandler
 
     return manager
 }
+
+fun JDA.loadGuildMusicManagers() = guildCache.forEach { MUSIC_MANAGERS[it.idLong] = GuildMusicManager(PLAYER_MANAGER) }
 
 fun GuildMusicManager.stop() {
     player.destroy()
