@@ -85,14 +85,14 @@ fun main() = runBlocking {
             discord.upsertCommand(it.asSlashCommand!!).queue { cmd ->
                 LOGGER.info("UPDATE: Discord has updated the following slash command: ${cmd.name}!")
 
-                val helpMenu = discordCommands.firstOrNull { c -> c.name == "help" }?.options?.firstOrNull()
+                /*val helpMenu = discordCommands.firstOrNull { c -> c.name == "help" }?.options?.firstOrNull()
                 val condition = helpMenu?.choices?.map { c -> c.name } !=
                         CommandHandler.filter { c -> c !is HelpCommand }.sorted().map { c -> c.name}
 
                 if (condition)
                     discord.upsertCommand(CommandHandler["help"]?.asSlashCommand!!).queue {
                         LOGGER.info("Update: HelpCommand has been updated as a slash command!")
-                    }
+                    }*/
             }
         }
 
