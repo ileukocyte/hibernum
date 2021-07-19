@@ -6,6 +6,7 @@ import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandCategory
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
 import io.ileukocyte.hibernum.commands.TextOnlyCommand
+import io.ileukocyte.hibernum.extensions.replyFailure
 import io.ileukocyte.hibernum.extensions.sendFailure
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asText
@@ -14,7 +15,6 @@ import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
@@ -25,15 +25,8 @@ class HelpCommand : Command {
     override val name = "help"
     override val description = "Sends a list of all Hibernum's commands and provides the user with their documentation"
     override val usages = setOf("command name (optional)")
-    override val options by lazy {
-        val commands = CommandHandler
-            .filter { it !is HelpCommand }
-            .sorted()
-            .map { Choice(it.name, it.name) }
-
-        setOf(OptionData(OptionType.STRING, "command", "The command to provide help for")
-            .addChoices(commands))
-    }
+    override val options =
+        setOf(OptionData(OptionType.STRING, "command", "The command to provide help for"))
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         if (args !== null) {
@@ -68,6 +61,9 @@ class HelpCommand : Command {
         if (option !== null) {
             CommandHandler[option.asString]
                 ?.let { event.replyEmbeds(it.commandHelp(event.jda)).setEphemeral(true).queue() }
+                ?: event.replyFailure("The specified command name is invalid!")
+                    .setEphemeral(true)
+                    .queue()
         } else {
             event.replyEmbeds(commandList(event.jda, event.user, true, isInDm = false))
                 .setEphemeral(true)

@@ -12,7 +12,6 @@ import io.ileukocyte.hibernum.builders.buildActivity
 import io.ileukocyte.hibernum.builders.buildJDA
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.TextOnlyCommand
-import io.ileukocyte.hibernum.commands.general.HelpCommand
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.handlers.EventHandler
@@ -84,15 +83,6 @@ fun main() = runBlocking {
         CommandHandler.filter { it !is TextOnlyCommand }.filter(predicate).forEach {
             discord.upsertCommand(it.asSlashCommand!!).queue { cmd ->
                 LOGGER.info("UPDATE: Discord has updated the following slash command: ${cmd.name}!")
-
-                /*val helpMenu = discordCommands.firstOrNull { c -> c.name == "help" }?.options?.firstOrNull()
-                val condition = helpMenu?.choices?.map { c -> c.name } !=
-                        CommandHandler.filter { c -> c !is HelpCommand }.sorted().map { c -> c.name}
-
-                if (condition)
-                    discord.upsertCommand(CommandHandler["help"]?.asSlashCommand!!).queue {
-                        LOGGER.info("Update: HelpCommand has been updated as a slash command!")
-                    }*/
             }
         }
 
