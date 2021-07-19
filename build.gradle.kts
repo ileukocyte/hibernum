@@ -14,7 +14,7 @@ plugins {
 }
 
 group = "io.ileukocyte"
-version = Version(major = 1, minor = 0, stability = Version.Stability.Beta, unstable = 1)
+version = Version(major = 1, minor = 0, stability = Version.Stability.Beta, unstable = 2)
 
 repositories {
     mavenCentral()
@@ -35,7 +35,7 @@ repositories {
 dependencies {
     // Discord
     implementation(group = "net.dv8tion", name = "JDA", version = jdaVersion) { exclude(module = "opus-java") }
-    implementation(group = "com.sedmelluq", name = "lavaplayer", version = "1.3.77")
+    implementation(group = "com.sedmelluq", name = "lavaplayer", version = "1.3.78")
 
     // Logging
     implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.2.3")

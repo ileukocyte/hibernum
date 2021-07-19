@@ -8,18 +8,18 @@ import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendSuccess
 import io.ileukocyte.hibernum.utils.TIME_CODE_REGEX
 import io.ileukocyte.hibernum.utils.timeCodeToMillis
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
 class JumpCommand : Command {
     override val name = "jump"
-    override val description = "Jumps to the specified time of the track"
+    override val description = "Jumps to the specified time while playing the track"
     override val usages = setOf("time code")
     override val options = setOf(
-        OptionData(OptionType.STRING, "time", "A time code to jump to", true)
+        OptionData(OptionType.STRING, "time", "The time to jump to", true)
     )
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
@@ -39,7 +39,7 @@ class JumpCommand : Command {
 
                 audioPlayer.player.playingTrack.position = millis
 
-                event.channel.sendSuccess("The track has been successfully restarted!").queue()
+                event.channel.sendSuccess("Successfully jumped to the specified time!").queue()
             }
         } else throw CommandException("No track is currently playing!")
     }
@@ -62,7 +62,7 @@ class JumpCommand : Command {
 
                 audioPlayer.player.playingTrack.position = millis
 
-                event.replySuccess("The track has been successfully restarted!").queue()
+                event.replySuccess("Successfully jumped to the specified time!").queue()
             }
         } else throw CommandException("No track is currently playing!")
     }

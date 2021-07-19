@@ -1,6 +1,7 @@
 package io.ileukocyte.hibernum.commands.music
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
+
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.audio.GuildMusicManager
 import io.ileukocyte.hibernum.audio.TrackUserData
@@ -18,10 +19,10 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 
 import org.jetbrains.kotlin.utils.addToStdlib.cast
 
-class PlayingCommand : Command {
-    override val name = "playing"
+class NowPlayingCommand : Command {
+    override val name = "nowplaying"
     override val description = "Shows information about the track that is currently playing"
-    override val aliases = setOf("np", "nowplaying", "playingnow")
+    override val aliases = setOf("np", "playing", "playingnow")
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val audioPlayer = event.guild.audioPlayer ?: throw CommandException()

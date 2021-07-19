@@ -216,7 +216,7 @@ object CommandHandler : MutableSet<Command> {
      */
     @HibernumExperimental
     internal operator fun invoke(event: ButtonClickEvent) {
-        if (event.isFromGuild) {
+        if (event.isFromGuild && event.message?.author == event.jda.selfUser) {
             this[event.componentId.split("-").first()]
             ?.let { command ->
                 CoroutineScope(CommandContext).launch {
@@ -235,7 +235,7 @@ object CommandHandler : MutableSet<Command> {
                                            |${e.message ?: "No message provided"}
                                            |""".trimMargin()
                                 ).queue()
-                                
+
                                 e.printStackTrace()
                             }
                         }
@@ -256,7 +256,7 @@ object CommandHandler : MutableSet<Command> {
      */
     @HibernumExperimental
     internal operator fun invoke(event: SelectionMenuEvent) {
-        if (event.isFromGuild) {
+        if (event.isFromGuild && event.message?.author == event.jda.selfUser) {
             this[event.componentId.split("-").first()]?.let {
                     command ->
                 CoroutineScope(CommandContext).launch {

@@ -90,7 +90,7 @@ fun main() = runBlocking {
         }
 
         discordCommands.filter {
-            CommandHandler[it.name] is TextOnlyCommand || CommandHandler[it.name] === null
+            CommandHandler[it.name] is TextOnlyCommand || it.name !in CommandHandler.map(Command::name)
         }.takeUnless { it.isEmpty() }?.forEach {
             discord.deleteCommandById(it.id).queue { _ ->
                 LOGGER.info("${it.name} is no longer a slash command!")

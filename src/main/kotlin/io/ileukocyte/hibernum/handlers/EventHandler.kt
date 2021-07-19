@@ -1,5 +1,9 @@
 package io.ileukocyte.hibernum.handlers
 
+import io.ileukocyte.hibernum.audio.audioPlayer
+import io.ileukocyte.hibernum.audio.stop
+
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
@@ -18,4 +22,9 @@ object EventHandler : ListenerAdapter() {
 
     override fun onGuildMessageReceived(event: GuildMessageReceivedEvent) =
         CommandHandler(event)
+
+    override fun onGuildVoiceLeave(event: GuildVoiceLeaveEvent) {
+        if (event.member == event.guild.selfMember)
+            event.guild.audioPlayer?.stop() // just in case
+    }
 }
