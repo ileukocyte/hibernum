@@ -1,28 +1,14 @@
 package io.ileukocyte.hibernum.audio
 
-import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
-import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
-import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack
-import io.ileukocyte.hibernum.extensions.replySuccess
-import io.ileukocyte.hibernum.extensions.sendFailure
-import io.ileukocyte.hibernum.extensions.sendSuccess
-
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.launch
-
-import net.dv8tion.jda.api.entities.Guild
-import net.dv8tion.jda.api.entities.TextChannel
-import net.dv8tion.jda.api.entities.User
-import net.dv8tion.jda.api.entities.VoiceChannel
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-
-import java.util.concurrent.Executors
 
 import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.asCoroutineDispatcher
+
+import net.dv8tion.jda.api.entities.Guild
+
+import java.util.concurrent.Executors
 
 private val musicContextDispatcher = Executors.newFixedThreadPool(3).asCoroutineDispatcher()
 
@@ -50,4 +36,22 @@ fun GuildMusicManager.stop() {
     player.volume = 100
     scheduler.loopMode = LoopMode.DISABLED
     scheduler.queue.close()
+}
+
+fun getProgressBar(currentTime: Long, totalDuration: Long, blocks: Int = 15): String {
+    val passed = (currentTime.toDouble() / totalDuration * blocks).toInt()
+
+    return buildString {
+        passed.takeIf { it > 0 }?.let { _ ->
+            append("[")
+
+            for (i in 0 until blocks)
+                append("\u25AC".takeIf { passed > i }.orEmpty())
+
+            append("](https://discord.com)")
+        }
+
+        for (i in 0 until blocks)
+            append("\u25AC".takeUnless { passed >= i }.orEmpty())
+    }
 }
