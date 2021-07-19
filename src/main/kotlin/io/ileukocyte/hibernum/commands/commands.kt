@@ -36,8 +36,6 @@ interface Command : Comparable<Command> {
     val cooldown: Long get() = 0
     val botPermissions: Set<Permission> get() = emptySet()
     val memberPermissions: Set<Permission> get() = emptySet()
-
-    // may be implemented via Command#options soon
     val usages: Set<String> get() = emptySet()
 
     /**

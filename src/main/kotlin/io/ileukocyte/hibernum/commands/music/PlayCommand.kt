@@ -28,6 +28,7 @@ class PlayCommand : Command {
     override val description = "Plays the specified media in a voice channel"
     override val options = setOf(
         OptionData(OptionType.STRING, "query", "A link or a search term", true))
+    override val usages = setOf("query")
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         event.member?.voiceState?.channel?.let {

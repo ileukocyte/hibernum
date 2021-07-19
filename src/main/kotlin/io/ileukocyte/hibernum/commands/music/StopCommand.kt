@@ -3,6 +3,7 @@ package io.ileukocyte.hibernum.commands.music
 import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.audio.stop
 import io.ileukocyte.hibernum.commands.Command
+import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.replyFailure
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendFailure
@@ -16,7 +17,7 @@ class StopCommand : Command {
     override val description = "Stops the song that is currently playing and clears the queue"
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
-        val audioPlayer = event.guild.audioPlayer ?: return
+        val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
 
         if (audioPlayer.player.playingTrack !== null) {
             if (event.member?.voiceState?.channel != event.guild.selfMember.voiceState?.channel) {
@@ -31,7 +32,7 @@ class StopCommand : Command {
 
     override suspend fun invoke(event: SlashCommandEvent) {
         val guild = event.guild ?: return
-        val audioPlayer = guild.audioPlayer ?: return
+        val audioPlayer = guild.audioPlayer ?: throw CommandException()
 
         if (audioPlayer.player.playingTrack !== null) {
             if (event.member?.voiceState?.channel != guild.selfMember.voiceState?.channel) {

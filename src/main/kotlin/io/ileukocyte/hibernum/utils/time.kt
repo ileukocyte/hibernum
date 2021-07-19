@@ -20,7 +20,7 @@ fun Long.millisToDate(zone: ZoneId = ZoneId.of("Etc/GMT0")): OffsetDateTime =
  * **Example**:
  * ```
  * val millisExample = "ileukocyte/hibernum".hashCode() // 884095017
- * val text = asText(millisExample) // "10 days, 5 hours, 34 minutes, and 55 seconds"
+ * val text = asText(millisExample.toLong()) // "10 days, 5 hours, 34 minutes, and 55 seconds"
  * ```
  *
  * @param time
@@ -37,9 +37,9 @@ fun asText(time: Long, unit: DurationUnit = DurationUnit.MILLISECONDS): String {
     val duration = time.toDuration(unit)
 
     val days = duration.inWholeDays
-    val hours = duration.inWholeHours - days.toDuration(DurationUnit.DAYS).inWholeHours
-    val minutes = duration.inWholeMinutes - duration.inWholeHours.toDuration(DurationUnit.HOURS).inWholeMinutes
-    val seconds = duration.inWholeSeconds - duration.inWholeMinutes.toDuration(DurationUnit.MINUTES).inWholeSeconds
+    val hours = duration.inWholeHours % 24L
+    val minutes = duration.inWholeMinutes % 60L
+    val seconds = duration.inWholeSeconds % 60L
 
     return buildString {
         var alreadyPresent = false
@@ -92,5 +92,31 @@ fun asText(time: Long, unit: DurationUnit = DurationUnit.MILLISECONDS): String {
 
         if (isEmpty() && !alreadyPresent)
             append("0 seconds")
+    }
+}
+
+@OptIn(ExperimentalTime::class)
+fun asDuration(
+    time: Long,
+    unit: DurationUnit = DurationUnit.MILLISECONDS,
+    prependZeroDays: Boolean = false,
+    prependZeroHours: Boolean = false
+): String {
+    val duration = time.toDuration(unit)
+
+    val seconds = duration.inWholeSeconds % 60L
+    val minutes = duration.inWholeMinutes % 60L
+    val hours = duration.inWholeHours % 24L
+    val days = duration.inWholeDays % 30L
+
+    return buildString {
+        if (prependZeroDays || days > 0)
+            append("0$days:".takeIf { days < 10 } ?: "$days:")
+
+        if (prependZeroHours || days > 0 || prependZeroDays || hours > 0)
+            append("0$hours:".takeIf { hours < 10 } ?: "$hours:")
+
+        append("0$minutes:".takeIf { minutes < 10 } ?: "$minutes:")
+        append("0$seconds".takeIf { seconds < 10 } ?: "$seconds")
     }
 }
