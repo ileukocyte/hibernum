@@ -2,6 +2,9 @@
 package io.ileukocyte.hibernum.extensions
 
 import io.ileukocyte.hibernum.builders.KEmbedBuilder
+import io.ileukocyte.hibernum.builders.KMessageBuilder
+import io.ileukocyte.hibernum.builders.buildEmbed
+import io.ileukocyte.hibernum.builders.buildMessage
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.utils.awaitEvent
 import io.ileukocyte.hibernum.utils.waiterProcess
@@ -11,25 +14,29 @@ import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.TimeoutCancellationException
 
 import net.dv8tion.jda.api.EmbedBuilder.ZERO_WIDTH_SPACE
+import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.interactions.components.Component
 
+inline fun MessageChannel.sendMessage(block: KMessageBuilder.() -> Unit) =
+    sendMessage(buildMessage(block))
+
 inline fun MessageChannel.sendEmbed(block: KEmbedBuilder.() -> Unit) =
-    sendMessageEmbeds(KEmbedBuilder().apply(block)())
+    sendMessageEmbeds(buildEmbed(block))
 
-fun MessageChannel.sendSuccess(desc: String) =
-    sendMessageEmbeds(defaultEmbed(desc, EmbedType.SUCCESS))
+fun MessageChannel.sendSuccess(desc: String, footer: String? = null) =
+    sendMessageEmbeds(defaultEmbed(desc, EmbedType.SUCCESS, footer))
 
-fun MessageChannel.sendFailure(desc: String) =
-    sendMessageEmbeds(defaultEmbed(desc, EmbedType.FAILURE))
+fun MessageChannel.sendFailure(desc: String, footer: String? = null) =
+    sendMessageEmbeds(defaultEmbed(desc, EmbedType.FAILURE, footer))
 
-fun MessageChannel.sendConfirmation(desc: String) =
-    sendMessageEmbeds(defaultEmbed(desc, EmbedType.CONFIRMATION))
+fun MessageChannel.sendConfirmation(desc: String, footer: String? = null) =
+    sendMessageEmbeds(defaultEmbed(desc, EmbedType.CONFIRMATION, footer))
 
-fun MessageChannel.sendWarning(desc: String) =
-    sendMessageEmbeds(defaultEmbed(desc, EmbedType.WARNING))
+fun MessageChannel.sendWarning(desc: String, footer: String? = null) =
+    sendMessageEmbeds(defaultEmbed(desc, EmbedType.WARNING, footer))
 
 fun MessageChannel.sendActionRow(vararg components: Component) =
     sendMessage(ZERO_WIDTH_SPACE).setActionRow(*components)
@@ -43,6 +50,8 @@ fun MessageChannel.sendActionRow(vararg components: Component) =
  * A set of users who the message is being received from
  * @param processCommand
  * The default command used as a process property
+ * @param invokingMessage
+ * The message that invokes the awaiting process
  * @param delay
  * A period throughout which the message must be received
  * @param unit
@@ -60,6 +69,7 @@ fun MessageChannel.sendActionRow(vararg components: Component) =
 suspend inline fun MessageChannel.awaitMessage(
     authors: Set<User>,
     processCommand: Command? = null,
+    invokingMessage: Message? = null,
     delay: Long = 1,
     unit: DurationUnit = DurationUnit.MINUTES
 ) = jda.awaitEvent<GuildMessageReceivedEvent>(
@@ -69,6 +79,7 @@ suspend inline fun MessageChannel.awaitMessage(
         users += authors.map { it.idLong }
         channel = idLong
         command = processCommand
+        invoker = invokingMessage?.idLong
     }
 ) { it.author in authors && it.channel.idLong == idLong }?.message
 
@@ -78,9 +89,11 @@ suspend inline fun MessageChannel.awaitMessage(
  * @receiver The [MessageChannel] in which the message is going to be awaited
  *
  * @param author
- * A user who the message is being received from
+ * The user who the message is being received from
  * @param processCommand
  * The default command used as a process property
+ * @param invokingMessage
+ * The message that invokes the awaiting process
  * @param delay
  * A period throughout which the message must be received
  * @param unit
@@ -98,6 +111,7 @@ suspend inline fun MessageChannel.awaitMessage(
 suspend inline fun MessageChannel.awaitMessage(
     author: User,
     processCommand: Command? = null,
+    invokingMessage: Message? = null,
     delay: Long = 1,
     unit: DurationUnit = DurationUnit.MINUTES
-) = awaitMessage(setOf(author), processCommand, delay, unit)
+) = awaitMessage(setOf(author), processCommand, invokingMessage, delay, unit)

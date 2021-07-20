@@ -1,5 +1,11 @@
 package io.ileukocyte.hibernum.commands
 
-open class CommandException(message: String? = null) : RuntimeException(message)
+import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
+
+data class SelfDeletion
+    @OptIn(ExperimentalTime::class) constructor(val delay: Long, val unit: DurationUnit = DurationUnit.SECONDS)
+
+open class CommandException(message: String? = null, val selfDeletion: SelfDeletion? = null) : RuntimeException(message)
 
 object NoArgumentsException : CommandException("You have not specified any arguments!")

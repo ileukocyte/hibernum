@@ -5,9 +5,6 @@ import com.markozajc.akiwrapper.core.entities.Server
 import com.markozajc.akiwrapper.core.entities.Server.GuessType
 import com.markozajc.akiwrapper.core.entities.Server.Language
 
-@DslMarker
-internal annotation class AkiwrapperDslMarker
-
 class KAkiwrapperBuilder {
     var guessType = GuessType.CHARACTER
     var language = Language.ENGLISH

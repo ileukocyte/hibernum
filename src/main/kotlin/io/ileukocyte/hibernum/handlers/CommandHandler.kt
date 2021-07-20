@@ -103,6 +103,7 @@ object CommandHandler : MutableSet<Command> {
      *
      * @author Alexander Oksanich
      */
+    @OptIn(ExperimentalTime::class)
     internal operator fun invoke(event: GuildMessageReceivedEvent) {
         if (!event.author.isBot && !event.author.isSystem && event.message.type == MessageType.DEFAULT) {
             if (event.message.contentRaw.trim().startsWith(Immutable.DEFAULT_PREFIX)) {
@@ -127,8 +128,14 @@ object CommandHandler : MutableSet<Command> {
                                     } catch (e: Exception) {
                                         when (e) {
                                             is CommandException ->
-                                                event.channel.sendFailure(e.message ?: "CommandException has occurred!")
-                                                    .queue()
+                                                event.channel.sendFailure(
+                                                    e.message ?: "CommandException has occurred!",
+                                                    e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
+                                                ).queue({
+                                                    e.selfDeletion?.let { sd ->
+                                                        it.delete().queueAfter(sd.delay, sd.unit, {}) {}
+                                                    }
+                                                }) { e.printStackTrace() }
                                             is InsufficientPermissionException -> { } // ignored
                                             else -> {
                                                 event.channel.sendFailure(
@@ -158,6 +165,7 @@ object CommandHandler : MutableSet<Command> {
      *
      * @author Alexander Oksanich
      */
+    @OptIn(ExperimentalTime::class)
     @HibernumExperimental
     internal operator fun invoke(event: SlashCommandEvent) {
         if (event.isFromGuild) {
@@ -181,7 +189,16 @@ object CommandHandler : MutableSet<Command> {
                                     is CommandException ->
                                         event.replyFailure(e.message ?: "CommandException has occurred!")
                                             .setEphemeral(true)
-                                            .queue()
+                                            .queue({}) {
+                                                event.channel.sendFailure(
+                                                    e.message ?: "CommandException has occurred!",
+                                                    e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
+                                                ).queue({
+                                                    e.selfDeletion?.let { sd ->
+                                                        it.delete().queueAfter(sd.delay, sd.unit, {}) {}
+                                                    }
+                                                }) { e.printStackTrace() }
+                                            }
                                     is InsufficientPermissionException -> {} // ignored
                                     else -> {
                                         event.replyFailure(
@@ -214,6 +231,7 @@ object CommandHandler : MutableSet<Command> {
      *
      * @author Alexander Oksanich
      */
+    @OptIn(ExperimentalTime::class)
     @HibernumExperimental
     internal operator fun invoke(event: ButtonClickEvent) {
         if (event.isFromGuild && event.message?.author == event.jda.selfUser) {
@@ -226,7 +244,16 @@ object CommandHandler : MutableSet<Command> {
                         when (e) {
                             is CommandException -> event.replyFailure(e.message ?: "CommandException has occurred!")
                                 .setEphemeral(true)
-                                .queue()
+                                .queue({}) {
+                                    event.channel.sendFailure(
+                                        e.message ?: "CommandException has occurred!",
+                                        e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
+                                    ).queue({
+                                        e.selfDeletion?.let { sd ->
+                                            it.delete().queueAfter(sd.delay, sd.unit, {}) {}
+                                        }
+                                    }) { e.printStackTrace() }
+                                }
                             is InsufficientPermissionException -> {} // ignored
                             else -> {
                                 event.replyFailure(
@@ -254,6 +281,7 @@ object CommandHandler : MutableSet<Command> {
      *
      * @author Alexander Oksanich
      */
+    @OptIn(ExperimentalTime::class)
     @HibernumExperimental
     internal operator fun invoke(event: SelectionMenuEvent) {
         if (event.isFromGuild && event.message?.author == event.jda.selfUser) {
@@ -266,9 +294,17 @@ object CommandHandler : MutableSet<Command> {
                         when (e) {
                             is CommandException -> event.replyFailure(e.message ?: "CommandException has occurred!")
                                 .setEphemeral(true)
-                                .queue()
-                            is InsufficientPermissionException -> {
-                            } // ignored
+                                .queue({}) {
+                                    event.channel.sendFailure(
+                                        e.message ?: "CommandException has occurred!",
+                                        e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
+                                    ).queue({
+                                        e.selfDeletion?.let { sd ->
+                                            it.delete().queueAfter(sd.delay, sd.unit, {}) {}
+                                        }
+                                    }) { e.printStackTrace() }
+                                }
+                            is InsufficientPermissionException -> {} // ignored
                             else -> {
                                 event.replyFailure(
                                     """

@@ -19,6 +19,7 @@ import kotlin.reflect.KClass
 import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.*
+import net.dv8tion.jda.api.entities.Message
 
 // Context
 private val waiterContextDispatcher = newFixedThreadPool(3).asCoroutineDispatcher()
@@ -45,6 +46,9 @@ fun JDA.getProcessByEntities(user: User, channel: MessageChannel) = getProcessBy
 fun JDA.getUserProcesses(user: User) = processes.filter { user.idLong in it.users }
 fun JDA.getUserProcesses(userId: Long) = processes.filter { userId in it.users }
 
+fun JDA.getProcessByMessage(message: Message) = getProcessByMessage(message.idLong)
+fun JDA.getProcessByMessage(messageId: Long) = processes.firstOrNull { it.invoker == messageId }
+
 fun WaiterProcess.kill(jda: JDA) = WaiterProcess.currentlyRunning[this]?.kill(jda, true)
 
 /**
@@ -66,9 +70,10 @@ fun WaiterProcess.kill(jda: JDA) = WaiterProcess.currentlyRunning[this]?.kill(jd
  * @see awaitEvent
  */
 data class WaiterProcess(
-    val users: MutableList<Long>,
+    val users: MutableSet<Long>,
     val channel: Long,
     val command: Command?,
+    val invoker: Long?,
     val id: String = "%04d".format((1..9999).filter {
         "%04d".format(it) !in currentlyRunning.keys.map { p -> p.id }
     }.random()),
@@ -80,14 +85,16 @@ data class WaiterProcess(
 
     @WaiterDslMarker
     class Builder {
-        val users = mutableListOf<Long>()
+        val users = mutableSetOf<Long>()
         var channel = 0L
         var command: Command? = null
+        var invoker: Long? = null
 
         operator fun invoke() = WaiterProcess(
             users = users,
             channel = channel,
-            command = command
+            command = command,
+            invoker = invoker
         )
     }
 

@@ -11,6 +11,7 @@ import io.ileukocyte.hibernum.builders.buildAkiwrapper
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.SelfDeletion
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.*
 
@@ -28,9 +29,11 @@ import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.components.ActionRow
 import net.dv8tion.jda.api.interactions.components.Button
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
@@ -130,6 +133,8 @@ class AkinatorCommand : Command {
                     val lang = optionValue?.let { Language.valueOf(it) } ?: Language.ENGLISH
 
                     try {
+                        event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda)
+
                         event.message?.delete()?.await()
 
                         val akiwrapper = buildAkiwrapper {
@@ -141,7 +146,7 @@ class AkinatorCommand : Command {
                         declinedGuesses += event.user.idLong to mutableSetOf()
                         akiwrappers += event.user.idLong to akiwrapper
 
-                        event.channel.sendEmbed {
+                        val invoker = event.channel.sendEmbed {
                             color = Immutable.SUCCESS
                             description = akiwrapper.currentQuestion?.question ?: "N/A"
                             author {
@@ -156,19 +161,20 @@ class AkinatorCommand : Command {
                             }
                         }.await()
 
-                        awaitAnswer(event.channel, event.user, akiwrapper)
+                        awaitAnswer(event.channel, event.user, akiwrapper, invoker)
                     } catch (e: Exception) {
                         declinedGuesses -= event.user.idLong
                         types -= event.user.idLong
                         akiwrappers -= event.user.idLong
 
-                        throw CommandException(e.message ?: "Something went wrong!")
+                        throw CommandException(e.message ?: "Something went wrong!", SelfDeletion(30))
                     }
                 }
             }
         } else throw CommandException("You did not invoke the initial command!")
     }
 
+    @OptIn(ExperimentalTime::class)
     override suspend fun invoke(event: ButtonClickEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
 
@@ -254,10 +260,11 @@ class AkinatorCommand : Command {
                                 ?.let { finalGuess ->
                                     val m = guessMessage(finalGuess, true, event.user.idLong, event.channel, event.message?.idLong)
 
-                                    event.jda.awaitEvent<ButtonClickEvent>(waiterProcess = waiterProcess {
+                                    event.jda.awaitEvent<ButtonClickEvent>(15, DurationUnit.MINUTES, waiterProcess = waiterProcess {
                                         channel = event.channel.idLong
                                         users += event.user.idLong
                                         command = this@AkinatorCommand
+                                        invoker = m.idLong
                                     }) { it.user.idLong == event.user.idLong && it.message == m } // used to block other commands
                                 } ?: event.channel.let { channel ->
                                     declinedGuesses -= event.user.idLong
@@ -274,9 +281,15 @@ class AkinatorCommand : Command {
     }
 
     @OptIn(ExperimentalTime::class)
-    private suspend fun awaitAnswer(messageChannel: MessageChannel, player: User, akiwrapper: Akiwrapper) {
+    private suspend fun awaitAnswer(
+        messageChannel: MessageChannel,
+        player: User,
+        akiwrapper: Akiwrapper,
+        invokingMessage: Message? = null
+    ) {
         try {
-            val message = messageChannel.awaitMessage(player, processCommand = this, delay = 5) ?: throw CommandException()
+            val message = messageChannel.awaitMessage(player, this, invokingMessage, delay = 5)
+                ?: return
 
             when (val content = message.contentRaw.lowercase()) {
                 "exit" -> {
@@ -286,10 +299,11 @@ class AkinatorCommand : Command {
                             Button.secondary("$name-${player.idLong}-stay", "No")
                         ).await()
 
-                    messageChannel.jda.awaitEvent<ButtonClickEvent>(waiterProcess = waiterProcess {
+                    messageChannel.jda.awaitEvent<ButtonClickEvent>(15, DurationUnit.MINUTES, waiterProcess = waiterProcess {
                         channel = messageChannel.idLong
                         users += player.idLong
                         command = this@AkinatorCommand
+                        invoker = m.idLong
                     }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
                 }
                 "debug" -> {
@@ -331,7 +345,7 @@ class AkinatorCommand : Command {
                     awaitAnswer(messageChannel, player, akiwrapper)
                 }
                 "b", "back" -> {
-                    messageChannel.sendEmbed {
+                    val invoker = messageChannel.sendEmbed {
                         val isFirst = akiwrapper.currentQuestion?.step != 0
                         val question =
                             if (isFirst) akiwrapper.undoAnswer() else akiwrapper.currentQuestion
@@ -350,7 +364,7 @@ class AkinatorCommand : Command {
                         }
                     }.await()
 
-                    awaitAnswer(messageChannel, player, akiwrapper)
+                    awaitAnswer(messageChannel, player, akiwrapper, invoker)
                 }
                 else -> {
                     if (content in possibleAnswers.values.flatten()) {
@@ -363,7 +377,7 @@ class AkinatorCommand : Command {
                             val nextQuestion = akiwrapper.answerCurrentQuestion(answer)
 
                             if (nextQuestion !== null) {
-                                messageChannel.sendEmbed {
+                                val invoker = messageChannel.sendEmbed {
                                     color = Immutable.SUCCESS
                                     description = nextQuestion.question
 
@@ -374,17 +388,18 @@ class AkinatorCommand : Command {
                                     }
                                 }.await()
 
-                                awaitAnswer(messageChannel, player, akiwrapper)
+                                awaitAnswer(messageChannel, player, akiwrapper, invoker)
                             } else {
                                 akiwrapper.guesses // always empty for an unknown reason
                                     .firstOrNull { declinedGuesses[player.idLong]?.contains(it.idLong) == false }
                                     ?.let { finalGuess ->
                                         val m = guessMessage(finalGuess, true, player.idLong, message.channel, message.idLong)
 
-                                        messageChannel.jda.awaitEvent<ButtonClickEvent>(waiterProcess = waiterProcess {
+                                        messageChannel.jda.awaitEvent<ButtonClickEvent>(15, DurationUnit.MINUTES, waiterProcess = waiterProcess {
                                             channel = messageChannel.idLong
                                             users += player.idLong
                                             command = this@AkinatorCommand
+                                            invoker = m.idLong
                                         }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
                                     } ?: messageChannel.let { channel ->
                                         declinedGuesses -= player.idLong
@@ -397,16 +412,18 @@ class AkinatorCommand : Command {
                         } else {
                             val m = guessMessage(guess, false, player.idLong, message.channel, content = content)
 
-                            messageChannel.jda.awaitEvent<ButtonClickEvent>(waiterProcess = waiterProcess {
+                            messageChannel.jda.awaitEvent<ButtonClickEvent>(15, DurationUnit.MINUTES, waiterProcess = waiterProcess {
                                 channel = messageChannel.idLong
                                 users += player.idLong
                                 command = this@AkinatorCommand
+                                invoker = m.idLong
                             }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
                         }
                     } else {
-                        val incorrect =
-                            messageChannel.sendFailure("Incorrect answer! Use `help`/`aliases` to get documentation!")
-                                .await()
+                        val incorrect = messageChannel.sendFailure(
+                            "Incorrect answer! Use `help`/`aliases` to get documentation!",
+                            "This message will self-delete in 5 seconds"
+                        ).await()
 
                         incorrect.delete().queueAfter(5, DurationUnit.SECONDS, {}) {}
 
@@ -422,18 +439,19 @@ class AkinatorCommand : Command {
             messageChannel.jda.getProcessByEntities(player, messageChannel)?.kill(messageChannel.jda) // just in case
 
             throw CommandException(
-                if (e is TimeoutCancellationException) "Time is out!" else (e.message ?: "Something went wrong!")
+                if (e is TimeoutCancellationException) "Time is out!" else (e.message ?: "Something went wrong!"),
+                SelfDeletion(30)
             )
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     private suspend fun <E : Event> sendGuessTypeMenu(channelId: Long, playerId: Long, event: E) {
         event.jda.getProcessByEntitiesIds(playerId, channelId)?.kill(event.jda) // just in case
 
         if (event.jda.getUserProcesses(playerId).any { it.command is AkinatorCommand && it.channel != channelId })
             throw CommandException("You have another Akinator command running somewhere else! Finish the process first!")
 
-        val description = "Choose your guess type!"
         val menu = SelectionMenu
             .create("$name-$playerId-type")
             .addOptions(
@@ -453,31 +471,43 @@ class AkinatorCommand : Command {
 
         val restAction = when (event) {
             is GuildMessageReceivedEvent ->
-                event.channel.sendConfirmation(description).setActionRow(menu)
+                event.channel.sendMessage {
+                    embeds += defaultEmbed("Choose your guess type!", EmbedType.CONFIRMATION)
+                    actionRows += ActionRow.of(menu)
+                }
             is SlashCommandEvent ->
-                event.replyConfirmation(description).addActionRow(menu)
+                event.reply {
+                    embeds += defaultEmbed("Choose your guess type!", EmbedType.CONFIRMATION)
+                    actionRows += ActionRow.of(menu)
+                }
             is SelectionMenuEvent ->
-                event.channel.sendConfirmation(description).setActionRow(menu)
+                event.channel.sendMessage {
+                    embeds += defaultEmbed("Choose your guess type!", EmbedType.CONFIRMATION)
+                    actionRows += ActionRow.of(menu)
+                }
             else -> null // must never occur
         }
 
-        val message = restAction?.await()
+        val message = restAction?.await() as Message
 
-        event.jda.awaitEvent<SelectionMenuEvent>(waiterProcess = waiterProcess {
+        event.jda.awaitEvent<SelectionMenuEvent>(15, DurationUnit.MINUTES, waiterProcess = waiterProcess {
             channel = channelId
             users += playerId
             command = this@AkinatorCommand
+            invoker = message.idLong
         }) { it.user.idLong == playerId && it.message == message } // used to block other commands
     }
 
+    @OptIn(ExperimentalTime::class)
     private suspend fun sendLanguagesMenu(
         event: GenericInteractionCreateEvent,
         optionValue: String?,
         isFromSlashCommand: Boolean
     ) {
-        if (isFromSlashCommand)
+        if (isFromSlashCommand) {
             if (event.user.processes.any { it.command is AkinatorCommand && it.channel != event.messageChannel.idLong })
                 throw CommandException("You have another Akinator command running somewhere else! Finish the process first!")
+        }
 
         val type = optionValue?.let { GuessType.valueOf(it) } ?: GuessType.CHARACTER
 
@@ -495,15 +525,22 @@ class AkinatorCommand : Command {
 
         val message = event.let {
             if (!isFromSlashCommand)
-                it.messageChannel.sendConfirmation("Choose your language!").setActionRow(menu)
+                it.messageChannel.sendMessage {
+                    embeds += defaultEmbed("Choose your language!", EmbedType.CONFIRMATION)
+                    actionRows += ActionRow.of(menu)
+                }
             else
-                it.replyConfirmation("Choose your language!").addActionRow(menu)
+                it.reply {
+                    embeds += defaultEmbed("Choose your language!", EmbedType.CONFIRMATION)
+                    actionRows += ActionRow.of(menu)
+                }
         }.await()
 
-        event.jda.awaitEvent<SelectionMenuEvent>(waiterProcess = waiterProcess {
+        event.jda.awaitEvent<SelectionMenuEvent>(15, DurationUnit.MINUTES, waiterProcess = waiterProcess {
             channel = event.messageChannel.idLong
             users += event.user.idLong
             command = this@AkinatorCommand
+            invoker = (message as? Message)?.idLong ?: (message as? InteractionHook)?.retrieveOriginal()?.await()?.idLong
         }) { it.user.idLong == event.user.idLong && it.message == message } // used to block other commands
     }
 
@@ -515,15 +552,15 @@ class AkinatorCommand : Command {
         messageIdForReply: Long? = null,
         content: String? = null
     ): Message {
-        val prefix = "g".let { if (isFinal) "final" + it.uppercase() else it }
+        val prefix = "g".let { if (isFinal) "final" + it.uppercase() else it } + "uess"
         val buttons = setOf(
-            Button.primary("$name-$playerId-${prefix}uessYes", "Yes"),
+            Button.primary("$name-$playerId-${prefix}Yes", "Yes"),
             Button.danger(buildString {
                 append("$name-$playerId-")
 
                 if (!isFinal) append("$content-")
 
-                append("${prefix}uessNo")
+                append("${prefix}No")
 
                 if (!isFinal) append(guess.id)
             }, "No"))

@@ -15,8 +15,9 @@ enum class EmbedType(val color: Color) {
     val title = "${name.capitalizeAll()}!"
 }
 
-fun defaultEmbed(desc: String, type: EmbedType) = buildEmbed {
+fun defaultEmbed(desc: String, type: EmbedType, footer: String? = null) = buildEmbed {
     color = type.color
     description = desc
     author { name = type.title }
+    footer { text = footer }
 }
