@@ -6,7 +6,7 @@ import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.audio.GuildMusicManager
 import io.ileukocyte.hibernum.audio.TrackUserData
 import io.ileukocyte.hibernum.audio.audioPlayer
-import io.ileukocyte.hibernum.audio.getProgressBar
+import io.ileukocyte.hibernum.audio.getEmbedProgressBar
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
@@ -23,6 +23,7 @@ class NowPlayingCommand : Command {
     override val name = "nowplaying"
     override val description = "Shows information about the track that is currently playing"
     override val aliases = setOf("np", "playing", "playingnow")
+    override val cooldown = 10L
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
@@ -63,7 +64,7 @@ class NowPlayingCommand : Command {
         }
 
         field {
-            val timeline = getProgressBar(
+            val timeline = getEmbedProgressBar(
                 track.position.takeUnless { track.info.isStream } ?: Long.MAX_VALUE,
                 track.duration
             )

@@ -5,9 +5,6 @@ import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-
 import java.util.concurrent.ConcurrentLinkedQueue
 
 class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
@@ -30,24 +27,17 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
         queue = ConcurrentLinkedQueue(queue.shuffled())
     }
 
-    /*override fun onTrackStart(player: AudioPlayer, track: AudioTrack) =
-        track.userData.cast<TrackUserData>().channel
-            .sendMessage("DEBUG: starting ${track.info.title}")
-            .queue()*/
-
     override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
         if (endReason.mayStartNext) {
-            CoroutineScope(MusicContext).launch {
-                when (loopMode) {
-                    LoopMode.SONG ->
-                        player.playTrack(track.makeClone().apply { userData = track.userData })
-                    LoopMode.QUEUE -> {
-                        queue.offer(track.makeClone().apply { userData = track.userData })
+            when (loopMode) {
+                LoopMode.SONG ->
+                    player.playTrack(track.makeClone().apply { userData = track.userData })
+                LoopMode.QUEUE -> {
+                    queue.offer(track.makeClone().apply { userData = track.userData })
 
-                        nextTrack()
-                    }
-                    else -> nextTrack()
+                    nextTrack()
                 }
+                else -> nextTrack()
             }
         }
     }

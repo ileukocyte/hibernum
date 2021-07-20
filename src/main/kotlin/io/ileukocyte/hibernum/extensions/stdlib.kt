@@ -10,26 +10,12 @@ fun String.containsAll(vararg args: CharSequence): Boolean {
     return true
 }
 fun String.containsAll(elements: Collection<CharSequence>) = containsAll(*elements.toTypedArray())
-fun String.containsAll(vararg args: Char) = containsAll(args.map { it.toString() })
+fun String.containsAll(vararg args: Char) = toCharArray().toList().containsAll(args.toList())
 
 fun String.remove(input: String) = replace(input, "")
 fun String.remove(regex: Regex) = replace(regex, "")
 
-fun String.capitalizeAll(isForce: Boolean = true): String {
-    val chars = (if (isForce) lowercase() else this).toCharArray()
-    var found = false
+fun String.capitalizeAll() =
+    lowercase().split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
 
-    for (i in chars.indices) {
-        if (!found && chars[i].isLetter()) {
-            chars[i] = chars[i].uppercaseChar()
-            found = true
-        } else if (chars[i].isWhitespace() || chars[i] == '.' || chars[i] == '\'') {
-            found = false
-        }
-    }
-
-    return String(chars)
-}
-
-fun String.singularOrPlural(int: Int) = singularOrPlural(int.toLong())
-fun String.singularOrPlural(long: Long) = this + "s".takeIf { long > 1L }.orEmpty()
+fun <N : Number> String.singularOrPlural(number: N) = this + "s".takeUnless { number.toLong() == 1L }.orEmpty()

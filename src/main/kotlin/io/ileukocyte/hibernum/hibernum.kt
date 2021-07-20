@@ -98,7 +98,7 @@ fun main() = runBlocking {
         }
     }
 
-    // adding an event listener
+    // adding the event listener
     discord.addEventListener(EventHandler)
 
     LOGGER.info("EventHandler has been successfully set as an event listener")

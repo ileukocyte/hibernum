@@ -44,7 +44,7 @@ object EventHandler : ListenerAdapter() {
 
             val description =
                 "The ${process.command?.let { it::class.simpleName } ?: event.jda.selfUser.name} process " +
-                        "running in this channel has been terminated by message deletion!"
+                        "running in this channel has been terminated via message deletion!"
 
             event.jda.getTextChannelById(process.channel)
                 ?.sendMessage {

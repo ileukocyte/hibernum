@@ -42,7 +42,7 @@ fun GuildMusicManager.stop() {
     scheduler.queue.clear()
 }
 
-fun getProgressBar(currentTime: Long, totalDuration: Long, blocks: Int = 15): String {
+fun getEmbedProgressBar(currentTime: Long, totalDuration: Long, blocks: Int = 15): String {
     val passed = (currentTime.toDouble() / totalDuration * blocks).toInt()
 
     return buildString {

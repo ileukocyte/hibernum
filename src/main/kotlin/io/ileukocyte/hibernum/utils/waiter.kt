@@ -101,7 +101,8 @@ data class WaiterProcess(
     }
 
     companion object {
-        val currentlyRunning = mutableMapOf<WaiterProcess, AwaitableEventListener<*>>()
+        @PublishedApi
+        internal val currentlyRunning = mutableMapOf<WaiterProcess, AwaitableEventListener<*>>()
     }
 }
 
@@ -137,7 +138,7 @@ class AwaitableEventListener<E : GenericEvent>(
 }
 
 /**
- * The extension intended to make awaiting of any JDA event while using the process management system possible.
+ * An extension that is intended to make awaiting of any JDA event while using the process management system possible.
  *
  * @param delay
  * A period throughout which an event is being awaited

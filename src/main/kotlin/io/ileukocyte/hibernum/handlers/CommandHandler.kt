@@ -81,7 +81,7 @@ object CommandHandler : MutableSet<Command> {
             val time = OffsetDateTime.now().until(cooldown, ChronoUnit.SECONDS)
 
             if (time <= 0) {
-                cooldowns -= name
+                cooldowns -= "$name|$userId"
                 0
             } else time
         } ?: 0
@@ -121,8 +121,8 @@ object CommandHandler : MutableSet<Command> {
                                             command.getCooldownError(event.author.idLong)
                                                 ?.let { event.channel.sendFailure(it).queue() }
                                                 ?: command.let {
-                                                    it.applyCooldown(event.author.idLong)
                                                     it(event, args.getOrNull(1))
+                                                    it.applyCooldown(event.author.idLong)
                                                 }
                                         } else command(event, args.getOrNull(1))
                                     } catch (e: Exception) {
@@ -180,8 +180,8 @@ object CommandHandler : MutableSet<Command> {
                                     command.getCooldownError(event.user.idLong)
                                         ?.let { event.replyFailure(it).setEphemeral(true).queue() }
                                         ?: command.let {
-                                            it.applyCooldown(event.user.idLong)
                                             it(event)
+                                            it.applyCooldown(event.user.idLong)
                                         }
                                 } else command(event)
                             } catch (e: Exception) {
