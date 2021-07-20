@@ -52,14 +52,16 @@ fun JDA.getProcessByMessage(messageId: Long) = processes.firstOrNull { it.invoke
 fun WaiterProcess.kill(jda: JDA) = WaiterProcess.currentlyRunning[this]?.kill(jda, true)
 
 /**
- * The unit of the bot's event waiter process management system containing the required metadata.
+ * The unit of the bot's event waiter process management system containing the required data.
  *
  * @property users
  * A mutable list containing the ID's of the users being involved
  * @property channel
- * The ID of the channel the process is currently running in
+ * An ID of the channel the process is currently running in
  * @property command
  * The command the process was launched from or by
+ * @property invoker
+ * An ID of the message the process might have been launched from
  * @property id
  * The unique 4-digit identificational key of the process used in several contexts. **Strongly unrecommended to change!**
  * @property timeCreated
