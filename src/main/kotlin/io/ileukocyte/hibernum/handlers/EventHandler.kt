@@ -53,7 +53,7 @@ object EventHandler : ListenerAdapter() {
 
                         CoroutineScope(CommandContext).launch {
                             try {
-                                val joinEvent = event.jda.awaitEvent<GuildVoiceJoinEvent>(10, DurationUnit.SECONDS) {
+                                val joinEvent = event.jda.awaitEvent<GuildVoiceJoinEvent>(90, DurationUnit.SECONDS) {
                                     it.channelJoined == event.channelLeft && !it.member.user.isBot
                                 }
 
@@ -61,10 +61,13 @@ object EventHandler : ListenerAdapter() {
 
                                 joinEvent?.guild?.audioPlayer?.player?.isPaused = false
                             } catch (e: TimeoutCancellationException) {
-                                event.guild.audioPlayer?.player?.playingTrack?.userData?.cast<TrackUserData>()?.channel?.let {
-                                    it.sendWarning("${event.jda.selfUser.name} has been inactive for too long to stay in the voice channel! " +
-                                            "The bot has left!").queue({}) {}
-                                }
+                                event.guild.audioPlayer?.player?.playingTrack?.userData
+                                    ?.cast<TrackUserData>()
+                                    ?.channel
+                                    ?.let {
+                                        it.sendWarning("${event.jda.selfUser.name} has been inactive for too long to stay in the voice channel! " +
+                                                "The bot has left!").queue({}) {}
+                                    }
 
                                 event.guild.audioPlayer?.stop()
                                 event.guild.audioManager.closeAudioConnection()

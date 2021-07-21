@@ -129,29 +129,29 @@ class YouTubePlayCommand : Command {
             object : AudioLoadResultHandler {
                 override fun trackLoaded(track: AudioTrack) {
                     val id = YOUTUBE_LINK_REGEX.find(query)?.groups?.get(3)?.value ?: query
-                    println(id)
 
-                    track.userData = TrackUserData(user, channel, "https://i3.ytimg.com/vi/$id/hqdefault.jpg")
+                    track.userData = TrackUserData(
+                        user,
+                        channel,
+                        "https://i3.ytimg.com/vi/$id/hqdefault.jpg",
+                        announceQueued = musicManager.player.playingTrack !== null,
+                        firstTrackPlaying = musicManager.player.playingTrack === null,
+                        ifFromSlashCommand = ifFromSlashCommand
+                    )
                     musicManager.scheduler += track
-
-                    ifFromSlashCommand?.replySuccess("[${track.info.title}](${track.info.uri}) " +
-                            "has been successfully added to the queue by ${user.asMention}!")?.queue()
-                        ?: channel.sendSuccess("[${track.info.title}](${track.info.uri}) " +
-                                "has been successfully added to the queue!").queue()
-
                 }
 
                 override fun playlistLoaded(playlist: AudioPlaylist) {
-                    ifFromSlashCommand?.replySuccess("${if (!playlist.isSearchResult) "[${playlist.name}](https://www.youtube.com/watch?v=$id)" else playlist.name} " +
-                            "has been successfully added to the queue by ${user.asMention}!")?.queue()
+                    ifFromSlashCommand?.replySuccess( "[${playlist.name}]($query) playlist " +
+                            "has been successfully added to the queue!")?.queue()
                         ?: channel.sendSuccess("${if (!playlist.isSearchResult) "[${playlist.name}](https://www.youtube.com/watch?v=$id)" else playlist.name} " +
-                            "has been successfully added to the queue!").queue()
+                                "has been successfully added to the queue!").queue()
 
                     for (track in playlist.tracks) {
                         val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
                             ?.let { "https://i3.ytimg.com/vi/$it/hqdefault.jpg" }
 
-                        track.userData = TrackUserData(user, channel, thumbnail)
+                        track.userData = TrackUserData(user, channel, thumbnail, firstTrackPlaying = musicManager.player.playingTrack === null)
                         musicManager.scheduler += track
                     }
                 }

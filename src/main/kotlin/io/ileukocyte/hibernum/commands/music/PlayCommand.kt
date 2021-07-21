@@ -46,28 +46,29 @@ class PlayCommand : Command {
                             val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
                                 ?.let { id -> "https://i3.ytimg.com/vi/$id/hqdefault.jpg" }
 
-                            track.userData = TrackUserData(event.author, event.channel, thumbnail)
+                            track.userData = TrackUserData(
+                                event.author,
+                                event.channel,
+                                thumbnail,
+                                announceQueued = musicManager.player.playingTrack !== null,
+                                firstTrackPlaying = musicManager.player.playingTrack === null
+                            )
                             musicManager.scheduler += track
-
-                            event.channel.sendSuccess(
-                                "[${track.info.title}](${track.info.uri}) " +
-                                        "has been successfully added to the queue!"
-                            ).queue()
                         }
 
                         override fun playlistLoaded(playlist: AudioPlaylist) {
-                            event.channel.sendSuccess(
-                                "${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else playlist.name} " +
-                                        "has been successfully added to the queue!"
-                            ).queue()
-
                             for (track in playlist.tracks) {
                                 val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
                                     ?.let { id -> "https://i3.ytimg.com/vi/$id/hqdefault.jpg" }
 
-                                track.userData = TrackUserData(event.author, event.channel, thumbnail)
+                                track.userData = TrackUserData(event.author, event.channel, thumbnail, firstTrackPlaying = musicManager.player.playingTrack === null)
                                 musicManager.scheduler += track
                             }
+
+                            event.channel.sendSuccess(
+                                "${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else playlist.name} playlist " +
+                                        "has been successfully added to the queue!"
+                            ).queue()
                         }
 
                         override fun noMatches() =
@@ -99,23 +100,27 @@ class PlayCommand : Command {
                         val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
                             ?.let { id -> "https://i3.ytimg.com/vi/$id/hqdefault.jpg" }
 
-                        track.userData = TrackUserData(event.user, event.channel, thumbnail)
+                        track.userData = TrackUserData(
+                            event.user,
+                            event.channel,
+                            thumbnail,
+                            announceQueued = musicManager.player.playingTrack !== null,
+                            firstTrackPlaying = musicManager.player.playingTrack === null,
+                            ifFromSlashCommand = event
+                        )
                         musicManager.scheduler += track
-
-                        event.replySuccess("[${track.info.title}](${track.info.uri}) " +
-                                "has been successfully added to the queue!").queue()
                     }
 
                     override fun playlistLoaded(playlist: AudioPlaylist) {
                         event.replySuccess(
-                            "${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else playlist.name} " +
+                            "${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else playlist.name} playlist " +
                                     "has been successfully added to the queue!").queue()
 
                         for (track in playlist.tracks) {
                             val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
                                 ?.let { id -> "https://i3.ytimg.com/vi/$id/hqdefault.jpg" }
 
-                            track.userData = TrackUserData(event.user, event.channel, thumbnail)
+                            track.userData = TrackUserData(event.user, event.channel, thumbnail, firstTrackPlaying = musicManager.player.playingTrack === null)
                             musicManager.scheduler += track
                         }
                     }
