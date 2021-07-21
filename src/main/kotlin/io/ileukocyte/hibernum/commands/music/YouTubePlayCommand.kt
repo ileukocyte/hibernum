@@ -144,7 +144,7 @@ class YouTubePlayCommand : Command {
                 override fun playlistLoaded(playlist: AudioPlaylist) {
                     ifFromSlashCommand?.replySuccess( "[${playlist.name}]($query) playlist " +
                             "has been successfully added to the queue!")?.queue()
-                        ?: channel.sendSuccess("${if (!playlist.isSearchResult) "[${playlist.name}](https://www.youtube.com/watch?v=$id)" else playlist.name} " +
+                        ?: channel.sendSuccess("[${playlist.name}]($query) playlist " +
                                 "has been successfully added to the queue!").queue()
 
                     for (track in playlist.tracks) {

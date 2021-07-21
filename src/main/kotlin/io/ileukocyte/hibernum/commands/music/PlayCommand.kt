@@ -66,7 +66,7 @@ class PlayCommand : Command {
                             }
 
                             event.channel.sendSuccess(
-                                "${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else playlist.name} playlist " +
+                                "${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else "\"${playlist.name}\""} playlist " +
                                         "has been successfully added to the queue!"
                             ).queue()
                         }
@@ -113,7 +113,7 @@ class PlayCommand : Command {
 
                     override fun playlistLoaded(playlist: AudioPlaylist) {
                         event.replySuccess(
-                            "${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else playlist.name} playlist " +
+                            "${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else "\"${playlist.name}\""} playlist " +
                                     "has been successfully added to the queue!").queue()
 
                         for (track in playlist.tracks) {
