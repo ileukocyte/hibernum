@@ -96,12 +96,11 @@ class HelpCommand : Command {
 
         if (options.isNotEmpty())
             field {
-                title = "Slash Usages"
-                description = "$nameWithPrefix ${
-                    options.joinToString(" ") {
-                        "<${it.name}${" (optional)".takeUnless { _ -> it.isRequired }.orEmpty()}>"
+                title = "Slash Options"
+                description = "$nameWithPrefix ${options.joinToString(" ") { "<${it.name}>" }}\n\n" +
+                    options.joinToString("\n") { o ->
+                        "<${o.name}>${" (optional)".takeUnless { _ -> o.isRequired }.orEmpty()} — ${o.description.replaceFirstChar { it.lowercase() }}"
                     }
-                }"
             }
 
         author {

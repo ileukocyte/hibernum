@@ -14,20 +14,28 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
+import kotlin.math.max
+
 class JumpCommand : Command {
     override val name = "jump"
     override val description = "Jumps to the specified time while playing the track"
-    override val usages = setOf("time code")
+    override val usages = setOf("[rewind:/fast-forward:]time code")
     override val options = setOf(
-        OptionData(OptionType.STRING, "time", "The time to jump to", true)
+        OptionData(
+            OptionType.STRING,
+            "time",
+            "The time to jump to (you can apply the prefixes \"rewind:\" or \"fast-forward:\" (e.g. rewind:1:00))",
+            true
+        )
     )
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
 
         if (audioPlayer.player.playingTrack !== null) {
-            val time = (args ?: throw NoArgumentsException).takeIf { it matches TIME_CODE_REGEX }
-                ?: throw CommandException("You have entered an argument of a wrong format!")
+            val time = (args ?: throw NoArgumentsException).takeIf {
+                it.removePrefix("rewind:").removePrefix("fast-forward:") matches TIME_CODE_REGEX
+            } ?: throw CommandException("You have entered an argument of a wrong format!")
 
             if (event.member?.voiceState?.channel != event.guild.selfMember.voiceState?.channel)
                 throw CommandException("You are not connected to the required voice channel!")
@@ -35,12 +43,26 @@ class JumpCommand : Command {
             if (audioPlayer.player.playingTrack.info.isStream)
                 throw CommandException("The track cannot be sought since it is recognized as a stream!")
 
-            val millis = timeCodeToMillis(time)
+            val millis = timeCodeToMillis(time.removePrefix("rewind:").removePrefix("fast-forward:"))
 
-            if (millis !in 0..audioPlayer.player.playingTrack.duration)
-                throw CommandException("You have specified a wrong time code for the track!")
+            if (!time.startsWith("rewind:")) {
+                if (time.startsWith("fast-forward:")) {
+                    if (audioPlayer.player.playingTrack.position + millis > audioPlayer.player.playingTrack.duration)
+                        throw CommandException("You have exceeded the track duration!")
+                } else {
+                    if (millis !in 0..audioPlayer.player.playingTrack.duration)
+                        throw CommandException("You have specified a wrong time code for the track!")
+                }
+            }
 
-            audioPlayer.player.playingTrack.position = millis
+            when {
+                time.startsWith("rewind:") ->
+                    audioPlayer.player.playingTrack.position = max(0, audioPlayer.player.playingTrack.position - millis)
+                time.startsWith("fast-forward:") ->
+                    audioPlayer.player.playingTrack.position += millis
+                else ->
+                    audioPlayer.player.playingTrack.position = millis
+            }
 
             event.channel.sendSuccess("Successfully jumped to the specified time!").queue()
         } else throw CommandException("No track is currently playing!")
@@ -50,9 +72,11 @@ class JumpCommand : Command {
         val audioPlayer = event.guild?.audioPlayer ?: throw CommandException()
 
         if (audioPlayer.player.playingTrack !== null) {
-            val time = (event.getOption("time") ?.asString?: throw NoArgumentsException)
-                .takeIf { it matches TIME_CODE_REGEX }
-                ?: throw CommandException("You have entered an argument of a wrong format!")
+            val time = (event.getOption("time")?.asString ?: throw NoArgumentsException)
+                .lowercase()
+                .takeIf {
+                    it.removePrefix("rewind:").removePrefix("fast-forward:") matches TIME_CODE_REGEX
+                } ?: throw CommandException("You have entered an argument of a wrong format!")
 
             if (event.member?.voiceState?.channel != event.guild?.selfMember?.voiceState?.channel)
                 throw CommandException("You are not connected to the required voice channel!")
@@ -60,12 +84,26 @@ class JumpCommand : Command {
             if (audioPlayer.player.playingTrack.info.isStream)
                 throw CommandException("The track cannot be sought since it is recognized as a stream!")
 
-            val millis = timeCodeToMillis(time)
+            val millis = timeCodeToMillis(time.removePrefix("rewind:").removePrefix("fast-forward:"))
 
-            if (millis !in 0..audioPlayer.player.playingTrack.duration)
-                throw CommandException("You have specified a wrong time code for the track!")
+            if (!time.startsWith("rewind:")) {
+                if (time.startsWith("fast-forward:")) {
+                    if (audioPlayer.player.playingTrack.position + millis > audioPlayer.player.playingTrack.duration)
+                        throw CommandException("You have exceeded the track duration!")
+                } else {
+                    if (millis !in 0..audioPlayer.player.playingTrack.duration)
+                        throw CommandException("You have specified a wrong time code for the track!")
+                }
+            }
 
-            audioPlayer.player.playingTrack.position = millis
+            when {
+                time.startsWith("rewind:") ->
+                    audioPlayer.player.playingTrack.position = max(0, audioPlayer.player.playingTrack.position - millis)
+                time.startsWith("fast-forward:") ->
+                    audioPlayer.player.playingTrack.position += millis
+                else ->
+                    audioPlayer.player.playingTrack.position = millis
+            }
 
             event.replySuccess("Successfully jumped to the specified time!").queue()
         } else throw CommandException("No track is currently playing!")
