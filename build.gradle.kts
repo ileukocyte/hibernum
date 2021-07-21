@@ -45,6 +45,9 @@ dependencies {
     implementation(group = "com.github.markozajc", name = "akiwrapper", version = "1.5.1.1")
     implementation(group = "org.reflections", name = "reflections", version = "0.9.12")
     implementation(group = "org.json", name = "json", version = "20210307")
+    implementation(group = "com.google.api-client", name = "google-api-client", version = "1.23.0")
+    implementation(group = "com.google.oauth-client", name = "google-oauth-client-jetty", version = "1.23.0")
+    implementation(group = "com.google.apis", name = "google-api-services-youtube", version = "v3-rev222-1.25.0")
 
     // Kotlin
     implementation(kotlin("stdlib"))

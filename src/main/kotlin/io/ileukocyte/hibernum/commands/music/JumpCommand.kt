@@ -29,18 +29,20 @@ class JumpCommand : Command {
             val time = (args ?: throw NoArgumentsException).takeIf { it matches TIME_CODE_REGEX }
                 ?: throw CommandException("You have entered an argument of a wrong format!")
 
-            if (event.member?.voiceState?.channel != event.guild.selfMember.voiceState?.channel) {
+            if (event.member?.voiceState?.channel != event.guild.selfMember.voiceState?.channel)
                 throw CommandException("You are not connected to the required voice channel!")
-            } else {
-                val millis = timeCodeToMillis(time)
 
-                if (millis !in 0..audioPlayer.player.playingTrack.duration)
-                    throw CommandException("You have specified a wrong time code for the track!")
+            if (audioPlayer.player.playingTrack.info.isStream)
+                throw CommandException("The track cannot be sought since it is recognized as a stream!")
 
-                audioPlayer.player.playingTrack.position = millis
+            val millis = timeCodeToMillis(time)
 
-                event.channel.sendSuccess("Successfully jumped to the specified time!").queue()
-            }
+            if (millis !in 0..audioPlayer.player.playingTrack.duration)
+                throw CommandException("You have specified a wrong time code for the track!")
+
+            audioPlayer.player.playingTrack.position = millis
+
+            event.channel.sendSuccess("Successfully jumped to the specified time!").queue()
         } else throw CommandException("No track is currently playing!")
     }
 
@@ -52,18 +54,20 @@ class JumpCommand : Command {
                 .takeIf { it matches TIME_CODE_REGEX }
                 ?: throw CommandException("You have entered an argument of a wrong format!")
 
-            if (event.member?.voiceState?.channel != event.guild?.selfMember?.voiceState?.channel) {
+            if (event.member?.voiceState?.channel != event.guild?.selfMember?.voiceState?.channel)
                 throw CommandException("You are not connected to the required voice channel!")
-            } else {
-                val millis = timeCodeToMillis(time)
 
-                if (millis !in 0..audioPlayer.player.playingTrack.duration)
-                    throw CommandException("You have specified a wrong time code for the track!")
+            if (audioPlayer.player.playingTrack.info.isStream)
+                throw CommandException("The track cannot be sought since it is recognized as a stream!")
 
-                audioPlayer.player.playingTrack.position = millis
+            val millis = timeCodeToMillis(time)
 
-                event.replySuccess("Successfully jumped to the specified time!").queue()
-            }
+            if (millis !in 0..audioPlayer.player.playingTrack.duration)
+                throw CommandException("You have specified a wrong time code for the track!")
+
+            audioPlayer.player.playingTrack.position = millis
+
+            event.replySuccess("Successfully jumped to the specified time!").queue()
         } else throw CommandException("No track is currently playing!")
     }
 }

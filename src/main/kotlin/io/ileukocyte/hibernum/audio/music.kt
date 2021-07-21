@@ -5,8 +5,8 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.asCoroutineDispatcher
-import net.dv8tion.jda.api.JDA
 
+import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.entities.User
@@ -60,4 +60,4 @@ fun getEmbedProgressBar(currentTime: Long, totalDuration: Long, blocks: Int = 15
     }
 }
 
-data class TrackUserData(val user: User, val channel: MessageChannel)
+data class TrackUserData(val user: User, val channel: MessageChannel, val thumbnail: String? = null)

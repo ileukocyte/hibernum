@@ -5,18 +5,17 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 
-import io.ileukocyte.hibernum.audio.MusicContext
 import io.ileukocyte.hibernum.audio.PLAYER_MANAGER
 import io.ileukocyte.hibernum.audio.TrackUserData
 import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.extensions.replyFailure
 import io.ileukocyte.hibernum.extensions.replySuccess
+import io.ileukocyte.hibernum.extensions.sendFailure
 import io.ileukocyte.hibernum.extensions.sendSuccess
-
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
+import io.ileukocyte.hibernum.utils.YOUTUBE_LINK_REGEX
 
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
@@ -29,46 +28,58 @@ class PlayCommand : Command {
     override val aliases = setOf("p")
     override val options = setOf(
         OptionData(OptionType.STRING, "query", "A link or a search term", true))
-    override val usages = setOf("query")
+    override val usages = setOf("query", "file")
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         event.member?.voiceState?.channel?.let {
             val channel = it.takeUnless { vc -> event.guild.selfMember.voiceState?.channel == vc }
-            val url = args ?: throw NoArgumentsException
+            val urls = setOf(args).filterNotNull().takeUnless { s -> s.isEmpty() }
+                ?: event.message.attachments.map { a -> a.url }.takeUnless { l -> l.isEmpty() }
+                ?: throw NoArgumentsException
 
             event.guild.audioPlayer?.let { musicManager ->
                 channel?.let { event.guild.audioManager.openAudioConnection(channel) }
 
-                PLAYER_MANAGER.loadItemOrdered(musicManager, url, object : AudioLoadResultHandler {
-                    override fun trackLoaded(track: AudioTrack) {
-                        CoroutineScope(MusicContext).launch {
-                            event.channel.sendSuccess("[${track.info.title}](${track.info.uri}) " +
-                                    "has been successfully added to queue!").queue()
+                for (url in urls) {
+                    PLAYER_MANAGER.loadItemOrdered(musicManager, url, object : AudioLoadResultHandler {
+                        override fun trackLoaded(track: AudioTrack) {
+                            val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
+                                ?.let { id -> "https://i3.ytimg.com/vi/$id/hqdefault.jpg" }
 
-                            track.userData = TrackUserData(event.author, event.channel)
+                            track.userData = TrackUserData(event.author, event.channel, thumbnail)
                             musicManager.scheduler += track
-                        }
-                    }
 
-                    override fun playlistLoaded(playlist: AudioPlaylist) {
-                        event.channel.sendSuccess("${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else playlist.name} " +
-                                    "has been successfully added to queue!").queue()
+                            event.channel.sendSuccess(
+                                "[${track.info.title}](${track.info.uri}) " +
+                                        "has been successfully added to the queue!"
+                            ).queue()
+                        }
+
+                        override fun playlistLoaded(playlist: AudioPlaylist) {
+                            event.channel.sendSuccess(
+                                "${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else playlist.name} " +
+                                        "has been successfully added to the queue!"
+                            ).queue()
 
                             for (track in playlist.tracks) {
-                                track.userData = TrackUserData(event.author, event.channel)
+                                val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
+                                    ?.let { id -> "https://i3.ytimg.com/vi/$id/hqdefault.jpg" }
+
+                                track.userData = TrackUserData(event.author, event.channel, thumbnail)
                                 musicManager.scheduler += track
                             }
-                    }
+                        }
 
-                    override fun noMatches() =
-                        throw CommandException("No results have been found by the query!")
+                        override fun noMatches() =
+                            event.channel.sendFailure("No results have been found by the query!").queue()
 
-                    override fun loadFailed(exception: FriendlyException) {
-                        exception.printStackTrace()
+                        override fun loadFailed(exception: FriendlyException) {
+                            //exception.printStackTrace()
 
-                        throw CommandException("The track is unable to be played!")
-                    }
-                })
+                            event.channel.sendFailure("The track cannot to be played!").queue()
+                        }
+                    })
+                }
             }
         } ?: throw CommandException("You are not connected to a voice channel!")
     }
@@ -85,29 +96,35 @@ class PlayCommand : Command {
 
                 PLAYER_MANAGER.loadItemOrdered(musicManager, url, object : AudioLoadResultHandler {
                     override fun trackLoaded(track: AudioTrack) {
-                        event.replySuccess("[${track.info.title}](${track.info.uri}) " +
-                                "has been successfully added to queue!").queue()
+                        val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
+                            ?.let { id -> "https://i3.ytimg.com/vi/$id/hqdefault.jpg" }
 
-                        track.userData = TrackUserData(event.user, event.channel)
+                        track.userData = TrackUserData(event.user, event.channel, thumbnail)
                         musicManager.scheduler += track
+
+                        event.replySuccess("[${track.info.title}](${track.info.uri}) " +
+                                "has been successfully added to the queue!").queue()
                     }
 
                     override fun playlistLoaded(playlist: AudioPlaylist) {
                         event.replySuccess(
                             "${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else playlist.name} " +
-                                    "has been successfully added to queue!").queue()
+                                    "has been successfully added to the queue!").queue()
 
                         for (track in playlist.tracks) {
-                            track.userData = TrackUserData(event.user, event.channel)
+                            val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
+                                ?.let { id -> "https://i3.ytimg.com/vi/$id/hqdefault.jpg" }
+
+                            track.userData = TrackUserData(event.user, event.channel, thumbnail)
                             musicManager.scheduler += track
                         }
                     }
 
                     override fun noMatches() =
-                        throw CommandException("No results have been found by the query!")
+                        event.replyFailure("No results have been found by the query!").queue()
 
                     override fun loadFailed(exception: FriendlyException) =
-                        throw CommandException("The track is unable to be played!")
+                        event.replyFailure("The track cannot be played!").queue()
                 })
             }
         } ?: throw CommandException("You are not connected to a voice channel!")

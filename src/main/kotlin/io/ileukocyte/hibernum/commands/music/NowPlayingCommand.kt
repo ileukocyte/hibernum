@@ -22,8 +22,7 @@ import org.jetbrains.kotlin.utils.addToStdlib.cast
 class NowPlayingCommand : Command {
     override val name = "nowplaying"
     override val description = "Shows information about the track that is currently playing"
-    override val aliases = setOf("np", "playing", "playingnow")
-    override val cooldown = 10L
+    override val aliases = setOf("np", "now", "playing", "playingnow")
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
@@ -40,8 +39,10 @@ class NowPlayingCommand : Command {
     }
 
     private fun playingEmbed(jda: JDA, musicManager: GuildMusicManager, track: AudioTrack) = buildEmbed {
+        val trackData = track.userData.cast<TrackUserData>()
+
         color = Immutable.SUCCESS
-        thumbnail = jda.selfUser.effectiveAvatarUrl
+        thumbnail = trackData.thumbnail ?: jda.selfUser.effectiveAvatarUrl
 
         field {
             title = "Playing Now"
@@ -50,7 +51,7 @@ class NowPlayingCommand : Command {
 
         field {
             title = "Track Requester"
-            description = track.userData.cast<TrackUserData>().user.asMention
+            description = trackData.user.asMention
         }
 
         field {

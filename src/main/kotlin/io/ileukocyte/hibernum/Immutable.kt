@@ -23,6 +23,7 @@ object Immutable {
     val VERSION = Version(major = 1, minor = 0, stability = Version.Stability.Beta, unstable = 3)
 
     val USER_AGENT = "User-Agent: DiscordBot ($GITHUB_REPOSITORY, $VERSION)"
+    val YOUTUBE_API_KEY: String = System.getenv("YOUTUBE_API_KEY")
 
     val SUCCESS = Color(140, 190, 218)
     val FAILURE = Color(239, 67, 63)

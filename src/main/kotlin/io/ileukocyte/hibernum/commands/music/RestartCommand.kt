@@ -18,6 +18,9 @@ class RestartCommand : Command {
 
         if (audioPlayer.player.playingTrack !== null) {
             if (event.member?.voiceState?.channel == event.guild.selfMember.voiceState?.channel) {
+                if (audioPlayer.player.playingTrack.info.isStream)
+                    throw CommandException("The track cannot be restarted since it is recognized as a stream!")
+
                 audioPlayer.player.playingTrack.position = 0
 
                 event.channel.sendSuccess("The track has been successfully restarted!").queue()
@@ -31,6 +34,9 @@ class RestartCommand : Command {
 
         if (audioPlayer.player.playingTrack !== null) {
             if (event.member?.voiceState?.channel == guild.selfMember.voiceState?.channel) {
+                if (audioPlayer.player.playingTrack.info.isStream)
+                    throw CommandException("The track cannot be restarted since it is recognized as a stream!")
+
                 audioPlayer.player.playingTrack.position = 0
 
                 event.replySuccess("The track has been successfully restarted!").queue()
