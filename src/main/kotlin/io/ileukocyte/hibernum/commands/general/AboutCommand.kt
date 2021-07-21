@@ -34,7 +34,8 @@ class AboutCommand : Command {
             val inviteLink = Immutable.INVITE_LINK_FORMAT.format(jda.selfUser.id)
             val musicStreamingServersCount = jda.guildCache.count { it.selfMember.voiceState?.inVoiceChannel() == true }
 
-            appendLine("${jda.selfUser.name} is a modern Discord multi-purpose bot coded in 100% [Kotlin](https://kotlinlang.org/)")
+            appendLine("${jda.selfUser.name} is a modern Discord multi-purpose 100% [Kotlin](https://kotlinlang.org/)-coded bot that currently relies mostly on its musical functionality")
+            appendLine()
             appendLine(
                 musicStreamingServersCount.takeIf { it > 0 }
                     ?.let { "Currently streaming music on **$it ${"server".singularOrPlural(it)}**" }
