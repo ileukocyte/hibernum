@@ -2,10 +2,7 @@ package io.ileukocyte.hibernum.handlers
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.annotations.HibernumExperimental
-import io.ileukocyte.hibernum.commands.Command
-import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.commands.SlashOnlyCommand
-import io.ileukocyte.hibernum.commands.TextOnlyCommand
+import io.ileukocyte.hibernum.commands.*
 import io.ileukocyte.hibernum.commands.developer.ShutdownCommand
 import io.ileukocyte.hibernum.extensions.isDeveloper
 import io.ileukocyte.hibernum.extensions.replyFailure
@@ -114,39 +111,41 @@ object CommandHandler : MutableSet<Command> {
                         CoroutineScope(CommandContext).launch {
                             if (event.jda.getProcessByEntities(event.author, event.channel) === null || command is ShutdownCommand) {
                                 if (command.isDeveloper && !event.author.isDeveloper) {
-                                    event.channel.sendFailure("You cannot execute the command!").queue()
-                                } else {
-                                    try {
-                                        if (command.cooldown > 0) {
-                                            command.getCooldownError(event.author.idLong)
-                                                ?.let { event.channel.sendFailure(it).queue() }
-                                                ?: command.let {
-                                                    it.applyCooldown(event.author.idLong)
-                                                    it(event, args.getOrNull(1))
+                                    event.channel.sendFailure("You cannot execute the command since you are not a developer!").queue()
+
+                                    return@launch
+                                }
+
+                                try {
+                                    if (command.cooldown > 0) {
+                                        command.getCooldownError(event.author.idLong)
+                                            ?.let { throw CommandException(it, SelfDeletion(5)) }
+                                            ?: command.let {
+                                                it.applyCooldown(event.author.idLong)
+                                                it(event, args.getOrNull(1))
+                                            }
+                                    } else command(event, args.getOrNull(1))
+                                } catch (e: Exception) {
+                                    when (e) {
+                                        is CommandException ->
+                                            event.channel.sendFailure(
+                                                e.message ?: "CommandException has occurred!",
+                                                e.footer ?: e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
+                                            ).queue({
+                                                e.selfDeletion?.let { sd ->
+                                                    it.delete().queueAfter(sd.delay, sd.unit, {}) {}
                                                 }
-                                        } else command(event, args.getOrNull(1))
-                                    } catch (e: Exception) {
-                                        when (e) {
-                                            is CommandException ->
-                                                event.channel.sendFailure(
-                                                    e.message ?: "CommandException has occurred!",
-                                                    e.footer ?: e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
-                                                ).queue({
-                                                    e.selfDeletion?.let { sd ->
-                                                        it.delete().queueAfter(sd.delay, sd.unit, {}) {}
-                                                    }
-                                                }) { e.printStackTrace() }
-                                            is InsufficientPermissionException -> { } // ignored
-                                            else -> {
-                                                event.channel.sendFailure(
-                                                    """
+                                            }) { e.printStackTrace() }
+                                        is InsufficientPermissionException -> { } // ignored
+                                        else -> {
+                                            event.channel.sendFailure(
+                                                """
                                            |${e::class.simpleName ?: "An unknown exception"} has occurred:
                                            |${e.message ?: "No message provided"}
                                            |""".trimMargin()
-                                                ).queue()
+                                            ).queue()
 
-                                                e.printStackTrace()
-                                            }
+                                            e.printStackTrace()
                                         }
                                     }
                                 }
@@ -173,43 +172,45 @@ object CommandHandler : MutableSet<Command> {
                 CoroutineScope(CommandContext).launch {
                     if (event.jda.getProcessByEntities(event.user, event.channel) === null || command is ShutdownCommand) {
                         if (command.isDeveloper && !event.user.isDeveloper) {
-                            event.replyFailure("You cannot execute the command!").queue()
-                        } else {
-                            try {
-                                if (command.cooldown > 0) {
-                                    command.getCooldownError(event.user.idLong)
-                                        ?.let { event.replyFailure(it).setEphemeral(true).queue() }
-                                        ?: command.let {
-                                            it.applyCooldown(event.user.idLong)
-                                            it(event)
+                            event.replyFailure("You cannot execute the command since you are not a developer!").queue()
+
+                            return@launch
+                        }
+
+                        try {
+                            if (command.cooldown > 0) {
+                                command.getCooldownError(event.user.idLong)
+                                    ?.let { event.replyFailure(it).setEphemeral(true).queue() }
+                                    ?: command.let {
+                                        it.applyCooldown(event.user.idLong)
+                                        it(event)
+                                    }
+                            } else command(event)
+                        } catch (e: Exception) {
+                            when (e) {
+                                is CommandException ->
+                                    event.replyFailure(e.message ?: "CommandException has occurred!", e.footer)
+                                        .setEphemeral(true)
+                                        .queue({}) {
+                                            event.channel.sendFailure(
+                                                e.message ?: "CommandException has occurred!",
+                                                e.footer ?: e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
+                                            ).queue({
+                                                e.selfDeletion?.let { sd ->
+                                                    it.delete().queueAfter(sd.delay, sd.unit, {}) {}
+                                                }
+                                            }) { e.printStackTrace() }
                                         }
-                                } else command(event)
-                            } catch (e: Exception) {
-                                when (e) {
-                                    is CommandException ->
-                                        event.replyFailure(e.message ?: "CommandException has occurred!", e.footer)
-                                            .setEphemeral(true)
-                                            .queue({}) {
-                                                event.channel.sendFailure(
-                                                    e.message ?: "CommandException has occurred!",
-                                                    e.footer ?: e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
-                                                ).queue({
-                                                    e.selfDeletion?.let { sd ->
-                                                        it.delete().queueAfter(sd.delay, sd.unit, {}) {}
-                                                    }
-                                                }) { e.printStackTrace() }
-                                            }
-                                    is InsufficientPermissionException -> {} // ignored
-                                    else -> {
-                                        event.replyFailure(
-                                            """
+                                is InsufficientPermissionException -> {} // ignored
+                                else -> {
+                                    event.replyFailure(
+                                        """
                                            |${e::class.simpleName ?: "An unknown exception"} has occurred:
                                            |${e.message ?: "No message provided"}
                                            |""".trimMargin()
-                                        ).queue()
+                                    ).queue()
 
-                                        e.printStackTrace()
-                                    }
+                                    e.printStackTrace()
                                 }
                             }
                         }
@@ -235,8 +236,7 @@ object CommandHandler : MutableSet<Command> {
     @HibernumExperimental
     internal operator fun invoke(event: ButtonClickEvent) {
         if (event.isFromGuild && event.message?.author == event.jda.selfUser) {
-            this[event.componentId.split("-").first()]
-            ?.let { command ->
+            this[event.componentId.split("-").first()]?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     try {
                         command(event)
