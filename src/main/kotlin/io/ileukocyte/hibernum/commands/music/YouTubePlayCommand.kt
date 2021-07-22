@@ -160,12 +160,9 @@ class YouTubePlayCommand : Command {
                     ifFromSlashCommand?.replyFailure("No results have been found by the query!")?.queue()
                         ?: channel.sendFailure("No results have been found by the query!").queue()
 
-                override fun loadFailed(exception: FriendlyException) {
-                    //exception.printStackTrace()
-
+                override fun loadFailed(exception: FriendlyException) =
                     ifFromSlashCommand?.replyFailure("The track cannot be played!")?.queue()
                         ?: channel.sendFailure("The track cannot be played!").queue()
-                }
             }
         )
     }

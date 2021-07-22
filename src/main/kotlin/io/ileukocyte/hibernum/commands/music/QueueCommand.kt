@@ -150,7 +150,11 @@ class QueueCommand : Command {
 
             field {
                 title = "Total Songs"
+                description = "${musicManager.scheduler.queue.size + 1}"
+            }
 
+            field {
+                title = "Queue"
                 description = buildString {
                     partition[page].filterNotNull().forEachIndexed { i, t ->
                         val userData = track.userData as TrackUserData
