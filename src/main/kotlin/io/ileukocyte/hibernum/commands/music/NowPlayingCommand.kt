@@ -56,11 +56,13 @@ class NowPlayingCommand : Command {
         field {
             title = "Looping Mode"
             description = musicManager.scheduler.loopMode.toString()
+            isInline = true
         }
 
         field {
             title = "Volume"
             description = "${musicManager.player.volume}%"
+            isInline = true
         }
 
         field {

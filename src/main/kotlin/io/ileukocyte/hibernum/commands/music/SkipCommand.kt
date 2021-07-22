@@ -37,16 +37,13 @@ class SkipCommand : Command {
 
         if (audioPlayer.player.playingTrack !== null) {
             if (event.member?.voiceState?.channel == guild.selfMember.voiceState?.channel) {
-                val deferred = event.deferReply().await()
-
                 audioPlayer.player.playingTrack.userData.cast<TrackUserData>().announcement?.delete()?.queue({}) {}
 
-                audioPlayer.scheduler.nextTrack()
+                audioPlayer.scheduler.nextTrack(event)
 
                 val description = "Playback has been successfully stopped!".takeIf { audioPlayer.player.playingTrack === null }
 
-                description?.let { deferred.editOriginalEmbeds(defaultEmbed(it, EmbedType.SUCCESS)).queue() }
-                    ?: deferred.deleteOriginal().queue()
+                description?.let { event.replyEmbeds(defaultEmbed(it, EmbedType.SUCCESS)).queue() }
             } else throw CommandException("You are not connected to the required voice channel!")
         } else throw CommandException("No track is currently playing!")
     }

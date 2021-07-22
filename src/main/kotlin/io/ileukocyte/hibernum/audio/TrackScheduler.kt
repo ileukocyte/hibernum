@@ -12,6 +12,9 @@ import io.ileukocyte.hibernum.extensions.sendEmbed
 import io.ileukocyte.hibernum.extensions.sendSuccess
 
 import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
+
+import org.jetbrains.kotlin.utils.addToStdlib.cast
 
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -36,11 +39,13 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
         }
     }
 
-    fun nextTrack() {
-        if (queue.isNotEmpty())
-            player.startTrack(queue.poll(), false)
-        else
-            player.destroy()
+    fun nextTrack(ifFromSlashCommand: SlashCommandEvent? = null) {
+        if (queue.isNotEmpty()) {
+            val next = queue.poll()
+            next.userData = next.userData.cast<TrackUserData>().copy(ifFromSlashCommand = ifFromSlashCommand)
+
+            player.startTrack(next, false)
+        } else player.destroy()
     }
 
     fun shuffle() {
