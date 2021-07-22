@@ -40,7 +40,7 @@ class RemoveCommand : Command {
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
-        val number = event.getOption("")?.asString?.toIntOrNull()
+        val number = event.getOption("song")?.asString?.toIntOrNull()
             ?: throw CommandException("You have specified a wrong number!")
 
         val audioPlayer = event.guild?.audioPlayer ?: throw CommandException()

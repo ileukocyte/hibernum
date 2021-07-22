@@ -59,9 +59,9 @@ class QueueCommand : Command {
             ?.let { it - 1 }
             ?: 0
 
-        event.channel.sendMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, initialPage))
+        event.replyEmbeds(queueEmbed(event.jda, audioPlayer, track, initialPage))
             .let { it.takeIf { audioPlayer.scheduler.queue.size > 7 }
-                ?.setActionRow(pageButtons(event.user.id, initialPage))
+                ?.addActionRow(pageButtons(event.user.id, initialPage))
                 ?: it
             }.queue()
     }
@@ -127,7 +127,7 @@ class QueueCommand : Command {
                     }.queue()
                 }
             }
-        }
+        } else throw CommandException("You did not invoke the initial command!")
     }
 
     private fun pageButtons(userId: String, page: Int) = setOf(
@@ -149,11 +149,6 @@ class QueueCommand : Command {
             val partition = Lists.partition(musicManager.scheduler.queue.toList(), 7)
 
             field {
-                title = "Total Songs"
-                description = "${musicManager.scheduler.queue.size + 1}"
-            }
-
-            field {
                 title = "Queue"
                 description = buildString {
                     partition[page].filterNotNull().forEachIndexed { i, t ->
@@ -168,7 +163,10 @@ class QueueCommand : Command {
                 }
             }
 
-            if (partition.size > 1) footer { text = "Page: ${page + 1}/${partition.size}" }
+            footer {
+                text = "Total songs: ${musicManager.scheduler.queue.size + 1}"
+                text += " \u2022 Page: ${page + 1}/${partition.size}".takeIf { partition.size > 1 }.orEmpty()
+            }
         }
 
         field {

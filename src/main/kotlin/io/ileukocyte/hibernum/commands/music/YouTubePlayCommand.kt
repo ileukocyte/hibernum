@@ -100,7 +100,10 @@ class YouTubePlayCommand : Command {
                     SelectOption.of(
                         it.snippet.title.take(24).run { if (length == 24) "$this\u2026" else this },
                         it.id
-                    ).withDescription("${it.snippet.channelTitle} - ${asDuration(it.contentDetails.durationInMillis)}")
+                    ).withDescription(
+                        "${it.snippet.channelTitle} - ${asDuration(it.contentDetails.durationInMillis)}"
+                            .take(49).run { if (length == 49) "$this\u2026" else this }
+                    )
                 }
 
                 SelectionMenu.create("$name-${member.user.idLong}-videos")

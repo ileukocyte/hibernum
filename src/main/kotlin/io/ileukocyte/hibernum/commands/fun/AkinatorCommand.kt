@@ -345,7 +345,7 @@ class AkinatorCommand : Command {
                     awaitAnswer(messageChannel, player, akiwrapper)
                 }
                 "b", "back" -> {
-                    val invoker = messageChannel.sendEmbed {
+                    val invoker = message.replyEmbed {
                         val isFirst = akiwrapper.currentQuestion?.step != 0
                         val question =
                             if (isFirst) akiwrapper.undoAnswer() else akiwrapper.currentQuestion
@@ -377,7 +377,7 @@ class AkinatorCommand : Command {
                             val nextQuestion = akiwrapper.answerCurrentQuestion(answer)
 
                             if (nextQuestion !== null) {
-                                val invoker = messageChannel.sendEmbed {
+                                val invoker = message.replyEmbed {
                                     color = Immutable.SUCCESS
                                     description = nextQuestion.question
 
@@ -420,7 +420,7 @@ class AkinatorCommand : Command {
                             }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
                         }
                     } else {
-                        val incorrect = messageChannel.sendFailure(
+                        val incorrect = message.replyFailure(
                             "Incorrect answer! Use `help`/`aliases` to get documentation!",
                             "This message will self-delete in 5 seconds"
                         ).await()
