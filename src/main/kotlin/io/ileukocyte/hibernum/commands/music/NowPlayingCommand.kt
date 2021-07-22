@@ -10,7 +10,6 @@ import io.ileukocyte.hibernum.audio.getEmbedProgressBar
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.extensions.capitalizeAll
 import io.ileukocyte.hibernum.utils.asDuration
 
 import net.dv8tion.jda.api.JDA
@@ -56,7 +55,7 @@ class NowPlayingCommand : Command {
 
         field {
             title = "Looping Mode"
-            description = musicManager.scheduler.loopMode.name.capitalizeAll()
+            description = musicManager.scheduler.loopMode.toString()
         }
 
         field {

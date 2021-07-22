@@ -82,6 +82,7 @@ class KEmbedBuilder {
                 javaBuilder.addField(field.title, field.description, field.isInline)
             }
         }
+
         return javaBuilder.build()
     }
 

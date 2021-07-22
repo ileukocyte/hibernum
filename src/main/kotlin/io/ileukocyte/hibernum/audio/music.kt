@@ -73,5 +73,6 @@ data class TrackUserData(
     val announcement: Message? = null,
     val announceQueued: Boolean = false,
     val firstTrackPlaying: Boolean = false,
-    val ifFromSlashCommand: SlashCommandEvent? = null
+    val ifFromSlashCommand: SlashCommandEvent? = null,
+    val playCount: Int = 0
 )

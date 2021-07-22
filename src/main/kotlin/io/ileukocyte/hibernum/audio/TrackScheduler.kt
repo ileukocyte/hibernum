@@ -48,7 +48,7 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
     override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {
         val userData = track.userData as TrackUserData
         val action =
-            if (userData.firstTrackPlaying)
+            if (userData.firstTrackPlaying && userData.playCount == 0)
                 userData.ifFromSlashCommand?.replySuccess("[${track.info.title}](${track.info.uri}) is playing now!")
                     ?: userData.channel.sendSuccess("[${track.info.title}](${track.info.uri}) is playing now!")
             else userData.channel.sendEmbed {
@@ -56,7 +56,7 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
                 description = "[${track.info.title}](${track.info.uri}) is playing now!"
             }
 
-        action.queue({ track.userData = userData.copy(announcement = it as? Message) }) {}
+        action.queue({ track.userData = userData.copy(announcement = it as? Message, playCount = userData.playCount + 1) }) {}
     }
 
     override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {

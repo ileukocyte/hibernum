@@ -48,6 +48,7 @@ dependencies {
     implementation(group = "com.google.api-client", name = "google-api-client", version = "1.23.0")
     implementation(group = "com.google.oauth-client", name = "google-oauth-client-jetty", version = "1.23.0")
     implementation(group = "com.google.apis", name = "google-api-services-youtube", version = "v3-rev222-1.25.0")
+    implementation(group = "com.google.guava", name = "guava", version = "30.1.1-jre")
 
     // Kotlin
     implementation(kotlin("stdlib"))
