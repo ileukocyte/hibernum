@@ -5,8 +5,7 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
-import io.ileukocyte.hibernum.extensions.replaceLastChar
-import io.ileukocyte.hibernum.extensions.toJSONObject
+import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.handlers.CommandContext
 import io.ileukocyte.hibernum.utils.RequiredAttributes
 import io.ileukocyte.hibernum.utils.getPerspectiveApiProbability
@@ -24,12 +23,14 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
+import org.json.JSONObject
+
 import java.net.URLEncoder
 import java.time.OffsetDateTime
 
 class UrbanCommand : Command {
     override val name = "urban"
-    override val description = "Sends an Urban Dictionary definition of the specified term"
+    override val description = "Sends an Urban Dictionary definition of the specified term (executes faster in a NSFW channel)"
     override val aliases = setOf("ud", "urbandictionary", "define")
     override val cooldown = 4L
     override val usages = setOf("term")
@@ -42,17 +43,44 @@ class UrbanCommand : Command {
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val query = args ?: throw NoArgumentsException
 
-        val term = lookForDefinition(client, query, event.channel.isNSFW)
+        val deferred = event.channel.sendEmbed {
+            color = Immutable.SUCCESS
+            description = "Looking for a non-NSFW definition\u2026"
 
-        event.channel.sendMessageEmbeds(urbanEmbed(event.jda, term)).queue()
+            footer { text = "The command will execute faster in a NSFW channel!" }
+        }.takeUnless { event.channel.isNSFW }?.await()
+
+        val embed = try {
+            urbanEmbed(event.jda, lookForDefinition(client, query, event.channel.isNSFW))
+        } catch (e: Exception) {
+            defaultEmbed(e.message ?: "An exception has occurred!", EmbedType.FAILURE)
+        }
+
+        deferred?.editMessageEmbeds(embed)?.queue({}) {
+            event.channel.sendMessageEmbeds(embed).queue()
+        } ?: event.channel.sendMessageEmbeds(embed).queue()
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
         val query = event.getOption("term")?.asString ?: return
 
-        val term = lookForDefinition(client, query, event.textChannel.isNSFW)
+        val deferred = event.deferReply().takeIf { event.textChannel.isNSFW }?.await()
+            ?: event.replyEmbed {
+                color = Immutable.SUCCESS
+                description = "Looking for a non-NSFW definition\u2026"
 
-        event.replyEmbeds(urbanEmbed(event.jda, term)).queue()
+                footer { text = "The command will execute faster in a NSFW channel!" }
+            }.await()
+
+        val embed = try {
+            urbanEmbed(event.jda, lookForDefinition(client, query, event.textChannel.isNSFW))
+        } catch (e: Exception) {
+            defaultEmbed(e.message ?: "An exception has occurred!", EmbedType.FAILURE)
+        }
+
+        deferred?.editOriginalEmbeds(embed)?.queue({}) {
+            event.channel.sendMessageEmbeds(embed).queue()
+        }
     }
 
     private suspend fun lookForDefinition(client: HttpClient, query: String, isNSFWChannel: Boolean): Term {
@@ -64,11 +92,12 @@ class UrbanCommand : Command {
         } catch (_: ClientRequestException) {
             throw CommandException("Urban Dictionary is not available at the moment!")
         }
-        val result = urbanRequest.getJSONArray("list").takeUnless { it.isEmpty }
-            ?.getJSONObject(0)
+        val response = urbanRequest.getJSONArray("list").takeUnless { it.isEmpty }
+            ?.take(7)
+        var result = response?.toJSONArray()?.getJSONObject(0)
             ?: throw CommandException("No definition has been found by the query!")
 
-        val term = result.let { Term(
+        var term = result.let { Term(
             it.getString("word"),
             it.getString("definition"),
             it.getString("example"),
@@ -78,21 +107,49 @@ class UrbanCommand : Command {
             OffsetDateTime.parse(it.getString("written_on"))
         ) }
 
-        val hasFoundNsfw = arrayOf(term.definition, term.example)
-            .filter { it.isNotEmpty() }
-            .mapNotNull {
-                try {
-                    getPerspectiveApiProbability(client, it, RequiredAttributes.SEXUALLY_EXPLICIT)
-                } catch (_: ClientRequestException) {
-                    null
-                }
-            }.any { it >= 0.9f }
+        if (!isNSFWChannel) {
+            val hasFoundNsfw = arrayOf(term.definition, term.example)
+                .filter { it.isNotEmpty() }
+                .mapNotNull {
+                    try {
+                        getPerspectiveApiProbability(client, it, RequiredAttributes.SEXUALLY_EXPLICIT)
+                    } catch (_: ClientRequestException) {
+                        null
+                    }
+                }.any { it >= 0.9f }
 
-        if (hasFoundNsfw && !isNSFWChannel)
-            throw CommandException(
-                "The definition cannot be sent to this non-NSFW channel!",
-                footer = "Try using the command in a channel that is intended for NSFW bot commands!"
-            )
+            if (hasFoundNsfw) {
+                result = response
+                    .filterIsInstance<JSONObject>()
+                    .filter { it != result }
+                    .firstOrNull {
+                        arrayOf(it.getString("definition"), it.getString("example"))
+                            .filter { s -> s.isNotEmpty() }
+                            .mapNotNull { s ->
+                                try {
+                                    getPerspectiveApiProbability(client, s, RequiredAttributes.SEXUALLY_EXPLICIT)
+                                } catch (_: ClientRequestException) {
+                                    null
+                                }
+                            }.none { p -> p >= 0.9f }
+                    } ?: throw CommandException(
+                    "No definition that does not contain any sexually explicit content has been found for the query!",
+                    footer = "Try using the command in a channel that is intended for NSFW bot commands!"
+                )
+
+                term = result.let {
+                    Term(
+                        it.getString("word"),
+                        it.getString("definition"),
+                        it.getString("example"),
+                        it.getString("author"),
+                        it.getInt("thumbs_up"),
+                        it.getInt("thumbs_down"),
+                        OffsetDateTime.parse(it.getString("written_on"))
+                    )
+                }
+            }
+        }
 
         val definition: String by lazy {
             var definition = result.getString("definition")
