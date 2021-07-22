@@ -4,11 +4,13 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
-import io.ileukocyte.hibernum.Immutable
 
+import io.ileukocyte.hibernum.Immutable
+import io.ileukocyte.hibernum.extensions.replyEmbed
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendEmbed
 import io.ileukocyte.hibernum.extensions.sendSuccess
+
 import net.dv8tion.jda.api.entities.Message
 
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -46,15 +48,20 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
     }
 
     override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {
+        val embedDescription = "[${track.info.title}](${track.info.uri}) is playing now!"
         val userData = track.userData as TrackUserData
         val action =
             if (userData.firstTrackPlaying && userData.playCount == 0)
-                userData.ifFromSlashCommand?.replySuccess("[${track.info.title}](${track.info.uri}) is playing now!")
-                    ?: userData.channel.sendSuccess("[${track.info.title}](${track.info.uri}) is playing now!")
-            else userData.channel.sendEmbed {
-                color = Immutable.SUCCESS
-                description = "[${track.info.title}](${track.info.uri}) is playing now!"
-            }
+                userData.ifFromSlashCommand?.replySuccess(embedDescription)
+                    ?: userData.channel.sendSuccess(embedDescription)
+            else
+                userData.ifFromSlashCommand?.replyEmbed {
+                    color = Immutable.SUCCESS
+                    description = embedDescription
+                } ?: userData.channel.sendEmbed {
+                    color = Immutable.SUCCESS
+                    description = embedDescription
+                }
 
         action.queue({ track.userData = userData.copy(announcement = it as? Message, playCount = userData.playCount + 1) }) {}
     }
