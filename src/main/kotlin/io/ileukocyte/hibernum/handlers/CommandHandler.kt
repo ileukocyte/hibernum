@@ -130,7 +130,7 @@ object CommandHandler : MutableSet<Command> {
                                             is CommandException ->
                                                 event.channel.sendFailure(
                                                     e.message ?: "CommandException has occurred!",
-                                                    e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
+                                                    e.footer ?: e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
                                                 ).queue({
                                                     e.selfDeletion?.let { sd ->
                                                         it.delete().queueAfter(sd.delay, sd.unit, {}) {}
@@ -192,7 +192,7 @@ object CommandHandler : MutableSet<Command> {
                                             .queue({}) {
                                                 event.channel.sendFailure(
                                                     e.message ?: "CommandException has occurred!",
-                                                    e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
+                                                    e.footer ?: e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
                                                 ).queue({
                                                     e.selfDeletion?.let { sd ->
                                                         it.delete().queueAfter(sd.delay, sd.unit, {}) {}
@@ -247,7 +247,7 @@ object CommandHandler : MutableSet<Command> {
                                 .queue({}) {
                                     event.channel.sendFailure(
                                         e.message ?: "CommandException has occurred!",
-                                        e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
+                                        e.footer ?: e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
                                     ).queue({
                                         e.selfDeletion?.let { sd ->
                                             it.delete().queueAfter(sd.delay, sd.unit, {}) {}
@@ -297,7 +297,7 @@ object CommandHandler : MutableSet<Command> {
                                 .queue({}) {
                                     event.channel.sendFailure(
                                         e.message ?: "CommandException has occurred!",
-                                        e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
+                                        e.footer ?: e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
                                     ).queue({
                                         e.selfDeletion?.let { sd ->
                                             it.delete().queueAfter(sd.delay, sd.unit, {}) {}

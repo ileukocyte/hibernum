@@ -14,6 +14,8 @@ inline fun <T> JSONObject.put(lazy: () -> Pair<String, T>) {
     put(key, value)
 }
 
+operator fun <T> JSONObject.set(key: String, value: T): JSONObject = put(key, value)
+
 fun Collection<*>.toJSONArray() = JSONArray(this)
 
 fun String.toJSONArray() = JSONArray(this)

@@ -82,7 +82,10 @@ class EvalCommand : TextOnlyCommand {
                 "hibernum.builders",
                 "hibernum.commands",
                 "hibernum.commands.developer",
+                "hibernum.commands.`fun`",
                 "hibernum.commands.general",
+                "hibernum.commands.music",
+                "hibernum.commands.utils",
                 "hibernum.extensions",
                 "hibernum.handlers",
                 "hibernum.utils"
@@ -128,7 +131,7 @@ class EvalCommand : TextOnlyCommand {
                 "system"
             ),
             "kotlinx" to setOf("coroutines"),
-            "org" to setOf("json", "reflections"),
+            "org" to setOf("json", "jsoup", "reflections"),
             "mu" to emptySet()
         )
     }

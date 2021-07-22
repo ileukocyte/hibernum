@@ -70,7 +70,7 @@ class YouTubePlayCommand : Command {
 
                 play(videoUrl, event.textChannel, event.user, true)
             }
-        }
+        } else throw CommandException("You did not invoke the initial command!")
     }
 
     private suspend fun sendMenu(
@@ -98,11 +98,11 @@ class YouTubePlayCommand : Command {
             val menu by lazy {
                 val options = videos.map {
                     SelectOption.of(
-                        it.snippet.title.take(24).run { if (length == 24) "$this\u2026" else this },
+                        it.snippet.title.take(25).run { if (length == 25) replaceLastChar('\u2026') else this },
                         it.id
                     ).withDescription(
                         "${it.snippet.channelTitle} - ${asDuration(it.contentDetails.durationInMillis)}"
-                            .take(49).run { if (length == 49) "$this\u2026" else this }
+                            .take(50).run { if (length == 50) replaceLastChar('\u2026') else this }
                     )
                 }
 

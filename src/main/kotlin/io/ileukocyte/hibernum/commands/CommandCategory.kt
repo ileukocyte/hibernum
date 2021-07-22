@@ -8,6 +8,7 @@ enum class CommandCategory {
     FUN,
     GENERAL,
     MUSIC,
+    UTILS,
     BETA,
     UNKNOWN;
 

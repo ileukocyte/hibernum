@@ -5,10 +5,13 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 val kotlinVersion: String by project
 val coroutinesVersion: String by project
 val jdaVersion: String by project
+val ktorVersion: String by project
 
 plugins {
     java
+
     kotlin("jvm") version "1.5.21"
+
     id("com.github.johnrengelman.shadow") version "5.1.0"
     id("com.github.ben-manes.versions") version "0.19.0"
 }
@@ -49,6 +52,9 @@ dependencies {
     implementation(group = "com.google.oauth-client", name = "google-oauth-client-jetty", version = "1.23.0")
     implementation(group = "com.google.apis", name = "google-api-services-youtube", version = "v3-rev222-1.25.0")
     implementation(group = "com.google.guava", name = "guava", version = "30.1.1-jre")
+    implementation(group = "io.ktor", name = "ktor-client-core", version = ktorVersion)
+    implementation(group = "io.ktor", name = "ktor-client-cio", version = ktorVersion)
+    implementation(group = "org.jsoup", name = "jsoup", version = "1.14.1")
 
     // Kotlin
     implementation(kotlin("stdlib"))

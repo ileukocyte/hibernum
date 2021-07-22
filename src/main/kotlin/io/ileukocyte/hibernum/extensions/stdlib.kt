@@ -15,6 +15,9 @@ fun String.containsAll(vararg args: Char) = toCharArray().toList().containsAll(a
 fun String.remove(input: String) = replace(input, "")
 fun String.remove(regex: Regex) = replace(regex, "")
 
+fun String.replaceLastChar(charSequence: CharSequence) = substring(0, length - 1) + charSequence
+fun String.replaceLastChar(char: Char) = replaceLastChar(char.toString())
+
 fun String.capitalizeAll() =
     lowercase().split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
 
