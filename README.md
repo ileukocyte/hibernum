@@ -10,5 +10,6 @@
 * [Reflections](https://github.com/ronmamo/reflections)
 * [JSON-Java (org.json)](https://github.com/stleary/JSON-java)
 * [YouTube Data API](https://developers.google.com/youtube/v3)
+* [Guava](https://github.com/google/guava)
 * [logback-classic](http://logback.qos.ch/)
 * [kotlin-logging](https://github.com/MicroUtils/kotlin-logging)
