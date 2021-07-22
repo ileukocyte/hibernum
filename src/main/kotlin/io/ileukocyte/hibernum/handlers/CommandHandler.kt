@@ -187,7 +187,7 @@ object CommandHandler : MutableSet<Command> {
                             } catch (e: Exception) {
                                 when (e) {
                                     is CommandException ->
-                                        event.replyFailure(e.message ?: "CommandException has occurred!")
+                                        event.replyFailure(e.message ?: "CommandException has occurred!", e.footer)
                                             .setEphemeral(true)
                                             .queue({}) {
                                                 event.channel.sendFailure(
