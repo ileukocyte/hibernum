@@ -7,6 +7,7 @@
 * [JDA](https://github.com/DV8FromTheWorld/JDA)
 * [LavaPlayer](https://github.com/sedmelluq/lavaplayer)
 * [Akiwrapper](https://github.com/markozajc/Akiwrapper)
+* *[openweather-kt](https://github.com/ileukocyte/openweather-kt)*
 * [Reflections](https://github.com/ronmamo/reflections)
 * [Ktor](https://github.com/ktorio/ktor)
 * [JSON-Java (org.json)](https://github.com/stleary/JSON-java)
