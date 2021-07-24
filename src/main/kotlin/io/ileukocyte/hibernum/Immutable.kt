@@ -25,6 +25,7 @@ object Immutable {
     val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0" //"User-Agent: DiscordBot ($GITHUB_REPOSITORY, $VERSION)"
     val YOUTUBE_API_KEY: String = System.getenv("YOUTUBE_API_KEY")
     val PERSPECTIVE_API_KEY: String = System.getenv("PERSPECTIVE_API_KEY")
+    val WEATHER_API_KEY: String = System.getenv("WEATHER_API_KEY")
 
     val SUCCESS = Color(140, 190, 218)
     val FAILURE = Color(239, 67, 63)
@@ -45,7 +46,8 @@ data class Version(
         major,
         minor,
         patch.takeUnless { it == 0 }
-    ).filterNotNull().joinToString(separator = ".") + stability.suffix?.let { "-$it$unstable" }.orEmpty()
+    ).filterNotNull().joinToString(separator = ".") +
+            stability.suffix?.let { "-$it${unstable.takeIf { u -> u != 0 } ?: ""}" }.orEmpty()
 
     sealed class Stability(val suffix: String? = null) {
         object Stable : Stability()

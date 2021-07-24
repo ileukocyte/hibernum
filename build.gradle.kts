@@ -46,6 +46,7 @@ dependencies {
 
     // APIs
     implementation(group = "com.github.markozajc", name = "akiwrapper", version = "1.5.1.1")
+    implementation(group = "com.github.ileukocyte", name = "openweather-kt", version = "1.0-BETA1")
     implementation(group = "org.reflections", name = "reflections", version = "0.9.12")
     implementation(group = "org.json", name = "json", version = "20210307")
     implementation(group = "com.google.api-client", name = "google-api-client", version = "1.23.0")
@@ -110,7 +111,8 @@ data class Version(
         major,
         minor,
         patch.takeUnless { it == 0 }
-    ).filterNotNull().joinToString(separator = ".") + stability.suffix?.let { "-$it$unstable" }.orEmpty()
+    ).filterNotNull().joinToString(separator = ".") +
+            stability.suffix?.let { "-$it${unstable.takeIf { u -> u != 0 } ?: ""}" }.orEmpty()
 
     sealed class Stability(val suffix: String? = null) {
         object Stable : Stability()
