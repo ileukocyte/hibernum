@@ -13,11 +13,14 @@ import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.SelfDeletion
 import io.ileukocyte.hibernum.extensions.*
+import io.ileukocyte.hibernum.handlers.CommandContext
 import io.ileukocyte.hibernum.utils.*
 
 import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.launch
 
 import net.dv8tion.jda.api.entities.Emoji
 import net.dv8tion.jda.api.entities.Message
@@ -29,6 +32,7 @@ import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.OptionType
@@ -92,10 +96,10 @@ class AkinatorCommand : Command {
         )
 
     override suspend fun invoke(event: SlashCommandEvent) =
-        sendLanguagesMenu(event, event.getOption("type")?.asString, true)
+        sendLanguagesMenu(event, event.getOption("type")?.asString, null, true)
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) =
-        sendGuessTypeMenu(event.channel.idLong, event.author.idLong, event)
+        sendGuessTypeMenu(event.channel.idLong, event.author.idLong, event.messageIdLong, event)
 
     override suspend fun invoke(event: SelectionMenuEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
@@ -117,7 +121,7 @@ class AkinatorCommand : Command {
                 "type" -> {
                     event.message?.delete()?.await()
 
-                    sendLanguagesMenu(event, optionValue, false)
+                    sendLanguagesMenu(event, optionValue, id[1].toLongOrNull(), false)
                 }
                 "lang" -> {
                     if (optionValue == "return") {
@@ -125,7 +129,7 @@ class AkinatorCommand : Command {
 
                         event.message?.delete()?.await()
 
-                        sendGuessTypeMenu(event.channel.idLong, event.user.idLong, event)
+                        sendGuessTypeMenu(event.channel.idLong, event.user.idLong, id[1].toLongOrNull(), event)
 
                         return
                     }
@@ -137,6 +141,14 @@ class AkinatorCommand : Command {
 
                         event.message?.delete()?.await()
 
+                        CoroutineScope(CommandContext).launch {
+                            event.jda.awaitEvent<GuildMessageReceivedEvent>(waiterProcess = waiterProcess {
+                                channel = event.channel.idLong
+                                users += event.user.idLong
+                                command = this@AkinatorCommand
+                            }) { false } // used to block other commands
+                        }
+
                         val akiwrapper = buildAkiwrapper {
                             guessType = types[event.user.idLong] ?: GuessType.CHARACTER
                             language = lang
@@ -146,7 +158,9 @@ class AkinatorCommand : Command {
                         declinedGuesses += event.user.idLong to mutableSetOf()
                         akiwrappers += event.user.idLong to akiwrapper
 
-                        val invoker = event.channel.sendEmbed {
+                        event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda)
+
+                        val embed = buildEmbed {
                             color = Immutable.SUCCESS
                             description = akiwrapper.currentQuestion?.question ?: "N/A"
                             author {
@@ -159,10 +173,20 @@ class AkinatorCommand : Command {
                                     if (event.textChannel.isNSFW) append(" | NSFW mode")
                                 }
                             }
-                        }.await()
+                        }
+
+                        val invoker = try {
+                            event.channel.retrieveMessageById(id[1].toLongOrNull() ?: 0).await()
+                                .replyEmbeds(embed)
+                                .await()
+                        } catch (_: ErrorResponseException) {
+                            event.channel.sendMessageEmbeds(embed).await()
+                        }
 
                         awaitAnswer(event.channel, event.user, akiwrapper, invoker)
                     } catch (e: Exception) {
+                        event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda)
+
                         declinedGuesses -= event.user.idLong
                         types -= event.user.idLong
                         akiwrappers -= event.user.idLong
@@ -446,14 +470,14 @@ class AkinatorCommand : Command {
     }
 
     @OptIn(ExperimentalTime::class)
-    private suspend fun <E : Event> sendGuessTypeMenu(channelId: Long, playerId: Long, event: E) {
+    private suspend fun <E : Event> sendGuessTypeMenu(channelId: Long, playerId: Long, messageId: Long?, event: E) {
         event.jda.getProcessByEntitiesIds(playerId, channelId)?.kill(event.jda) // just in case
 
         if (event.jda.getUserProcesses(playerId).any { it.command is AkinatorCommand && it.channel != channelId })
             throw CommandException("You have another Akinator command running somewhere else! Finish the process first!")
 
         val menu = SelectionMenu
-            .create("$name-$playerId-type")
+            .create("$name-$playerId-${messageId ?: 0}-type")
             .addOptions(
                 *GuessType.values()
                     .filter { it != GuessType.PLACE }
@@ -502,6 +526,7 @@ class AkinatorCommand : Command {
     private suspend fun sendLanguagesMenu(
         event: GenericInteractionCreateEvent,
         optionValue: String?,
+        messageId: Long?,
         isFromSlashCommand: Boolean
     ) {
         if (isFromSlashCommand) {
@@ -516,7 +541,7 @@ class AkinatorCommand : Command {
         val availableLanguages = languagesAvailableForTypes[type] ?: Language.values().toSortedSet()
 
         val menu = SelectionMenu
-            .create("$name-${event.user.idLong}-lang")
+            .create("$name-${event.user.idLong}-${messageId ?: 0}-lang")
             .addOptions(
                 *availableLanguages.map { SelectOption.of(it.name.capitalizeAll(), it.name) }.toTypedArray(),
                 SelectOption.of("Return", "return").withEmoji(Emoji.fromUnicode("\u25C0\uFE0F")),
