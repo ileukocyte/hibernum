@@ -197,9 +197,11 @@ class UrbanCommand : Command {
             description = term.definition.limitTo(1024)
         }
 
-        field {
-            title = "Example"
-            description = term.example.limitTo(1024)
+        term.example.limitTo(1024).takeUnless { it.isEmpty() }?.let {
+            field {
+                title = "Example"
+                description = it
+            }
         }
 
         field {
