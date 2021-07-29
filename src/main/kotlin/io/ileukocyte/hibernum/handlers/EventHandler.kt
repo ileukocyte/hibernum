@@ -66,7 +66,9 @@ object EventHandler : ListenerAdapter() {
                                     ?.channel
                                     ?.let {
                                         it.sendWarning("${event.jda.selfUser.name} has been inactive for too long to stay in the voice channel! " +
-                                                "The bot has left!").queue({}) {}
+                                            "The bot has left!",
+                                            "This message will self-delete in 1 minute"
+                                        ).queue({ w -> w.delete().queueAfter(1, DurationUnit.MINUTES, {}) {} }) {}
                                     }
 
                                 event.guild.audioPlayer?.stop()
