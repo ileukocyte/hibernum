@@ -10,6 +10,9 @@ import io.ileukocyte.hibernum.Immutable
 
 import java.time.Duration
 
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
+
 val YOUTUBE = YouTube.Builder(NetHttpTransport(), JacksonFactory()) {}
     .setApplicationName("hibernum-discord-bot")
     .build()
@@ -17,7 +20,7 @@ val YOUTUBE = YouTube.Builder(NetHttpTransport(), JacksonFactory()) {}
 val YOUTUBE_LINK_REGEX =
     Regex("^(?:https?://)?(?:(?:www|m(?:usic)?)\\.)?(youtube\\.com|youtu.be)(/(?:[\\w\\-]+\\?v=|embed/|v/)?)([\\w\\-]+)(\\S+)?$")
 
-fun searchVideos(query: String, maxResults: Long = 15): List<Video> {
+suspend fun searchVideos(query: String, maxResults: Long = 15): List<Video> = suspendCoroutine {
     val search = YOUTUBE.search().list("id,snippet")
 
     search.key = Immutable.YOUTUBE_API_KEY
@@ -29,9 +32,9 @@ fun searchVideos(query: String, maxResults: Long = 15): List<Video> {
     val videos = YOUTUBE.videos().list("id,snippet,contentDetails")
 
     videos.key = search.key
-    videos.id = search.execute().items.joinToString(",") { it.id.videoId }
+    videos.id = search.execute().items.joinToString(",") { v -> v.id.videoId }
 
-    return videos.execute().items
+    it.resume(videos.execute().items)
 }
 
 val VideoContentDetails.durationInMillis get() = Duration.parse(duration).toMillis()

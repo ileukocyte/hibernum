@@ -12,7 +12,7 @@ import io.ileukocyte.hibernum.audio.getEmbedProgressBar
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.extensions.replaceLastChar
+import io.ileukocyte.hibernum.extensions.limitTo
 import io.ileukocyte.hibernum.utils.asDuration
 
 import net.dv8tion.jda.api.JDA
@@ -155,7 +155,7 @@ class QueueCommand : Command {
                     partition[page].forEachIndexed { i, t ->
                         val userData = track.userData as TrackUserData
 
-                        val trackTitle = "[${t.info.title.take(35).run { if (length == 35) replaceLastChar('\u2026') else this }}]" +
+                        val trackTitle = "[${t.info.title.limitTo(35)}]" +
                                 "(${t.info.uri})"
                         val trackDuration = if (t.info.isStream) "(LIVE)" else asDuration(t.duration)
 

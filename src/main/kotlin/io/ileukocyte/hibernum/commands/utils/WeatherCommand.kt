@@ -111,7 +111,8 @@ class WeatherCommand : Command {
         field {
             title = "Current Date"
             description = OffsetDateTime.now(forecast.time.timeZone.toZoneId())
-                .format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM))
+                .format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)) +
+                    " (${forecast.time.timeZone.displayName})"
         }
 
         author {

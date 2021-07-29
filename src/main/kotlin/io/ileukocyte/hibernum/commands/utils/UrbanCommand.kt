@@ -194,12 +194,12 @@ class UrbanCommand : Command {
 
         field {
             title = "Definition"
-            description = term.definition.take(1024).run { if (length == 1024) replaceLastChar('\u2026') else this }
+            description = term.definition.limitTo(1024)
         }
 
         field {
             title = "Example"
-            description = term.example.take(1024).run { if (length == 1024) replaceLastChar('\u2026') else this }
+            description = term.example.limitTo(1024)
         }
 
         field {
