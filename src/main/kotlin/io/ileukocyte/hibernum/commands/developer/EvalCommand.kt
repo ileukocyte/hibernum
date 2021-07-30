@@ -4,7 +4,10 @@ import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextOnlyCommand
+import io.ileukocyte.hibernum.extensions.remove
 import io.ileukocyte.hibernum.extensions.sendSuccess
+import io.ileukocyte.openweather.Forecast
+import io.ileukocyte.openweather.OpenWeatherApi
 
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.Message
@@ -62,6 +65,8 @@ class EvalCommand : TextOnlyCommand {
                     is RestAction<*> -> result.queue()
                     is Array<*> -> event.channel.sendMessage(result.contentDeepToString()).queue()
                     is JSONObject -> event.channel.sendMessage(result.toString(2)).queue()
+                    is Forecast -> event.channel.sendMessage(result.toString().remove(result.api.key)).queue()
+                    is OpenWeatherApi -> event.channel.sendMessage(result.toString().remove(result.key)).queue()
                     else -> event.channel.sendMessage("$result").queue()
                 }
             } else event.channel.sendSuccess("Successful execution!").queue()
@@ -88,7 +93,10 @@ class EvalCommand : TextOnlyCommand {
                 "hibernum.commands.utils",
                 "hibernum.extensions",
                 "hibernum.handlers",
-                "hibernum.utils"
+                "hibernum.utils",
+                "openweather",
+                "openweather.entities",
+                "openweather.extensions"
             ),
             "net.dv8tion.jda" to setOf(
                 "api",
@@ -108,6 +116,12 @@ class EvalCommand : TextOnlyCommand {
                 "api.requests.restaction.pagination",
                 "api.utils",
                 "api.utils.cache"
+            ),
+            "io.ktor" to setOf(
+                "client",
+                "client.engine.cio",
+                "client.features",
+                "client.request"
             ),
             "java" to setOf(
                 "io",
