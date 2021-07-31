@@ -17,7 +17,7 @@ plugins {
 }
 
 group = "io.ileukocyte"
-version = Version(major = 1, minor = 0, patch = 3)
+version = Version(major = 1, minor = 0, patch = 4)
 
 repositories {
     mavenCentral()
@@ -41,17 +41,17 @@ dependencies {
     implementation(group = "com.sedmelluq", name = "lavaplayer", version = "1.3.78")
 
     // Logging
-    implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.2.3")
-    implementation(group = "io.github.microutils", name = "kotlin-logging-jvm", version = "2.0.8")
+    implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.2.5")
+    implementation(group = "io.github.microutils", name = "kotlin-logging-jvm", version = "2.0.10")
 
     // APIs
     implementation(group = "com.github.markozajc", name = "akiwrapper", version = "1.5.1.1")
-    implementation(group = "com.github.ileukocyte", name = "openweather-kt", version = "1.0-BETA1")
+    implementation(group = "com.github.ileukocyte", name = "openweather-kt", version = "1.0")
     implementation(group = "org.reflections", name = "reflections", version = "0.9.12")
     implementation(group = "org.json", name = "json", version = "20210307")
-    implementation(group = "com.google.api-client", name = "google-api-client", version = "1.23.0")
-    implementation(group = "com.google.oauth-client", name = "google-oauth-client-jetty", version = "1.23.0")
-    implementation(group = "com.google.apis", name = "google-api-services-youtube", version = "v3-rev222-1.25.0")
+    implementation(group = "com.google.api-client", name = "google-api-client", version = "1.32.1")
+    implementation(group = "com.google.oauth-client", name = "google-oauth-client-jetty", version = "1.31.5")
+    implementation(group = "com.google.apis", name = "google-api-services-youtube", version = "v3-rev20210706-1.32.1")
     implementation(group = "com.google.guava", name = "guava", version = "30.1.1-jre")
     implementation(group = "io.ktor", name = "ktor-client-core", version = ktorVersion)
     implementation(group = "io.ktor", name = "ktor-client-cio", version = ktorVersion)
@@ -68,7 +68,7 @@ dependencies {
     implementation(kotlinx("coroutines-core", version = coroutinesVersion))
 
     // Testing
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
     testImplementation(kotlin("test-junit"))
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }

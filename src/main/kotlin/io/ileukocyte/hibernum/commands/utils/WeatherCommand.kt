@@ -8,7 +8,7 @@ import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.openweather.Forecast
 import io.ileukocyte.openweather.Units
 import io.ileukocyte.openweather.entities.Temperature.TemperatureUnit
-import io.ileukocyte.openweather.extensions.convertTo
+import io.ileukocyte.openweather.extensions.convertUnitsTo
 import io.ileukocyte.openweather.openWeatherApi
 
 import net.dv8tion.jda.api.JDA
@@ -63,7 +63,7 @@ class WeatherCommand : Command {
 
         field {
             val celsius = forecast.temperature.temperature.toInt()
-            val fahrenheit = forecast.temperature.convertTo(TemperatureUnit.FAHRENHEIT_DEGREES).temperature.toInt()
+            val fahrenheit = forecast.temperature.convertUnitsTo(TemperatureUnit.FAHRENHEIT_DEGREES).temperature.toInt()
 
             title = "Temperature"
             description = "$celsius${TemperatureUnit.CELSIUS_DEGREES.symbol}/$fahrenheit${TemperatureUnit.FAHRENHEIT_DEGREES.symbol}"

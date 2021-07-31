@@ -37,9 +37,9 @@ class YouTubeCommand : Command {
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         if ((args ?: throw NoArgumentsException) matches YOUTUBE_LINK_REGEX) {
             val video = suspendCoroutine<Video?> {
-                val list = YOUTUBE.videos().list("id,snippet,contentDetails")
+                val list = YOUTUBE.videos().list(listOf("id", "snippet", "contentDetails"))
 
-                list.id = YOUTUBE_LINK_REGEX.find(args)?.groups?.get(3)?.value
+                list.id = listOf(YOUTUBE_LINK_REGEX.find(args)?.groups?.get(3)?.value)
                 list.key = Immutable.YOUTUBE_API_KEY
 
                 it.resume(list.execute().items.firstOrNull())
@@ -56,9 +56,9 @@ class YouTubeCommand : Command {
 
         if (query matches YOUTUBE_LINK_REGEX) {
             val video = suspendCoroutine<Video?> {
-                val list = YOUTUBE.videos().list("id,snippet,contentDetails")
+                val list = YOUTUBE.videos().list(listOf("id", "snippet", "contentDetails"))
 
-                list.id = YOUTUBE_LINK_REGEX.find(query)?.groups?.get(3)?.value
+                list.id = listOf(YOUTUBE_LINK_REGEX.find(query)?.groups?.get(3)?.value)
                 list.key = Immutable.YOUTUBE_API_KEY
 
                 it.resume(list.execute().items.firstOrNull())
@@ -84,9 +84,9 @@ class YouTubeCommand : Command {
                 event.message?.delete()?.queue()
 
                 val video = suspendCoroutine<Video?> {
-                    val list = YOUTUBE.videos().list("id,snippet,contentDetails")
+                    val list = YOUTUBE.videos().list(listOf("id", "snippet", "contentDetails"))
 
-                    list.id = event.selectedOptions?.firstOrNull()?.value ?: return@suspendCoroutine
+                    list.id = listOf(event.selectedOptions?.firstOrNull()?.value ?: return@suspendCoroutine)
                     list.key = Immutable.YOUTUBE_API_KEY
 
                     it.resume(list.execute().items.firstOrNull())

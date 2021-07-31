@@ -1,7 +1,7 @@
 package io.ileukocyte.hibernum.utils
 
 import com.google.api.client.http.javanet.NetHttpTransport
-import com.google.api.client.json.jackson2.JacksonFactory
+import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.youtube.YouTube
 import com.google.api.services.youtube.model.Video
 import com.google.api.services.youtube.model.VideoContentDetails
@@ -13,7 +13,7 @@ import java.time.Duration
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-val YOUTUBE = YouTube.Builder(NetHttpTransport(), JacksonFactory()) {}
+val YOUTUBE = YouTube.Builder(NetHttpTransport(), GsonFactory()) {}
     .setApplicationName("hibernum-discord-bot")
     .build()
 
@@ -21,18 +21,18 @@ val YOUTUBE_LINK_REGEX =
     Regex("^(?:https?://)?(?:(?:www|m(?:usic)?)\\.)?(youtube\\.com|youtu.be)(/(?:[\\w\\-]+\\?v=|embed/|v/)?)([\\w\\-]+)(\\S+)?$")
 
 suspend fun searchVideos(query: String, maxResults: Long = 15): List<Video> = suspendCoroutine {
-    val search = YOUTUBE.search().list("id,snippet")
+    val search = YOUTUBE.search().list(listOf("id", "snippet"))
 
     search.key = Immutable.YOUTUBE_API_KEY
     search.q = query
     search.maxResults = maxResults
     search.fields = "items(id/kind,id/videoId,snippet/title,snippet/thumbnails/default/url)"
-    search.type = "video"
+    search.type = listOf("video")
 
-    val videos = YOUTUBE.videos().list("id,snippet,contentDetails")
+    val videos = YOUTUBE.videos().list(listOf("id", "snippet", "contentDetails"))
 
     videos.key = search.key
-    videos.id = search.execute().items.joinToString(",") { v -> v.id.videoId }
+    videos.id = listOf(search.execute().items.joinToString(",") { v -> v.id.videoId })
 
     it.resume(videos.execute().items)
 }
