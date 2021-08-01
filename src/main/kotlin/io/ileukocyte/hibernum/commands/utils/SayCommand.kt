@@ -11,6 +11,7 @@ class SayCommand : TextOnlyCommand {
     override val name = "say"
     override val description = "Sends your message on behalf of the bot as an embed message"
     override val aliases = setOf("announce")
+    override val usages = setOf("message", "image file")
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         if (args === null && event.message.attachments.none { it.isImage })

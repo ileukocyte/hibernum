@@ -17,6 +17,7 @@ class CharacterCommand : Command {
     override val description = "Sends some information about the provided character(s) (including built-in emojis)"
     override val aliases = setOf("character")
     override val options = setOf(OptionData(OptionType.STRING, "input", "The characters provided", true))
+    override val usages = setOf("input")
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val input = args?.remove(" ")
