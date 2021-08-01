@@ -54,17 +54,17 @@ fun WaiterProcess.kill(jda: JDA) = WaiterProcess.currentlyRunning[this]?.kill(jd
 /**
  * The unit of the bot's event waiter process management system containing the required data.
  *
- * @property users
+ * @param users
  * A mutable list containing the ID's of the users being involved
- * @property channel
+ * @param channel
  * An ID of the channel the process is currently running in
- * @property command
+ * @param command
  * The command the process was launched from or by
- * @property invoker
+ * @param invoker
  * An ID of the message the process might have been launched from
- * @property id
+ * @param id
  * The unique 4-digit identificational key of the process used in several contexts. **Strongly unrecommended to change!**
- * @property timeCreated
+ * @param timeCreated
  * The date and time when the process was launched. **Strongly unrecommended to change!**
  *
  * @author Alexander Oksanich
@@ -128,6 +128,7 @@ class AwaitableEventListener<E : GenericEvent>(
         if (event::class == type) {
             CoroutineScope(WaiterContext).launch {
                 val casted = event as E
+
                 if (condition(casted)) {
                     kill(casted.jda)
                     deferred.complete(casted)
