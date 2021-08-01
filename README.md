@@ -16,5 +16,6 @@
 * [Guava](https://github.com/google/guava)
 * [Urban Dicitonary API](https://www.urbandictionary.com/)
 * [jsoup](https://github.com/jhy/jsoup)
+* [Apache Commons Validator](https://commons.apache.org/proper/commons-validator/)
 * [logback-classic](http://logback.qos.ch/)
 * [kotlin-logging](https://github.com/MicroUtils/kotlin-logging)
