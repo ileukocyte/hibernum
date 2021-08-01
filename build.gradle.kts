@@ -44,7 +44,7 @@ dependencies {
     implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.2.5")
     implementation(group = "io.github.microutils", name = "kotlin-logging-jvm", version = "2.0.10")
 
-    // APIs
+    // APIs and libraries
     implementation(group = "com.github.markozajc", name = "akiwrapper", version = "1.5.1.1")
     implementation(group = "com.github.ileukocyte", name = "openweather-kt", version = "1.0")
     implementation(group = "org.reflections", name = "reflections", version = "0.9.12")
@@ -56,6 +56,7 @@ dependencies {
     implementation(group = "io.ktor", name = "ktor-client-core", version = ktorVersion)
     implementation(group = "io.ktor", name = "ktor-client-cio", version = ktorVersion)
     implementation(group = "org.jsoup", name = "jsoup", version = "1.14.1")
+    implementation(group = "commons-validator", name = "commons-validator", version = "1.7")
 
     // Kotlin
     implementation(kotlin("stdlib"))
