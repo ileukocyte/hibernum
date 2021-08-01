@@ -1,8 +1,10 @@
 package io.ileukocyte.hibernum.commands.utils
 
+import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextOnlyCommand
+import io.ileukocyte.hibernum.extensions.capitalizeAll
 import io.ileukocyte.hibernum.extensions.remove
 import io.ileukocyte.hibernum.extensions.sendEmbed
 
@@ -18,14 +20,30 @@ class CharacterCommand : TextOnlyCommand {
             ?: throw NoArgumentsException
 
         event.channel.sendEmbed {
-            for (codePoint in input.codePoints()) {
-                //val char = codePoint.toChar()
-                var hex = Integer.toHexString(codePoint)
+            color = Immutable.SUCCESS
 
-                while (hex.length < 4)
-                    hex = "0$hex"
+            for (codePoint in input.codePoints().distinct()) {
+                val chars = Character.toChars(codePoint)
+                var mainHex = Integer.toHexString(codePoint).uppercase()
 
-                appendln("`${codePoint.toChar()}`: `\\u$hex` ${Character.getName(codePoint) ?: "unknown"}")
+                while (mainHex.length < 4)
+                    mainHex = "0$mainHex"
+
+                val hex = if (chars.size > 1) {
+                    "`\\u$mainHex` (`" + chars.joinToString("") {
+                        var hex = Integer.toHexString(it.code).uppercase()
+
+                        while (hex.length < 4)
+                            hex = "0$hex"
+
+                        "\\u$hex"
+                    } + "`)"
+                } else "`\\u$mainHex`"
+
+                field {
+                    title = Character.getName(codePoint)?.capitalizeAll() ?: "unknown character"
+                    description = buildString { appendLine("${String(chars)} — $hex") }
+                }
             }
         }.queue()
     }
