@@ -32,7 +32,7 @@ class InvertCommand : Command {
     override val aliases = setOf("negative")
     override val options = setOf(
         OptionData(OptionType.STRING, "link", "The provided image"),
-        OptionData(OptionType.USER, "user", "The provided mention (high-priority)")
+        OptionData(OptionType.USER, "user", "The provided mention (has a higher priority)")
     )
     override val cooldown = 7L
 
