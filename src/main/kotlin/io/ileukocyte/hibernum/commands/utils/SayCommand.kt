@@ -3,6 +3,7 @@ package io.ileukocyte.hibernum.commands.utils
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextOnlyCommand
+import io.ileukocyte.hibernum.extensions.limitTo
 import io.ileukocyte.hibernum.extensions.sendEmbed
 
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
@@ -19,13 +20,13 @@ class SayCommand : TextOnlyCommand {
 
         event.channel.sendEmbed {
             color = Immutable.SUCCESS
-            description = args
+            description = args?.limitTo(2000)
             image = event.message.attachments.firstOrNull { it.isImage }?.url
 
             author {
                 name = event.author.asTag
                 iconUrl = event.author.effectiveAvatarUrl
             }
-        }.queue()
+        }.queue { event.message.delete().queue() }
     }
 }
