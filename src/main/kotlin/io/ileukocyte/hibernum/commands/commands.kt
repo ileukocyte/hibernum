@@ -30,6 +30,10 @@ interface Command : Comparable<Command> {
         javaClass.`package`.name?.let { CommandCategory[it.split(".").last()] } ?: CommandCategory.UNKNOWN
 
     /**
+     * Used for the help command if the main description is too long for slash command limits
+     */
+    val fullDescription: String get() = description
+    /**
      * A property that shows whether or not the command can only be used by a developer of the bot
      */
     val isDeveloper: Boolean get() = category == CommandCategory.DEVELOPER

@@ -26,8 +26,9 @@ import javax.imageio.ImageIO
 
 class InvertCommand : Command {
     override val name = "invert"
-    override val description = "Inverts the image provided"// as a link, a file (non-slash-only), or a profile picture of the mentioned user" +
-            //"(or yours in case of no arguments provided)"
+    override val description = "Inverts the provided image (see the command's help menu)"
+    override val fullDescription = "Inverts the image provided as a link, a file (non-slash-only), " +
+            "or a profile picture of the mentioned user (or yours in case of no arguments provided)"
     override val aliases = setOf("negative")
     override val options = setOf(
         OptionData(OptionType.STRING, "link", "The provided image"),

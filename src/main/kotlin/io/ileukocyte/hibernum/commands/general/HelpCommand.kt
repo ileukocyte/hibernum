@@ -3,6 +3,7 @@ package io.ileukocyte.hibernum.commands.general
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.*
+import io.ileukocyte.hibernum.extensions.surroundWith
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asText
 
@@ -26,12 +27,6 @@ class HelpCommand : Command {
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         if (args !== null) {
             val command = CommandHandler[args.lowercase()]
-
-            if (command is HelpCommand) {
-                invoke(event, null)
-                return
-            }
-
             val action = command?.let { event.channel.sendMessageEmbeds(it.commandHelp(event.jda)) }
                 ?: throw CommandException("The specified command has not been found!")
 
@@ -69,7 +64,7 @@ class HelpCommand : Command {
         val nameWithPrefix = "${Immutable.DEFAULT_PREFIX}$name"
 
         color = Immutable.SUCCESS
-        description = this@commandHelp.description
+        description = this@commandHelp.fullDescription
 
         if (aliases.isNotEmpty())
             field {
@@ -146,7 +141,9 @@ class HelpCommand : Command {
             val commandFields = mutableSetOf<Pair<String, String>>()
 
             for ((category, commands) in categories)
-                commandFields += "$category Commands:" to commands.sorted().joinToString { it.name }
+                commandFields += "$category Commands:" to commands.sorted().joinToString { cmd ->
+                    cmd.name.let { if (cmd is TextOnlyCommand || cmd is SlashOnlyCommand) it.surroundWith("*") else it }
+                }
 
             for ((name, value) in commandFields.sortedBy { it.first })
                 field {
