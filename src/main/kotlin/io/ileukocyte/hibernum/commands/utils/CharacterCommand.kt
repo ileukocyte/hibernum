@@ -5,8 +5,7 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
-import io.ileukocyte.hibernum.extensions.capitalizeAll
-import io.ileukocyte.hibernum.extensions.remove
+import io.ileukocyte.hibernum.extensions.*
 
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
@@ -39,15 +38,15 @@ class CharacterCommand : Command {
         color = Immutable.SUCCESS
 
         for (codePoint in input.codePoints().distinct()) {
-            val chars = Character.toChars(codePoint)
-            var mainHex = Integer.toHexString(codePoint).uppercase()
+            val chars = codePoint.toChars()
+            var mainHex = codePoint.toString(16).uppercase()
 
             while (mainHex.length < 4)
                 mainHex = "0$mainHex"
 
             val hex = if (chars.size > 1) {
                 "`\\u$mainHex` (`" + chars.joinToString("") {
-                    var hex = Integer.toHexString(it.code).uppercase()
+                    var hex = it.code.toString(16).uppercase()
 
                     while (hex.length < 4)
                         hex = "0$hex"
@@ -57,7 +56,7 @@ class CharacterCommand : Command {
             } else "`\\u$mainHex`"
 
             field {
-                title = Character.getName(codePoint)?.capitalizeAll() ?: "Unknown Character"
+                title = codePoint.charName?.capitalizeAll() ?: "Unknown Character"
                 description = buildString { appendLine("${String(chars)} — $hex") }
             }
         }

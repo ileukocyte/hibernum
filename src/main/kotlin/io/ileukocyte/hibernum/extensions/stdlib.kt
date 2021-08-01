@@ -1,7 +1,21 @@
 @file:JvmName("StandardLibraryExtensions")
 package io.ileukocyte.hibernum.extensions
 
+// kotlin.Int
+val Int.charName: String? get() = Character.getName(this)
+
+fun Int.toChars(): CharArray = Character.toChars(this)
+
 // kotlin.String
+val String.isByte get() = toByteOrNull() !== null
+val String.isUByte get() = toUByteOrNull() != null
+val String.isShort get() = toShortOrNull() !== null
+val String.isUShort get() = toUShortOrNull() != null
+val String.isInt get() = toIntOrNull() !== null
+val String.isUInt get() = toUIntOrNull() != null
+val String.isLong get() = toLongOrNull() !== null
+val String.isULong get() = toULongOrNull() != null
+
 fun String.capitalizeAll() =
     lowercase().split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
 
@@ -34,3 +48,7 @@ fun <N : Number> String.singularOrPlural(number: N) = this + "s".takeUnless { nu
 
 fun String.surroundWith(charSequence: CharSequence) = "$charSequence$this$charSequence"
 fun String.surroundWith(char: Char) = "$char$this$char"
+
+operator fun String.times(num: Int) = buildString {
+    repeat(num) { append(this@times) }
+}
