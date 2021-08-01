@@ -12,11 +12,12 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 
 class CharacterCommand : TextOnlyCommand {
     override val name = "char"
-    override val description = "char"
+    override val description = "Sends some information about the provided character(s) (including built-in emojis)"
+    override val aliases = setOf("character")
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val input = args?.remove(" ")
-            ?.run { takeIf { it.length <= 20 } ?: throw CommandException("too long") }
+            ?.run { takeIf { it.length <= 20 } ?: throw CommandException("The amount of characters must not exceed 20!") }
             ?: throw NoArgumentsException
 
         event.channel.sendEmbed {
@@ -41,7 +42,7 @@ class CharacterCommand : TextOnlyCommand {
                 } else "`\\u$mainHex`"
 
                 field {
-                    title = Character.getName(codePoint)?.capitalizeAll() ?: "unknown character"
+                    title = Character.getName(codePoint)?.capitalizeAll() ?: "Unknown Character"
                     description = buildString { appendLine("${String(chars)} — $hex") }
                 }
             }
