@@ -3,16 +3,21 @@ package io.ileukocyte.hibernum.commands.utils
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextOnlyCommand
-import io.ileukocyte.hibernum.extensions.limitTo
 import io.ileukocyte.hibernum.extensions.sendEmbed
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.interactions.commands.OptionType
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
 class ChooseCommand : TextOnlyCommand {
     override val name = "choose"
-    override val description = "N/A"
+    override val description = "Chooses a random option among the provided ones split with the \"|\" character"
+    override val usages = setOf("option 1> | <option 2> | ... | <option n")
+    override val options = setOf(
+        OptionData(OptionType.STRING, "options", "The options provided (split with \"|\")", true)
+    )
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
-        val input = args?.split(Regex("((?:\\s)?\\|(?:\\s)?)"))
+        val input = args?.split(Regex("\\s?\\|\\s?"))
             ?.filter { it.isNotEmpty() }
             ?.takeUnless { it.isEmpty() }
             ?: throw NoArgumentsException
