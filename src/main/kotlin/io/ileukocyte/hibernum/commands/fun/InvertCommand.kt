@@ -86,7 +86,7 @@ class InvertCommand : Command {
 
             val bytesToSend = ByteArrayOutputStream()
                 .apply { withContext(Dispatchers.IO) { ImageIO.write(image, "png", this@apply) } }
-                .toByteArray()
+                .use { it.toByteArray() }
 
             deferred.editMessageEmbeds().addFile(bytesToSend, "inverted.png").queue({}) {
                 event.channel.sendFile(bytesToSend, "inverted.png").queue()
