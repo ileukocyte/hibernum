@@ -49,6 +49,7 @@ fun asText(time: Long, unit: DurationUnit = DurationUnit.MILLISECONDS): String {
 
         if (days > 0L) {
             append("$days ${"day".singularOrPlural(days)}")
+
             alreadyPresent = true
         }
 
@@ -64,6 +65,7 @@ fun asText(time: Long, unit: DurationUnit = DurationUnit.MILLISECONDS): String {
             }
 
             append("$hours ${"hour".singularOrPlural(hours)}")
+
             alreadyPresent = true
         }
 
@@ -78,8 +80,9 @@ fun asText(time: Long, unit: DurationUnit = DurationUnit.MILLISECONDS): String {
                 append(" and ")
             }
 
-            alreadyPresent = true
             append("$minutes ${"minute".singularOrPlural(minutes)}")
+
+            alreadyPresent = true
         }
 
         if (seconds > 0L) {
