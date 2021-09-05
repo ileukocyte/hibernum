@@ -30,7 +30,7 @@ import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
 class YouTubePlayCommand : Command {
     override val name = "ytplay"
     override val description = "Plays the specified YouTube video in a voice channel"
-    override val aliases = setOf("yp", "ytp", "youtubeplay")
+    override val aliases = setOf("yp", "ytp", "youtubeplay", "youtube-play")
     override val options = setOf(
         OptionData(OptionType.STRING, "query", "A link or a search term", true))
     override val usages = setOf("query")

@@ -21,7 +21,7 @@ import org.jetbrains.kotlin.utils.addToStdlib.cast
 class NowPlayingCommand : Command {
     override val name = "nowplaying"
     override val description = "Shows information about the track that is currently playing"
-    override val aliases = setOf("np", "now", "playing", "playingnow")
+    override val aliases = setOf("np", "now", "playing", "playingnow", "playing-now")
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
