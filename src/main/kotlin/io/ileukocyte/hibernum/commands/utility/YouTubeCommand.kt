@@ -1,4 +1,4 @@
-package io.ileukocyte.hibernum.commands.utils
+package io.ileukocyte.hibernum.commands.utility
 
 import com.google.api.services.youtube.model.Video
 

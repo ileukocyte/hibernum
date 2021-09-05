@@ -1,4 +1,4 @@
-package io.ileukocyte.hibernum.commands.utils
+package io.ileukocyte.hibernum.commands.utility
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.commands.Command
