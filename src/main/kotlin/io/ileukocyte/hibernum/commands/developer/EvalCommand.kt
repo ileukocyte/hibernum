@@ -90,7 +90,7 @@ class EvalCommand : TextOnlyCommand {
                 "hibernum.commands.`fun`",
                 "hibernum.commands.general",
                 "hibernum.commands.music",
-                "hibernum.commands.utils",
+                "hibernum.commands.utility",
                 "hibernum.extensions",
                 "hibernum.handlers",
                 "hibernum.utils",
