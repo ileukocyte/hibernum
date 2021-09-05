@@ -23,6 +23,7 @@ class QRCommand : Command {
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val qr = QRCode.from(args ?: throw NoArgumentsException)
             .withSize(768, 768)
+            .withCharset("UTF-8")
             .to(ImageType.PNG)
             .stream()
 
@@ -32,6 +33,7 @@ class QRCommand : Command {
     override suspend fun invoke(event: SlashCommandEvent) {
         val qr = QRCode.from(event.getOption("input")?.asString ?: return)
             .withSize(768, 768)
+            .withCharset("UTF-8")
             .to(ImageType.PNG)
             .stream()
 
