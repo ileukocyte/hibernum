@@ -1,9 +1,14 @@
 package io.ileukocyte.hibernum.commands.`fun`
 
+import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.NoArgumentsException
-import io.ileukocyte.hibernum.commands.TextOnlyCommand
 import io.ileukocyte.hibernum.extensions.limitTo
+
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.interactions.commands.OptionType
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
+
 import java.awt.Color
 import java.awt.Font
 import java.awt.RenderingHints
@@ -12,15 +17,26 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import javax.imageio.ImageIO
 
-class TextToImageCommand : TextOnlyCommand {
+class TextToImageCommand : Command {
     override val name = "tti"
-    override val description = "N/A"
+    override val description = "Creates an image containing the provided text"
+    override val aliases = setOf("texttoimage")
+    override val usages = setOf("input")
+    override val options = setOf(OptionData(OptionType.STRING, "input", "The provided text", true))
+    override val cooldown = 5L
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
-        val lines = args?.split("\n")?.map { it.limitTo(50) } ?: throw NoArgumentsException
+        val lines = args?.split("\n")?.map { it.limitTo(100) } ?: throw NoArgumentsException
         val bytes = textToImage(lines.take(25), lines.maxByOrNull { it.length } ?: return)
 
         event.channel.sendFile(bytes, "tti.png").queue()
+    }
+
+    override suspend fun invoke(event: SlashCommandEvent) {
+        val lines = event.getOption("input")?.asString?.split("\n")?.map { it.limitTo(100) } ?: return
+        val bytes = textToImage(lines.take(25), lines.maxByOrNull { it.length } ?: return)
+
+        event.deferReply().addFile(bytes, "tti.png").queue()
     }
 
     private fun textToImage(lines: List<String>, longest: String): ByteArray {
