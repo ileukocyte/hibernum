@@ -57,6 +57,7 @@ dependencies {
     implementation(group = "io.ktor", name = "ktor-client-cio", version = ktorVersion)
     implementation(group = "org.jsoup", name = "jsoup", version = "1.14.2")
     implementation(group = "commons-validator", name = "commons-validator", version = "1.7")
+    implementation(group = "com.github.kenglxn.QRGen", name = "javase", version = "2.6.0")
 
     // Kotlin
     implementation(kotlin("stdlib"))
