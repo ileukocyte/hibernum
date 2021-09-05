@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 class StopCommand : Command {
     override val name = "stop"
     override val description = "Stops the song that is currently playing and clears the queue"
+    override val aliases = setOf("clear")
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
