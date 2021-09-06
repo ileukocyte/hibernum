@@ -1,34 +1,53 @@
 package io.ileukocyte.hibernum.commands.utility
 
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.CommandCategory
+import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
-import io.ileukocyte.hibernum.commands.TextOnlyCommand
 import io.ileukocyte.hibernum.extensions.orNull
 import io.ileukocyte.hibernum.extensions.toJSONObject
+
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.get
+
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.interactions.commands.OptionType
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
+
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import javax.imageio.ImageIO
 
-class ColorCommand : TextOnlyCommand {
+class ColorCommand : Command {
     override val name = "color"
-    override val description = "n/a"
-    override val category = CommandCategory.BETA
+    override val description = "Sends brief information about the color provided by its hexadecimal representation"
+    override val aliases = setOf("colorinfo", "color-info")
+    override val usages = setOf("hex")
+    override val options = setOf(
+        OptionData(OptionType.STRING, "hex", "The color's hexadecimal representation", true)
+    )
+    override val cooldown = 3L
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val input = (args ?: throw NoArgumentsException)
             .takeIf { it matches HEX_REGEX }
             ?: throw CommandException("You have provided invalid arguments!")
-        
         val info = getColorInfo(input)
 
         event.channel.sendMessageEmbeds(colorEmbed(info))
+            .addFile(info.image, "${info.hexString.removePrefix("#")}.png")
+            .queue()
+    }
+
+    override suspend fun invoke(event: SlashCommandEvent) {
+        val input = event.getOption("hex")?.asString?.takeIf { it matches HEX_REGEX }
+            ?: throw CommandException("You have provided invalid arguments!")
+        val info = getColorInfo(input)
+
+        event.replyEmbeds(colorEmbed(info))
             .addFile(info.image, "${info.hexString.removePrefix("#")}.png")
             .queue()
     }
