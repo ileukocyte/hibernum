@@ -1,6 +1,8 @@
 package io.ileukocyte.hibernum.commands.utility
 
+import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandCategory
+import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextOnlyCommand
 import io.ileukocyte.hibernum.extensions.orNull
@@ -20,11 +22,30 @@ class ColorCommand : TextOnlyCommand {
     override val category = CommandCategory.BETA
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
-        val input = args?.takeIf { it matches HEX_REGEX } ?: throw NoArgumentsException
+        val input = (args ?: throw NoArgumentsException)
+            .takeIf { it matches HEX_REGEX }
+            ?: throw CommandException("You have provided invalid arguments!")
+        
+        val info = getColorInfo(input)
 
+        event.channel.sendMessageEmbeds(colorEmbed(info))
+            .addFile(info.image, "${info.hexString.removePrefix("#")}.png")
+            .queue()
     }
 
-    /*private*/ suspend fun color(input: String): Color {
+    private fun colorEmbed(colorInfo: Color) = buildEmbed {
+        color = colorInfo.javaColor
+        image = "attachment://${colorInfo.hexString.removePrefix("#")}.png"
+        description = """**HEX**: ${colorInfo.hexString}
+            |**RGB**: ${colorInfo.rgb.red}, ${colorInfo.rgb.green}, ${colorInfo.rgb.blue}
+            |**DEC**: ${colorInfo.hexString.removePrefix("#").toInt(16)}
+            |**CMYK**: ${colorInfo.cmyk.cyan}, ${colorInfo.cmyk.magenta}, ${colorInfo.cmyk.yellow}, ${colorInfo.cmyk.key}
+            |**HSL**: ${colorInfo.hsl.hue}, ${colorInfo.hsl.saturation}%, ${colorInfo.hsl.lightness}%""".trimMargin()
+
+        author { name = colorInfo.name }
+    }
+
+    private suspend fun getColorInfo(input: String): Color {
         val client = HttpClient(CIO)
         val api = "http://www.thecolorapi.com/id?hex=${input.removePrefix("#").lowercase()}"
         val response = client.get<String>(api).toJSONObject()
@@ -54,14 +75,14 @@ class ColorCommand : TextOnlyCommand {
 
         return Color(
             response.getJSONObject("name").getString("value"),
-            response.getJSONObject("hex").getString("value"),
+            response.getJSONObject("hex").getString("value").lowercase(),
             rgb,
             hsl,
             cmyk
         )
     }
 
-    data class Color(
+    private data class Color(
         val name: String,
         val hexString: String,
         val rgb: RGB,
@@ -72,12 +93,13 @@ class ColorCommand : TextOnlyCommand {
         data class HSL(val hue: Int, val saturation: Int, val lightness: Int)
         data class CMYK(val cyan: Int, val magenta: Int, val yellow: Int, val key: Int)
 
+        val javaColor get() = Color(rgb.red, rgb.green, rgb.blue)
         val image: ByteArray
             get() {
                 val bufferedImage = BufferedImage(150, 150, BufferedImage.TYPE_INT_RGB)
                 val graphics = bufferedImage.createGraphics()
 
-                graphics.color = Color(rgb.red, rgb.green, rgb.blue)
+                graphics.color = javaColor
                 graphics.fillRect(0, 0, 150, 150)
                 graphics.dispose()
 
