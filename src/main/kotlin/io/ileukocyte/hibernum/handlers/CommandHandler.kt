@@ -235,7 +235,7 @@ object CommandHandler : MutableSet<Command> {
     @OptIn(ExperimentalTime::class)
     @HibernumExperimental
     internal operator fun invoke(event: ButtonClickEvent) {
-        if (event.isFromGuild && event.message?.author == event.jda.selfUser) {
+        if (event.isFromGuild && event.message.author == event.jda.selfUser) {
             this[event.componentId.split("-").first()]?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     try {
@@ -284,7 +284,7 @@ object CommandHandler : MutableSet<Command> {
     @OptIn(ExperimentalTime::class)
     @HibernumExperimental
     internal operator fun invoke(event: SelectionMenuEvent) {
-        if (event.isFromGuild && event.message?.author == event.jda.selfUser) {
+        if (event.isFromGuild && event.message.author == event.jda.selfUser) {
             this[event.componentId.split("-").first()]?.let {
                     command ->
                 CoroutineScope(CommandContext).launch {

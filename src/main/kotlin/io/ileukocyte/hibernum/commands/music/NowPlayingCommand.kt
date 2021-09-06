@@ -18,6 +18,8 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 
 import org.jetbrains.kotlin.utils.addToStdlib.cast
 
+import kotlin.time.ExperimentalTime
+
 class NowPlayingCommand : Command {
     override val name = "nowplaying"
     override val description = "Shows information about the track that is currently playing"
@@ -37,6 +39,7 @@ class NowPlayingCommand : Command {
         event.replyEmbeds(playingEmbed(event.jda, audioPlayer, track)).queue()
     }
 
+    @OptIn(ExperimentalTime::class)
     private fun playingEmbed(jda: JDA, musicManager: GuildMusicManager, track: AudioTrack) = buildEmbed {
         val trackData = track.userData.cast<TrackUserData>()
 

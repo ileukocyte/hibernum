@@ -108,13 +108,13 @@ class GuessNumberCommand : Command {
 
                     event.replySuccess("The game session has been finished!")
                         .setEphemeral(true)
-                        .flatMap { event.message?.delete() }
+                        .flatMap { event.message.delete() }
                         .queue()
                 }
                 "stay" -> {
                     event.replySuccess("Let's go on!")
                         .setEphemeral(true)
-                        .flatMap { event.message?.delete() }
+                        .flatMap { event.message.delete() }
                         .await()
 
                     awaitMessage(id[1].toInt(), id[2].toInt(), event.channel, null, event.user)

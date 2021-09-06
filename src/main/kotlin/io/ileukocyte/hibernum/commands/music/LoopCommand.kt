@@ -49,7 +49,7 @@ class LoopCommand : Command {
 
         if (event.user.id == id.first()) {
             if (id.last() == "exit") {
-                event.message?.delete()?.queue()
+                event.message.delete().queue()
 
                 return
             }
@@ -62,11 +62,11 @@ class LoopCommand : Command {
             val description = "$newMode looping has been enabled!".takeUnless { newMode == LoopMode.DISABLED }
                 ?: "$currentMode looping has been disabled!"
 
-            event.message?.editMessageEmbeds(defaultEmbed(description, EmbedType.SUCCESS))
-                ?.setActionRows()
-                ?.queue({ _ -> }) {
+            event.message.editMessageEmbeds(defaultEmbed(description, EmbedType.SUCCESS))
+                .setActionRows()
+                .queue({}) {
                     event.replySuccess(description)
-                        .flatMap { event.message?.delete() }
+                        .flatMap { event.message.delete() }
                         .queue()
                 }
         }

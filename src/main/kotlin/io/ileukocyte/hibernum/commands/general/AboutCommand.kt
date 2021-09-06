@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.JDAInfo
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 
+import kotlin.time.ExperimentalTime
 
 class AboutCommand : Command {
     override val name = "about"
@@ -24,6 +25,7 @@ class AboutCommand : Command {
     override suspend fun invoke(event: SlashCommandEvent) =
         event.replyEmbeds(statsEmbed(event.jda)).queue()
 
+    @OptIn(ExperimentalTime::class)
     private suspend fun statsEmbed(jda: JDA) = buildEmbed {
         color = Immutable.SUCCESS
         thumbnail = jda.selfUser.effectiveAvatarUrl

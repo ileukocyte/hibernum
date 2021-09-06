@@ -23,6 +23,7 @@ import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
 
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import kotlin.time.ExperimentalTime
 
 class YouTubeCommand : Command {
     override val name = "youtube"
@@ -75,13 +76,13 @@ class YouTubeCommand : Command {
 
         if (event.user.id == id.first()) {
             if (event.selectedOptions?.firstOrNull()?.value == "exit") {
-                event.message?.delete()?.queue()
+                event.message.delete().queue()
 
                 return
             }
 
             if (id.last() == "videos") {
-                event.message?.delete()?.queue()
+                event.message.delete().queue()
 
                 val video = suspendCoroutine<Video?> {
                     val list = YOUTUBE.videos().list(listOf("id", "snippet", "contentDetails"))
@@ -97,6 +98,7 @@ class YouTubeCommand : Command {
         } else throw CommandException("You did not invoke the initial command!")
     }
 
+    @OptIn(ExperimentalTime::class)
     private fun videoEmbed(video: Video, author: User? = null) = buildEmbed {
         color = Immutable.SUCCESS
         image = video.snippet.thumbnails?.let {
@@ -129,6 +131,7 @@ class YouTubeCommand : Command {
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     private suspend fun sendMenu(
         query: String,
         author: User,

@@ -101,6 +101,7 @@ class AkinatorCommand : Command {
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) =
         sendGuessTypeMenu(event.channel.idLong, event.author.idLong, event.messageIdLong, event)
 
+    @OptIn(ExperimentalTime::class)
     override suspend fun invoke(event: SelectionMenuEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
         val optionValue = event.selectedOptions?.firstOrNull()?.value
@@ -111,7 +112,7 @@ class AkinatorCommand : Command {
 
                 event.replySuccess("The Akinator session has been finished!")
                     .setEphemeral(true)
-                    .flatMap { event.message?.delete() }
+                    .flatMap { event.message.delete() }
                     .queue()
 
                 return
@@ -119,7 +120,7 @@ class AkinatorCommand : Command {
 
             when (id.last()) {
                 "type" -> {
-                    event.message?.delete()?.await()
+                    event.message.delete().await()
 
                     sendLanguagesMenu(event, optionValue, id[1].toLongOrNull(), false)
                 }
@@ -127,7 +128,7 @@ class AkinatorCommand : Command {
                     if (optionValue == "return") {
                         event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda)
 
-                        event.message?.delete()?.await()
+                        event.message.delete().await()
 
                         sendGuessTypeMenu(event.channel.idLong, event.user.idLong, id[1].toLongOrNull(), event)
 
@@ -139,7 +140,7 @@ class AkinatorCommand : Command {
                     try {
                         event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda)
 
-                        event.message?.delete()?.await()
+                        event.message.delete().await()
 
                         CoroutineScope(CommandContext).launch {
                             event.jda.awaitEvent<GuildMessageReceivedEvent>(waiterProcess = waiterProcess {
@@ -215,13 +216,13 @@ class AkinatorCommand : Command {
 
                     event.replySuccess("The Akinator session has been finished!")
                         .setEphemeral(true)
-                        .flatMap { event.message?.delete() }
+                        .flatMap { event.message.delete() }
                         .queue()
                 }
                 "stay" -> {
                     event.replySuccess("Let's go on!")
                         .setEphemeral(true)
-                        .flatMap { event.message?.delete() }
+                        .flatMap { event.message.delete() }
                         .await()
 
                     awaitAnswer(event.channel, event.user, akiwrapper)
@@ -235,7 +236,7 @@ class AkinatorCommand : Command {
 
                     event.replySuccess("Great! Guessed right one more time!")
                         .setEphemeral(true)
-                        .flatMap { event.message?.delete() }
+                        .flatMap { event.message.delete() }
                         .await()
                 }
                 "finalGuessNo" -> {
@@ -246,7 +247,7 @@ class AkinatorCommand : Command {
                     event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda)
 
                     event.channel.sendSuccess("Bravo! You have defeated me!")
-                        .flatMap { event.message?.delete() }
+                        .flatMap { event.message.delete() }
                         .await()
                 }
                 else -> {
@@ -263,7 +264,7 @@ class AkinatorCommand : Command {
                         if (nextQuestion !== null) {
                             event.replySuccess("Let's go on!")
                                 .setEphemeral(true)
-                                .flatMap { event.message?.delete() }
+                                .flatMap { event.message.delete() }
                                 .await()
 
                             event.channel.sendEmbed {
@@ -282,7 +283,7 @@ class AkinatorCommand : Command {
                             akiwrapper.guesses // always empty for an unknown reason
                                 .firstOrNull { declinedGuesses[event.user.idLong]?.contains(it.idLong) == false }
                                 ?.let { finalGuess ->
-                                    val m = guessMessage(finalGuess, true, event.user.idLong, event.channel, event.message?.idLong)
+                                    val m = guessMessage(finalGuess, true, event.user.idLong, event.channel, event.message.idLong)
 
                                     event.jda.awaitEvent<ButtonClickEvent>(15, DurationUnit.MINUTES, waiterProcess = waiterProcess {
                                         channel = event.channel.idLong

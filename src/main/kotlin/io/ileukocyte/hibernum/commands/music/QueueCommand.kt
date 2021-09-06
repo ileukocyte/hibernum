@@ -25,6 +25,7 @@ import net.dv8tion.jda.api.interactions.components.Button
 
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.time.ExperimentalTime
 
 class QueueCommand : Command {
     override val name = "queue"
@@ -74,7 +75,7 @@ class QueueCommand : Command {
             val audioPlayer = event.guild?.audioPlayer ?: return
             val track = audioPlayer.player.playingTrack.let {
                 if (it === null) {
-                    event.message?.delete()?.queue()
+                    event.message.delete().queue()
                     return
                 } else it
             }
@@ -138,6 +139,7 @@ class QueueCommand : Command {
         Button.secondary("$name-$userId-$page-last", "Last Page")
     )
 
+    @OptIn(ExperimentalTime::class)
     private fun queueEmbed(jda: JDA, musicManager: GuildMusicManager, track: AudioTrack, page: Int) = buildEmbed {
         color = Immutable.SUCCESS
 

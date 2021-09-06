@@ -66,10 +66,10 @@ class LeaveCommand : Command {
 
                     event.replySuccess("Left the voice channel!")
                         .setEphemeral(true)
-                        .flatMap { event.message?.delete() }
+                        .flatMap { event.message.delete() }
                         .queue()
                 }
-                "exit" -> event.message?.delete()?.queue {
+                "exit" -> event.message.delete().queue {
                     event.replySuccess("Successfully canceled!").setEphemeral(true).queue()
                 }
             }

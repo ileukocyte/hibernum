@@ -10,7 +10,7 @@ val ktorVersion: String by project
 plugins {
     java
 
-    kotlin("jvm") version "1.5.21"
+    kotlin("jvm") version "1.5.30"
 
     id("com.github.johnrengelman.shadow") version "5.1.0"
     id("com.github.ben-manes.versions") version "0.19.0"
@@ -60,14 +60,14 @@ dependencies {
     implementation(group = "com.github.kenglxn.QRGen", name = "javase", version = "2.6.0")
 
     // Kotlin
-    implementation(kotlin("stdlib"))
-    implementation(kotlin("reflect"))
-    implementation(kotlin("compiler"))
-    implementation(kotlin("script-util"))
-    implementation(kotlin("scripting-compiler"))
-    implementation(kotlin("scripting-jsr223"))
-    implementation(kotlin("scripting-jvm-host"))
-    implementation(kotlinx("coroutines-core", version = coroutinesVersion))
+    implementation(kotlin("stdlib", kotlinVersion))
+    implementation(kotlin("reflect", kotlinVersion))
+    implementation(kotlin("compiler", kotlinVersion))
+    implementation(kotlin("script-util", kotlinVersion))
+    implementation(kotlin("scripting-compiler", kotlinVersion))
+    implementation(kotlin("scripting-jsr223", kotlinVersion))
+    implementation(kotlin("scripting-jvm-host", kotlinVersion))
+    implementation(kotlinx("coroutines-core", coroutinesVersion))
 
     // Testing
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
@@ -95,7 +95,8 @@ tasks.withType<ShadowJar> {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
+    kotlinOptions.freeCompilerArgs += setOf("-Xopt-in=kotlin.RequiresOptIn", "-Xunrestricted-builder-inference")
+    kotlinOptions.languageVersion = "1.6"
 }
 
 tasks.getByName<Test>("test") {

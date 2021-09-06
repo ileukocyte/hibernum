@@ -27,6 +27,8 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
 
+import kotlin.time.ExperimentalTime
+
 class YouTubePlayCommand : Command {
     override val name = "ytplay"
     override val description = "Plays the specified YouTube video in a voice channel"
@@ -58,13 +60,13 @@ class YouTubePlayCommand : Command {
 
         if (event.user.id == id.first()) {
             if (event.selectedOptions?.firstOrNull()?.value == "exit") {
-                event.message?.delete()?.queue()
+                event.message.delete().queue()
 
                 return
             }
 
             if (id.last() == "videos") {
-                event.message?.delete()?.queue()
+                event.message.delete().queue()
 
                 val videoUrl = event.selectedOptions?.firstOrNull()?.value ?: return
 
@@ -73,6 +75,7 @@ class YouTubePlayCommand : Command {
         } else throw CommandException("You did not invoke the initial command!")
     }
 
+    @OptIn(ExperimentalTime::class)
     private suspend fun sendMenu(
         member: Member,
         textChannel: TextChannel,

@@ -32,7 +32,7 @@ class ShutdownCommand : Command {
                 "shut" -> {
                     event.replySuccess("${event.jda.selfUser.name} has been successfully shut down!")
                         .setEphemeral(true)
-                        .flatMap { event.message?.delete() }
+                        .flatMap { event.message.delete() }
                         .queue({
                             event.jda.shutdown()
                             exitProcess(0)
@@ -41,7 +41,7 @@ class ShutdownCommand : Command {
                             exitProcess(0)
                         }
                 }
-                "exit" -> event.message?.delete()?.queue {
+                "exit" -> event.message.delete().queue {
                     event.replySuccess("Successfully canceled!").setEphemeral(true).queue()
                 }
             }
