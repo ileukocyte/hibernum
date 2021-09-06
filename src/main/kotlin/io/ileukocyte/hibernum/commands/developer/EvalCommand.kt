@@ -33,7 +33,7 @@ class EvalCommand : TextOnlyCommand {
         } ?: throw NoArgumentsException
 
         val packages = buildString {
-            for ((key, value) in imports) {
+            for ((key, value) in IMPORTS) {
                 if (value.isNotEmpty()) {
                     for (`package` in value) {
                         appendLine("import $key.$`package`.*")
@@ -79,7 +79,8 @@ class EvalCommand : TextOnlyCommand {
     }
 
     companion object {
-        val imports = mutableMapOf(
+        @JvmField
+        val IMPORTS = mutableMapOf(
             "io.ileukocyte" to setOf(
                 "hibernum",
                 "hibernum.annotations",

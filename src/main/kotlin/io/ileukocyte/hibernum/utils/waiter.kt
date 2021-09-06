@@ -27,7 +27,7 @@ private val waiterContextDispatcher = newFixedThreadPool(3).asCoroutineDispatche
 object WaiterContext : CoroutineContext by waiterContextDispatcher, AutoCloseable by waiterContextDispatcher
 
 // Process management functions
-val JDA.processes get() = WaiterProcess.currentlyRunning.keys
+val JDA.processes get() = WaiterProcess.CURRENTLY_RUNNING.keys
 val User.processes get() = jda.getUserProcesses(this)
 
 inline fun waiterProcess(block: WaiterProcess.Builder.() -> Unit)  = WaiterProcess.Builder().apply(block)()
@@ -49,7 +49,7 @@ fun JDA.getUserProcesses(userId: Long) = processes.filter { userId in it.users }
 fun JDA.getProcessByMessage(message: Message) = getProcessByMessage(message.idLong)
 fun JDA.getProcessByMessage(messageId: Long) = processes.firstOrNull { it.invoker == messageId }
 
-fun WaiterProcess.kill(jda: JDA) = WaiterProcess.currentlyRunning[this]?.kill(jda, true)
+fun WaiterProcess.kill(jda: JDA) = WaiterProcess.CURRENTLY_RUNNING[this]?.kill(jda, true)
 
 /**
  * The unit of the bot's event waiter process management system containing the required data.
@@ -77,7 +77,7 @@ data class WaiterProcess(
     val command: Command?,
     val invoker: Long?,
     val id: String = "%04d".format((1..9999).filter {
-        "%04d".format(it) !in currentlyRunning.keys.map { p -> p.id }
+        "%04d".format(it) !in CURRENTLY_RUNNING.keys.map { p -> p.id }
     }.random()),
     val timeCreated: OffsetDateTime = OffsetDateTime.now(ZoneId.of("Etc/GMT0")),
     var eventType: KClass<out GenericEvent>? = null
@@ -101,8 +101,8 @@ data class WaiterProcess(
     }
 
     companion object {
-        @PublishedApi
-        internal val currentlyRunning = mutableMapOf<WaiterProcess, AwaitableEventListener<*>>()
+        @[JvmField PublishedApi]
+        internal val CURRENTLY_RUNNING = mutableMapOf<WaiterProcess, AwaitableEventListener<*>>()
     }
 }
 
@@ -113,11 +113,11 @@ class AwaitableEventListener<E : GenericEvent>(
     private val condition: suspend (E) -> Boolean
 ) : EventListener {
     init {
-        waiterProcess?.let { WaiterProcess.currentlyRunning += it to this }
+        waiterProcess?.let { WaiterProcess.CURRENTLY_RUNNING += it to this }
     }
 
     fun kill(jda: JDA, completeWithNull: Boolean = false) {
-        waiterProcess?.let { WaiterProcess.currentlyRunning -= it }
+        waiterProcess?.let { WaiterProcess.CURRENTLY_RUNNING -= it }
 
         jda.removeEventListener(this)
 
@@ -179,7 +179,7 @@ suspend inline fun <reified E : GenericEvent> JDA.awaitEvent(
         try {
             withTimeout(unit.toMillis(delay)) { deferred.await() }
         } catch (e: TimeoutCancellationException) {
-            waiterProcess?.let { WaiterProcess.currentlyRunning -= it }
+            waiterProcess?.let { WaiterProcess.CURRENTLY_RUNNING -= it }
             removeEventListener(listener)
             throw e
         }

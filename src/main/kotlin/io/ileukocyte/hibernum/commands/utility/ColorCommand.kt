@@ -136,6 +136,7 @@ class ColorCommand : Command {
     }
 
     companion object {
+        @JvmField
         val HEX_REGEX = Regex("#?(([A-Fa-f\\d]){3}|([A-Fa-f\\d]){6})")
     }
 }

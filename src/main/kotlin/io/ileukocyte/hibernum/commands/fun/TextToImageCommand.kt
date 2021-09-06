@@ -82,6 +82,7 @@ class TextToImageCommand : Command {
     }
 
     companion object {
+        @JvmField
         val TTI_FONT =
             Font.createFont(Font.TRUETYPE_FONT, File("src/main/resources/tti-font.ttf"))
                 .deriveFont(32f)
