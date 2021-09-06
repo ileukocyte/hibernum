@@ -35,7 +35,7 @@ class JumpCommand : Command {
         if (audioPlayer.player.playingTrack !== null) {
             val time = (args ?: throw NoArgumentsException).takeIf {
                 it.removePrefix("rewind:").removePrefix("fast-forward:") matches TIME_CODE_REGEX
-            } ?: throw CommandException("You have entered an argument of a wrong format!")
+            } ?: throw CommandException("You have provided an argument of a wrong format!")
 
             if (event.member?.voiceState?.channel != event.guild.selfMember.voiceState?.channel)
                 throw CommandException("You are not connected to the required voice channel!")
@@ -51,7 +51,7 @@ class JumpCommand : Command {
                         throw CommandException("You have exceeded the track duration!")
                 } else {
                     if (millis !in 0..audioPlayer.player.playingTrack.duration)
-                        throw CommandException("You have specified a wrong time code for the track!")
+                        throw CommandException("You have provided a wrong time code for the track!")
                 }
             }
 
@@ -76,7 +76,7 @@ class JumpCommand : Command {
                 .lowercase()
                 .takeIf {
                     it.removePrefix("rewind:").removePrefix("fast-forward:") matches TIME_CODE_REGEX
-                } ?: throw CommandException("You have entered an argument of a wrong format!")
+                } ?: throw CommandException("You have provided an argument of a wrong format!")
 
             if (event.member?.voiceState?.channel != event.guild?.selfMember?.voiceState?.channel)
                 throw CommandException("You are not connected to the required voice channel!")
@@ -92,7 +92,7 @@ class JumpCommand : Command {
                         throw CommandException("You have exceeded the track duration!")
                 } else {
                     if (millis !in 0..audioPlayer.player.playingTrack.duration)
-                        throw CommandException("You have specified a wrong time code for the track!")
+                        throw CommandException("You have provided a wrong time code for the track!")
                 }
             }
 

@@ -34,7 +34,7 @@ class MoveCommand : Command {
             .filter { it.isInt }
             .takeIf { it.size == 2 }
             ?.map { it.toInt() - 1 }
-            ?: throw CommandException("You have specified wrong arguments!")
+            ?: throw CommandException("You have provided invalid arguments!")
 
         val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
 
@@ -45,7 +45,7 @@ class MoveCommand : Command {
 
                 val list = audioPlayer.scheduler.queue.toMutableList()
                 val track = list.getOrNull(song)
-                    ?: throw CommandException("You have specified a wrong song index!")
+                    ?: throw CommandException("You have specified an invalid song index!")
 
                 list.removeAt(song)
                 list.add(max(0, min(index, audioPlayer.scheduler.queue.size.dec())), track)
@@ -72,7 +72,7 @@ class MoveCommand : Command {
 
                 val list = audioPlayer.scheduler.queue.toMutableList()
                 val track = list.getOrNull(song)
-                    ?: throw CommandException("You have specified a wrong song index!")
+                    ?: throw CommandException("You have specified an invalid song index!")
 
                 list.removeAt(song)
                 list.add(max(0, min(index, audioPlayer.scheduler.queue.size.dec())), track)

@@ -51,7 +51,7 @@ class HelpCommand : Command {
         if (option !== null) {
             CommandHandler[option.asString]
                 ?.let { event.replyEmbeds(it.commandHelp(event.jda)).setEphemeral(true).queue() }
-                ?: throw CommandException("The specified command name is invalid!")
+                ?: throw CommandException("The provided command name is invalid!")
         } else {
             event.replyEmbeds(commandList(event.jda, event.user, true, isInDm = false))
                 .setEphemeral(true)

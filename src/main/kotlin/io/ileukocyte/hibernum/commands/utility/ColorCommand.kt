@@ -9,6 +9,7 @@ import io.ileukocyte.hibernum.extensions.toJSONObject
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.features.ClientRequestException
 import io.ktor.client.request.get
 
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
@@ -67,7 +68,11 @@ class ColorCommand : Command {
     private suspend fun getColorInfo(input: String): Color {
         val client = HttpClient(CIO)
         val api = "http://www.thecolorapi.com/id?hex=${input.removePrefix("#").lowercase()}"
-        val response = client.get<String>(api).toJSONObject()
+        val response = try {
+            client.get<String>(api).toJSONObject()
+        } catch (_: ClientRequestException) {
+            throw CommandException("The Color API is not available at the moment!")
+        }
 
         val rgb = response.getJSONObject("rgb").let {
             Color.RGB(
