@@ -2,6 +2,7 @@ package io.ileukocyte.hibernum.commands.utility
 
 import com.wrapper.spotify.SpotifyApi
 import com.wrapper.spotify.model_objects.specification.Track
+
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandCategory
@@ -11,24 +12,23 @@ import io.ileukocyte.hibernum.commands.TextOnlyCommand
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.limitTo
 import io.ileukocyte.hibernum.extensions.sendEmbed
-import io.ileukocyte.hibernum.extensions.toJSONObject
 import io.ileukocyte.hibernum.utils.asDuration
+
 import net.dv8tion.jda.api.entities.Emoji
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
-import org.jetbrains.kotlin.utils.addToStdlib.cast
-import org.json.JSONObject
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
+
 import kotlin.math.round
 import kotlin.time.ExperimentalTime
 
 class SpotifyCommand : TextOnlyCommand {
     override val name = "spotify"
-    override val description = "search"
+    override val description = "Searches a Spotify track by the provided query and sends some information about one"
     override val category = CommandCategory.BETA
+    override val usages = setOf("query")
+    override val cooldown = 5L
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val query = args ?: throw NoArgumentsException
