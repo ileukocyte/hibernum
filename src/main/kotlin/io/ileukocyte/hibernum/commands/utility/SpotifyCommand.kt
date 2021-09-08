@@ -38,7 +38,6 @@ import kotlin.time.ExperimentalTime
 class SpotifyCommand : Command {
     override val name = "spotify"
     override val description = "Searches a Spotify track by the provided query and sends some information about one"
-    override val category = CommandCategory.BETA
     override val usages = setOf("query")
     override val options = setOf(
         OptionData(OptionType.STRING, "query", "A search term", true)
