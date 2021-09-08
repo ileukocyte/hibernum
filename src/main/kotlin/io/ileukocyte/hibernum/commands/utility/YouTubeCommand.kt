@@ -77,13 +77,10 @@ class YouTubeCommand : Command {
         if (event.user.id == id.first()) {
             if (event.selectedOptions?.firstOrNull()?.value == "exit") {
                 event.message.delete().queue()
-
                 return
             }
 
             if (id.last() == "videos") {
-                event.message.delete().queue()
-
                 val video = suspendCoroutine<Video?> {
                     val list = YOUTUBE.videos().list(listOf("id", "snippet", "contentDetails"))
 
@@ -93,7 +90,9 @@ class YouTubeCommand : Command {
                     it.resume(list.execute().items.firstOrNull())
                 } ?: return
 
-                event.channel.sendMessageEmbeds(videoEmbed(video, event.user.takeIf { id.getOrNull(1) == "slash" })).queue()
+                event.editComponents().setEmbeds(videoEmbed(video, event.user.takeIf { id.getOrNull(1) == "slash" })).queue({}) {
+                    event.channel.sendMessageEmbeds(videoEmbed(video, event.user.takeIf { id.getOrNull(1) == "slash" })).queue()
+                }
             }
         } else throw CommandException("You did not invoke the initial command!")
     }
