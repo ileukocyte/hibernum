@@ -1,6 +1,7 @@
 package io.ileukocyte.hibernum.commands.utility
 
 import com.wrapper.spotify.SpotifyApi
+import com.wrapper.spotify.exceptions.detailed.BadRequestException
 import com.wrapper.spotify.model_objects.specification.Track
 
 import de.androidpit.colorthief.ColorThief
@@ -50,6 +51,19 @@ class SpotifyCommand : Command {
 
         api.accessToken = api.clientCredentials().build().executeAsync().await().accessToken
 
+        val regexMatches = SPOTIFY_TRACK_URL_REGEX.findAll(query)
+
+        if (regexMatches.any()) {
+            val track = try {
+                api.getTrack(regexMatches.first().groups.last()?.value ?: return).build().executeAsync().await()
+            } catch (_: BadRequestException) {
+                throw CommandException("You have provided an invalid URL!")
+            }
+
+            event.channel.sendMessageEmbeds(trackEmbed(track, api)).queue()
+            return
+        }
+
         val request = api.searchTracks(query).limit(5).build()
         val items = request.executeAsync().await().items.takeUnless { it.isEmpty() }
             ?: throw CommandException("No track has been found by the query!")
@@ -82,11 +96,25 @@ class SpotifyCommand : Command {
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
+        val query = event.getOption("query")?.asString ?: return
         val api = SPOTIFY_API
 
         api.accessToken = api.clientCredentials().build().executeAsync().await().accessToken
 
-        val request = api.searchTracks(event.getOption("query")?.asString ?: return).limit(5).build()
+        val regexMatches = SPOTIFY_TRACK_URL_REGEX.findAll(query)
+
+        if (regexMatches.any()) {
+            val track = try {
+                api.getTrack(regexMatches.first().groups.last()?.value ?: return).build().executeAsync().await()
+            } catch (_: BadRequestException) {
+                throw CommandException("You have provided an invalid URL!")
+            }
+
+            event.replyEmbeds(trackEmbed(track, api)).queue()
+            return
+        }
+
+        val request = api.searchTracks(query).limit(5).build()
         val items = request.executeAsync().await().items.takeUnless { it.isEmpty() }
             ?: throw CommandException("No track has been found by the query!")
 
@@ -232,5 +260,8 @@ class SpotifyCommand : Command {
             .setClientId(Immutable.SPOTIFY_CLIENT_ID)
             .setClientSecret(Immutable.SPOTIFY_CLIENT_SECRET)
             .build()
+
+        @JvmField
+        val SPOTIFY_TRACK_URL_REGEX = Regex("(?:https?://)?(open.spotify.com/track/)([A-Za-z0-9]+)")
     }
 }
