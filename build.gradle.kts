@@ -58,6 +58,7 @@ dependencies {
     implementation(group = "org.jsoup", name = "jsoup", version = "1.14.2")
     implementation(group = "commons-validator", name = "commons-validator", version = "1.7")
     implementation(group = "com.github.kenglxn.QRGen", name = "javase", version = "2.6.0")
+    implementation("se.michaelthelin.spotify:spotify-web-api-java:6.5.4")
 
     // Kotlin
     implementation(kotlin("stdlib", kotlinVersion))

@@ -26,6 +26,8 @@ object Immutable {
     val YOUTUBE_API_KEY: String = System.getenv("YOUTUBE_API_KEY")
     val PERSPECTIVE_API_KEY: String = System.getenv("PERSPECTIVE_API_KEY")
     val WEATHER_API_KEY: String = System.getenv("WEATHER_API_KEY")
+    val SPOTIFY_CLIENT_ID: String = System.getenv("SPOTIFY_CLIENT_ID")
+    val SPOTIFY_CLIENT_SECRET: String = System.getenv("SPOTIFY_CLIENT_SECRET")
 
     val SUCCESS = Color(140, 190, 218)
     val FAILURE = Color(239, 67, 63)

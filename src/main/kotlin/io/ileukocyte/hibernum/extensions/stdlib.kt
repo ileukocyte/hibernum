@@ -1,6 +1,17 @@
 @file:JvmName("StandardLibraryExtensions")
 package io.ileukocyte.hibernum.extensions
 
+import java.util.concurrent.CompletableFuture
+
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
+
+// Java concurrency
+suspend fun <T> CompletableFuture<T>.await() = suspendCoroutine<T> { c ->
+    whenComplete { r, e -> e?.let { c.resumeWithException(it) } ?: c.resume(r) }
+}
+
 // kotlin.Int
 val Int.charName: String? get() = Character.getName(this)
 
