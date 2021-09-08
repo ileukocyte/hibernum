@@ -3,6 +3,8 @@ package io.ileukocyte.hibernum.commands.utility
 import com.wrapper.spotify.SpotifyApi
 import com.wrapper.spotify.model_objects.specification.Track
 
+import de.androidpit.colorthief.ColorThief
+
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandCategory
@@ -14,11 +16,19 @@ import io.ileukocyte.hibernum.extensions.limitTo
 import io.ileukocyte.hibernum.extensions.sendEmbed
 import io.ileukocyte.hibernum.utils.asDuration
 
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.request.get
+
 import net.dv8tion.jda.api.entities.Emoji
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
+
+import java.awt.Color
+import java.io.InputStream
+import javax.imageio.ImageIO
 
 import kotlin.math.round
 import kotlin.time.ExperimentalTime
@@ -95,8 +105,16 @@ class SpotifyCommand : TextOnlyCommand {
         val artist = api.getArtist(track.artists.first().id).build().executeAsync().await()
         val features = api.getAudioFeaturesForTrack(track.id).build().executeAsync().await()
 
-        //color = Immutable.SUCCESS
-        image = album.images.maxByOrNull { it.height }?.url
+        album.images.maxByOrNull { it.height }?.url?.let { img ->
+            image = img
+
+            HttpClient(CIO).get<InputStream>(img).use {
+                val bufferedImage = ImageIO.read(it)
+                val rgb = ColorThief.getColor(bufferedImage)
+
+                color = Color(rgb[0], rgb[1], rgb[2])
+            }
+        }
 
         author {
             name = "${track.artists.first().name} - ${track.name}"

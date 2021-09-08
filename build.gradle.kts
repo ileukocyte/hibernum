@@ -59,6 +59,7 @@ dependencies {
     implementation(group = "commons-validator", name = "commons-validator", version = "1.7")
     implementation(group = "com.github.kenglxn.QRGen", name = "javase", version = "2.6.0")
     implementation("se.michaelthelin.spotify:spotify-web-api-java:6.5.4")
+    implementation("com.github.SvenWoltmann:color-thief-java:v1.1.2")
 
     // Kotlin
     implementation(kotlin("stdlib", kotlinVersion))
