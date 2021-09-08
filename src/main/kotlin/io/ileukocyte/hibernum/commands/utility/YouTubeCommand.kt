@@ -2,13 +2,20 @@ package io.ileukocyte.hibernum.commands.utility
 
 import com.google.api.services.youtube.model.Video
 
+import de.androidpit.colorthief.ColorThief
+
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
+import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.limitTo
 import io.ileukocyte.hibernum.utils.*
+
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.request.get
 
 import net.dv8tion.jda.api.entities.Emoji
 import net.dv8tion.jda.api.entities.TextChannel
@@ -20,6 +27,10 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
+
+import java.awt.Color
+import java.io.InputStream
+import javax.imageio.ImageIO
 
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -90,18 +101,31 @@ class YouTubeCommand : Command {
                     it.resume(list.execute().items.firstOrNull())
                 } ?: return
 
-                event.editComponents().setEmbeds(videoEmbed(video, event.user.takeIf { id.getOrNull(1) == "slash" })).queue({}) {
-                    event.channel.sendMessageEmbeds(videoEmbed(video, event.user.takeIf { id.getOrNull(1) == "slash" })).queue()
+                try {
+                    event.editComponents()
+                        .setEmbeds(videoEmbed(video, event.user.takeIf { id.getOrNull(1) == "slash" }))
+                        .await()
+                } catch (_: Exception) {
+                    event.channel.sendMessageEmbeds(videoEmbed(video, event.user.takeIf { id.getOrNull(1) == "slash" }))
+                        .queue()
                 }
             }
         } else throw CommandException("You did not invoke the initial command!")
     }
 
     @OptIn(ExperimentalTime::class)
-    private fun videoEmbed(video: Video, author: User? = null) = buildEmbed {
-        color = Immutable.SUCCESS
-        image = video.snippet.thumbnails?.let {
+    private suspend fun videoEmbed(video: Video, author: User? = null) = buildEmbed {
+        video.snippet.thumbnails?.let {
             it.maxres.url ?: it.standard.url ?: it.high.url ?: it.medium.url ?: it.default.url
+        }?.let {
+            image = it
+
+            HttpClient(CIO).get<InputStream>(it).use { s ->
+                val bufferedImage = ImageIO.read(s)
+                val rgb = ColorThief.getColor(bufferedImage)
+
+                color = Color(rgb[0], rgb[1], rgb[2])
+            }
         }
         description =
             video.snippet.description.takeUnless { it.isEmpty() }?.limitTo(4096) ?: "No description provided"
