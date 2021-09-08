@@ -51,7 +51,7 @@ class KEmbedBuilder {
         }
     }
 
-    fun appendln(content: String = "") {
+    fun appendLine(content: String = "") {
         if (description !== null) {
             description += "$content\n"
         } else {
@@ -61,7 +61,7 @@ class KEmbedBuilder {
 
     inline fun append(lazyContent: () -> Any?) = append(lazyContent()?.toString() ?: "")
 
-    inline fun appendln(lazyContent: () -> Any?) = appendln(lazyContent()?.toString() ?: "")
+    inline fun appendln(lazyContent: () -> Any?) = appendLine(lazyContent()?.toString() ?: "")
 
     @PublishedApi
     internal operator fun invoke(): MessageEmbed {
