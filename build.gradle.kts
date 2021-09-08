@@ -51,15 +51,15 @@ dependencies {
     implementation(group = "org.json", name = "json", version = "20210307")
     implementation(group = "com.google.api-client", name = "google-api-client", version = "1.32.1")
     implementation(group = "com.google.oauth-client", name = "google-oauth-client-jetty", version = "1.32.1")
-    implementation(group = "com.google.apis", name = "google-api-services-youtube", version = "v3-rev20210811-1.32.1")
+    implementation(group = "com.google.apis", name = "google-api-services-youtube", version = "v3-rev20210828-1.32.1")
     implementation(group = "com.google.guava", name = "guava", version = "30.1.1-jre")
     implementation(group = "io.ktor", name = "ktor-client-core", version = ktorVersion)
     implementation(group = "io.ktor", name = "ktor-client-cio", version = ktorVersion)
     implementation(group = "org.jsoup", name = "jsoup", version = "1.14.2")
     implementation(group = "commons-validator", name = "commons-validator", version = "1.7")
     implementation(group = "com.github.kenglxn.QRGen", name = "javase", version = "2.6.0")
-    implementation("se.michaelthelin.spotify:spotify-web-api-java:6.5.4")
-    implementation("com.github.SvenWoltmann:color-thief-java:v1.1.2")
+    implementation(group = "se.michaelthelin.spotify", name = "spotify-web-api-java", version = "6.5.4")
+    implementation(group = "com.github.SvenWoltmann", name = "color-thief-java", version = "v1.1.2")
 
     // Kotlin
     implementation(kotlin("stdlib", kotlinVersion))
