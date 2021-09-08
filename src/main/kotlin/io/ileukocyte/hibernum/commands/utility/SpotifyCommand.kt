@@ -7,12 +7,10 @@ import de.androidpit.colorthief.ColorThief
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.CommandCategory
-import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.commands.NoArgumentsException
-import io.ileukocyte.hibernum.commands.TextOnlyCommand
+import io.ileukocyte.hibernum.commands.*
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.limitTo
+import io.ileukocyte.hibernum.extensions.replyEmbed
 import io.ileukocyte.hibernum.extensions.sendEmbed
 import io.ileukocyte.hibernum.utils.asDuration
 
@@ -22,7 +20,10 @@ import io.ktor.client.request.get
 
 import net.dv8tion.jda.api.entities.Emoji
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.interactions.commands.OptionType
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
 
@@ -33,11 +34,14 @@ import javax.imageio.ImageIO
 import kotlin.math.round
 import kotlin.time.ExperimentalTime
 
-class SpotifyCommand : TextOnlyCommand {
+class SpotifyCommand : Command {
     override val name = "spotify"
     override val description = "Searches a Spotify track by the provided query and sends some information about one"
     override val category = CommandCategory.BETA
     override val usages = setOf("query")
+    override val options = setOf(
+        OptionData(OptionType.STRING, "query", "A search term", true)
+    )
     override val cooldown = 5L
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
@@ -77,6 +81,42 @@ class SpotifyCommand : TextOnlyCommand {
         }.setActionRow(menu).queue()
     }
 
+    override suspend fun invoke(event: SlashCommandEvent) {
+        val api = SPOTIFY_API
+
+        api.accessToken = api.clientCredentials().build().executeAsync().await().accessToken
+
+        val request = api.searchTracks(event.getOption("query")?.asString ?: return).limit(5).build()
+        val items = request.executeAsync().await().items.takeUnless { it.isEmpty() }
+            ?: throw CommandException("No track has been found by the query!")
+
+        if (items.size == 1) {
+            event.replyEmbeds(trackEmbed(items.first(), api)).queue()
+            return
+        }
+
+        val menu by lazy {
+            val options = items.map {
+                val artist = it.artists.first().name
+                val title = it.name
+                val album = it.album.name
+
+                SelectOption.of("$artist - $title - $album".limitTo(100), it.id)
+            }
+
+            SelectionMenu.create("$name-${event.user.idLong}-spotify")
+                .addOptions(
+                    *options.toTypedArray(),
+                    SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C"))
+                ).build()
+        }
+
+        event.replyEmbed {
+            color = Immutable.SUCCESS
+            description = "Select a track you want to check information about!"
+        }.addActionRow(menu).queue()
+    }
+
     override suspend fun invoke(event: SelectionMenuEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
 
@@ -87,14 +127,16 @@ class SpotifyCommand : TextOnlyCommand {
             }
 
             if (id.last() == "spotify") {
-                event.message.delete().queue()
-
                 val api = SPOTIFY_API.apply {
                     accessToken = clientCredentials().build().executeAsync().await().accessToken
                 }
                 val track = api.getTrack(event.selectedOptions?.firstOrNull()?.value).build().executeAsync().await()
 
-                event.channel.sendMessageEmbeds(trackEmbed(track, api)).queue()
+                try {
+                    event.editComponents().setEmbeds(trackEmbed(track, api)).await()
+                } catch (_: Exception) {
+                    event.channel.sendMessageEmbeds(trackEmbed(track, api)).queue()
+                }
             }
         } else throw CommandException("You did not invoke the initial command!")
     }

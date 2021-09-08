@@ -98,7 +98,7 @@ tasks.withType<ShadowJar> {
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.freeCompilerArgs += setOf("-Xopt-in=kotlin.RequiresOptIn", "-Xunrestricted-builder-inference")
-    kotlinOptions.languageVersion = "1.6"
+    //kotlinOptions.languageVersion = "1.6"
 }
 
 tasks.getByName<Test>("test") {
