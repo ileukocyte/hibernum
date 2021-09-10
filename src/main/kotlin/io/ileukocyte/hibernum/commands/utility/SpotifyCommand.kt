@@ -233,7 +233,7 @@ class SpotifyCommand : Command {
 
         field {
             title = "Popularity"
-            description = track.popularity?.takeUnless { it == 0 }?.let { "$it/100" } ?: "N/A"
+            description = track.popularity?.takeUnless { it == 0 }?.let { "${it / 10f}/10" } ?: "N/A"
             isInline = true
         }
 
