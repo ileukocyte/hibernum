@@ -61,7 +61,7 @@ class HelpCommand : Command {
 
     @OptIn(ExperimentalTime::class)
     private fun Command.commandHelp(jda: JDA) = buildEmbed {
-        val nameWithPrefix = "${Immutable.DEFAULT_PREFIX}$name"
+        val nameWithPrefix = "${Immutable.DEFAULT_PREFIX.takeUnless { this@commandHelp is SlashOnlyCommand } ?: "/"}$name"
 
         color = Immutable.SUCCESS
         description = this@commandHelp.fullDescription
