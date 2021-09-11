@@ -15,7 +15,7 @@ plugins {
 }
 
 group = "io.ileukocyte"
-version = Version(major = 1, minor = 6, unstable = 1, stability = Version.Stability.ReleaseCandidate)
+version = Version(major = 1, minor = 6)
 
 repositories {
     mavenCentral()
@@ -71,7 +71,7 @@ dependencies {
 
     // Testing
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
-    testImplementation(kotlin("test-junit"))
+    testImplementation(kotlin("test-junit", kotlinVersion))
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.2")
 }
 

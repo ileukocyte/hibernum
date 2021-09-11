@@ -44,13 +44,13 @@ class PruneCommand : SlashOnlyCommand {
         val member = event.member ?: return
 
         if (Permission.MESSAGE_MANAGE !in guild.selfMember.permissions)
-            throw CommandException("${event.user.name} is not able to delete messages as no required permissions were granted! Contact the server's staff!")
+            throw CommandException("${event.user.name} is not able to delete messages since no required permissions were granted! Contact the server's staff!")
 
         if (Permission.MESSAGE_MANAGE !in member.permissions)
             throw CommandException("You do not have the required permission to manage messages!")
 
         if (event.getOption("text-filter") !== null && event.getOption("text") === null)
-            throw CommandException("The `text` option must be initialized in case of the `text-filter` option being provided!")
+            throw CommandException("The \"text\" option must be initialized in case of the \"text-filter\" option being provided!")
 
         val count = event.getOption("count")?.asLong?.toInt()?.takeIf { it in 1..1000 }
             ?: throw CommandException("The provided amount is out of the required range of 1 through 1,000!")
