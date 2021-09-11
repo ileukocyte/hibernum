@@ -54,7 +54,8 @@ class PruneCommand : SlashOnlyCommand {
 
         val deferred = event.deferReply().setEphemeral(true).await()
 
-        val history = event.channel.iterableHistory.takeAsync(1000).await()
+        val amount = count.takeUnless { event.options.filterNotNull().size > 1 } ?: 1000
+        val history = event.channel.iterableHistory.takeAsync(amount).await()
         val filtered = history.filter { message ->
             val filter = event.getOption("filter")?.let {
                 when (it.asString) {
@@ -95,7 +96,7 @@ class PruneCommand : SlashOnlyCommand {
 
         event.channel.purgeMessages(filtered)
 
-        deferred.editOriginal(response).queue()
+        deferred.editOriginalEmbeds(defaultEmbed(response, EmbedType.SUCCESS)).queue()
     }
 
     fun getResponse(deletedMessages: Int, user: User?, filter: String?, contentFilter: String?) = buildString {
