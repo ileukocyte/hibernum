@@ -7,6 +7,7 @@ enum class CommandCategory {
     DEVELOPER,
     FUN,
     GENERAL,
+    MODERATION,
     MUSIC,
     UTILITY,
     BETA,
