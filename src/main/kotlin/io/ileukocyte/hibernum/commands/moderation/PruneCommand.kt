@@ -120,7 +120,7 @@ class PruneCommand : SlashOnlyCommand {
                 "bots" -> " sent by bots"
                 "embeds" -> ""
                 "invites" -> " containing invite links"
-                "links" -> " containing any URLs"
+                "links" -> " containing any links"
                 else -> " mentioning any users or any roles"
             })
         }
