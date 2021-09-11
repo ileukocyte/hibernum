@@ -3,8 +3,6 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val kotlinVersion: String by project
-val coroutinesVersion: String by project
-val jdaVersion: String by project
 val ktorVersion: String by project
 
 plugins {
@@ -37,7 +35,7 @@ repositories {
 
 dependencies {
     // Discord
-    implementation(group = "net.dv8tion", name = "JDA", version = jdaVersion) { exclude(module = "opus-java") }
+    implementation(group = "net.dv8tion", name = "JDA", version = "4.3.0_324") { exclude(module = "opus-java") }
     implementation(group = "com.sedmelluq", name = "lavaplayer", version = "1.3.78")
 
     // Logging
@@ -69,7 +67,7 @@ dependencies {
     implementation(kotlin("scripting-compiler", kotlinVersion))
     implementation(kotlin("scripting-jsr223", kotlinVersion))
     implementation(kotlin("scripting-jvm-host", kotlinVersion))
-    implementation(kotlinx("coroutines-core", coroutinesVersion))
+    implementation(kotlinx("coroutines-core", "1.5.2"))
 
     // Testing
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
