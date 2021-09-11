@@ -21,7 +21,6 @@ class PruneCommand : SlashOnlyCommand {
     override val name = "prune"
     override val description = "Deletes messages by the amount and filters provided"
     override val fullDescription = "$description\n\n*Using filters leads to the deletion process being pretty slow!*"
-    override val aliases = setOf("purge")
     override val options = setOf(
         OptionData(OptionType.INTEGER, "count", "The amount of messages to delete (up to 1000)", true),
         OptionData(OptionType.USER, "user", "The user whose messages are to delete"),
