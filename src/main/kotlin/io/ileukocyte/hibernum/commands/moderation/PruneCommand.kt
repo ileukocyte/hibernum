@@ -107,7 +107,7 @@ class PruneCommand : SlashOnlyCommand {
         }.queue { it.delete().queueAfter(5, DurationUnit.SECONDS, {}) {} }
     }
 
-    fun getResponse(deletedMessages: Int, user: User?, filter: String?, textFilter: String?) = buildString {
+    private fun getResponse(deletedMessages: Int, user: User?, filter: String?, textFilter: String?) = buildString {
         append("Deleted $deletedMessages ")
 
         if (filter == "embeds") append("embed ")
