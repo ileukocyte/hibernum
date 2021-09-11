@@ -48,11 +48,7 @@ fun main() = runBlocking {
     LOGGER.info("JDA has been successfully initialized!")
 
     // first evaluation
-    val jsr223Deferred = async { EVAL_KOTLIN_ENGINE.eval("Unit") }
-
-    jsr223Deferred.await()
-
-    LOGGER.info("Kotlin JSR-223 engine is ready to use!")
+    EVAL_KOTLIN_ENGINE.eval("io.ileukocyte.hibernum.Immutable.LOGGER.info(\"Kotlin JSR-223 engine is ready to use!\")")
 
     // loading guild music managers
     discord.loadGuildMusicManagers()
