@@ -16,16 +16,16 @@ inline fun GenericInteractionCreateEvent.reply(block: KMessageBuilder.() -> Unit
 inline fun GenericInteractionCreateEvent.replyEmbed(block: KEmbedBuilder.() -> Unit) =
     replyEmbeds(buildEmbed(block))
 
-fun GenericInteractionCreateEvent.replySuccess(desc: String, footer: String? = null) =
+fun GenericInteractionCreateEvent.replySuccess(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
     replyEmbeds(defaultEmbed(desc, EmbedType.SUCCESS, footer))
 
-fun GenericInteractionCreateEvent.replyFailure(desc: String, footer: String? = null) =
+fun GenericInteractionCreateEvent.replyFailure(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
     replyEmbeds(defaultEmbed(desc, EmbedType.FAILURE, footer))
 
-fun GenericInteractionCreateEvent.replyConfirmation(desc: String, footer: String? = null) =
+fun GenericInteractionCreateEvent.replyConfirmation(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
     replyEmbeds(defaultEmbed(desc, EmbedType.CONFIRMATION, footer))
 
-fun GenericInteractionCreateEvent.replyWarning(desc: String, footer: String? = null) =
+fun GenericInteractionCreateEvent.replyWarning(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
     replyEmbeds(defaultEmbed(desc, EmbedType.WARNING, footer))
 
 fun GenericInteractionCreateEvent.replyActionRow(vararg components: Component) =

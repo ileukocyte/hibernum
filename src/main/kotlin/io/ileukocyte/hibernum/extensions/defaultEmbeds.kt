@@ -2,6 +2,7 @@
 package io.ileukocyte.hibernum.extensions
 
 import io.ileukocyte.hibernum.Immutable
+import io.ileukocyte.hibernum.builders.KEmbedBuilder
 import io.ileukocyte.hibernum.builders.buildEmbed
 
 import java.awt.Color
@@ -15,9 +16,9 @@ enum class EmbedType(val color: Color) {
     val title = "${name.capitalizeAll()}!"
 }
 
-fun defaultEmbed(desc: String, type: EmbedType, footer: String? = null) = buildEmbed {
+fun defaultEmbed(desc: String, type: EmbedType, footerBlock: (KEmbedBuilder.Footer.() -> Unit)? = null) = buildEmbed {
     color = type.color
     description = desc
     author { name = type.title }
-    footer { text = footer }
+    footerBlock?.let { footer(it) }
 }

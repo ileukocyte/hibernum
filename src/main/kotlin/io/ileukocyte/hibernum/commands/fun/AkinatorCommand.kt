@@ -445,10 +445,9 @@ class AkinatorCommand : Command {
                             }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
                         }
                     } else {
-                        val incorrect = message.replyFailure(
-                            "Incorrect answer! Use `help`/`aliases` to get documentation!",
-                            "This message will self-delete in 5 seconds"
-                        ).await()
+                        val incorrect = message.replyFailure("Incorrect answer! Use `help`/`aliases` to get documentation!") {
+                            text = "This message will self-delete in 5 seconds"
+                        }.await()
 
                         incorrect.delete().queueAfter(5, DurationUnit.SECONDS, {}) {}
 

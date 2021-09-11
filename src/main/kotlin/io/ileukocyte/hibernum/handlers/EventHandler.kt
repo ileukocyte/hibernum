@@ -65,10 +65,9 @@ object EventHandler : ListenerAdapter() {
                                     ?.cast<TrackUserData>()
                                     ?.channel
                                     ?.let {
-                                        it.sendWarning("${event.jda.selfUser.name} has been inactive for too long to stay in the voice channel! " +
-                                            "The bot has left!",
-                                            "This message will self-delete in 1 minute"
-                                        ).queue({ w -> w.delete().queueAfter(1, DurationUnit.MINUTES, {}) {} }) {}
+                                        it.sendWarning("${event.jda.selfUser.name} has been inactive for too long to stay in the voice channel! The bot has left!") {
+                                            text = "This message will self-delete in 1 minute"
+                                        }.queue({ w -> w.delete().queueAfter(1, DurationUnit.MINUTES, {}) {} }) {}
                                     }
 
                                 event.guild.audioPlayer?.stop()
@@ -92,7 +91,7 @@ object EventHandler : ListenerAdapter() {
 
             event.jda.getTextChannelById(process.channel)
                 ?.sendMessage {
-                    embeds += defaultEmbed(description, EmbedType.WARNING, "This message will self-delete in 5 seconds")
+                    embeds += defaultEmbed(description, EmbedType.WARNING) { text = "This message will self-delete in 5 seconds" }
 
                     process.users.mapNotNull { event.jda.getUserById(it)?.asMention }.joinToString()
                         .takeUnless { it.isEmpty() }

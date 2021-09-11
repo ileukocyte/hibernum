@@ -72,7 +72,9 @@ class PlayCommand : Command {
                         }
 
                         override fun noMatches() =
-                            event.channel.sendFailure("No results have been found by the query!", "Try using the \"ytplay\" command instead!").queue()
+                            event.channel.sendFailure("No results have been found by the query!") {
+                                text = "Try using the \"ytplay\" command instead!"
+                            }.queue()
 
                         override fun loadFailed(exception: FriendlyException) =
                             event.channel.sendFailure("The track cannot be played!").queue()
@@ -123,7 +125,9 @@ class PlayCommand : Command {
                     }
 
                     override fun noMatches() =
-                        event.replyFailure("No results have been found by the query!", "Try using the \"ytplay\" command instead!").queue()
+                        event.replyFailure("No results have been found by the query!") {
+                            text = "Try using the \"ytplay\" command instead!"
+                        }.queue()
 
                     override fun loadFailed(exception: FriendlyException) =
                         event.replyFailure("The track cannot be played!").queue()

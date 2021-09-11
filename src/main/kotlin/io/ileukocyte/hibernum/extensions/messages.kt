@@ -69,14 +69,14 @@ suspend fun Message.awaitConfirmationWithReactions(
 inline fun Message.replyEmbed(block: KEmbedBuilder.() -> Unit) =
     replyEmbeds(KEmbedBuilder().apply(block)())
 
-fun Message.replySuccess(desc: String, footer: String? = null) =
+fun Message.replySuccess(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
     replyEmbeds(defaultEmbed(desc, EmbedType.SUCCESS, footer))
 
-fun Message.replyFailure(desc: String, footer: String? = null) =
+fun Message.replyFailure(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
     replyEmbeds(defaultEmbed(desc, EmbedType.FAILURE, footer))
 
-fun Message.replyConfirmation(desc: String, footer: String? = null) =
+fun Message.replyConfirmation(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
     replyEmbeds(defaultEmbed(desc, EmbedType.CONFIRMATION, footer))
 
-fun Message.replyWarning(desc: String, footer: String? = null) =
+fun Message.replyWarning(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
     replyEmbeds(defaultEmbed(desc, EmbedType.WARNING, footer))

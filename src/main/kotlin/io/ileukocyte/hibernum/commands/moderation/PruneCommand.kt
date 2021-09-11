@@ -1,6 +1,5 @@
 package io.ileukocyte.hibernum.commands.moderation
 
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandCategory
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
@@ -15,10 +14,14 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
 import org.apache.commons.validator.routines.UrlValidator
 
+import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
+
 class PruneCommand : SlashOnlyCommand {
     override val name = "prune"
     override val description = "Deletes messages by the amount and filters provided"
-    override val category = CommandCategory.BETA
+    override val fullDescription = "$description\n\n*Using filters leads to the deletion process being pretty slow!*"
+    override val aliases = setOf("purge")
     override val options = setOf(
         OptionData(OptionType.INTEGER, "count", "The amount of messages to delete (up to 1000)", true),
         OptionData(OptionType.USER, "user", "The user whose messages are to delete"),
@@ -35,8 +38,9 @@ class PruneCommand : SlashOnlyCommand {
             .addChoice("Ends With", "endswith"),
         OptionData(OptionType.STRING, "text", "The content to filter messages by")
     )
-    override val cooldown = 3L
+    override val cooldown = 5L
 
+    @OptIn(ExperimentalTime::class)
     override suspend fun invoke(event: SlashCommandEvent) {
         val guild = event.guild ?: return
         val member = event.member ?: return
@@ -53,11 +57,12 @@ class PruneCommand : SlashOnlyCommand {
         val count = event.getOption("count")?.asLong?.toInt()?.takeIf { it in 1..1000 }
             ?: throw CommandException("The provided amount is out of the required range of 1 through 1,000!")
 
+        val amount = count.takeUnless { event.options.filterNotNull().size > 1 } ?: 1000
+        val history = event.channel.iterableHistory
+
         val deferred = event.deferReply().setEphemeral(true).await()
 
-        val amount = count.takeUnless { event.options.filterNotNull().size > 1 } ?: 1000
-        val history = event.channel.iterableHistory.takeAsync(amount).await()
-        val filtered = history.filter { message ->
+        val filtered = history.takeAsync(amount + 1).await().filter { message ->
             val filter = event.getOption("filter")?.let {
                 when (it.asString) {
                     "attachments" -> message.attachments.isNotEmpty()
@@ -98,6 +103,10 @@ class PruneCommand : SlashOnlyCommand {
         event.channel.purgeMessages(filtered)
 
         deferred.editOriginalEmbeds(defaultEmbed(response, EmbedType.SUCCESS)).queue()
+
+        event.channel.sendWarning("${event.user.asMention} has used the `$name` command!")  {
+            text = "This message will self-delete in 5 seconds"
+        }.queue { it.delete().queueAfter(5, DurationUnit.SECONDS, {}) {} }
     }
 
     fun getResponse(deletedMessages: Int, user: User?, filter: String?, textFilter: String?) = buildString {

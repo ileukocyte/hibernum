@@ -128,13 +128,10 @@ object CommandHandler : MutableSet<Command> {
                                 } catch (e: Exception) {
                                     when (e) {
                                         is CommandException ->
-                                            event.channel.sendFailure(
-                                                e.message ?: "CommandException has occurred!",
-                                                e.footer ?: e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
-                                            ).queue({
-                                                e.selfDeletion?.let { sd ->
-                                                    it.delete().queueAfter(sd.delay, sd.unit, {}) {}
-                                                }
+                                            event.channel.sendFailure(e.message ?: "CommandException has occurred!") {
+                                                text = e.footer ?: e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
+                                            }.queue({
+                                                e.selfDeletion?.let { sd -> it.delete().queueAfter(sd.delay, sd.unit, {}) {} }
                                             }) { e.printStackTrace() }
                                         is InsufficientPermissionException -> { } // ignored
                                         else -> {
@@ -189,16 +186,13 @@ object CommandHandler : MutableSet<Command> {
                         } catch (e: Exception) {
                             when (e) {
                                 is CommandException ->
-                                    event.replyFailure(e.message ?: "CommandException has occurred!", e.footer)
+                                    event.replyFailure(e.message ?: "CommandException has occurred!") { text = e.footer }
                                         .setEphemeral(true)
                                         .queue({}) {
-                                            event.channel.sendFailure(
-                                                e.message ?: "CommandException has occurred!",
-                                                e.footer ?: e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
-                                            ).queue({
-                                                e.selfDeletion?.let { sd ->
-                                                    it.delete().queueAfter(sd.delay, sd.unit, {}) {}
-                                                }
+                                            event.channel.sendFailure(e.message ?: "CommandException has occurred!") {
+                                                text = e.footer ?: e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
+                                            }.queue({
+                                                e.selfDeletion?.let { sd -> it.delete().queueAfter(sd.delay, sd.unit, {}) {} }
                                             }) { e.printStackTrace() }
                                         }
                                 is InsufficientPermissionException -> {} // ignored
@@ -245,13 +239,10 @@ object CommandHandler : MutableSet<Command> {
                             is CommandException -> event.replyFailure(e.message ?: "CommandException has occurred!")
                                 .setEphemeral(true)
                                 .queue({}) {
-                                    event.channel.sendFailure(
-                                        e.message ?: "CommandException has occurred!",
-                                        e.footer ?: e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
-                                    ).queue({
-                                        e.selfDeletion?.let { sd ->
-                                            it.delete().queueAfter(sd.delay, sd.unit, {}) {}
-                                        }
+                                    event.channel.sendFailure(e.message ?: "CommandException has occurred!") {
+                                        text = e.footer ?: e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
+                                    }.queue({
+                                        e.selfDeletion?.let { sd -> it.delete().queueAfter(sd.delay, sd.unit, {}) {} }
                                     }) { e.printStackTrace() }
                                 }
                             is InsufficientPermissionException -> {} // ignored
@@ -295,13 +286,10 @@ object CommandHandler : MutableSet<Command> {
                             is CommandException -> event.replyFailure(e.message ?: "CommandException has occurred!")
                                 .setEphemeral(true)
                                 .queue({}) {
-                                    event.channel.sendFailure(
-                                        e.message ?: "CommandException has occurred!",
-                                        e.footer ?: e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
-                                    ).queue({
-                                        e.selfDeletion?.let { sd ->
-                                            it.delete().queueAfter(sd.delay, sd.unit, {}) {}
-                                        }
+                                    event.channel.sendFailure(e.message ?: "CommandException has occurred!") {
+                                        text = e.footer ?: e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
+                                    }.queue({
+                                        e.selfDeletion?.let { sd -> it.delete().queueAfter(sd.delay, sd.unit, {}) {} }
                                     }) { e.printStackTrace() }
                                 }
                             is InsufficientPermissionException -> {} // ignored

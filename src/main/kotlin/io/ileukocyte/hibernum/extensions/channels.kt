@@ -26,16 +26,16 @@ inline fun MessageChannel.sendMessage(block: KMessageBuilder.() -> Unit) =
 inline fun MessageChannel.sendEmbed(block: KEmbedBuilder.() -> Unit) =
     sendMessageEmbeds(buildEmbed(block))
 
-fun MessageChannel.sendSuccess(desc: String, footer: String? = null) =
+fun MessageChannel.sendSuccess(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
     sendMessageEmbeds(defaultEmbed(desc, EmbedType.SUCCESS, footer))
 
-fun MessageChannel.sendFailure(desc: String, footer: String? = null) =
+fun MessageChannel.sendFailure(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
     sendMessageEmbeds(defaultEmbed(desc, EmbedType.FAILURE, footer))
 
-fun MessageChannel.sendConfirmation(desc: String, footer: String? = null) =
+fun MessageChannel.sendConfirmation(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
     sendMessageEmbeds(defaultEmbed(desc, EmbedType.CONFIRMATION, footer))
 
-fun MessageChannel.sendWarning(desc: String, footer: String? = null) =
+fun MessageChannel.sendWarning(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
     sendMessageEmbeds(defaultEmbed(desc, EmbedType.WARNING, footer))
 
 fun MessageChannel.sendActionRow(vararg components: Component) =

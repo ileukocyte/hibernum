@@ -175,10 +175,9 @@ class GuessNumberCommand : Command {
                         awaitMessage(attempt, number, channel, m, user)
                     }
                 } else {
-                    val incorrect = received.replyFailure(
-                        "You have provided an invalid argument!",
-                        "This message will self-delete in 5 seconds"
-                    ).await()
+                    val incorrect = received.replyFailure("You have provided an invalid argument!") {
+                        text = "This message will self-delete in 5 seconds"
+                    }.await()
 
                     incorrect.delete().queueAfter(5, DurationUnit.SECONDS, {}) {}
 
