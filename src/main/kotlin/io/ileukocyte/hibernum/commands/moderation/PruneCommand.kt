@@ -1,6 +1,5 @@
 package io.ileukocyte.hibernum.commands.moderation
 
-import io.ileukocyte.hibernum.commands.CommandCategory
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
 import io.ileukocyte.hibernum.extensions.*
