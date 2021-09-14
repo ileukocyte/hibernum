@@ -3,8 +3,6 @@
 
 package io.ileukocyte.hibernum.commands
 
-import io.ileukocyte.hibernum.annotations.HibernumExperimental
-
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
@@ -43,15 +41,13 @@ interface Command : Comparable<Command> {
     val usages: Set<String> get() = emptySet()
 
     /**
-     * EXPERIMENTAL: A property containing a set of data that is used for option-requiring slash commands
+     * A property containing a set of data that is used for option-requiring slash commands
      */
-    @HibernumExperimental
     val options: Set<OptionData> get() = emptySet()
 
     /**
-     * EXPERIMENTAL: A [CommandData] instance of this slash command
+     * A [CommandData] instance of this slash command
      */
-    @HibernumExperimental
     val asSlashCommand: CommandData? get() =
         CommandData(name, "(Developer-only) ".takeIf { isDeveloper }.orEmpty() + description)
             .addOptions(options)
@@ -70,30 +66,27 @@ interface Command : Comparable<Command> {
     suspend operator fun invoke(event: GuildMessageReceivedEvent, args: String?)
 
     /**
-     * EXPERIMENTAL: A function that is executed when the command is invoked as a slash command
+     * A function that is executed when the command is invoked as a slash command
      *
      * @param event
      * The [SlashCommandEvent] occurring once the command is invoked
      */
-    @HibernumExperimental
     suspend operator fun invoke(event: SlashCommandEvent)
 
     /**
-     * EXPERIMENTAL: A function that is executed when the command's button menu is utilized by a user
+     * A function that is executed when the command's button menu is utilized by a user
      *
      * @param event
      * The [ButtonClickEvent] occurring once the command is invoked
      */
-    @HibernumExperimental
     suspend operator fun invoke(event: ButtonClickEvent) {}
 
     /**
-     * EXPERIMENTAL: A function that is executed when the command's selection menu is utilized by a user
+     * A function that is executed when the command's selection menu is utilized by a user
      *
      * @param event
      * The [SelectionMenuEvent] occurring once the command is invoked
      */
-    @HibernumExperimental
     suspend operator fun invoke(event: SelectionMenuEvent) {}
 
     override fun compareTo(other: Command) = name.compareTo(other.name)

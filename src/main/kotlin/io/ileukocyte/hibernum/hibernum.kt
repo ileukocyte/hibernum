@@ -7,7 +7,6 @@ import io.ileukocyte.hibernum.Immutable.DISCORD_TOKEN
 import io.ileukocyte.hibernum.Immutable.EVAL_KOTLIN_ENGINE
 import io.ileukocyte.hibernum.Immutable.LOGGER
 import io.ileukocyte.hibernum.Immutable.VERSION
-import io.ileukocyte.hibernum.annotations.HibernumExperimental
 import io.ileukocyte.hibernum.audio.loadGuildMusicManagers
 import io.ileukocyte.hibernum.builders.buildActivity
 import io.ileukocyte.hibernum.builders.buildJDA
@@ -33,7 +32,6 @@ import org.reflections.Reflections
 private inline fun <reified T> Reflections.getSubtypesOf() =
     getSubTypesOf(T::class.java)
 
-@HibernumExperimental
 fun main() = runBlocking {
     // initializing Discord
     val discord = buildJDA {

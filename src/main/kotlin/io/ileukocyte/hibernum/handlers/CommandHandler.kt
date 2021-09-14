@@ -1,7 +1,6 @@
 package io.ileukocyte.hibernum.handlers
 
 import io.ileukocyte.hibernum.Immutable
-import io.ileukocyte.hibernum.annotations.HibernumExperimental
 import io.ileukocyte.hibernum.commands.*
 import io.ileukocyte.hibernum.commands.developer.ShutdownCommand
 import io.ileukocyte.hibernum.extensions.isDeveloper
@@ -154,7 +153,7 @@ object CommandHandler : MutableSet<Command> {
     }
 
     /**
-     * EXPERIMENTAL: A function that handles [SlashCommandEvent] that contains a slash command
+     * A function that handles [SlashCommandEvent] that contains a slash command
      *
      * @param event
      * [SlashCommandEvent] occurring once the command is invoked
@@ -162,7 +161,6 @@ object CommandHandler : MutableSet<Command> {
      * @author Alexander Oksanich
      */
     @OptIn(ExperimentalTime::class)
-    @HibernumExperimental
     internal operator fun invoke(event: SlashCommandEvent) {
         if (event.isFromGuild) {
             this[event.name]?.takeIf { it !is TextOnlyCommand }?.let { command ->
@@ -218,8 +216,8 @@ object CommandHandler : MutableSet<Command> {
     }
 
     /**
-     * EXPERIMENTAL: A function that handles [ButtonClickEvent] that occurs
-     * when a command's button menu is utilized by a user
+     * A function that handles [ButtonClickEvent] that occurs when
+     * a command's button menu is utilized by a user
      *
      * @param event
      * [ButtonClickEvent] occurring once the command's button menu is used
@@ -227,7 +225,6 @@ object CommandHandler : MutableSet<Command> {
      * @author Alexander Oksanich
      */
     @OptIn(ExperimentalTime::class)
-    @HibernumExperimental
     internal operator fun invoke(event: ButtonClickEvent) {
         if (event.isFromGuild && event.message.author == event.jda.selfUser) {
             this[event.componentId.split("-").first()]?.let { command ->
@@ -264,8 +261,8 @@ object CommandHandler : MutableSet<Command> {
     }
 
     /**
-     * EXPERIMENTAL: A function that handles [SelectionMenuEvent] that occurs
-     * when a command's selection menu is utilized by a user
+     * A function that handles [SelectionMenuEvent] that occurs when
+     * a command's selection menu is utilized by a user
      *
      * @param event
      * [SelectionMenuEvent] occurring once the command's selection menu is used
@@ -273,7 +270,6 @@ object CommandHandler : MutableSet<Command> {
      * @author Alexander Oksanich
      */
     @OptIn(ExperimentalTime::class)
-    @HibernumExperimental
     internal operator fun invoke(event: SelectionMenuEvent) {
         if (event.isFromGuild && event.message.author == event.jda.selfUser) {
             this[event.componentId.split("-").first()]?.let {
