@@ -83,7 +83,6 @@ class EvalCommand : TextOnlyCommand {
         val IMPORTS = mutableMapOf(
             "io.ileukocyte" to setOf(
                 "hibernum",
-                "hibernum.annotations",
                 "hibernum.audio",
                 "hibernum.builders",
                 "hibernum.commands",
