@@ -46,9 +46,9 @@ class SpotifyCommand : Command {
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val query = args ?: throw NoArgumentsException
-        val api = SPOTIFY_API
-
-        api.accessToken = api.clientCredentials().build().executeAsync().await().accessToken
+        val api = SPOTIFY_API.apply {
+            accessToken = clientCredentials().build().executeAsync().await().accessToken
+        }
 
         val regexMatches = SPOTIFY_TRACK_URL_REGEX.findAll(query)
 
@@ -96,9 +96,9 @@ class SpotifyCommand : Command {
 
     override suspend fun invoke(event: SlashCommandEvent) {
         val query = event.getOption("query")?.asString ?: return
-        val api = SPOTIFY_API
-
-        api.accessToken = api.clientCredentials().build().executeAsync().await().accessToken
+        val api = SPOTIFY_API.apply {
+            accessToken = clientCredentials().build().executeAsync().await().accessToken
+        }
 
         val regexMatches = SPOTIFY_TRACK_URL_REGEX.findAll(query)
 
