@@ -19,7 +19,6 @@ import io.ileukocyte.hibernum.utils.isEqualTo
 import io.ileukocyte.hibernum.utils.toOptionData
 
 import kotlin.reflect.full.createInstance
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 

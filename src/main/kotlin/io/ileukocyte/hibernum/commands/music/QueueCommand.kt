@@ -141,6 +141,8 @@ class QueueCommand : Command {
 
     @OptIn(ExperimentalTime::class)
     private fun queueEmbed(jda: JDA, musicManager: GuildMusicManager, track: AudioTrack, page: Int) = buildEmbed {
+        val queueIsNotEmpty = musicManager.scheduler.queue.isNotEmpty()
+
         color = Immutable.SUCCESS
 
         author {
@@ -148,7 +150,7 @@ class QueueCommand : Command {
             iconUrl = jda.selfUser.effectiveAvatarUrl
         }
 
-        if (musicManager.scheduler.queue.isNotEmpty()) {
+        if (queueIsNotEmpty) {
             val partition = Lists.partition(musicManager.scheduler.queue.toList(), 7)
 
             field {
@@ -184,6 +186,14 @@ class QueueCommand : Command {
             description = "**[${track.info.title}](${track.info.uri})** (${userData.user.asMention})\n" +
                     "$timeline " + ("(${asDuration(track.position)}/${asDuration(track.duration)})"
                 .takeUnless { track.info.isStream } ?: "(LIVE)")
+        }
+
+        if (queueIsNotEmpty) {
+            field {
+                title = "Total Duration"
+                description = asDuration(track.duration + musicManager.scheduler.queue.sumOf { it.duration })
+                isInline = true
+            }
         }
 
         field {
