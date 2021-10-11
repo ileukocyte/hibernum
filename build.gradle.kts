@@ -56,6 +56,7 @@ dependencies {
     implementation(group = "com.github.kenglxn.QRGen", name = "javase", version = "2.6.0")
     implementation(group = "se.michaelthelin.spotify", name = "spotify-web-api-java", version = "6.5.4")
     implementation(group = "com.github.SvenWoltmann", name = "color-thief-java", version = "v1.1.2")
+    implementation(group = "org.ocpsoft.prettytime", name = "prettytime", version = "4.0.4.Final")
 
     // Kotlin
     implementation(kotlin("stdlib", kotlinVersion))

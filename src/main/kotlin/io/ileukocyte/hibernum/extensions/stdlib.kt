@@ -40,10 +40,11 @@ fun String.containsAll(vararg args: CharSequence): Boolean {
 fun String.containsAll(elements: Collection<CharSequence>) = containsAll(*elements.toTypedArray())
 fun String.containsAll(vararg args: Char) = toCharArray().toList().containsAll(args.toList())
 
-fun String.limitTo(limit: Int, toTrim: Boolean = true, endingChar: Char = '\u2026') = take(limit)
+// Only works with UTF-16 encoding
+fun String.limitTo(limit: Int, toTrim: Boolean = true) = take(limit)
     .let {
         if (length > limit)
-            (it.removeLastChar().takeIf { toTrim }?.trim() ?: it.removeLastChar()) + endingChar
+            (it.removeLastChar().takeIf { toTrim }?.trim() ?: it.removeLastChar()) + '\u2026'
         else this
     }
 

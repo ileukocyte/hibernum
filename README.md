@@ -20,5 +20,6 @@
 * [QRGen](https://github.com/kenglxn/QRGen)
 * [Spotify Web API Java](https://github.com/thelinmichael/spotify-web-api-java)
 * [Color Thief](https://github.com/SvenWoltmann/color-thief-java)
+* [PrettyTime](https://github.com/ocpsoft/prettytime)
 * [logback-classic](http://logback.qos.ch/)
 * [kotlin-logging](https://github.com/MicroUtils/kotlin-logging)
