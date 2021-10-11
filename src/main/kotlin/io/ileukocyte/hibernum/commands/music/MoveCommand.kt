@@ -21,7 +21,7 @@ import kotlin.math.min
 class MoveCommand : Command {
     override val name = "move"
     override val description = "Moves the selected track in the queue to the specified position"
-    override val usages = setOf("song", "index")
+    override val usages = setOf(setOf("song", "index"))
     override val options = setOf(
         OptionData(OptionType.INTEGER, "song", "The index of the song to move", true),
         OptionData(OptionType.INTEGER, "index", "The index to move the song to", true)

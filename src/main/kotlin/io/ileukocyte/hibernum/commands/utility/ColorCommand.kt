@@ -26,7 +26,7 @@ class ColorCommand : Command {
     override val name = "color"
     override val description = "Sends brief information about the color provided by its hexadecimal representation"
     override val aliases = setOf("colorinfo", "color-info")
-    override val usages = setOf("hex")
+    override val usages = setOf(setOf("hex"))
     override val options = setOf(
         OptionData(OptionType.STRING, "hex", "The color's hexadecimal representation", true)
     )

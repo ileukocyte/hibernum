@@ -14,7 +14,7 @@ import net.glxn.qrgen.javase.QRCode
 class QRCommand : Command {
     override val name = "qr"
     override val description = "Generates a QR code from the provided input"
-    override val usages = setOf("input")
+    override val usages = setOf(setOf("input"))
     override val options = setOf(
         OptionData(OptionType.STRING, "input", "The provided input", true)
     )

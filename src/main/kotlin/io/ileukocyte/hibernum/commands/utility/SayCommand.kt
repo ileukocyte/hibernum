@@ -15,7 +15,7 @@ class SayCommand : Command {
     override val name = "say"
     override val description = "Sends your message on behalf of the bot as an embed message"
     override val aliases = setOf("announce")
-    override val usages = setOf("message", "image file")
+    override val usages = setOf(setOf("message"), setOf("image file"))
     override val options = setOf(
         OptionData(OptionType.STRING, "message", "The message to send on behalf of the bot", true)
     )

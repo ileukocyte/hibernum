@@ -30,7 +30,11 @@ class InvertCommand : Command {
     override val fullDescription = "Inverts the image provided as a link, a file (non-slash-only), " +
             "or a profile picture of the mentioned user (or yours in case of no arguments provided)"
     override val aliases = setOf("negative")
-    override val usages = setOf("image file", "image link", "user mention")
+    override val usages = setOf(
+        setOf("image file"),
+        setOf("image link"),
+        setOf("user mention")
+    )
     override val options = setOf(
         OptionData(OptionType.STRING, "link", "The provided image"),
         OptionData(OptionType.USER, "user", "The provided mention (has a higher priority)")

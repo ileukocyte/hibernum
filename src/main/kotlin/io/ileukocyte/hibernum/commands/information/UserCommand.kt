@@ -35,7 +35,7 @@ class UserCommand : TextOnlyCommand {
     override val name = "user"
     override val description = "Sends either detailed information about the specified user or their profile picture"
     override val aliases = setOf("userinfo")
-    override val usages = setOf("user name/ID (optional)")
+    override val usages = setOf(setOf("user name/ID (optional)"))
     override val cooldown = 3L
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {

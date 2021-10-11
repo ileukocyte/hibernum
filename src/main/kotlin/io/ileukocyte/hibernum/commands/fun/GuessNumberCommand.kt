@@ -33,7 +33,7 @@ class GuessNumberCommand : Command {
         OptionData(OptionType.INTEGER, "min", "The beginning of the range (minimum: 1)", true),
         OptionData(OptionType.INTEGER, "max", "The maximal value of the range (maximum: 500,000)", true)
     )
-    override val usages = setOf("min> <max")
+    override val usages = setOf(setOf("min", "max"))
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val (min, max) = args?.split(" ")?.filter { it.toIntOrNull() !== null }?.take(2)

@@ -35,7 +35,7 @@ class YouTubePlayCommand : Command {
     override val aliases = setOf("yp", "ytp", "youtubeplay", "youtube-play")
     override val options = setOf(
         OptionData(OptionType.STRING, "query", "A link or a search term", true))
-    override val usages = setOf("query")
+    override val usages = setOf(setOf("query"))
     override val cooldown = 5L
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {

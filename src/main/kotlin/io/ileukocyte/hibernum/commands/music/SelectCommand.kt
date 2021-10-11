@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 class SelectCommand : Command {
     override val name = "select"
     override val description = "Selects another track from the queue and plays it"
+    override val usages = setOf(setOf("song"))
     override val options = setOf(
         OptionData(OptionType.INTEGER, "song", "The number of the song to play", true)
     )

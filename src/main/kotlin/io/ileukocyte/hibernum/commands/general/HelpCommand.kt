@@ -19,8 +19,8 @@ import kotlin.time.ExperimentalTime
 
 class HelpCommand : Command {
     override val name = "help"
-    override val description = "Sends a list of all Hibernum's commands and provides the user with their documentation"
-    override val usages = setOf("command name (optional)")
+    override val description = "Sends a list of all Hibernum's commands and provides the user with the documentation"
+    override val usages = setOf(setOf("command name (optional)"))
     override val options =
         setOf(OptionData(OptionType.STRING, "command", "The command to provide help for"))
 
@@ -86,7 +86,8 @@ class HelpCommand : Command {
         if (usages.isNotEmpty())
             field {
                 title = "Text Usages"
-                description = usages.joinToString("\n") { "$nameWithPrefix <$it>" }
+                description =
+                    usages.joinToString("\n") { "$nameWithPrefix ${it.joinToString(" ") { u -> "<$u>" }}" }
             }
 
         if (options.isNotEmpty())

@@ -21,7 +21,7 @@ class TextToImageCommand : Command {
     override val name = "tti"
     override val description = "Creates an image containing the provided text"
     override val aliases = setOf("texttoimage", "text-to-image")
-    override val usages = setOf("input")
+    override val usages = setOf(setOf("input"))
     override val options = setOf(OptionData(OptionType.STRING, "input", "The provided text", true))
     override val cooldown = 5L
 

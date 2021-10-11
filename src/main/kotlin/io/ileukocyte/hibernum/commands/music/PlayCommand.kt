@@ -28,7 +28,7 @@ class PlayCommand : Command {
     override val aliases = setOf("p")
     override val options = setOf(
         OptionData(OptionType.STRING, "query", "A link or a search term", true))
-    override val usages = setOf("query", "file")
+    override val usages = setOf(setOf("query"), setOf("file"))
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         event.member?.voiceState?.channel?.let {

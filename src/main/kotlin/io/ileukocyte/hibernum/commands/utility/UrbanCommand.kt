@@ -33,7 +33,7 @@ class UrbanCommand : Command {
     override val description = "Sends an Urban Dictionary definition of the specified term (executes faster in a NSFW channel)"
     override val aliases = setOf("ud", "urbandictionary", "define")
     override val cooldown = 4L
-    override val usages = setOf("term")
+    override val usages = setOf(setOf("term"))
     override val options = setOf(
         OptionData(OptionType.STRING, "term", "A word or a phrase to define", true)
     )

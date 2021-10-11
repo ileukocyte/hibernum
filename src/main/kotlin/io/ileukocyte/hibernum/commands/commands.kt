@@ -38,7 +38,7 @@ interface Command : Comparable<Command> {
     val cooldown: Long get() = 0
     val botPermissions: Set<Permission> get() = emptySet()
     val memberPermissions: Set<Permission> get() = emptySet()
-    val usages: Set<String> get() = emptySet()
+    val usages: Set<Set<String>> get() = emptySet()
 
     /**
      * A property containing a set of data that is used for option-requiring slash commands

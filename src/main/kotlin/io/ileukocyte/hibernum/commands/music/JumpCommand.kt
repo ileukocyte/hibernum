@@ -20,7 +20,7 @@ class JumpCommand : Command {
     override val name = "jump"
     override val description = "Jumps to the specified time while playing the track"
     override val aliases = setOf("seek")
-    override val usages = setOf("[rewind:/fast-forward:]time code")
+    override val usages = setOf(setOf("[rewind:/fast-forward:]time code"))
     override val options = setOf(
         OptionData(
             OptionType.STRING,
