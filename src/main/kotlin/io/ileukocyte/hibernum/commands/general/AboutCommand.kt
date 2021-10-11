@@ -3,6 +3,8 @@ package io.ileukocyte.hibernum.commands.general
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.Command
+import io.ileukocyte.hibernum.commands.SlashOnlyCommand
+import io.ileukocyte.hibernum.commands.TextOnlyCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asText
@@ -50,8 +52,8 @@ class AboutCommand : Command {
             appendLine("**JDA Version**: ${JDAInfo.VERSION}")
             appendLine("**Kotlin Version**: ${KotlinVersion.CURRENT}")
             appendLine("**Java Version**: ${System.getProperty("java.version") ?: "Unknown"}")
-            appendLine("**Total Commands**: ${CommandHandler.size}")
-            appendLine("**Slash Commands**: ${jda.retrieveCommands().await().size}")
+            appendLine("**Total Commands**: ${CommandHandler.size} (text-only: ${CommandHandler.count { it is TextOnlyCommand }}, slash-only: ${CommandHandler.count { it is SlashOnlyCommand }})")
+            appendLine("**Discord-Side Slash Commands**: ${jda.retrieveCommands().await().size}")
             append("**Servers**: ${jda.guildCache.size()}")
 
             if (jda.unavailableGuilds.isNotEmpty())
