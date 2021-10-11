@@ -6,12 +6,12 @@ fun Guild.searchMembers(query: String) = memberCache
     .filter { getSearchPriority(query, it.user.name) > 0 }
     .sortedByDescending { getSearchPriority(query, it.user.name) }
 
-internal fun getSearchPriority(expected: String, actual: String): Byte = when {
+internal fun getSearchPriority(expected: String, actual: String) = when {
     expected == actual -> 6
     expected.lowercase() == actual.lowercase() -> 5
-    expected.startsWith(actual) -> 4
-    expected.startsWith(actual, true) -> 3
-    actual in expected -> 2
-    actual.lowercase() in expected.lowercase() -> 1
+    actual.startsWith(expected) -> 4
+    actual.startsWith(expected, true) -> 3
+    expected in actual -> 2
+    expected.lowercase() in actual.lowercase() -> 1
     else -> 0
 }

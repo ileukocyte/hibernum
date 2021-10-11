@@ -185,7 +185,7 @@ class YouTubeCommand : Command {
 
         val embed = buildEmbed {
             color = Immutable.SUCCESS
-            description = "Select a video you want to play!"
+            description = "Select the video you want to play!"
         }
 
         ifFromSlashCommand?.replyEmbeds(embed)?.addActionRow(menu)?.queue()

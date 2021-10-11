@@ -35,6 +35,7 @@ fun main() = runBlocking {
     // initializing Discord
     val discord = buildJDA {
         token = DISCORD_TOKEN
+        includePrivilegedIntents = true
         onlineStatus = OnlineStatus.DO_NOT_DISTURB
         activity {
             name = "loading..."

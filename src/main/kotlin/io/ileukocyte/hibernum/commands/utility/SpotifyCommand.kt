@@ -90,7 +90,7 @@ class SpotifyCommand : Command {
 
         event.channel.sendEmbed {
             color = Immutable.SUCCESS
-            description = "Select a track you want to check information about!"
+            description = "Select the track you want to check information about!"
         }.setActionRow(menu).queue()
     }
 
@@ -140,7 +140,7 @@ class SpotifyCommand : Command {
 
         event.replyEmbed {
             color = Immutable.SUCCESS
-            description = "Select a track you want to check information about!"
+            description = "Select the track you want to check information about!"
         }.addActionRow(menu).queue()
     }
 
