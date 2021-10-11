@@ -94,7 +94,7 @@ class HelpCommand : Command {
                 title = "Slash Options"
                 description = "$nameWithPrefix ${options.joinToString(" ") { "<${it.name}>" }}\n\n" +
                     options.joinToString("\n") { o ->
-                        "<${o.name}>${" (optional)".takeUnless { _ -> o.isRequired }.orEmpty()} — ${o.description.replaceFirstChar { it.lowercase() }}"
+                        "<${o.name}>${" (optional)".takeUnless { o.isRequired }.orEmpty()} — ${o.description.replaceFirstChar { it.lowercase() }}"
                     }
             }
 
@@ -108,8 +108,6 @@ class HelpCommand : Command {
 
     private fun commandList(jda: JDA, author: User, isFromSlashCommand: Boolean, isInDm: Boolean = true) =
         buildEmbed {
-            val categories = mutableMapOf<CommandCategory, MutableSet<Command>>()
-
             color = Immutable.SUCCESS
 
             description = buildString {
@@ -132,23 +130,14 @@ class HelpCommand : Command {
                     iconUrl = author.effectiveAvatarUrl
                 }
 
-            for (category in CommandCategory.values().filter { CommandHandler.any { cmd -> cmd.category == it } })
-                categories += category to mutableSetOf()
-
-            for (command in CommandHandler)
-                categories[command.category]?.let { it += command }
-
-            val commandFields = mutableSetOf<Pair<String, String>>()
-
-            for ((category, commands) in categories)
-                commandFields += "$category Commands:" to commands.sorted().joinToString { cmd ->
-                    cmd.name.let { if (cmd is TextOnlyCommand || cmd is SlashOnlyCommand) it.surroundWith("*") else it }
-                }
-
-            for ((name, value) in commandFields.sortedBy { it.first })
+            for ((category, cmd) in CommandHandler.groupBy { it.category }.toSortedMap())
                 field {
-                    title = name
-                    description = value
+                    title = "$category Commands"
+                    description = cmd.sortedBy { it.name }.joinToString { cmd ->
+                        cmd.name.let {
+                            if (cmd is TextOnlyCommand || cmd is SlashOnlyCommand) it.surroundWith('*') else it
+                        }
+                    }
                 }
         }
 }
