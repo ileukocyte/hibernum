@@ -4,8 +4,8 @@ import de.androidpit.colorthief.ColorThief
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
+import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.commands.TextOnlyCommand
 import io.ileukocyte.hibernum.extensions.*
 
 import io.ktor.client.HttpClient
@@ -15,9 +15,14 @@ import io.ktor.client.request.get
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.entities.Activity.ActivityType
+import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
+import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.interactions.commands.OptionType
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.Button
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
@@ -31,11 +36,14 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import javax.imageio.ImageIO
 
-class UserCommand : TextOnlyCommand {
+class UserCommand : Command {
     override val name = "user"
-    override val description = "Sends either detailed information about the specified user or their profile picture"
+    override val description = "Sends either detailed information about the specified user's account or their profile picture"
     override val aliases = setOf("userinfo")
     override val usages = setOf(setOf("user name/ID (optional)"))
+    override val options = setOf(
+        OptionData(OptionType.USER, "user", "The user to check information about", false)
+    )
     override val cooldown = 3L
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
@@ -44,11 +52,11 @@ class UserCommand : TextOnlyCommand {
 
             when {
                 args matches Regex("\\d{17,20}") ->
-                    chooseUserInfoOrPfp(event.guild.getMemberById(args)?.user ?: throw exception, event.author, event.channel)
+                    chooseUserInfoOrPfp(event.guild.getMemberById(args)?.user ?: throw exception, event.author, event)
                 event.message.mentionedMembers.isNotEmpty() ->
-                    chooseUserInfoOrPfp(event.message.mentionedMembers.firstOrNull()?.user ?: return, event.author, event.channel)
+                    chooseUserInfoOrPfp(event.message.mentionedMembers.firstOrNull()?.user ?: return, event.author, event)
                 args matches User.USER_TAG.toRegex() ->
-                    chooseUserInfoOrPfp(event.guild.getMemberByTag(args)?.user ?: throw exception, event.author, event.channel)
+                    chooseUserInfoOrPfp(event.guild.getMemberByTag(args)?.user ?: throw exception, event.author, event)
                 else -> {
                     val results = event.guild.searchMembers(args)
                         .takeUnless { it.isEmpty() }
@@ -56,7 +64,7 @@ class UserCommand : TextOnlyCommand {
                         ?: throw exception
 
                     if (results.size == 1) {
-                        chooseUserInfoOrPfp(results.first().user, event.author, event.channel)
+                        chooseUserInfoOrPfp(results.first().user, event.author, event)
 
                         return
                     }
@@ -74,7 +82,13 @@ class UserCommand : TextOnlyCommand {
                     }.setActionRow(menu).queue()
                 }
             }
-        } else chooseUserInfoOrPfp(event.author, event.author, event.channel)
+        } else chooseUserInfoOrPfp(event.author, event.author, event)
+    }
+
+    override suspend fun invoke(event: SlashCommandEvent) {
+        val user = event.getOption("user")?.asUser ?: event.user
+
+        chooseUserInfoOrPfp(user, event.user, event)
     }
 
     override suspend fun invoke(event: SelectionMenuEvent) {
@@ -88,7 +102,7 @@ class UserCommand : TextOnlyCommand {
             if (value == "exit")
                 return
 
-            chooseUserInfoOrPfp(event.guild?.getMemberById(value)?.user ?: return, event.user, event.textChannel)
+            chooseUserInfoOrPfp(event.guild?.getMemberById(value)?.user ?: return, event.user, event)
         } else throw CommandException("You did not invoke the initial command!")
     }
 
@@ -96,25 +110,29 @@ class UserCommand : TextOnlyCommand {
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
-            event.message.delete().queue()
-
             val type = id.last()
 
-            if (type == "exit")
+            if (type == "exit") {
+                event.message.delete().queue()
+
                 return
+            }
 
             val member = event.guild?.getMemberById(id[1]) ?: return
 
             when (type) {
-                "info" -> event.channel.sendMessageEmbeds(infoEmbed(member)).queue()
-                "pfp" -> event.channel.sendMessageEmbeds(pfpEmbed(member.user)).queue()
+                "info" -> event.editMessageEmbeds(infoEmbed(member)).setActionRows().queue()
+                "pfp" -> event.editMessageEmbeds(pfpEmbed(member.user)).setActionRows().queue()
             }
         } else throw CommandException("You did not invoke the initial command!")
     }
 
-    private suspend fun chooseUserInfoOrPfp(user: User, author: User, channel: TextChannel) {
+    private suspend fun <E: GenericEvent> chooseUserInfoOrPfp(user: User, author: User, event: E) {
         if (user.isBot) {
-            channel.sendMessageEmbeds(pfpEmbed(user)).queue()
+            when (event) {
+                is GuildMessageReceivedEvent -> event.channel.sendMessageEmbeds(pfpEmbed(user)).queue()
+                is GenericInteractionCreateEvent -> event.replyEmbeds(pfpEmbed(user)).queue()
+            }
 
             return
         }
@@ -123,9 +141,16 @@ class UserCommand : TextOnlyCommand {
         val pfp = Button.secondary("$name-${author.idLong}-${user.idLong}-pfp", "Profile Picture")
         val exit = Button.danger("$name-${author.idLong}-exit", "Exit")
 
-        channel.sendConfirmation("Choose the type of information that you want to check!")
-            .setActionRow(info, pfp, exit)
-            .queue()
+        when (event) {
+            is GuildMessageReceivedEvent ->
+                event.channel.sendConfirmation("Choose the type of information that you want to check!")
+                    .setActionRow(info, pfp, exit)
+                    .queue()
+            is GenericInteractionCreateEvent ->
+                event.replyConfirmation("Choose the type of information that you want to check!")
+                    .addActionRow(info, pfp, exit)
+                    .queue()
+        }
     }
 
     private suspend fun infoEmbed(member: Member) = buildEmbed {
