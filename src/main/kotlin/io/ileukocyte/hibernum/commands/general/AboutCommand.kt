@@ -9,12 +9,12 @@ import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asText
 
+import kotlin.time.ExperimentalTime
+
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDAInfo
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-
-import kotlin.time.ExperimentalTime
 
 class AboutCommand : Command {
     override val name = "about"

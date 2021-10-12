@@ -3,10 +3,10 @@ package io.ileukocyte.hibernum.extensions
 
 import io.ileukocyte.hibernum.utils.millisToDate
 
-import net.dv8tion.jda.api.JDA
-
 import java.lang.management.ManagementFactory
 import java.time.OffsetDateTime
+
+import net.dv8tion.jda.api.JDA
 
 private val runtimeMXBean = ManagementFactory.getRuntimeMXBean()
 

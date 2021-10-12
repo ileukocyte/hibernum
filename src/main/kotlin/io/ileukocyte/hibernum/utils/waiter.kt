@@ -4,12 +4,6 @@ package io.ileukocyte.hibernum.utils
 
 import io.ileukocyte.hibernum.commands.Command
 
-import net.dv8tion.jda.api.JDA
-import net.dv8tion.jda.api.entities.MessageChannel
-import net.dv8tion.jda.api.entities.User
-import net.dv8tion.jda.api.events.GenericEvent
-import net.dv8tion.jda.api.hooks.EventListener
-
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.util.concurrent.Executors.newFixedThreadPool
@@ -19,7 +13,13 @@ import kotlin.reflect.KClass
 import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.*
+
+import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.entities.MessageChannel
+import net.dv8tion.jda.api.entities.User
+import net.dv8tion.jda.api.events.GenericEvent
+import net.dv8tion.jda.api.hooks.EventListener
 
 // Context
 private val waiterContextDispatcher = newFixedThreadPool(3).asCoroutineDispatcher()

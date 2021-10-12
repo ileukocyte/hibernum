@@ -7,11 +7,11 @@ import io.ileukocyte.hibernum.extensions.startDate
 import io.ileukocyte.hibernum.extensions.uptime
 import io.ileukocyte.hibernum.utils.asText
 
+import kotlin.time.ExperimentalTime
+
 import net.dv8tion.jda.api.events.Event
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-
-import kotlin.time.ExperimentalTime
 
 class UptimeCommand : Command {
     override val name = "uptime"

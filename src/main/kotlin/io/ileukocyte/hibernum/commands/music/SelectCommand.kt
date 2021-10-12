@@ -6,6 +6,8 @@ import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 
+import java.util.concurrent.ConcurrentLinkedQueue
+
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
@@ -14,8 +16,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
 import org.jetbrains.kotlin.utils.addToStdlib.cast
-
-import java.util.concurrent.ConcurrentLinkedQueue
 
 class SelectCommand : Command {
     override val name = "select"

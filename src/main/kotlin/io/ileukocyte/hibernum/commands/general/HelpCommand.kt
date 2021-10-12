@@ -7,15 +7,15 @@ import io.ileukocyte.hibernum.extensions.surroundWith
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asText
 
+import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
+
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
 
 class HelpCommand : Command {
     override val name = "help"

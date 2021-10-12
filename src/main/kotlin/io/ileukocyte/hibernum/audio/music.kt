@@ -3,6 +3,8 @@ package io.ileukocyte.hibernum.audio
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 
+import java.util.concurrent.Executors
+
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.asCoroutineDispatcher
 
@@ -14,8 +16,6 @@ import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 
 import org.jetbrains.kotlin.utils.addToStdlib.cast
-
-import java.util.concurrent.Executors
 
 private val musicContextDispatcher = Executors.newFixedThreadPool(3).asCoroutineDispatcher()
 

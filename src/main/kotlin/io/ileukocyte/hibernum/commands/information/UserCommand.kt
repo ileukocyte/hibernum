@@ -7,6 +7,9 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
+import java.time.format.DateTimeFormatter
+import java.util.Date
+
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.entities.Activity.ActivityType
@@ -24,9 +27,6 @@ import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
 import org.ocpsoft.prettytime.PrettyTime
-
-import java.time.format.DateTimeFormatter
-import java.util.Date
 
 class UserCommand : Command {
     override val name = "user"

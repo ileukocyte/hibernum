@@ -8,6 +8,8 @@ import io.ileukocyte.hibernum.utils.awaitEvent
 import io.ileukocyte.hibernum.utils.getProcessByMessage
 import io.ileukocyte.hibernum.utils.kill
 
+import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
@@ -23,9 +25,6 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 
 import org.jetbrains.kotlin.utils.addToStdlib.cast
-
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
 
 object EventHandler : ListenerAdapter() {
     override fun onSlashCommand(event: SlashCommandEvent) =

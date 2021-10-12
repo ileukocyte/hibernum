@@ -1,11 +1,11 @@
 package io.ileukocyte.hibernum
 
-import mu.KotlinLogging
-
 import java.awt.Color
 import javax.script.ScriptEngineManager
 
 import kotlin.script.experimental.jvmhost.jsr223.KotlinJsr223ScriptEngineImpl
+
+import mu.KotlinLogging
 
 object Immutable {
     val DISCORD_TOKEN: String = System.getenv("DISCORD_TOKEN")
@@ -20,7 +20,7 @@ object Immutable {
 
     val EVAL_KOTLIN_ENGINE = ScriptEngineManager().getEngineByExtension("kts") as KotlinJsr223ScriptEngineImpl
 
-    val VERSION = Version(major = 2, minor = 0, unstable = 1, stability = Version.Stability.Beta)
+    val VERSION = Version(major = 2, minor = 0, stability = Version.Stability.ReleaseCandidate)
 
     val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0" //"User-Agent: DiscordBot ($GITHUB_REPOSITORY, $VERSION)"
     val YOUTUBE_API_KEY: String = System.getenv("YOUTUBE_API_KEY")

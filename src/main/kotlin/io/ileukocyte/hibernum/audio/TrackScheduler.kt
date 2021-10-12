@@ -11,12 +11,12 @@ import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendEmbed
 import io.ileukocyte.hibernum.extensions.sendSuccess
 
+import java.util.concurrent.ConcurrentLinkedQueue
+
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 
 import org.jetbrains.kotlin.utils.addToStdlib.cast
-
-import java.util.concurrent.ConcurrentLinkedQueue
 
 class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
     var queue = ConcurrentLinkedQueue<AudioTrack>()

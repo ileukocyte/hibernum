@@ -15,6 +15,9 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.features.ClientRequestException
 import io.ktor.client.request.*
 
+import java.net.URLEncoder
+import java.time.OffsetDateTime
+
 import kotlinx.coroutines.withContext
 
 import net.dv8tion.jda.api.JDA
@@ -24,9 +27,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
 import org.json.JSONObject
-
-import java.net.URLEncoder
-import java.time.OffsetDateTime
 
 class UrbanCommand : Command {
     override val name = "urban"

@@ -12,13 +12,13 @@ import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.utils.asDuration
 
+import kotlin.time.ExperimentalTime
+
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 
 import org.jetbrains.kotlin.utils.addToStdlib.cast
-
-import kotlin.time.ExperimentalTime
 
 class NowPlayingCommand : Command {
     override val name = "nowplaying"

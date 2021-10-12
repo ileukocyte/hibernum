@@ -6,13 +6,13 @@ import io.ileukocyte.hibernum.extensions.replyConfirmation
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendConfirmation
 
+import kotlin.system.exitProcess
+
 import net.dv8tion.jda.api.events.Event
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.interactions.components.Button
-
-import kotlin.system.exitProcess
 
 class ShutdownCommand : Command {
     override val name = "shutdown"

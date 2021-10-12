@@ -15,6 +15,10 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.limitTo
 import io.ileukocyte.hibernum.utils.asDuration
 
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.time.ExperimentalTime
+
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
@@ -22,10 +26,6 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.Button
-
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.time.ExperimentalTime
 
 class QueueCommand : Command {
     override val name = "queue"

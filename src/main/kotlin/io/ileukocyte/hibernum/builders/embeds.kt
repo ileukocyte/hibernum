@@ -1,10 +1,10 @@
 package io.ileukocyte.hibernum.builders
 
-import net.dv8tion.jda.api.EmbedBuilder
-import net.dv8tion.jda.api.entities.MessageEmbed
-
 import java.awt.Color
 import java.time.temporal.TemporalAccessor
+
+import net.dv8tion.jda.api.EmbedBuilder
+import net.dv8tion.jda.api.entities.MessageEmbed
 
 @DslMarker
 internal annotation class EmbedDslMarker

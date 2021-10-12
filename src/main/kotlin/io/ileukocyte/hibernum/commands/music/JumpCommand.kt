@@ -9,12 +9,12 @@ import io.ileukocyte.hibernum.extensions.sendSuccess
 import io.ileukocyte.hibernum.utils.TIME_CODE_REGEX
 import io.ileukocyte.hibernum.utils.timeCodeToMillis
 
+import kotlin.math.max
+
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-
-import kotlin.math.max
 
 class JumpCommand : Command {
     override val name = "jump"

@@ -11,16 +11,16 @@ import io.ileukocyte.openweather.entities.Temperature.TemperatureUnit
 import io.ileukocyte.openweather.extensions.convertUnitsTo
 import io.ileukocyte.openweather.openWeatherApi
 
+import java.text.DecimalFormat
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-
-import java.text.DecimalFormat
-import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 
 class WeatherCommand : Command {
     override val name = "weather"

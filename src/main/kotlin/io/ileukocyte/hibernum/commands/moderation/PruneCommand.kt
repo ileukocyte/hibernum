@@ -4,6 +4,9 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
 import io.ileukocyte.hibernum.extensions.*
 
+import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
+
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
@@ -12,9 +15,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
 import org.apache.commons.validator.routines.UrlValidator
-
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
 
 class PruneCommand : SlashOnlyCommand {
     override val name = "prune"
@@ -42,9 +42,6 @@ class PruneCommand : SlashOnlyCommand {
 
     @OptIn(ExperimentalTime::class)
     override suspend fun invoke(event: SlashCommandEvent) {
-        val guild = event.guild ?: return
-        val member = event.member ?: return
-
         if (event.getOption("text-filter") !== null && event.getOption("text") === null)
             throw CommandException("The \"text\" option must be initialized in case of the \"text-filter\" option being provided!")
 
@@ -98,7 +95,7 @@ class PruneCommand : SlashOnlyCommand {
 
         deferred.editOriginalEmbeds(defaultEmbed(response, EmbedType.SUCCESS)).queue()
 
-        event.channel.sendWarning("${event.user.asMention} has used the `$name` command!")  {
+        event.channel.sendWarning("${event.user.asMention} has used the `$name` command!") {
             text = "This message will self-delete in 5 seconds"
         }.queue { it.delete().queueAfter(5, DurationUnit.SECONDS, {}) {} }
     }

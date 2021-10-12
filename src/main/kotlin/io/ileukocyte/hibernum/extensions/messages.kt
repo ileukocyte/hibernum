@@ -6,13 +6,13 @@ import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.utils.awaitEvent
 import io.ileukocyte.hibernum.utils.waiterProcess
 
-import net.dv8tion.jda.api.entities.Message
-import net.dv8tion.jda.api.entities.User
-import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent
-
 import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.TimeoutCancellationException
+
+import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.entities.User
+import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent
 
 const val CHECK_MARK = "\u2705"
 const val CROSS_MARK = "\u274E"

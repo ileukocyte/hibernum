@@ -11,6 +11,10 @@ import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.limitTo
 import io.ileukocyte.hibernum.utils.*
 
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
+import kotlin.time.ExperimentalTime
+
 import net.dv8tion.jda.api.entities.Emoji
 import net.dv8tion.jda.api.entities.MessageEmbed.DESCRIPTION_MAX_LENGTH
 import net.dv8tion.jda.api.entities.TextChannel
@@ -22,10 +26,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
-
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
-import kotlin.time.ExperimentalTime
 
 class YouTubeCommand : Command {
     override val name = "youtube"

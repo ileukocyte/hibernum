@@ -14,6 +14,9 @@ import io.ileukocyte.hibernum.extensions.sendEmbed
 import io.ileukocyte.hibernum.utils.asDuration
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
+import kotlin.math.round
+import kotlin.time.ExperimentalTime
+
 import net.dv8tion.jda.api.entities.Emoji
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
@@ -22,9 +25,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
-
-import kotlin.math.round
-import kotlin.time.ExperimentalTime
 
 class SpotifyCommand : Command {
     override val name = "spotify"

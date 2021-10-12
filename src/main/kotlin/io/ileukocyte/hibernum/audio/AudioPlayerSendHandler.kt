@@ -4,9 +4,9 @@ import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame
 
-import net.dv8tion.jda.api.audio.AudioSendHandler
-
 import java.nio.ByteBuffer
+
+import net.dv8tion.jda.api.audio.AudioSendHandler
 
 class AudioPlayerSendHandler(private val player: AudioPlayer) : AudioSendHandler {
     private val buffer = ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_OPUS.maximumChunkSize())
