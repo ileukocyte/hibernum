@@ -1,22 +1,14 @@
 package io.ileukocyte.hibernum.commands.information
 
-import de.androidpit.colorthief.ColorThief
-
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.asText
+import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.request.get
-
-import java.awt.Color
-import java.io.InputStream
 import java.time.format.DateTimeFormatter
 import java.util.Date
-import javax.imageio.ImageIO
 
 import kotlin.time.ExperimentalTime
 
@@ -29,6 +21,7 @@ import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.interactions.components.Button
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
+
 import org.ocpsoft.prettytime.PrettyTime
 
 class ServerCommand : Command {
@@ -136,13 +129,7 @@ class ServerCommand : Command {
         val members = guild.memberCache
 
         guild.iconUrl?.let { icon ->
-            HttpClient(CIO).get<InputStream>(icon).use {
-                val bufferedImage = ImageIO.read(it)
-                val rgb = ColorThief.getColor(bufferedImage)
-
-                color = Color(rgb[0], rgb[1], rgb[2])
-            }
-
+            color = getDominantColorByImageUrl(icon)
             thumbnail = icon
         }
 
@@ -304,12 +291,7 @@ class ServerCommand : Command {
     private suspend fun iconEmbed(guild: Guild) = buildEmbed {
         val icon = guild.iconUrl ?: return@buildEmbed
 
-        HttpClient(CIO).get<InputStream>(icon).use {
-            val bufferedImage = ImageIO.read(it)
-            val rgb = ColorThief.getColor(bufferedImage)
-
-            color = Color(rgb[0], rgb[1], rgb[2])
-        }
+        color = getDominantColorByImageUrl(icon)
 
         author {
             name = guild.name
@@ -341,13 +323,6 @@ class ServerCommand : Command {
             } else it
         }
 
-        guild.iconUrl?.let { icon ->
-            HttpClient(CIO).get<InputStream>(icon).use {
-                val bufferedImage = ImageIO.read(it)
-                val rgb = ColorThief.getColor(bufferedImage)
-
-                color = Color(rgb[0], rgb[1], rgb[2])
-            }
-        }
+        guild.iconUrl?.let { icon -> color = getDominantColorByImageUrl(icon) }
     }
 }

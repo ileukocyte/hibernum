@@ -1,16 +1,11 @@
 package io.ileukocyte.hibernum.commands.information
 
-import de.androidpit.colorthief.ColorThief
-
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.*
-
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.request.get
+import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.*
@@ -30,11 +25,8 @@ import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
 import org.ocpsoft.prettytime.PrettyTime
 
-import java.awt.Color
-import java.io.InputStream
 import java.time.format.DateTimeFormatter
-import java.util.*
-import javax.imageio.ImageIO
+import java.util.Date
 
 class UserCommand : Command {
     override val name = "user"
@@ -164,18 +156,12 @@ class UserCommand : Command {
         val dateFormatter = DateTimeFormatter.ofPattern("E, d MMM yyyy, h:mm:ss a")
         val user = member.user
 
+        color = getDominantColorByImageUrl(user.effectiveAvatarUrl)
         thumbnail = user.effectiveAvatarUrl
 
         author {
             name = user.asTag
             iconUrl = user.effectiveAvatarUrl
-        }
-
-        HttpClient(CIO).get<InputStream>(user.effectiveAvatarUrl).use {
-            val bufferedImage = ImageIO.read(it)
-            val rgb = ColorThief.getColor(bufferedImage)
-
-            color = Color(rgb[0], rgb[1], rgb[2])
         }
 
         field {
@@ -315,12 +301,6 @@ class UserCommand : Command {
     }
 
     private suspend fun pfpEmbed(user: User) = buildEmbed {
-        HttpClient(CIO).get<InputStream>(user.effectiveAvatarUrl).use {
-            val bufferedImage = ImageIO.read(it)
-            val rgb = ColorThief.getColor(bufferedImage)
-
-            color = Color(rgb[0], rgb[1], rgb[2])
-        }
 
         "${user.effectiveAvatarUrl}?size=2048".let { pfp ->
             author {
@@ -330,6 +310,7 @@ class UserCommand : Command {
 
             description = "[Profile Picture URL]($pfp)".surroundWith("**")
             image = pfp
+            color = getDominantColorByImageUrl(pfp)
         }
     }
 
