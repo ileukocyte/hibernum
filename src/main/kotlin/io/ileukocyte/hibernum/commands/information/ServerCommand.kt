@@ -14,6 +14,8 @@ import io.ktor.client.request.get
 
 import java.awt.Color
 import java.io.InputStream
+import java.time.format.DateTimeFormatter
+import java.util.Date
 import javax.imageio.ImageIO
 
 import kotlin.time.ExperimentalTime
@@ -27,6 +29,7 @@ import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.interactions.components.Button
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
+import org.ocpsoft.prettytime.PrettyTime
 
 class ServerCommand : Command {
     override val name = "server"
@@ -235,10 +238,14 @@ class ServerCommand : Command {
             isInline = true
         }
 
-        // should have been the "Stickers" field, but JDA has no implementation for it
         field {
-            title = "MFA Requirement"
-            description = if (guild.requiredMFALevel == Guild.MFALevel.TWO_FACTOR_AUTH) "Yes" else "No"
+            val time = guild.timeCreated
+                .format(DateTimeFormatter.ofPattern("E, d MMM yyyy, h:mm:ss a"))
+                .removeSuffix(" GMT")
+            val ago = PrettyTime().format(Date.from(guild.timeCreated.toInstant()))
+
+            title = "Creation Date"
+            description = "$time ($ago)"
             isInline = true
         }
 
@@ -284,6 +291,12 @@ class ServerCommand : Command {
         field {
             title = "NSFW Level"
             description = guild.nsfwLevel.name.replace('_', ' ').capitalizeAll()
+            isInline = true
+        }
+
+        field {
+            title = "MFA Requirement"
+            description = if (guild.requiredMFALevel == Guild.MFALevel.TWO_FACTOR_AUTH) "Yes" else "No"
             isInline = true
         }
     }
