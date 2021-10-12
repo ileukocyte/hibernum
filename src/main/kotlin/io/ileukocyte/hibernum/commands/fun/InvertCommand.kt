@@ -4,10 +4,15 @@ import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.*
+import io.ileukocyte.hibernum.utils.invert
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.get
+
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import javax.imageio.ImageIO
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -18,11 +23,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
 import org.apache.commons.validator.routines.UrlValidator
-
-import java.awt.image.BufferedImage
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import javax.imageio.ImageIO
 
 class InvertCommand : Command {
     override val name = "invert"
@@ -126,25 +126,6 @@ class InvertCommand : Command {
 
         deferred.editOriginalEmbeds().addFile(bytesToSend, "inverted.png").queue({}) {
             event.channel.sendFile(bytesToSend, "inverted.png").queue()
-        }
-    }
-
-    private fun BufferedImage.invert() {
-        for (x in 0 until width) {
-            for (y in 0 until height) {
-                val rgba = getRGB(x, y)
-
-                val a = rgba shr 24 and 0xff shl 24
-                var r = rgba shr 16 and 0xff
-                var g = rgba shr 8 and 0xff
-                var b = rgba and 0xff
-
-                r = 255 - r shl 16
-                g = 255 - g shl 8
-                b = 255 - b
-
-                setRGB(x, y, a or r or g or b)
-            }
         }
     }
 }
