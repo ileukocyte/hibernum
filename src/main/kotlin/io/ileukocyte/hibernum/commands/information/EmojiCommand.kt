@@ -16,7 +16,7 @@ import org.ocpsoft.prettytime.PrettyTime
 class EmojiCommand : TextOnlyCommand {
     override val name = "emoji"
     override val description = "Sends the available information about the provided custom emoji"
-    override val aliases = setOf("emote")
+    override val aliases = setOf("emote", "emojiinfo", "emoji-info", "emoteinfo", "emote-info")
     override val usages = setOf(setOf("custom emoji"))
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
