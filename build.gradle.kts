@@ -42,7 +42,7 @@ dependencies {
 
     // APIs and libraries
     implementation(group = "com.github.markozajc", name = "akiwrapper", version = "1.5.1.1")
-    implementation(group = "com.github.ileukocyte", name = "openweather-kt", version = "1.0")
+    implementation(group = "com.github.ileukocyte", name = "openweather-kt", version = "dfaea810a8")
     implementation(group = "org.reflections", name = "reflections", version = "0.10")
     implementation(group = "org.json", name = "json", version = "20210307")
     implementation(group = "com.google.api-client", name = "google-api-client", version = "1.32.1")
