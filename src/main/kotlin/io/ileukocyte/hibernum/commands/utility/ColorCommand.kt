@@ -6,21 +6,19 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.extensions.orNull
 import io.ileukocyte.hibernum.extensions.toJSONObject
+import io.ileukocyte.hibernum.utils.getImageBytes
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.features.ClientRequestException
 import io.ktor.client.request.get
 
+import java.awt.Color
+
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-
-import java.awt.Color
-import java.awt.image.BufferedImage
-import java.io.ByteArrayOutputStream
-import javax.imageio.ImageIO
 
 class ColorCommand : Command {
     override val name = "color"
@@ -38,7 +36,7 @@ class ColorCommand : Command {
         val info = getColorInfo(input)
 
         event.channel.sendMessageEmbeds(colorEmbed(info))
-            .addFile(info.image, "${info.hexString.removePrefix("#")}.png")
+            .addFile(info.javaColor.getImageBytes(150, 150), "${info.hexString.removePrefix("#")}.png")
             .queue()
     }
 
@@ -48,7 +46,7 @@ class ColorCommand : Command {
         val info = getColorInfo(input)
 
         event.replyEmbeds(colorEmbed(info))
-            .addFile(info.image, "${info.hexString.removePrefix("#")}.png")
+            .addFile(info.javaColor.getImageBytes(150, 150), "${info.hexString.removePrefix("#")}.png")
             .queue()
     }
 
@@ -117,21 +115,6 @@ class ColorCommand : Command {
         data class CMYK(val cyan: Int, val magenta: Int, val yellow: Int, val key: Int)
 
         val javaColor get() = Color(rgb.red, rgb.green, rgb.blue)
-        val image: ByteArray
-            get() {
-                val bufferedImage = BufferedImage(150, 150, BufferedImage.TYPE_INT_RGB)
-                val graphics = bufferedImage.createGraphics()
-
-                graphics.color = javaColor
-                graphics.fillRect(0, 0, 150, 150)
-                graphics.dispose()
-
-                return ByteArrayOutputStream().use {
-                    ImageIO.write(bufferedImage, "png", it)
-
-                    it.toByteArray()
-                }
-            }
     }
 
     companion object {

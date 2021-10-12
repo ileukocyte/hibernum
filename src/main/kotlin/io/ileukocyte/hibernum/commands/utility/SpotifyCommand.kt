@@ -4,8 +4,6 @@ import com.wrapper.spotify.SpotifyApi
 import com.wrapper.spotify.exceptions.detailed.BadRequestException
 import com.wrapper.spotify.model_objects.specification.Track
 
-import de.androidpit.colorthief.ColorThief
-
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.*
@@ -14,10 +12,7 @@ import io.ileukocyte.hibernum.extensions.limitTo
 import io.ileukocyte.hibernum.extensions.replyEmbed
 import io.ileukocyte.hibernum.extensions.sendEmbed
 import io.ileukocyte.hibernum.utils.asDuration
-
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.request.get
+import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
 import net.dv8tion.jda.api.entities.Emoji
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
@@ -27,10 +22,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
-
-import java.awt.Color
-import java.io.InputStream
-import javax.imageio.ImageIO
 
 import kotlin.math.round
 import kotlin.time.ExperimentalTime
@@ -178,13 +169,7 @@ class SpotifyCommand : Command {
 
         album.images.maxByOrNull { it.height }?.url?.let { img ->
             image = img
-
-            HttpClient(CIO).get<InputStream>(img).use {
-                val bufferedImage = ImageIO.read(it)
-                val rgb = ColorThief.getColor(bufferedImage)
-
-                color = Color(rgb[0], rgb[1], rgb[2])
-            }
+            color = getDominantColorByImageUrl(img)
         }
 
         author {
