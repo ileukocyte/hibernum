@@ -68,7 +68,7 @@ class SpotifyCommand : Command {
                 val title = it.name
                 val album = it.album.name
 
-                SelectOption.of("$artist - $title - $album".limitTo(100), it.id)
+                SelectOption.of("$artist - $title - $album".limitTo(SelectOption.LABEL_MAX_LENGTH), it.id)
             }
 
             SelectionMenu.create("$name-${event.author.idLong}-spotify")
@@ -120,7 +120,7 @@ class SpotifyCommand : Command {
                 val title = it.name
                 val album = it.album.name
 
-                SelectOption.of("$artist - $title - $album".limitTo(100), it.id)
+                SelectOption.of("$artist - $title - $album".limitTo(SelectOption.LABEL_MAX_LENGTH), it.id)
             }
 
             SelectionMenu.create("$name-${event.user.idLong}-spotify")

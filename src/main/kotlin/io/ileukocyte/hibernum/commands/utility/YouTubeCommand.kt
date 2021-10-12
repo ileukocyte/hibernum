@@ -12,6 +12,7 @@ import io.ileukocyte.hibernum.extensions.limitTo
 import io.ileukocyte.hibernum.utils.*
 
 import net.dv8tion.jda.api.entities.Emoji
+import net.dv8tion.jda.api.entities.MessageEmbed.DESCRIPTION_MAX_LENGTH
 import net.dv8tion.jda.api.entities.TextChannel
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
@@ -110,8 +111,9 @@ class YouTubeCommand : Command {
             image = it
             color = getDominantColorByImageUrl(it)
         }
-        description =
-            video.snippet.description.takeUnless { it.isEmpty() }?.limitTo(4096) ?: "No description provided"
+        description = video.snippet.description.takeUnless { it.isEmpty() }
+            ?.limitTo(DESCRIPTION_MAX_LENGTH)
+            ?: "No description provided"
 
         title {
             title = video.snippet.title
@@ -152,10 +154,11 @@ class YouTubeCommand : Command {
         val menu by lazy {
             val options = videos.map {
                 SelectOption.of(
-                    it.snippet.title.limitTo(100),
+                    it.snippet.title.limitTo(SelectOption.LABEL_MAX_LENGTH),
                     it.id
                 ).withDescription(
-                    "${it.snippet.channelTitle} - ${asDuration(it.contentDetails.durationInMillis)}".limitTo(100)
+                    "${it.snippet.channelTitle} - ${asDuration(it.contentDetails.durationInMillis)}"
+                        .limitTo(SelectOption.DESCRIPTION_MAX_LENGTH)
                 )
             }
 

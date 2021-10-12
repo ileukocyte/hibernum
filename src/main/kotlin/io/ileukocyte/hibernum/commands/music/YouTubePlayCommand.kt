@@ -16,6 +16,7 @@ import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.*
 
+import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.withContext
 
 import net.dv8tion.jda.api.entities.*
@@ -26,8 +27,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
-
-import kotlin.time.ExperimentalTime
 
 class YouTubePlayCommand : Command {
     override val name = "ytplay"
@@ -101,10 +100,11 @@ class YouTubePlayCommand : Command {
             val menu by lazy {
                 val options = videos.map {
                     SelectOption.of(
-                        it.snippet.title.limitTo(100),
+                        it.snippet.title.limitTo(SelectOption.LABEL_MAX_LENGTH),
                         it.id,
                     ).withDescription(
-                        "${it.snippet.channelTitle} - ${asDuration(it.contentDetails.durationInMillis)}".limitTo(100)
+                        "${it.snippet.channelTitle} - ${asDuration(it.contentDetails.durationInMillis)}"
+                            .limitTo(SelectOption.DESCRIPTION_MAX_LENGTH)
                     )
                 }
 
