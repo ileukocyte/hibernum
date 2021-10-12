@@ -13,14 +13,14 @@ object Immutable {
     const val DEFAULT_PREFIX = "&"
     const val GITHUB_REPOSITORY = "https://github.com/ileukocyte/hibernum"
     const val INVITE_LINK_FORMAT = "https://discord.com/api/oauth2/authorize?client_id=%s" +
-            "&permissions=4294967287" +
+            "&permissions=536870911991" +
             "&scope=applications.commands%%20bot"
 
     val LOGGER = KotlinLogging.logger("Hibernum")
 
     val EVAL_KOTLIN_ENGINE = ScriptEngineManager().getEngineByExtension("kts") as KotlinJsr223ScriptEngineImpl
 
-    val VERSION = Version(major = 2, minor = 0, unstable = 2, stability = Version.Stability.Alpha)
+    val VERSION = Version(major = 2, minor = 0, unstable = 3, stability = Version.Stability.Alpha)
 
     val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0" //"User-Agent: DiscordBot ($GITHUB_REPOSITORY, $VERSION)"
     val YOUTUBE_API_KEY: String = System.getenv("YOUTUBE_API_KEY")

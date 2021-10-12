@@ -261,7 +261,7 @@ class ServerCommand : Command {
 
         field {
             title = "Features"
-            description = guild.features.takeUnless { it.isNotEmpty() }?.joinToString {
+            description = guild.features.takeUnless { it.isEmpty() }?.joinToString {
                 it.replace('_', ' ').capitalizeAll()
                     .replace("Url", "URL")
                     .replace("Vip", "VIP")
