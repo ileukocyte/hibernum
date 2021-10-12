@@ -101,10 +101,11 @@ class YouTubePlayCommand : Command {
             val menu by lazy {
                 val options = videos.map {
                     SelectOption.of(
-                        it.snippet.title.limitTo(100),
+                        it.snippet.title.limitTo(SelectOption.LABEL_MAX_LENGTH),
                         it.id
                     ).withDescription(
-                        "${it.snippet.channelTitle} - ${asDuration(it.contentDetails.durationInMillis)}".limitTo(100)
+                        "${it.snippet.channelTitle} - ${asDuration(it.contentDetails.durationInMillis)}"
+                            .limitTo(SelectOption.DESCRIPTION_MAX_LENGTH)
                     )
                 }
 
