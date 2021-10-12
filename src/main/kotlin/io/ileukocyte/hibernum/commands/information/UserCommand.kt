@@ -39,7 +39,7 @@ import javax.imageio.ImageIO
 class UserCommand : Command {
     override val name = "user"
     override val description = "Sends either detailed information about the specified user's account or their profile picture"
-    override val aliases = setOf("userinfo")
+    override val aliases = setOf("userinfo", "user-info")
     override val usages = setOf(setOf("user name/ID (optional)"))
     override val options = setOf(
         OptionData(OptionType.USER, "user", "The user to check information about", false))
