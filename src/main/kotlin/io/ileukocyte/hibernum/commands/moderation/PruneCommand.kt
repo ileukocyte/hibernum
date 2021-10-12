@@ -37,17 +37,13 @@ class PruneCommand : SlashOnlyCommand {
         OptionData(OptionType.STRING, "text", "The content to filter messages by"),
     )
     override val cooldown = 5L
+    override val memberPermissions = setOf(Permission.MESSAGE_MANAGE)
+    override val botPermissions = setOf(Permission.MESSAGE_MANAGE)
 
     @OptIn(ExperimentalTime::class)
     override suspend fun invoke(event: SlashCommandEvent) {
         val guild = event.guild ?: return
         val member = event.member ?: return
-
-        if (Permission.MESSAGE_MANAGE !in guild.selfMember.permissions)
-            throw CommandException("${event.user.name} is not able to delete messages since no required permissions were granted! Contact the server's staff!")
-
-        if (Permission.MESSAGE_MANAGE !in member.permissions)
-            throw CommandException("You do not have the required permission to manage messages!")
 
         if (event.getOption("text-filter") !== null && event.getOption("text") === null)
             throw CommandException("The \"text\" option must be initialized in case of the \"text-filter\" option being provided!")

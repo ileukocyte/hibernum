@@ -38,7 +38,7 @@ class UserCommand : Command {
         setOf("user ID (optional)"),
     )
     override val options = setOf(
-        OptionData(OptionType.USER, "user", "The user to check information about", false))
+        OptionData(OptionType.USER, "user", "The user to check information about"))
     override val cooldown = 3L
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {

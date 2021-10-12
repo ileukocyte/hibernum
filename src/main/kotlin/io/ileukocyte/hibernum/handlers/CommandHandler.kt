@@ -9,6 +9,10 @@ import io.ileukocyte.hibernum.extensions.sendFailure
 import io.ileukocyte.hibernum.utils.asText
 import io.ileukocyte.hibernum.utils.getProcessByEntities
 
+import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
+import java.util.concurrent.Executors.newFixedThreadPool
+
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
@@ -23,10 +27,6 @@ import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
-
-import java.time.OffsetDateTime
-import java.time.temporal.ChronoUnit
-import java.util.concurrent.Executors.newFixedThreadPool
 
 private val commandContextDispatcher = newFixedThreadPool(3).asCoroutineDispatcher()
 
@@ -78,6 +78,7 @@ object CommandHandler : MutableSet<Command> {
 
             if (time <= 0) {
                 cooldowns -= "$name|$userId"
+
                 0
             } else time
         } ?: 0
@@ -116,6 +117,18 @@ object CommandHandler : MutableSet<Command> {
                                 }
 
                                 try {
+                                    if (command.botPermissions.isNotEmpty()
+                                        && !event.guild.selfMember.permissions.containsAll(command.botPermissions))
+                                        throw CommandException(
+                                            "${event.jda.selfUser.name} is not able to execute the command " +
+                                                "since no required permissions (${command.botPermissions.joinToString { it.getName() }}) were granted!",
+                                                footer = "Try contacting the server's staff!",
+                                        )
+
+                                    if (command.memberPermissions.isNotEmpty()
+                                        && event.member?.permissions?.containsAll(command.memberPermissions) == false)
+                                        throw CommandException("You do not have the required permission to manage messages!")
+
                                     if (command.cooldown > 0) {
                                         command.getCooldownError(event.author.idLong)
                                             ?.let { throw CommandException(it, SelfDeletion(5)) }
@@ -173,6 +186,18 @@ object CommandHandler : MutableSet<Command> {
                         }
 
                         try {
+                            if (command.botPermissions.isNotEmpty()
+                                && event.guild?.selfMember?.permissions?.containsAll(command.botPermissions) == false)
+                                throw CommandException(
+                                    "${event.jda.selfUser.name} is not able to execute the command " +
+                                            "since no required permissions (${command.botPermissions.joinToString { it.getName() }}) were granted!",
+                                    footer = "Try contacting the server's staff!",
+                                )
+
+                            if (command.memberPermissions.isNotEmpty()
+                                && event.member?.permissions?.containsAll(command.memberPermissions) == false)
+                                throw CommandException("You do not have the required permission to manage messages!")
+
                             if (command.cooldown > 0) {
                                 command.getCooldownError(event.user.idLong)
                                     ?.let { event.replyFailure(it).setEphemeral(true).queue() }

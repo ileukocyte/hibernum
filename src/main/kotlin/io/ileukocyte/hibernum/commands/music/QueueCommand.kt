@@ -140,7 +140,12 @@ class QueueCommand : Command {
     )
 
     @OptIn(ExperimentalTime::class)
-    private fun queueEmbed(jda: JDA, musicManager: GuildMusicManager, track: AudioTrack, page: Int) = buildEmbed {
+    private fun queueEmbed(
+        jda: JDA,
+        musicManager: GuildMusicManager,
+        track: AudioTrack,
+        page: Int,
+    ) = buildEmbed {
         val queueIsNotEmpty = musicManager.scheduler.queue.isNotEmpty()
 
         color = Immutable.SUCCESS
