@@ -80,7 +80,7 @@ data class WaiterProcess(
         "%04d".format(it) !in CURRENTLY_RUNNING.keys.map { p -> p.id }
     }.random()),
     val timeCreated: OffsetDateTime = OffsetDateTime.now(ZoneId.of("Etc/GMT0")),
-    var eventType: KClass<out GenericEvent>? = null
+    var eventType: KClass<out GenericEvent>? = null,
 ) {
     @DslMarker
     private annotation class WaiterDslMarker
@@ -96,7 +96,7 @@ data class WaiterProcess(
             users = users,
             channel = channel,
             command = command,
-            invoker = invoker
+            invoker = invoker,
         )
     }
 
@@ -110,7 +110,7 @@ class AwaitableEventListener<E : GenericEvent>(
     private val type: KClass<E>,
     private val deferred: CompletableDeferred<E?>,
     private val waiterProcess: WaiterProcess? = null,
-    private val condition: suspend (E) -> Boolean
+    private val condition: suspend (E) -> Boolean,
 ) : EventListener {
     init {
         waiterProcess?.let { WaiterProcess.CURRENTLY_RUNNING += it to this }
@@ -131,6 +131,7 @@ class AwaitableEventListener<E : GenericEvent>(
 
                 if (condition(casted)) {
                     kill(casted.jda)
+
                     deferred.complete(casted)
                 }
             }
@@ -166,7 +167,7 @@ suspend inline fun <reified E : GenericEvent> JDA.awaitEvent(
     delay: Long = -1,
     unit: DurationUnit = DurationUnit.MILLISECONDS,
     waiterProcess: WaiterProcess? = null,
-    noinline condition: suspend (E) -> Boolean
+    noinline condition: suspend (E) -> Boolean,
 ): E? {
     waiterProcess?.eventType = E::class
 
@@ -181,6 +182,7 @@ suspend inline fun <reified E : GenericEvent> JDA.awaitEvent(
         } catch (e: TimeoutCancellationException) {
             waiterProcess?.let { WaiterProcess.CURRENTLY_RUNNING -= it }
             removeEventListener(listener)
+
             throw e
         }
     } else deferred.await()

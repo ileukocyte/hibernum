@@ -40,8 +40,7 @@ class SpotifyCommand : Command {
     override val description = "Searches a Spotify track by the provided query and sends some information about one"
     override val usages = setOf(setOf("query"))
     override val options = setOf(
-        OptionData(OptionType.STRING, "query", "A search term", true)
-    )
+        OptionData(OptionType.STRING, "query", "A search term", true))
     override val cooldown = 5L
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
@@ -84,7 +83,7 @@ class SpotifyCommand : Command {
             SelectionMenu.create("$name-${event.author.idLong}-spotify")
                 .addOptions(
                     *options.toTypedArray(),
-                    SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C"))
+                    SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),
                 ).build()
         }
 
@@ -110,6 +109,7 @@ class SpotifyCommand : Command {
             }
 
             event.replyEmbeds(trackEmbed(track, api)).queue()
+
             return
         }
 
@@ -119,6 +119,7 @@ class SpotifyCommand : Command {
 
         if (items.size == 1) {
             event.replyEmbeds(trackEmbed(items.first(), api)).queue()
+
             return
         }
 
@@ -134,7 +135,7 @@ class SpotifyCommand : Command {
             SelectionMenu.create("$name-${event.user.idLong}-spotify")
                 .addOptions(
                     *options.toTypedArray(),
-                    SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C"))
+                    SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),
                 ).build()
         }
 
@@ -150,6 +151,7 @@ class SpotifyCommand : Command {
         if (event.user.id == id.first()) {
             if (event.selectedOptions?.firstOrNull()?.value == "exit") {
                 event.message.delete().queue()
+
                 return
             }
 

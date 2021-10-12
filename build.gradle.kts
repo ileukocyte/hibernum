@@ -107,7 +107,7 @@ data class Version(
     val minor: Int,
     val patch: Int = 0,
     val stability: Stability = Stability.Stable,
-    val unstable: Int = 0
+    val unstable: Int = 0,
 ) {
     override fun toString() = arrayOf(
         major,

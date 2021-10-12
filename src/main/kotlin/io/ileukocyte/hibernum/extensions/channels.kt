@@ -71,7 +71,7 @@ suspend inline fun MessageChannel.awaitMessage(
     processCommand: Command? = null,
     invokingMessage: Message? = null,
     delay: Long = 1,
-    unit: DurationUnit = DurationUnit.MINUTES
+    unit: DurationUnit = DurationUnit.MINUTES,
 ) = jda.awaitEvent<GuildMessageReceivedEvent>(
     delay = delay,
     unit = unit,
@@ -80,7 +80,7 @@ suspend inline fun MessageChannel.awaitMessage(
         channel = idLong
         command = processCommand
         invoker = invokingMessage?.idLong
-    }
+    },
 ) { it.author in authors && it.channel.idLong == idLong }?.message
 
 /**
@@ -113,5 +113,5 @@ suspend inline fun MessageChannel.awaitMessage(
     processCommand: Command? = null,
     invokingMessage: Message? = null,
     delay: Long = 1,
-    unit: DurationUnit = DurationUnit.MINUTES
+    unit: DurationUnit = DurationUnit.MINUTES,
 ) = awaitMessage(setOf(author), processCommand, invokingMessage, delay, unit)

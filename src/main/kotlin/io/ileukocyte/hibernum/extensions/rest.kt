@@ -19,7 +19,7 @@ import kotlin.time.ExperimentalTime
 suspend fun <T> RestAction<T>.await() = suspendCoroutine<T> {
     queue(
         { success -> it.resume(success) },
-        { failure -> it.resumeWithException(failure) }
+        { failure -> it.resumeWithException(failure) },
     )
 }
 
@@ -40,5 +40,6 @@ suspend fun <T> RestAction<T>.awaitAfter(
     unit: DurationUnit
 ): T {
     delay(unit.toMillis(delay))
+
     return await()
 }

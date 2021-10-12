@@ -52,7 +52,7 @@ class ShutdownCommand : Command {
         val description = "Are you sure you want to shut the bot down?"
         val buttons = setOf(
             Button.danger("$name-$userId-shut", "Yes"),
-            Button.secondary("$name-$userId-exit", "No")
+            Button.secondary("$name-$userId-exit", "No"),
         )
 
         val restAction = when (event) {

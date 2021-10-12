@@ -17,8 +17,7 @@ class ChooseCommand : Command {
     override val aliases = setOf("random")
     override val usages = setOf(setOf("option 1> | <option 2> | ... | <option n"))
     override val options = setOf(
-        OptionData(OptionType.STRING, "options", "The options provided (split with \"|\")", true)
-    )
+        OptionData(OptionType.STRING, "options", "The options provided (split with \"|\")", true))
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val input = args?.split(Regex("\\s?\\|\\s?"))

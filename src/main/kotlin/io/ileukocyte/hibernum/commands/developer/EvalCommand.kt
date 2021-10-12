@@ -96,7 +96,7 @@ class EvalCommand : TextOnlyCommand {
                 "hibernum.utils",
                 "openweather",
                 "openweather.entities",
-                "openweather.extensions"
+                "openweather.extensions",
             ),
             "net.dv8tion.jda" to setOf(
                 "api",
@@ -115,13 +115,13 @@ class EvalCommand : TextOnlyCommand {
                 "api.requests.restaction.order",
                 "api.requests.restaction.pagination",
                 "api.utils",
-                "api.utils.cache"
+                "api.utils.cache",
             ),
             "io.ktor" to setOf(
                 "client",
                 "client.engine.cio",
                 "client.features",
-                "client.request"
+                "client.request",
             ),
             "java" to setOf(
                 "io",
@@ -131,7 +131,7 @@ class EvalCommand : TextOnlyCommand {
                 "time",
                 "time.format",
                 "time.temporal",
-                "util.concurrent"
+                "util.concurrent",
             ),
             "kotlin" to setOf(
                 "concurrent",
@@ -142,11 +142,11 @@ class EvalCommand : TextOnlyCommand {
                 "reflect",
                 "reflect.full",
                 "reflect.jvm",
-                "system"
+                "system",
             ),
             "kotlinx" to setOf("coroutines"),
             "org" to setOf("json", "jsoup", "reflections"),
-            "mu" to emptySet()
+            "mu" to emptySet(),
         )
     }
 }

@@ -22,8 +22,7 @@ class SelectCommand : Command {
     override val description = "Selects another track from the queue and plays it"
     override val usages = setOf(setOf("song"))
     override val options = setOf(
-        OptionData(OptionType.INTEGER, "song", "The number of the song to play", true)
-    )
+        OptionData(OptionType.INTEGER, "song", "The number of the song to play", true))
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val number = args?.toIntOrNull() ?: throw CommandException("You have specified a wrong number!")
@@ -47,7 +46,7 @@ class SelectCommand : Command {
         audioPlayer: GuildMusicManager,
         guild: Guild,
         member: Member,
-        ifFromSlashCommandEvent: SlashCommandEvent? = null
+        ifFromSlashCommandEvent: SlashCommandEvent? = null,
     ) {
         if (audioPlayer.scheduler.queue.isNotEmpty()) {
             if (member.voiceState?.channel == guild.selfMember.voiceState?.channel) {

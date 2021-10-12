@@ -24,7 +24,7 @@ class MoveCommand : Command {
     override val usages = setOf(setOf("song", "index"))
     override val options = setOf(
         OptionData(OptionType.INTEGER, "song", "The index of the song to move", true),
-        OptionData(OptionType.INTEGER, "index", "The index to move the song to", true)
+        OptionData(OptionType.INTEGER, "index", "The index to move the song to", true),
     )
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {

@@ -41,8 +41,7 @@ class YouTubeCommand : Command {
     override val description = "Searches a YouTube video by the provided query and sends some information about one"
     override val aliases = setOf("yt", "yts", "ytsearch")
     override val options = setOf(
-        OptionData(OptionType.STRING, "query", "A link or a search term", true)
-    )
+        OptionData(OptionType.STRING, "query", "A link or a search term", true))
     override val usages = setOf(setOf("query"))
     override val cooldown = 5L
 
@@ -159,7 +158,7 @@ class YouTubeCommand : Command {
         query: String,
         author: User,
         textChannel: TextChannel,
-        ifFromSlashCommand: SlashCommandEvent? = null
+        ifFromSlashCommand: SlashCommandEvent? = null,
     ) {
         val videos = searchVideos(query)
 
@@ -179,7 +178,7 @@ class YouTubeCommand : Command {
             SelectionMenu.create("$name-${author.idLong}${"-slash".takeIf { ifFromSlashCommand !== null }.orEmpty()}-videos")
                 .addOptions(
                     *options.toTypedArray(),
-                    SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C"))
+                    SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),
                 ).build()
         }
 

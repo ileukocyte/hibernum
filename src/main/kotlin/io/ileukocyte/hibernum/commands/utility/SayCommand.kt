@@ -17,8 +17,7 @@ class SayCommand : Command {
     override val aliases = setOf("announce")
     override val usages = setOf(setOf("message"), setOf("image file"))
     override val options = setOf(
-        OptionData(OptionType.STRING, "message", "The message to send on behalf of the bot", true)
-    )
+        OptionData(OptionType.STRING, "message", "The message to send on behalf of the bot", true))
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         if (args === null && event.message.attachments.none { it.isImage })

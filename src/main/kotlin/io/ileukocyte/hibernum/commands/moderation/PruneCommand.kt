@@ -34,7 +34,7 @@ class PruneCommand : SlashOnlyCommand {
             .addChoice("Does Not Contain", "not")
             .addChoice("Starts With", "startswith")
             .addChoice("Ends With", "endswith"),
-        OptionData(OptionType.STRING, "text", "The content to filter messages by")
+        OptionData(OptionType.STRING, "text", "The content to filter messages by"),
     )
     override val cooldown = 5L
 
@@ -95,7 +95,7 @@ class PruneCommand : SlashOnlyCommand {
             filtered.size,
             event.getOption("user")?.asUser,
             event.getOption("filter")?.asString,
-            event.getOption("text-filter")?.asString
+            event.getOption("text-filter")?.asString,
         )
 
         event.channel.purgeMessages(filtered)
@@ -107,7 +107,12 @@ class PruneCommand : SlashOnlyCommand {
         }.queue { it.delete().queueAfter(5, DurationUnit.SECONDS, {}) {} }
     }
 
-    private fun getResponse(deletedMessages: Int, user: User?, filter: String?, textFilter: String?) = buildString {
+    private fun getResponse(
+        deletedMessages: Int,
+        user: User?,
+        filter: String?,
+        textFilter: String?,
+    ) = buildString {
         append("Deleted $deletedMessages ")
 
         if (filter == "embeds") append("embed ")

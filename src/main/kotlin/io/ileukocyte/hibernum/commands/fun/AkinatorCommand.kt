@@ -77,7 +77,7 @@ class AkinatorCommand : Command {
         Answer.NO to setOf("no", "n"),
         Answer.DONT_KNOW to setOf("don't know", "i", "idk", "dk", "dont know"),
         Answer.PROBABLY to setOf("probably", "p"),
-        Answer.PROBABLY_NOT to setOf("probably not", "pn")
+        Answer.PROBABLY_NOT to setOf("probably not", "pn"),
     )
 
     private val languagesAvailableForTypes get() =
@@ -92,7 +92,7 @@ class AkinatorCommand : Command {
             ),
             GuessType.MOVIE_TV_SHOW to setOf(Language.ENGLISH, Language.FRENCH),
             GuessType.CHARACTER to Language.values().toSortedSet(),
-            GuessType.OBJECT to setOf(Language.ENGLISH, Language.FRENCH)
+            GuessType.OBJECT to setOf(Language.ENGLISH, Language.FRENCH),
         )
 
     override suspend fun invoke(event: SlashCommandEvent) =
@@ -164,9 +164,9 @@ class AkinatorCommand : Command {
                         val embed = buildEmbed {
                             color = Immutable.SUCCESS
                             description = akiwrapper.currentQuestion?.question ?: "N/A"
-                            author {
-                                name = "Question #${(akiwrapper.currentQuestion?.step ?: -1) + 1}"
-                            }
+
+                            author { name = "Question #${(akiwrapper.currentQuestion?.step ?: -1) + 1}" }
+
                             footer {
                                 text = buildString {
                                     append("Type in \"help\"/\"aliases\" for further help or \"exit\" for termination!")
@@ -273,9 +273,7 @@ class AkinatorCommand : Command {
 
                                 footer { text = "Type in \"exit\" to finish the session!" }
 
-                                author {
-                                    name = "Question #${nextQuestion.step + 1}"
-                                }
+                                author { name = "Question #${nextQuestion.step + 1}" }
                             }.await()
 
                             awaitAnswer(event.channel, event.user, akiwrapper)
@@ -310,7 +308,7 @@ class AkinatorCommand : Command {
         messageChannel: MessageChannel,
         player: User,
         akiwrapper: Akiwrapper,
-        invokingMessage: Message? = null
+        invokingMessage: Message? = null,
     ) {
         try {
             val message = messageChannel.awaitMessage(player, this, invokingMessage, delay = 5)
@@ -321,7 +319,7 @@ class AkinatorCommand : Command {
                     val m = message.replyConfirmation("Are you sure you want to exit?")
                         .setActionRow(
                             Button.danger("$name-${player.idLong}-exit", "Yes"),
-                            Button.secondary("$name-${player.idLong}-stay", "No")
+                            Button.secondary("$name-${player.idLong}-stay", "No"),
                         ).await()
 
                     messageChannel.jda.awaitEvent<ButtonClickEvent>(15, DurationUnit.MINUTES, waiterProcess = waiterProcess {
@@ -464,7 +462,7 @@ class AkinatorCommand : Command {
 
             throw CommandException(
                 if (e is TimeoutCancellationException) "Time is out!" else (e.message ?: "Something went wrong!"),
-                SelfDeletion(30)
+                SelfDeletion(30),
             )
         }
     }
@@ -490,7 +488,7 @@ class AkinatorCommand : Command {
                             it.name
                         )
                     }.toTypedArray(),
-                SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C"))
+                SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),
             ).build()
 
         val restAction = when (event) {
@@ -527,7 +525,7 @@ class AkinatorCommand : Command {
         event: GenericInteractionCreateEvent,
         optionValue: String?,
         messageId: Long?,
-        isFromSlashCommand: Boolean
+        isFromSlashCommand: Boolean,
     ) {
         if (isFromSlashCommand) {
             if (event.user.processes.any { it.command is AkinatorCommand && it.channel != event.messageChannel.idLong })
@@ -545,7 +543,7 @@ class AkinatorCommand : Command {
             .addOptions(
                 *availableLanguages.map { SelectOption.of(it.name.capitalizeAll(), it.name) }.toTypedArray(),
                 SelectOption.of("Return", "return").withEmoji(Emoji.fromUnicode("\u25C0\uFE0F")),
-                SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C"))
+                SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),
             ).build()
 
         val message = event.let {
@@ -575,7 +573,7 @@ class AkinatorCommand : Command {
         playerId: Long,
         messageChannel: MessageChannel,
         messageIdForReply: Long? = null,
-        content: String? = null
+        content: String? = null,
     ): Message {
         val prefix = "g".let { if (isFinal) "final" + it.uppercase() else it } + "uess"
         val buttons = setOf(
@@ -588,7 +586,8 @@ class AkinatorCommand : Command {
                 append("${prefix}No")
 
                 if (!isFinal) append(guess.id)
-            }, "No"))
+            }, "No"),
+        )
         val embed = buildEmbed {
             color = Immutable.SUCCESS
 

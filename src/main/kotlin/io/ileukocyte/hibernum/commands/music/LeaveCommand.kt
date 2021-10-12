@@ -80,7 +80,7 @@ class LeaveCommand : Command {
         val description = "Are you sure you want the bot to stop playing music and leave the channel?"
         val buttons = setOf(
             Button.danger("$name-$userId-leave", "Yes"),
-            Button.secondary("$name-$userId-exit", "No")
+            Button.secondary("$name-$userId-exit", "No"),
         )
 
         val restAction = when (event) {

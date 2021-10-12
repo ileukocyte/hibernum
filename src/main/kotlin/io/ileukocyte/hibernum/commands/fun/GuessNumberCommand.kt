@@ -31,7 +31,7 @@ class GuessNumberCommand : Command {
     override val aliases = setOf("guessnum", "guessnumber", "guess-number")
     override val options = setOf(
         OptionData(OptionType.INTEGER, "min", "The beginning of the range (minimum: 1)", true),
-        OptionData(OptionType.INTEGER, "max", "The maximal value of the range (maximum: 500,000)", true)
+        OptionData(OptionType.INTEGER, "max", "The maximal value of the range (maximum: 500,000)", true),
     )
     override val usages = setOf(setOf("min", "max"))
 
@@ -135,7 +135,7 @@ class GuessNumberCommand : Command {
                 val m = received.replyConfirmation("Are you sure you want to exit?")
                     .setActionRow(
                         Button.danger("$name-${user.idLong}-exit", "Yes"),
-                        Button.secondary("$name-${user.idLong}-$attempt-$number-stay", "No")
+                        Button.secondary("$name-${user.idLong}-$attempt-$number-stay", "No"),
                     ).await()
 
                 channel.jda.awaitEvent<ButtonClickEvent>(15, DurationUnit.MINUTES, waiterProcess = waiterProcess {

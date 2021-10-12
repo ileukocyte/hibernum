@@ -44,7 +44,7 @@ suspend fun Message.awaitConfirmationWithReactions(
     user: User,
     processCommand: Command? = null,
     delay: Long = 1,
-    unit: DurationUnit = DurationUnit.MINUTES
+    unit: DurationUnit = DurationUnit.MINUTES,
 ): Boolean? {
     addReaction(CHECK_MARK).await()
     addReaction(CROSS_MARK).await()
@@ -56,7 +56,7 @@ suspend fun Message.awaitConfirmationWithReactions(
             users += user.idLong
             channel = this@awaitConfirmationWithReactions.channel.idLong
             command = processCommand
-        }
+        },
     ) {
         it.user.idLong == user.idLong
                 && it.messageIdLong == idLong

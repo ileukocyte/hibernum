@@ -38,7 +38,7 @@ class HelpCommand : Command {
                 }) {
                     event.channel.sendMessageEmbeds(commandList(event.jda, event.author,
                         isFromSlashCommand = false,
-                        isInDm = false
+                        isInDm = false,
                     )).queue()
                 }
             }

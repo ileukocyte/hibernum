@@ -9,7 +9,7 @@ data class SelfDeletion
 open class CommandException(
     message: String? = null,
     val selfDeletion: SelfDeletion? = null,
-    val footer: String? = null
+    val footer: String? = null,
 ) : RuntimeException(message)
 
 object NoArgumentsException : CommandException("You have not specified any arguments!")

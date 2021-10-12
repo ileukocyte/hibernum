@@ -28,8 +28,7 @@ class WeatherCommand : Command {
     override val cooldown = 3L
     override val usages = setOf(setOf("location"))
     override val options = setOf(
-        OptionData(OptionType.STRING, "location", "A location to get the weather for", true)
-    )
+        OptionData(OptionType.STRING, "location", "A location to get the weather for", true))
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val api = openWeatherApi(Immutable.WEATHER_API_KEY, Units.METRIC)
@@ -72,7 +71,8 @@ class WeatherCommand : Command {
 
         field {
             title = "Wind"
-            description = forecast.wind.let { "${it.speed.toInt()} ${it.unit.asString}" + it.directionName?.let { dn -> ", $dn" } }
+            description = forecast.wind
+                .let { "${it.speed.toInt()} ${it.unit.asString}" + it.directionName?.let { dn -> ", $dn" } }
             isInline = true
         }
 

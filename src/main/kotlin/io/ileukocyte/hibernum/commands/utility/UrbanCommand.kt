@@ -35,8 +35,7 @@ class UrbanCommand : Command {
     override val cooldown = 4L
     override val usages = setOf(setOf("term"))
     override val options = setOf(
-        OptionData(OptionType.STRING, "term", "A word or a phrase to define", true)
-    )
+        OptionData(OptionType.STRING, "term", "A word or a phrase to define", true))
 
     private val client = HttpClient(CIO)
 
@@ -97,14 +96,16 @@ class UrbanCommand : Command {
         var result = response?.toJSONArray()?.getJSONObject(0)
             ?: throw CommandException("No definition has been found by the query!")
 
-        var term = result.let { Term(
-            it.getString("word"),
-            it.getString("definition"),
-            it.getString("example"),
-            it.getString("author"),
-            it.getInt("thumbs_up"),
-            it.getInt("thumbs_down"),
-            OffsetDateTime.parse(it.getString("written_on"))
+        var term = result.let {
+            Term(
+                it.getString("word"),
+                it.getString("definition"),
+                it.getString("example"),
+                it.getString("author"),
+                it.getInt("thumbs_up"),
+                it.getInt("thumbs_down"),
+                OffsetDateTime.parse(it.getString("written_on"),
+            )
         ) }
 
         if (!isNSFWChannel) {
@@ -133,9 +134,9 @@ class UrbanCommand : Command {
                                 }
                             }.none { p -> p >= 0.9f }
                     } ?: throw CommandException(
-                    "No definition that does not contain any sexually explicit content has been found for the query!",
-                    footer = "Try using the command in a channel that is intended for NSFW bot commands!"
-                )
+                        "No definition that does not contain any sexually explicit content has been found for the query!",
+                        footer = "Try using the command in a channel that is intended for NSFW bot commands!",
+                    )
 
                 term = result.let {
                     Term(
@@ -145,7 +146,7 @@ class UrbanCommand : Command {
                         it.getString("author"),
                         it.getInt("thumbs_up"),
                         it.getInt("thumbs_down"),
-                        OffsetDateTime.parse(it.getString("written_on"))
+                        OffsetDateTime.parse(it.getString("written_on")),
                     )
                 }
             }
@@ -227,7 +228,7 @@ class UrbanCommand : Command {
         val author: String,
         val likes: Int,
         val dislikes: Int,
-        val dateAdded: OffsetDateTime
+        val dateAdded: OffsetDateTime,
     ) {
         val url = "https://www.urbandictionary.com/define.php?term=" + URLEncoder.encode(term, "UTF-8")
     }

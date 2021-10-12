@@ -120,13 +120,13 @@ class QueueCommand : Command {
                     val lastPage = partition.lastIndex
                     val newPage = min(pageNumber + 1, lastPage)
 
-                    event.editMessageEmbeds(
-                        queueEmbed(event.jda, audioPlayer, track, newPage)
-                    ).setActionRows().let {
-                        it.takeIf { audioPlayer.scheduler.queue.size > 7 }
-                            ?.setActionRow(pageButtons(id.first(), newPage))
-                            ?: it
-                    }.queue()
+                    event.editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, newPage))
+                        .setActionRows()
+                        .let {
+                            it.takeIf { audioPlayer.scheduler.queue.size > 7 }
+                                ?.setActionRow(pageButtons(id.first(), newPage))
+                                ?: it
+                        }.queue()
                 }
             }
         } else throw CommandException("You did not invoke the initial command!")
@@ -136,7 +136,7 @@ class QueueCommand : Command {
         Button.secondary("$name-$userId-$page-first", "First Page"),
         Button.secondary("$name-$userId-$page-back", "Back"),
         Button.secondary("$name-$userId-$page-next", "Next"),
-        Button.secondary("$name-$userId-$page-last", "Last Page")
+        Button.secondary("$name-$userId-$page-last", "Last Page"),
     )
 
     @OptIn(ExperimentalTime::class)

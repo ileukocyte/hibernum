@@ -28,8 +28,7 @@ class ColorCommand : Command {
     override val aliases = setOf("colorinfo", "color-info")
     override val usages = setOf(setOf("hex"))
     override val options = setOf(
-        OptionData(OptionType.STRING, "hex", "The color's hexadecimal representation", true)
-    )
+        OptionData(OptionType.STRING, "hex", "The color's hexadecimal representation", true))
     override val cooldown = 3L
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
@@ -78,7 +77,7 @@ class ColorCommand : Command {
             Color.RGB(
                 red = it.orNull("r") ?: 0,
                 green = it.orNull("g") ?: 0,
-                blue = it.orNull("b") ?: 0
+                blue = it.orNull("b") ?: 0,
             )
         }
         val cmyk = response.getJSONObject("cmyk").let {
@@ -86,14 +85,14 @@ class ColorCommand : Command {
                 cyan = it.orNull("c") ?: 0,
                 magenta = it.orNull("m") ?: 0,
                 yellow = it.orNull("y") ?: 0,
-                key = it.orNull("k") ?: 1
+                key = it.orNull("k") ?: 1,
             )
         }
         val hsl = response.getJSONObject("hsl").let {
             Color.HSL(
                 hue = it.orNull("h") ?: 0,
                 saturation = it.orNull("s") ?: 0,
-                lightness = it.orNull("l") ?: 0
+                lightness = it.orNull("l") ?: 0,
             )
         }
 
@@ -102,7 +101,7 @@ class ColorCommand : Command {
             response.getJSONObject("hex").getString("value").lowercase(),
             rgb,
             hsl,
-            cmyk
+            cmyk,
         )
     }
 
@@ -111,7 +110,7 @@ class ColorCommand : Command {
         val hexString: String,
         val rgb: RGB,
         val hsl: HSL,
-        val cmyk: CMYK
+        val cmyk: CMYK,
     ) {
         data class RGB(val red: Int, val green: Int, val blue: Int)
         data class HSL(val hue: Int, val saturation: Int, val lightness: Int)

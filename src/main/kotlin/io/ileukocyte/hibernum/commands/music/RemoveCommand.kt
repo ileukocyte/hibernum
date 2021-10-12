@@ -17,8 +17,7 @@ class RemoveCommand : Command {
     override val description = "Removes the selected track from the queue"
     override val usages = setOf(setOf("song"))
     override val options = setOf(
-        OptionData(OptionType.INTEGER, "song", "The number of the song to remove", true)
-    )
+        OptionData(OptionType.INTEGER, "song", "The number of the song to remove", true))
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val number = args?.toIntOrNull() ?: throw CommandException("You have specified a wrong number!")

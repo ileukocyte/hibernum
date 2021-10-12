@@ -42,7 +42,7 @@ class YouTubePlayCommand : Command {
         sendMenu(
             event.member ?: return,
             event.channel,
-            args ?: throw NoArgumentsException
+            args ?: throw NoArgumentsException,
         )
     }
 
@@ -51,7 +51,7 @@ class YouTubePlayCommand : Command {
             event.member ?: return,
             event.textChannel,
             event.getOption("query")?.asString ?: return,
-            event
+            event,
         )
     }
 
@@ -80,7 +80,7 @@ class YouTubePlayCommand : Command {
         member: Member,
         textChannel: TextChannel,
         query: String,
-        ifFromSlashCommand: SlashCommandEvent? = null
+        ifFromSlashCommand: SlashCommandEvent? = null,
     ) {
         member.voiceState?.channel?.let { vc ->
             val channel = vc.takeUnless { textChannel.guild.selfMember.voiceState?.channel == vc }
@@ -102,7 +102,7 @@ class YouTubePlayCommand : Command {
                 val options = videos.map {
                     SelectOption.of(
                         it.snippet.title.limitTo(100),
-                        it.id
+                        it.id,
                     ).withDescription(
                         "${it.snippet.channelTitle} - ${asDuration(it.contentDetails.durationInMillis)}".limitTo(100)
                     )
@@ -111,7 +111,7 @@ class YouTubePlayCommand : Command {
                 SelectionMenu.create("$name-${member.user.idLong}-videos")
                     .addOptions(
                         *options.toTypedArray(),
-                        SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C"))
+                        SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),
                     ).build()
             }
 
@@ -141,7 +141,7 @@ class YouTubePlayCommand : Command {
                         "https://i3.ytimg.com/vi/$id/hqdefault.jpg",
                         announceQueued = musicManager.player.playingTrack !== null,
                         firstTrackPlaying = musicManager.player.playingTrack === null,
-                        ifFromSlashCommand = ifFromSlashCommand
+                        ifFromSlashCommand = ifFromSlashCommand,
                     )
                     musicManager.scheduler += track
                 }

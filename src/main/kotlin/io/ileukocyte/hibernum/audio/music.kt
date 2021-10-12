@@ -74,5 +74,5 @@ data class TrackUserData(
     val announceQueued: Boolean = false,
     val firstTrackPlaying: Boolean = false,
     val ifFromSlashCommand: SlashCommandEvent? = null,
-    val playCount: Int = 0
+    val playCount: Int = 0,
 )

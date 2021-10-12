@@ -130,7 +130,7 @@ fun asDuration(
     time: Long,
     unit: DurationUnit = DurationUnit.MILLISECONDS,
     prependZeroDays: Boolean = false,
-    prependZeroHours: Boolean = false
+    prependZeroHours: Boolean = false,
 ): String {
     val duration = time.toDuration(unit)
 
@@ -174,7 +174,7 @@ fun timeCodeToMillis(timeCode: String) = TIME_CODE_REGEX.find(timeCode)?.let {
     data class Time(
         val seconds: ParsingTimeUnit,
         var minutes: ParsingTimeUnit,
-        var hours: ParsingTimeUnit
+        var hours: ParsingTimeUnit,
     ) {
         init {
             hours.first?.also {

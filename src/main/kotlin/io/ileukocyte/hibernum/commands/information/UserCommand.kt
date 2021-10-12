@@ -42,8 +42,7 @@ class UserCommand : Command {
     override val aliases = setOf("userinfo")
     override val usages = setOf(setOf("user name/ID (optional)"))
     override val options = setOf(
-        OptionData(OptionType.USER, "user", "The user to check information about", false)
-    )
+        OptionData(OptionType.USER, "user", "The user to check information about", false))
     override val cooldown = 3L
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
@@ -73,7 +72,7 @@ class UserCommand : Command {
                         .create("$name-${event.author.idLong}-search")
                         .addOptions(
                             *results.filter { !it.user.isBot }.take(10).map { SelectOption.of(it.user.asTag, it.user.id) }.toTypedArray(),
-                            SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C"))
+                            SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),
                         ).build()
 
                     event.channel.sendEmbed {
@@ -349,7 +348,7 @@ class UserCommand : Command {
             Permission.VIEW_GUILD_INSIGHTS,
             Permission.VOICE_DEAF_OTHERS,
             Permission.VOICE_MOVE_OTHERS,
-            Permission.VOICE_MUTE_OTHERS
+            Permission.VOICE_MUTE_OTHERS,
         )
     }
 }

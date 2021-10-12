@@ -33,11 +33,11 @@ class InvertCommand : Command {
     override val usages = setOf(
         setOf("image file"),
         setOf("image link"),
-        setOf("user mention")
+        setOf("user mention"),
     )
     override val options = setOf(
         OptionData(OptionType.STRING, "link", "The provided image"),
-        OptionData(OptionType.USER, "user", "The provided mention (has a higher priority)")
+        OptionData(OptionType.USER, "user", "The provided mention (has a higher priority)"),
     )
     override val cooldown = 7L
 

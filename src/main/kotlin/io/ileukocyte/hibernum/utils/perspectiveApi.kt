@@ -15,7 +15,7 @@ suspend fun getPerspectiveApiProbability(
     client: HttpClient,
     comment: String,
     mode: RequiredAttributes,
-    isExperimentalMode: Boolean = false
+    isExperimentalMode: Boolean = false,
 ): Float {
     val api = "https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze"
 

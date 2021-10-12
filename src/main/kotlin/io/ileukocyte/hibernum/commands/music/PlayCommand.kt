@@ -105,7 +105,7 @@ class PlayCommand : Command {
                             thumbnail,
                             announceQueued = musicManager.player.playingTrack !== null,
                             firstTrackPlaying = musicManager.player.playingTrack === null,
-                            ifFromSlashCommand = event
+                            ifFromSlashCommand = event,
                         )
                         musicManager.scheduler += track
                     }
