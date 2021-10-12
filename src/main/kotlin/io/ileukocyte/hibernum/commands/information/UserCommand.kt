@@ -46,6 +46,8 @@ class UserCommand : Command {
     override val cooldown = 3L
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+        if (!event.guild.isLoaded) event.guild.loadMembers().await()
+
         if (args !== null) {
             val exception = CommandException("No users have been found by the query!")
 
@@ -85,6 +87,8 @@ class UserCommand : Command {
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
+        if (event.guild?.isLoaded == false) event.guild?.loadMembers()?.await()
+
         val user = event.getOption("user")?.asUser ?: event.user
 
         chooseUserInfoOrPfp(user, event.user, event)
@@ -295,7 +299,7 @@ class UserCommand : Command {
 
         member.roles.filter { !it.isPublicRole }.let { roles ->
             field {
-                title = "Roles" + " (${roles.size})".takeUnless { roles.isEmpty() }
+                title = "Roles" + " (${roles.size})".takeUnless { roles.isEmpty() }.orEmpty()
                 description = roles.takeUnless { it.isEmpty() }
                     ?.joinToString { it.name }
                     ?.let { MarkdownSanitizer.escape(it) }

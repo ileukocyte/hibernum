@@ -4,12 +4,12 @@ package io.ileukocyte.hibernum.extensions
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.delay
 
 import net.dv8tion.jda.api.requests.RestAction
-
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
+import net.dv8tion.jda.api.utils.concurrent.Task
 
 /**
  * Suspends the current coroutine while submitting the request
@@ -42,4 +42,15 @@ suspend fun <T> RestAction<T>.awaitAfter(
     delay(unit.toMillis(delay))
 
     return await()
+}
+
+/**
+ * Suspends the current coroutine while submitting the request
+ *
+ * @return the response value
+ */
+suspend fun <T> Task<T>.await() = suspendCoroutine<T> { c ->
+    this
+        .onSuccess { c.resume(it) }
+        .onError { c.resumeWithException(it) }
 }

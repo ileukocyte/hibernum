@@ -1,28 +1,36 @@
 package io.ileukocyte.hibernum.commands.information
 
 import de.androidpit.colorthief.ColorThief
-import io.ileukocyte.hibernum.Immutable
+
 import io.ileukocyte.hibernum.builders.buildEmbed
+import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.commands.TextOnlyCommand
-import io.ileukocyte.hibernum.extensions.limitTo
-import io.ileukocyte.hibernum.extensions.sendConfirmation
-import io.ileukocyte.hibernum.extensions.surroundWith
+import io.ileukocyte.hibernum.extensions.*
+import io.ileukocyte.hibernum.utils.asText
+
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.get
-import net.dv8tion.jda.api.entities.Guild
-import net.dv8tion.jda.api.entities.MessageEmbed
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-import net.dv8tion.jda.api.interactions.components.Button
+
 import java.awt.Color
 import java.io.InputStream
 import javax.imageio.ImageIO
 
-class ServerCommand : TextOnlyCommand {
+import kotlin.time.ExperimentalTime
+
+import net.dv8tion.jda.api.EmbedBuilder.ZERO_WIDTH_SPACE
+import net.dv8tion.jda.api.OnlineStatus
+import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
+import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.interactions.components.Button
+import net.dv8tion.jda.api.utils.MarkdownSanitizer
+
+class ServerCommand : Command {
     override val name = "server"
-    override val description = "Sends either detailed information about the server, its icon, or its list of custom emojis"
+    override val description = "Sends the server's icon, its list of custom emojis, or detailed information about it"
     override val aliases = setOf("guild", "guildinfo", "guild-info", "serverinfo", "server-info")
     override val cooldown = 5L
 
@@ -38,16 +46,47 @@ class ServerCommand : TextOnlyCommand {
         }
 
         if (buttons.size == 1) {
-            //event.channel.sendMessageEmbeds(infoEmbed(guild)).queue()
+            if (!event.guild.isLoaded) event.guild.loadMembers().await()
 
-            //return
-            throw CommandException()
+            event.channel.sendMessageEmbeds(infoEmbed(event.guild)).queue()
+
+            return
         }
 
         event.channel.sendConfirmation("Choose the type of information that you want to check!")
             .setActionRow(
                 *buttons.toTypedArray(),
                 Button.danger("$name-${event.author.idLong}-exit", "Exit"),
+            ).queue()
+    }
+
+    override suspend fun invoke(event: SlashCommandEvent) {
+        val guild = event.guild ?: return
+
+        val buttons by lazy {
+            val info = Button.secondary("$name-${event.user.idLong}-info", "Information")
+            val icon = Button.secondary("$name-${event.user.idLong}-icon", "Server Icon")
+                .takeUnless { guild.iconUrl === null }
+            val emotes = Button.secondary("$name-${event.user.idLong}-emotes", "Custom Emojis")
+                .takeUnless { guild.emoteCache.isEmpty }
+
+            setOfNotNull(info, icon, emotes)
+        }
+
+        if (buttons.size == 1) {
+            val deferred = event.deferReply().await()
+
+            if (!guild.isLoaded) guild.loadMembers().await()
+
+            deferred.editOriginalEmbeds(infoEmbed(guild)).queue()
+
+            return
+        }
+
+        event.replyConfirmation("Choose the type of information that you want to check!")
+            .addActionRow(
+                *buttons.toTypedArray(),
+                Button.danger("$name-${event.user.idLong}-exit", "Exit"),
             ).queue()
     }
 
@@ -64,16 +103,35 @@ class ServerCommand : TextOnlyCommand {
             }
 
             val guild = event.guild ?: return
+            val deferred = event.editMessage("Executing\u2026".surroundWith('*'))
+                .setEmbeds()
+                .setActionRows()
+                .await()
 
             when (type) {
-                "info" -> throw CommandException()//event.editMessageEmbeds(infoEmbed(guild)).setActionRows().queue()
-                "icon" -> event.editMessageEmbeds(iconEmbed(guild)).setActionRows().queue()
-                "emotes" -> event.editMessageEmbeds(emotesEmbed(guild)).setActionRows().queue()
+                "info" -> {
+                    if (event.guild?.isLoaded == false) event.guild?.loadMembers()?.await()
+
+                    deferred.editOriginal(ZERO_WIDTH_SPACE)
+                        .setEmbeds(infoEmbed(guild))
+                        .queue()
+                }
+                "icon" ->
+                    deferred.editOriginal(ZERO_WIDTH_SPACE)
+                        .setEmbeds(iconEmbed(guild))
+                        .queue()
+                "emotes" ->
+                    deferred.editOriginal(ZERO_WIDTH_SPACE)
+                        .setEmbeds(emotesEmbed(guild))
+                        .queue()
             }
         } else throw CommandException("You did not invoke the initial command!")
     }
 
+    @OptIn(ExperimentalTime::class)
     private suspend fun infoEmbed(guild: Guild) = buildEmbed {
+        val members = guild.memberCache
+
         guild.iconUrl?.let { icon ->
             HttpClient(CIO).get<InputStream>(icon).use {
                 val bufferedImage = ImageIO.read(it)
@@ -81,6 +139,152 @@ class ServerCommand : TextOnlyCommand {
 
                 color = Color(rgb[0], rgb[1], rgb[2])
             }
+
+            thumbnail = icon
+        }
+
+        guild.description?.let { appendLine("**Description**: $it") }
+        guild.vanityUrl?.let { appendLine("**Vanity URL**: $it") }
+
+        field {
+            title = "Name"
+            description = MarkdownSanitizer.escape(guild.name)
+            isInline = true
+        }
+
+        field {
+            title = "ID"
+            description = guild.id
+            isInline = true
+        }
+
+        field {
+            title = "Owner"
+            description = guild.owner?.user?.asMention?.let { MarkdownSanitizer.escape(it) }
+                ?: "None (${guild.ownerIdLong})"
+            isInline = true
+        }
+
+        field {
+            title = "Online Members"
+            description = "${members.count { it.onlineStatus != OnlineStatus.OFFLINE }}/${members.size()}"
+            isInline = true
+        }
+
+        members.count { it.user.isBot }.let { bots ->
+            field {
+                title = "Humans"
+                description = "${members.size() - bots}/${members.size()}"
+                isInline = true
+            }
+
+            field {
+                title = "Bots"
+                description = "$bots/${members.size()}"
+                isInline = true
+            }
+        }
+
+        field {
+            title = "Channel Categories"
+            description = "${guild.categoryCache.size()}"
+            isInline = true
+        }
+
+        field {
+            title = "Text Channels"
+            description = "${guild.textChannelCache.size()}"
+            isInline = true
+        }
+
+        field {
+            title = "Voice Channels"
+            description = "${guild.voiceChannelCache.size()}"
+            isInline = true
+        }
+
+        field {
+            title = "System Channel"
+            description = guild.systemChannel?.asMention ?: "None"
+            isInline = true
+        }
+
+        field {
+            title = "Rules Channel"
+            description = guild.rulesChannel?.asMention ?: "None"
+            isInline = true
+        }
+
+        field {
+            title = "AFK Voice Channel"
+            description = guild.afkChannel?.asMention
+                ?.let { "$it (${asText(guild.afkTimeout.seconds * 1000L)})" }
+                ?: "None"
+            isInline = true
+        }
+
+        field {
+            title = "Roles"
+            description = "${guild.roleCache.size()}"
+            isInline = true
+        }
+
+        field {
+            title = "Custom Emojis"
+            description = "${guild.emoteCache.size()}"
+            isInline = true
+        }
+
+        // should have been the "Stickers" field, but JDA has no implementation for it
+        field {
+            title = "MFA Requirement"
+            description = if (guild.requiredMFALevel == Guild.MFALevel.TWO_FACTOR_AUTH) "Yes" else "No"
+            isInline = true
+        }
+
+        field {
+            title = "Boosts"
+            description = "${guild.boostCount}"
+            isInline = true
+        }
+
+        field {
+            val tier = guild.boostTier
+
+            title = "Boost Tier"
+            description = "**Level ${tier.key}**:\n" +
+                    "Bitrate: ${tier.maxBitrate / 1000} kbps\n" +
+                    "Emojis: ${tier.maxEmotes} slots\n" +
+                    "File Size: ${tier.maxFileSize shr 20} MB"
+            isInline = true
+        }
+
+        field {
+            title = "Features"
+            description = guild.features.takeUnless { it.isNotEmpty() }?.joinToString {
+                it.replace('_', ' ').capitalizeAll()
+                    .replace("Url", "URL")
+                    .replace("Vip", "VIP")
+            } ?: "None"
+            isInline = true
+        }
+
+        field {
+            title = "Verification Level"
+            description = guild.verificationLevel.name.replace('_', ' ').capitalizeAll()
+            isInline = true
+        }
+
+        field {
+            title = "Notification Level"
+            description = guild.defaultNotificationLevel.name.replace('_', ' ').capitalizeAll()
+            isInline = true
+        }
+
+        field {
+            title = "NSFW Level"
+            description = guild.nsfwLevel.name.replace('_', ' ').capitalizeAll()
+            isInline = true
         }
     }
 
@@ -106,7 +310,7 @@ class ServerCommand : TextOnlyCommand {
     }
 
     private suspend fun emotesEmbed(guild: Guild) = buildEmbed {
-        val emotes = guild.emoteCache.map { it.asMention }
+        val emotes = guild.emoteCache.filter { it.isAvailable }.map { it.asMention }
 
         author {
             name = "Custom Emojis"
