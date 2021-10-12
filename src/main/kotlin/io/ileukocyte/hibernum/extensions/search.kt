@@ -6,6 +6,10 @@ fun Guild.searchMembers(query: String) = memberCache
     .filter { getSearchPriority(query, it.user.name) > 0 }
     .sortedByDescending { getSearchPriority(query, it.user.name) }
 
+fun Guild.searchRoles(query: String) = roleCache
+    .filter { getSearchPriority(query, it.name) > 0 }
+    .sortedByDescending { getSearchPriority(query, it.name) }
+
 internal fun getSearchPriority(expected: String, actual: String) = when {
     expected == actual -> 6
     expected.lowercase() == actual.lowercase() -> 5
