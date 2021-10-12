@@ -40,17 +40,11 @@ class CharacterCommand : Command {
 
         for (codePoint in input.codePoints().distinct()) {
             val chars = codePoint.toChars()
-            var mainHex = codePoint.toString(16).uppercase()
-
-            while (mainHex.length < 4)
-                mainHex = "0$mainHex"
+            val mainHex = "%04X".format(codePoint)
 
             val hex = if (chars.size > 1) {
                 "`\\u$mainHex` (`" + chars.joinToString("") {
-                    var hex = it.code.toString(16).uppercase()
-
-                    while (hex.length < 4)
-                        hex = "0$hex"
+                    val hex = "%04X".format(it.code)
 
                     "\\u$hex"
                 } + "`)"
