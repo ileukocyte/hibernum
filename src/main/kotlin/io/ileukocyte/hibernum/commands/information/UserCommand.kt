@@ -31,7 +31,7 @@ import org.ocpsoft.prettytime.PrettyTime
 class UserCommand : Command {
     override val name = "user"
     override val description = "Sends either detailed information about the specified user's account or their profile picture"
-    override val aliases = setOf("userinfo", "user-info")
+    override val aliases = setOf("member", "memberinfo", "member-info", "userinfo", "user-info")
     override val usages = setOf(
         setOf("user name (optional)"),
         setOf("user mention (optional)"),
