@@ -20,7 +20,7 @@ object Immutable {
 
     val EVAL_KOTLIN_ENGINE = ScriptEngineManager().getEngineByExtension("kts") as KotlinJsr223ScriptEngineImpl
 
-    val VERSION = Version(major = 2, minor = 0, patch = 2)
+    val VERSION = Version(major = 2, minor = 0, patch = 3)
 
     val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0" //"User-Agent: DiscordBot ($GITHUB_REPOSITORY, $VERSION)"
     val YOUTUBE_API_KEY: String = System.getenv("YOUTUBE_API_KEY")

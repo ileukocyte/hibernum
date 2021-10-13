@@ -162,7 +162,7 @@ class QueueCommand : Command {
                 title = "Queue"
                 description = buildString {
                     partition[page].forEachIndexed { i, t ->
-                        val userData = track.userData as TrackUserData
+                        val userData = t.userData as TrackUserData
 
                         val trackTitle = "[${t.info.title.limitTo(35)}]" +
                                 "(${t.info.uri})"
@@ -174,7 +174,7 @@ class QueueCommand : Command {
             }
 
             footer {
-                text = "Total songs: ${musicManager.scheduler.queue.size + 1}"
+                text = "Total Songs: ${musicManager.scheduler.queue.size + 1}"
                 text += " \u2022 Page: ${page + 1}/${partition.size}".takeIf { partition.size > 1 }.orEmpty()
             }
         }
