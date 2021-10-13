@@ -105,6 +105,7 @@ object CommandHandler : MutableSet<Command> {
         if (!event.author.isBot && !event.author.isSystem && event.message.type == MessageType.DEFAULT) {
             if (event.message.contentRaw.trim().startsWith(Immutable.DEFAULT_PREFIX)) {
                 val args = event.message.contentRaw.split("\\s+".toRegex(), 2)
+
                 this[args.first().removePrefix(Immutable.DEFAULT_PREFIX).lowercase()]
                     ?.takeIf { it !is SlashOnlyCommand }
                     ?.let { command ->
@@ -117,16 +118,14 @@ object CommandHandler : MutableSet<Command> {
                                 }
 
                                 try {
-                                    if (command.botPermissions.isNotEmpty()
-                                        && !event.guild.selfMember.permissions.containsAll(command.botPermissions))
+                                    if (!event.guild.selfMember.hasPermission(command.botPermissions))
                                         throw CommandException(
                                             "${event.jda.selfUser.name} is not able to execute the command " +
                                                 "since no required permissions (${command.botPermissions.joinToString { it.getName() }}) were granted!",
                                                 footer = "Try contacting the server's staff!",
                                         )
 
-                                    if (command.memberPermissions.isNotEmpty()
-                                        && event.member?.permissions?.containsAll(command.memberPermissions) == false)
+                                    if (event.member?.hasPermission(command.memberPermissions) == false)
                                         throw CommandException("You do not have the required permission to manage messages!")
 
                                     if (command.cooldown > 0) {
@@ -186,16 +185,14 @@ object CommandHandler : MutableSet<Command> {
                         }
 
                         try {
-                            if (command.botPermissions.isNotEmpty()
-                                && event.guild?.selfMember?.permissions?.containsAll(command.botPermissions) == false)
+                            if (event.guild?.selfMember?.hasPermission(command.botPermissions) == false)
                                 throw CommandException(
                                     "${event.jda.selfUser.name} is not able to execute the command " +
                                             "since no required permissions (${command.botPermissions.joinToString { it.getName() }}) were granted!",
                                     footer = "Try contacting the server's staff!",
                                 )
 
-                            if (command.memberPermissions.isNotEmpty()
-                                && event.member?.permissions?.containsAll(command.memberPermissions) == false)
+                            if (event.member?.hasPermission(command.memberPermissions) == false)
                                 throw CommandException("You do not have the required permission to manage messages!")
 
                             if (command.cooldown > 0) {
