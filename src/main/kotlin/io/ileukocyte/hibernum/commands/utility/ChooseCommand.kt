@@ -14,13 +14,15 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 class ChooseCommand : Command {
     override val name = "choose"
     override val description = "Chooses a random option among the provided ones split with the \"|\" character"
+    override val fullDescription =
+        "$description (if you want to use \"|\" within any option, you can prefix the character with \"\\\\\")"
     override val aliases = setOf("random")
     override val usages = setOf(setOf("option 1> | <option 2> | ... | <option n"))
     override val options = setOf(
         OptionData(OptionType.STRING, "options", "The options provided (split with \"|\")", true))
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
-        val input = args?.split(Regex("\\s?\\|\\s?"))
+        val input = args?.split(Regex("\\s?(?<!\\\\)\\|\\s?"))
             ?.filter { it.isNotEmpty() }
             ?.takeUnless { it.isEmpty() }
             ?: throw NoArgumentsException
