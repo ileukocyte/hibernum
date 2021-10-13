@@ -35,7 +35,7 @@ object CommandHandler : MutableSet<Command> {
     private val registeredCommands = mutableSetOf<Command>()
     private val cooldowns = mutableMapOf<String, OffsetDateTime>()
 
-    // Stuff overriden from MutableSet
+    // Overridden from MutableSet
     override val size get() = registeredCommands.size
     override fun isEmpty() = registeredCommands.isEmpty()
     override fun contains(element: Command) = element in registeredCommands
@@ -136,7 +136,7 @@ object CommandHandler : MutableSet<Command> {
                                             }.queue({
                                                 e.selfDeletion?.let { sd -> it.delete().queueAfter(sd.delay, sd.unit, {}) {} }
                                             }) { e.printStackTrace() }
-                                        is InsufficientPermissionException -> { } // ignored
+                                        is InsufficientPermissionException -> {} // ignored
                                         else -> {
                                             event.channel.sendFailure(
                                                 """
@@ -310,6 +310,7 @@ object CommandHandler : MutableSet<Command> {
                                            |${e.message ?: "No message provided"}
                                            |""".trimMargin()
                                 ).queue()
+
                                 e.printStackTrace()
                             }
                         }

@@ -15,7 +15,7 @@ plugins {
 }
 
 group = "io.ileukocyte"
-version = Version(major = 2, minor = 0, stability = Version.Stability.ReleaseCandidate)
+version = Version(major = 2, minor = 0)
 
 repositories {
     mavenCentral()
@@ -56,7 +56,7 @@ dependencies {
     implementation(group = "com.github.kenglxn.QRGen", name = "javase", version = "2.6.0")
     implementation(group = "se.michaelthelin.spotify", name = "spotify-web-api-java", version = "6.5.4")
     implementation(group = "com.github.SvenWoltmann", name = "color-thief-java", version = "v1.1.2")
-    implementation(group = "org.ocpsoft.prettytime", name = "prettytime", version = "4.0.4.Final")
+    implementation(group = "org.ocpsoft.prettytime", name = "prettytime", version = "5.0.2.Final")
 
     // Kotlin
     implementation(kotlin("stdlib", kotlinVersion))
