@@ -26,7 +26,6 @@ import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
 
 private val commandContextDispatcher = newFixedThreadPool(3).asCoroutineDispatcher()
 
@@ -35,13 +34,6 @@ object CommandContext : CoroutineContext by commandContextDispatcher, AutoClosea
 object CommandHandler : MutableSet<Command> {
     private val registeredCommands = mutableSetOf<Command>()
     private val cooldowns = mutableMapOf<String, OffsetDateTime>()
-
-    /**
-     * A property that returns non-text-only commands registered by [CommandHandler] as a set of JDA's [CommandData] instances
-     */
-    val asSlashCommands get() = filter { it !is TextOnlyCommand }
-        .map { it.asSlashCommand }
-        .toSet()
 
     // Stuff overriden from MutableSet
     override val size get() = registeredCommands.size
