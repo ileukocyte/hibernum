@@ -40,7 +40,7 @@ class EmojiCommand : TextOnlyCommand {
             }
 
             field {
-                title = "Guild"
+                title = "Server"
                 description = emote.guild?.name?.let { MarkdownSanitizer.escape(it) } ?: "Unknown"
                 isInline = true
             }
