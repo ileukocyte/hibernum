@@ -35,7 +35,7 @@ class ChooseCommand : Command {
 
     override suspend fun invoke(event: SlashCommandEvent) {
         val input = event.getOption("options")?.asString
-            ?.split(Regex("\\s?\\|\\s?"))
+            ?.split(Regex("\\s?(?<!\\\\)\\|\\s?"))
             ?.filter { it.isNotEmpty() }
             ?.takeUnless { it.isEmpty() }
             ?: throw NoArgumentsException
