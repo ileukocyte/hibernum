@@ -183,13 +183,12 @@ class UserCommand : Command {
         }
 
         field {
-            title = "Online Status"
-            description = member.onlineStatus.name.replace('_', ' ').capitalizeAll()
-            isInline = true
+            val clients = setOf(ClientType.DESKTOP, ClientType.MOBILE, ClientType.WEB)
+                .associateWith { member.getOnlineStatus(it).name.replace('_', ' ').capitalizeAll() }
 
-            member.activeClients.takeUnless { it.isEmpty() }?.let { ct ->
-                description += ct.joinToString { it.name.capitalizeAll() }.let { " ($it)" }
-            }
+            title = "Online Status"
+            description = clients.map { (k, v) -> "${k.name.capitalizeAll()}: $v" }.joinToString("\n")
+            isInline = true
         }
 
         member.activities.let { activities ->
