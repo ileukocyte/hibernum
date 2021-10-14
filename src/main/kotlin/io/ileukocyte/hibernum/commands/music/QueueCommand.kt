@@ -33,11 +33,10 @@ class QueueCommand : Command {
     override val aliases = setOf("q", "playlist")
     override val usages = setOf(setOf("page (optional)"))
     override val options = setOf(
-        OptionData(OptionType.INTEGER, "page", "Initial page number")
-    )
+        OptionData(OptionType.INTEGER, "page", "Initial page number"))
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
-        val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
+        val audioPlayer = event.guild.audioPlayer ?: return
         val track = audioPlayer.player.playingTrack ?: throw CommandException("No track is currently playing!")
 
         val initialPage = args?.toIntOrNull()
@@ -53,7 +52,7 @@ class QueueCommand : Command {
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
-        val audioPlayer = event.guild?.audioPlayer ?: throw CommandException()
+        val audioPlayer = event.guild?.audioPlayer ?: return
         val track = audioPlayer.player.playingTrack ?: throw CommandException("No track is currently playing!")
 
         val initialPage = event.getOption("page")?.asString?.toIntOrNull()
@@ -76,6 +75,7 @@ class QueueCommand : Command {
             val track = audioPlayer.player.playingTrack.let {
                 if (it === null) {
                     event.message.delete().queue()
+
                     return
                 } else it
             }
@@ -174,8 +174,8 @@ class QueueCommand : Command {
             }
 
             footer {
-                text = "Total Songs: ${musicManager.scheduler.queue.size + 1}"
-                text += " \u2022 Page: ${page + 1}/${partition.size}".takeIf { partition.size > 1 }.orEmpty()
+                text = "Total Songs: ${musicManager.scheduler.queue.size + 1}" +
+                        " \u2022 Page: ${page + 1}/${partition.size}".takeIf { partition.size > 1 }.orEmpty()
             }
         }
 
@@ -184,7 +184,7 @@ class QueueCommand : Command {
 
             val timeline = getEmbedProgressBar(
                 track.position.takeUnless { track.info.isStream } ?: Long.MAX_VALUE,
-                track.duration
+                track.duration,
             )
 
             title = "Playing Now"

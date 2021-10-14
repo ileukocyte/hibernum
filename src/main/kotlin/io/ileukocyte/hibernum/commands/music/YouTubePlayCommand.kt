@@ -125,7 +125,13 @@ class YouTubePlayCommand : Command {
         } ?: throw CommandException("You are not connected to a voice channel!")
     }
 
-    private fun play(query: String, channel: TextChannel, user: User, isId: Boolean, ifFromSlashCommand: SlashCommandEvent? = null) {
+    private fun play(
+        query: String,
+        channel: TextChannel,
+        user: User,
+        isId: Boolean,
+        ifFromSlashCommand: SlashCommandEvent? = null,
+    ) {
         val musicManager = channel.guild.audioPlayer ?: return
 
         PLAYER_MANAGER.loadItemOrdered(
@@ -143,6 +149,7 @@ class YouTubePlayCommand : Command {
                         firstTrackPlaying = musicManager.player.playingTrack === null,
                         ifFromSlashCommand = ifFromSlashCommand,
                     )
+
                     musicManager.scheduler += track
                 }
 
@@ -156,7 +163,13 @@ class YouTubePlayCommand : Command {
                         val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
                             ?.let { "https://i3.ytimg.com/vi/$it/hqdefault.jpg" }
 
-                        track.userData = TrackUserData(user, channel, thumbnail, firstTrackPlaying = musicManager.player.playingTrack === null)
+                        track.userData = TrackUserData(
+                            user,
+                            channel,
+                            thumbnail,
+                            firstTrackPlaying = musicManager.player.playingTrack === null,
+                        )
+
                         musicManager.scheduler += track
                     }
                 }

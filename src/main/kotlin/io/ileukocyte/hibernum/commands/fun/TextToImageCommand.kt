@@ -33,7 +33,8 @@ class TextToImageCommand : Command {
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
-        val lines = event.getOption("input")?.asString?.split("\n")?.map { it.limitTo(100) } ?: return
+        val lines = event.getOption("input")?.asString?.split("\n")?.map { it.limitTo(100) }
+            ?: return
         val bytes = textToImage(lines.take(25), lines.maxByOrNull { it.length } ?: return)
 
         event.deferReply().addFile(bytes, "tti.png").queue()

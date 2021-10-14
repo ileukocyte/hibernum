@@ -14,26 +14,26 @@ class ShuffleCommand : Command {
     override val description = "Shuffles the queue"
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
-        val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
+        val audioPlayer = event.guild.audioPlayer ?: return
 
         if (event.member?.voiceState?.channel == event.guild.selfMember.voiceState?.channel) {
             if (audioPlayer.scheduler.queue.isNotEmpty()) {
                 audioPlayer.scheduler.shuffle()
 
-                event.channel.sendSuccess("The queue has been successfully shuffled!").queue()
+                event.channel.sendSuccess("The queue has been shuffled!").queue()
             } else throw CommandException("The queue is empty at the moment!")
         } else throw CommandException("You are not connected to the required voice channel!")
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
         val guild = event.guild ?: return
-        val audioPlayer = guild.audioPlayer ?: throw CommandException()
+        val audioPlayer = guild.audioPlayer ?: return
 
         if (event.member?.voiceState?.channel == guild.selfMember.voiceState?.channel) {
             if (audioPlayer.scheduler.queue.isNotEmpty()) {
                 audioPlayer.scheduler.shuffle()
 
-                event.replySuccess("The queue has been successfully shuffled!").queue()
+                event.replySuccess("The queue has been shuffled!").queue()
             } else throw CommandException("The queue is empty at the moment!")
         } else throw CommandException("You are not connected to the required voice channel!")
     }

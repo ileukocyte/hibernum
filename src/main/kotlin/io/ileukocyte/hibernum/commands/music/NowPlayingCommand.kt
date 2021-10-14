@@ -26,14 +26,14 @@ class NowPlayingCommand : Command {
     override val aliases = setOf("np", "now", "playing", "playingnow", "playing-now")
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
-        val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
+        val audioPlayer = event.guild.audioPlayer ?: return
         val track = audioPlayer.player.playingTrack ?: throw CommandException("No track is currently playing!")
 
         event.channel.sendMessageEmbeds(playingEmbed(event.jda, audioPlayer, track)).queue()
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
-        val audioPlayer = event.guild?.audioPlayer ?: throw CommandException()
+        val audioPlayer = event.guild?.audioPlayer ?: return
         val track = audioPlayer.player.playingTrack ?: throw CommandException("No track is currently playing!")
 
         event.replyEmbeds(playingEmbed(event.jda, audioPlayer, track)).queue()

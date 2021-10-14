@@ -50,5 +50,7 @@ enum class RequiredAttributes(private val hasExperimentalImplPrefix: Boolean = t
 
     var isExperimental = false
 
-    override fun toString() = name + "_EXPERIMENTAL".takeIf { isExperimental && hasExperimentalImplPrefix }.orEmpty()
+    override fun toString() = name + "_EXPERIMENTAL"
+        .takeIf { isExperimental && hasExperimentalImplPrefix }
+        .orEmpty()
 }

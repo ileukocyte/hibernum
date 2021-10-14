@@ -27,7 +27,7 @@ class SelectCommand : Command {
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val number = args?.toIntOrNull() ?: throw CommandException("You have specified a wrong number!")
 
-        val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
+        val audioPlayer = event.guild.audioPlayer ?: return
 
         select(number, audioPlayer, event.guild, event.member ?: return)
     }
@@ -36,7 +36,7 @@ class SelectCommand : Command {
         val number = event.getOption("song")?.asString?.toIntOrNull()
             ?: throw CommandException("You have specified a wrong number!")
 
-        val audioPlayer = event.guild?.audioPlayer ?: throw CommandException()
+        val audioPlayer = event.guild?.audioPlayer ?: return
 
         select(number, audioPlayer, event.guild ?: return, event.member ?: return, event)
     }
@@ -56,7 +56,8 @@ class SelectCommand : Command {
 
                 queue -= track
 
-                track.userData = track.userData.cast<TrackUserData>().copy(ifFromSlashCommand = ifFromSlashCommandEvent)
+                track.userData = track.userData.cast<TrackUserData>()
+                    .copy(ifFromSlashCommand = ifFromSlashCommandEvent)
 
                 audioPlayer.player.startTrack(track, false)
                 audioPlayer.scheduler.queue = ConcurrentLinkedQueue(queue)

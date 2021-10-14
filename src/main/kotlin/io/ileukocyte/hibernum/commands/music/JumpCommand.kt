@@ -26,7 +26,7 @@ class JumpCommand : Command {
             OptionType.STRING,
             "time",
             "The time to jump to (you can apply the prefixes \"rewind:\" or \"fast-forward:\" (e.g. rewind:1:00))",
-            true
+            true,
         )
     )
 
@@ -58,7 +58,8 @@ class JumpCommand : Command {
 
             when {
                 time.startsWith("rewind:") ->
-                    audioPlayer.player.playingTrack.position = max(0, audioPlayer.player.playingTrack.position - millis)
+                    audioPlayer.player.playingTrack.position =
+                        max(0, audioPlayer.player.playingTrack.position - millis)
                 time.startsWith("fast-forward:") ->
                     audioPlayer.player.playingTrack.position += millis
                 else ->
@@ -99,7 +100,8 @@ class JumpCommand : Command {
 
             when {
                 time.startsWith("rewind:") ->
-                    audioPlayer.player.playingTrack.position = max(0, audioPlayer.player.playingTrack.position - millis)
+                    audioPlayer.player.playingTrack.position =
+                        max(0, audioPlayer.player.playingTrack.position - millis)
                 time.startsWith("fast-forward:") ->
                     audioPlayer.player.playingTrack.position += millis
                 else ->

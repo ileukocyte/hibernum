@@ -16,26 +16,26 @@ class StopCommand : Command {
     override val aliases = setOf("clear")
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
-        val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
+        val audioPlayer = event.guild.audioPlayer ?: return
 
         if (audioPlayer.player.playingTrack !== null) {
             if (event.member?.voiceState?.channel == event.guild.selfMember.voiceState?.channel) {
                 audioPlayer.stop()
 
-                event.channel.sendSuccess("Playback has been successfully stopped!").queue()
+                event.channel.sendSuccess("Playback has been stopped!").queue()
             } else throw CommandException("You are not connected to the required voice channel!")
         } else throw CommandException("No track is currently playing!")
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
         val guild = event.guild ?: return
-        val audioPlayer = guild.audioPlayer ?: throw CommandException()
+        val audioPlayer = guild.audioPlayer ?: return
 
         if (audioPlayer.player.playingTrack !== null) {
             if (event.member?.voiceState?.channel == guild.selfMember.voiceState?.channel) {
                 audioPlayer.stop()
 
-                event.replySuccess("Playback has been successfully stopped!").queue()
+                event.replySuccess("Playback has been stopped!").queue()
             } else throw CommandException("You are not connected to the required voice channel!")
         } else throw CommandException("No track is currently playing!")
     }

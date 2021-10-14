@@ -64,8 +64,9 @@ fun main() = runBlocking {
 
     handlerInit.join()
 
-    if (CommandHandler.isNotEmpty())
+    if (CommandHandler.isNotEmpty()) {
         LOGGER.info("CommandHandler has successfully loaded ${CommandHandler.size} commands!")
+    }
 
     // updating global slash commands
     discord.retrieveCommands().queue { discordCommands ->

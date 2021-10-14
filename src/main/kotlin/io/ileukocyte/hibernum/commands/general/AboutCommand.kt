@@ -36,7 +36,8 @@ class AboutCommand : Command {
         description = buildString {
             val restPing = jda.restPing.await()
             val inviteLink = Immutable.INVITE_LINK_FORMAT.format(jda.selfUser.id)
-            val musicStreamingServersCount = jda.guildCache.count { it.selfMember.voiceState?.inVoiceChannel() == true }
+            val musicStreamingServersCount = jda.guildCache
+                .count { it.selfMember.voiceState?.inVoiceChannel() == true }
 
             appendLine("${jda.selfUser.name} is a modern Discord multi-purpose 100% [Kotlin](https://kotlinlang.org/)-coded bot that currently relies mostly on its musical functionality")
             appendLine()
@@ -52,7 +53,9 @@ class AboutCommand : Command {
             appendLine("**JDA Version**: ${JDAInfo.VERSION}")
             appendLine("**Kotlin Version**: ${KotlinVersion.CURRENT}")
             appendLine("**Java Version**: ${System.getProperty("java.version") ?: "Unknown"}")
-            appendLine("**Total Commands**: ${CommandHandler.size} (text-only: ${CommandHandler.count { it is TextOnlyCommand }}, slash-only: ${CommandHandler.count { it is SlashOnlyCommand }})")
+            appendLine("**Total Commands**: ${CommandHandler.size} " +
+                    "(text-only: ${CommandHandler.count { it is TextOnlyCommand }}, " +
+                    "slash-only: ${CommandHandler.count { it is SlashOnlyCommand }})")
             appendLine("**Discord-Side Slash Commands**: ${jda.retrieveCommands().await().size}")
             append("**Servers**: ${jda.guildCache.size()}")
 

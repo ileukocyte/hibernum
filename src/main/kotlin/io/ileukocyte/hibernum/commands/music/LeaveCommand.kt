@@ -83,14 +83,11 @@ class LeaveCommand : Command {
             Button.secondary("$name-$userId-exit", "No"),
         )
 
-        val restAction = when (event) {
+        when (event) {
             is GuildMessageReceivedEvent ->
-                event.channel.sendConfirmation(description).setActionRow(buttons)
+                event.channel.sendConfirmation(description).setActionRow(buttons).queue()
             is SlashCommandEvent ->
-                event.replyConfirmation(description).addActionRow(buttons)
-            else -> null // must never occur
+                event.replyConfirmation(description).addActionRow(buttons).queue()
         }
-
-        restAction?.queue()
     }
 }

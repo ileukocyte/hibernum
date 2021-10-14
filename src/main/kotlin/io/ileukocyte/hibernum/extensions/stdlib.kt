@@ -31,9 +31,11 @@ fun String.capitalizeAll() =
     lowercase().split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
 
 fun String.containsAll(vararg args: CharSequence): Boolean {
-    for (element in args)
-        if (element !in this)
+    for (element in args) {
+        if (element !in this) {
             return false
+        }
+    }
 
     return true
 }
@@ -43,9 +45,11 @@ fun String.containsAll(vararg args: Char) = toCharArray().toList().containsAll(a
 // Only works with UTF-16 encoding
 fun String.limitTo(limit: Int, toTrim: Boolean = true) = take(limit)
     .let {
-        if (length > limit)
+        if (length > limit) {
             (it.removeLastChar().takeIf { toTrim }?.trim() ?: it.removeLastChar()) + '\u2026'
-        else this
+        } else {
+            this
+        }
     }
 
 fun String.remove(input: String) = replace(input, "")

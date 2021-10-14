@@ -112,7 +112,7 @@ data class Version(
     override fun toString() = arrayOf(
         major,
         minor,
-        patch.takeUnless { it == 0 }
+        patch.takeUnless { it == 0 },
     ).filterNotNull().joinToString(separator = ".") +
             stability.suffix?.let { "-$it${unstable.takeIf { u -> u != 0 } ?: ""}" }.orEmpty()
 

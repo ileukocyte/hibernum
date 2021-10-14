@@ -66,38 +66,44 @@ class HelpCommand : Command {
         color = Immutable.SUCCESS
         description = this@commandHelp.fullDescription
 
-        if (aliases.isNotEmpty())
+        if (aliases.isNotEmpty()) {
             field {
                 title = "Aliases"
                 description = aliases.sorted().joinToString()
             }
+        }
 
         field {
             title = "Category"
             description = category.toString()
         }
 
-        if (cooldown > 0)
+        if (cooldown > 0) {
             field {
                 title = "Cooldown"
                 description = asText(cooldown, DurationUnit.SECONDS)
             }
+        }
 
-        if (usages.isNotEmpty())
+        if (usages.isNotEmpty()) {
             field {
                 title = "Text Usages"
                 description =
                     usages.joinToString("\n") { "$nameWithPrefix ${it.joinToString(" ") { u -> "<$u>" }}" }
             }
+        }
 
-        if (options.isNotEmpty())
+        if (options.isNotEmpty()) {
             field {
                 title = "Slash Options"
                 description = "$nameWithPrefix ${options.joinToString(" ") { "<${it.name}>" }}\n\n" +
-                    options.joinToString("\n") { o ->
-                        "<${o.name}>${" (optional)".takeUnless { o.isRequired }.orEmpty()} — ${o.description.replaceFirstChar { it.lowercase() }}"
-                    }
+                        options.joinToString("\n") { o ->
+                            "<${o.name}>${
+                                " (optional)".takeUnless { o.isRequired }.orEmpty()
+                            } — ${o.description.replaceFirstChar { it.lowercase() }}"
+                        }
             }
+        }
 
         author {
             name = nameWithPrefix +
@@ -114,8 +120,9 @@ class HelpCommand : Command {
             description = buildString {
                 val inviteLink = Immutable.INVITE_LINK_FORMAT.format(jda.selfUser.id)
 
-                if (!isFromSlashCommand)
+                if (!isFromSlashCommand) {
                     appendLine("*Try using ${jda.selfUser.name}'s slash command menu via typing \"/\" on a server!*\n")
+                }
 
                 appendLine("**[Invite Link]($inviteLink)** • **[GitHub Repository](${Immutable.GITHUB_REPOSITORY})**")
             }

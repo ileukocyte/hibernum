@@ -78,6 +78,7 @@ class YouTubeCommand : Command {
         if (event.user.id == id.first()) {
             if (event.selectedOptions?.firstOrNull()?.value == "exit") {
                 event.message.delete().queue()
+
                 return
             }
 
@@ -111,6 +112,7 @@ class YouTubeCommand : Command {
             image = it
             color = getDominantColorByImageUrl(it)
         }
+
         description = video.snippet.description.takeUnless { it.isEmpty() }
             ?.limitTo(DESCRIPTION_MAX_LENGTH)
             ?: "No description provided"
@@ -155,7 +157,7 @@ class YouTubeCommand : Command {
             val options = videos.map {
                 SelectOption.of(
                     it.snippet.title.limitTo(SelectOption.LABEL_MAX_LENGTH),
-                    it.id
+                    it.id,
                 ).withDescription(
                     "${it.snippet.channelTitle} - ${asDuration(it.contentDetails.durationInMillis)}"
                         .limitTo(SelectOption.DESCRIPTION_MAX_LENGTH)

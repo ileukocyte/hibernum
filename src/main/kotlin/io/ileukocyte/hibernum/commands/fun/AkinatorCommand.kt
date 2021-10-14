@@ -51,11 +51,12 @@ class AkinatorCommand : Command {
             .filter { it != GuessType.PLACE }
             .map {
                 Choice(
-                    if (it == GuessType.MOVIE_TV_SHOW)
+                    if (it == GuessType.MOVIE_TV_SHOW) {
                         "Movie/TV Show"
-                    else
-                        it.name.lowercase().capitalizeAll(),
-                    it.name
+                    } else {
+                        it.name.lowercase().capitalizeAll()
+                    },
+                    it.name,
                 )
             }
 
@@ -88,7 +89,7 @@ class AkinatorCommand : Command {
                 Language.GERMAN,
                 Language.ITALIAN,
                 Language.JAPANESE,
-                Language.SPANISH
+                Language.SPANISH,
             ),
             GuessType.MOVIE_TV_SHOW to setOf(Language.ENGLISH, Language.FRENCH),
             GuessType.CHARACTER to Language.values().toSortedSet(),
@@ -330,7 +331,7 @@ class AkinatorCommand : Command {
                     }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
                 }
                 "debug" -> {
-                    if (player.isDeveloper)
+                    if (player.isDeveloper) {
                         message.reply(akiwrapper.guesses.filter { declinedGuesses[player.idLong]?.contains(it.idLong) == false }
                             .joinToString("\n") { "${it.name} (${it.id}): ${it.probability}" }
                             .ifEmpty { "No guesses available" }
@@ -341,6 +342,7 @@ class AkinatorCommand : Command {
                                     ?: s
                             }
                         ).await()
+                    }
 
                     awaitAnswer(messageChannel, player, akiwrapper)
                 }
@@ -376,9 +378,7 @@ class AkinatorCommand : Command {
                         color = Immutable.SUCCESS
                         description = question?.question ?: "N/A"
 
-                        author {
-                            name = "Question #${(question?.step ?: -1) + 1}"
-                        }
+                        author { name = "Question #${(question?.step ?: -1) + 1}" }
 
                         footer {
                             text = if (isFirst)
@@ -443,9 +443,10 @@ class AkinatorCommand : Command {
                             }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
                         }
                     } else {
-                        val incorrect = message.replyFailure("Incorrect answer! Use `help`/`aliases` to get documentation!") {
-                            text = "This message will self-delete in 5 seconds"
-                        }.await()
+                        val incorrect =
+                            message.replyFailure("Incorrect answer! Use `help`/`aliases` to get documentation!") {
+                                text = "This message will self-delete in 5 seconds"
+                            }.await()
 
                         incorrect.delete().queueAfter(5, DurationUnit.SECONDS, {}) {}
 
@@ -481,36 +482,35 @@ class AkinatorCommand : Command {
                     .filter { it != GuessType.PLACE }
                     .map {
                         SelectOption.of(
-                            if (it == GuessType.MOVIE_TV_SHOW)
+                            if (it == GuessType.MOVIE_TV_SHOW) {
                                 "Movie/TV Show"
-                            else
-                                it.name.lowercase().capitalizeAll(),
-                            it.name
+                            } else {
+                                it.name.lowercase().capitalizeAll()
+                            },
+                            it.name,
                         )
                     }.toTypedArray(),
                 SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),
             ).build()
 
-        val restAction = when (event) {
+        val message = when (event) {
             is GuildMessageReceivedEvent ->
                 event.channel.sendMessage {
                     embeds += defaultEmbed("Choose your guess type!", EmbedType.CONFIRMATION)
                     actionRows += ActionRow.of(menu)
-                }
+                }.await()
             is SlashCommandEvent ->
                 event.reply {
                     embeds += defaultEmbed("Choose your guess type!", EmbedType.CONFIRMATION)
                     actionRows += ActionRow.of(menu)
-                }
+                }.await().retrieveOriginal().await()
             is SelectionMenuEvent ->
                 event.channel.sendMessage {
                     embeds += defaultEmbed("Choose your guess type!", EmbedType.CONFIRMATION)
                     actionRows += ActionRow.of(menu)
-                }
+                }.await()
             else -> null // must never occur
-        }
-
-        val message = restAction?.await() as Message
+        } as Message
 
         event.jda.awaitEvent<SelectionMenuEvent>(15, DurationUnit.MINUTES, waiterProcess = waiterProcess {
             channel = channelId
@@ -547,23 +547,24 @@ class AkinatorCommand : Command {
             ).build()
 
         val message = event.let {
-            if (!isFromSlashCommand)
+            if (!isFromSlashCommand) {
                 it.messageChannel.sendMessage {
                     embeds += defaultEmbed("Choose your language!", EmbedType.CONFIRMATION)
                     actionRows += ActionRow.of(menu)
-                }
-            else
+                }.await()
+            } else {
                 it.reply {
                     embeds += defaultEmbed("Choose your language!", EmbedType.CONFIRMATION)
                     actionRows += ActionRow.of(menu)
-                }
-        }.await()
+                }.await().retrieveOriginal().await()
+            }
+        }
 
         event.jda.awaitEvent<SelectionMenuEvent>(15, DurationUnit.MINUTES, waiterProcess = waiterProcess {
             channel = event.messageChannel.idLong
             users += event.user.idLong
             command = this@AkinatorCommand
-            invoker = (message as? Message)?.idLong ?: (message as? InteractionHook)?.retrieveOriginal()?.await()?.idLong
+            invoker = message.idLong
         }) { it.user.idLong == event.user.idLong && it.message == message } // used to block other commands
     }
 

@@ -11,6 +11,7 @@ inline fun <reified T> JSONObject.orNull(key: String) = opt(key) as? T
 
 inline fun <T> JSONObject.put(lazy: () -> Pair<String, T>) {
     val (key, value) = lazy()
+
     put(key, value)
 }
 

@@ -24,8 +24,10 @@ class LoopCommand : Command {
                     .map { Button.secondary("$name-${event.author.idLong}-${it.name}", it.toString().removeSuffix("d")) }
 
                 event.channel.sendConfirmation("Choose a repeating mode to set!")
-                    .setActionRow(*buttons.toTypedArray(), Button.danger("$name-${event.author.idLong}-exit", "Exit"))
-                    .queue()
+                    .setActionRow(
+                        *buttons.toTypedArray(),
+                        Button.danger("$name-${event.author.idLong}-exit", "Exit"),
+                    ).queue()
             } else throw CommandException("You are not connected to the required voice channel!")
         } else throw CommandException("${event.jda.selfUser.name} is not connected to a voice channel!")
     }
@@ -38,8 +40,10 @@ class LoopCommand : Command {
                     .map { Button.secondary("$name-${event.user.idLong}-${it.name}", it.toString().removeSuffix("d")) }
 
                 event.replyConfirmation("Choose a repeating mode to set!")
-                    .addActionRow(*buttons.toTypedArray(), Button.danger("$name-${event.user.idLong}-exit", "Exit"))
-                    .queue()
+                    .addActionRow(
+                        *buttons.toTypedArray(),
+                        Button.danger("$name-${event.user.idLong}-exit", "Exit"),
+                    ).queue()
             } else throw CommandException("You are not connected to the required voice channel!")
         } else throw CommandException("${event.jda.selfUser.name} is not connected to a voice channel!")
     }

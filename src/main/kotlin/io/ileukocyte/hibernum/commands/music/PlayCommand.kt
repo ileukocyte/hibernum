@@ -51,8 +51,9 @@ class PlayCommand : Command {
                                 event.channel,
                                 thumbnail,
                                 announceQueued = musicManager.player.playingTrack !== null,
-                                firstTrackPlaying = musicManager.player.playingTrack === null
+                                firstTrackPlaying = musicManager.player.playingTrack === null,
                             )
+
                             musicManager.scheduler += track
                         }
 
@@ -61,7 +62,13 @@ class PlayCommand : Command {
                                 val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
                                     ?.let { id -> "https://i3.ytimg.com/vi/$id/hqdefault.jpg" }
 
-                                track.userData = TrackUserData(event.author, event.channel, thumbnail, firstTrackPlaying = musicManager.player.playingTrack === null)
+                                track.userData = TrackUserData(
+                                    event.author,
+                                    event.channel,
+                                    thumbnail,
+                                    firstTrackPlaying = musicManager.player.playingTrack === null,
+                                )
+
                                 musicManager.scheduler += track
                             }
 
@@ -107,6 +114,7 @@ class PlayCommand : Command {
                             firstTrackPlaying = musicManager.player.playingTrack === null,
                             ifFromSlashCommand = event,
                         )
+
                         musicManager.scheduler += track
                     }
 
@@ -119,7 +127,13 @@ class PlayCommand : Command {
                             val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
                                 ?.let { id -> "https://i3.ytimg.com/vi/$id/hqdefault.jpg" }
 
-                            track.userData = TrackUserData(event.user, event.channel, thumbnail, firstTrackPlaying = musicManager.player.playingTrack === null)
+                            track.userData = TrackUserData(
+                                event.user,
+                                event.channel,
+                                thumbnail,
+                                firstTrackPlaying = musicManager.player.playingTrack === null,
+                            )
+
                             musicManager.scheduler += track
                         }
                     }

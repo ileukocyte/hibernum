@@ -21,20 +21,21 @@ private val musicContextDispatcher = Executors.newFixedThreadPool(3).asCoroutine
 
 object MusicContext : CoroutineContext by musicContextDispatcher, AutoCloseable by musicContextDispatcher
 
-val PLAYER_MANAGER  = DefaultAudioPlayerManager().apply {
+val PLAYER_MANAGER = DefaultAudioPlayerManager().apply {
     AudioSourceManagers.registerLocalSource(this)
     AudioSourceManagers.registerRemoteSources(this)
 }
 
 val MUSIC_MANAGERS = hashMapOf<Long, GuildMusicManager>()
 
-val Guild.audioPlayer: GuildMusicManager? get() {
-    val manager = MUSIC_MANAGERS[idLong]
+val Guild.audioPlayer: GuildMusicManager?
+    get() {
+        val manager = MUSIC_MANAGERS[idLong]
 
-    audioManager.sendingHandler = manager?.sendHandler
+        audioManager.sendingHandler = manager?.sendHandler
 
-    return manager
-}
+        return manager
+    }
 
 fun JDA.loadGuildMusicManagers() = guildCache.forEach { MUSIC_MANAGERS[it.idLong] = GuildMusicManager(PLAYER_MANAGER) }
 
@@ -55,14 +56,16 @@ fun getEmbedProgressBar(currentTime: Long, totalDuration: Long, blocks: Int = 15
         passed.takeIf { it > 0 }?.let { _ ->
             append("[")
 
-            for (i in 0 until blocks)
+            for (i in 0 until blocks) {
                 append("\u25AC".takeIf { passed > i }.orEmpty())
+            }
 
             append("](https://discord.com)")
         }
 
-        for (i in 0 until blocks)
+        for (i in 0 until blocks) {
             append("\u25AC".takeUnless { passed >= i }.orEmpty())
+        }
     }
 }
 

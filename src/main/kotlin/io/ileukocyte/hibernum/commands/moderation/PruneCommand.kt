@@ -81,6 +81,7 @@ class PruneCommand : SlashOnlyCommand {
             message.author == (event.getOption("user")?.asUser ?: message.author) && filter && textFilter
         }.take(count).takeUnless { it.isEmpty() } ?: run {
             deferred.editOriginalEmbeds(defaultEmbed("No messages to delete have been found!", EmbedType.FAILURE)).queue()
+
             return
         }
 
@@ -124,8 +125,9 @@ class PruneCommand : SlashOnlyCommand {
         }
 
         textFilter?.let {
-            if (filter !== null && user !== null) append(",")
-            else if (filter !== null) append(" and")
+            if (filter !== null) {
+                append(if (user !== null) "," else " and")
+            }
 
             append(when (it) {
                 "contains" -> " containing the provided text"
@@ -136,8 +138,13 @@ class PruneCommand : SlashOnlyCommand {
         }
 
         user?.let {
-            if (filter !== null && textFilter !== null) append(", and")
-            else if (filter !== null || textFilter !== null) append (" and")
+            if (filter !== null || textFilter !== null) {
+                if (filter !== null && textFilter !== null) {
+                    append(",")
+                }
+
+                append (" and")
+            }
 
             append(" sent by ${it.asMention}")
         }

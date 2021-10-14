@@ -36,12 +36,9 @@ class PingCommand : Command {
             }
         }
 
-        val restAction = when (event) {
-            is GuildMessageReceivedEvent -> event.channel.sendMessageEmbeds(embed)
-            is SlashCommandEvent -> event.replyEmbeds(embed)
-            else -> null // must never occur
+        when (event) {
+            is GuildMessageReceivedEvent -> event.channel.sendMessageEmbeds(embed).queue()
+            is SlashCommandEvent -> event.replyEmbeds(embed).queue()
         }
-
-        restAction?.queue()
     }
 }

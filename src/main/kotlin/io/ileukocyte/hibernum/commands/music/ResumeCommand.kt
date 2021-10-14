@@ -14,7 +14,7 @@ class ResumeCommand : Command {
     override val description = "Resume the music after a pause"
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
-        val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
+        val audioPlayer = event.guild.audioPlayer ?: return
 
         if (audioPlayer.player.playingTrack !== null) {
             if (event.member?.voiceState?.channel == event.guild.selfMember.voiceState?.channel) {
@@ -29,7 +29,7 @@ class ResumeCommand : Command {
 
     override suspend fun invoke(event: SlashCommandEvent) {
         val guild = event.guild ?: return
-        val audioPlayer = guild.audioPlayer ?: throw CommandException()
+        val audioPlayer = guild.audioPlayer ?: return
 
         if (audioPlayer.player.playingTrack !== null) {
             if (event.member?.voiceState?.channel == guild.selfMember.voiceState?.channel) {

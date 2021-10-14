@@ -17,9 +17,11 @@ internal fun List<OptionData>.isEqualTo(another: List<OptionData>): Boolean {
     if (size != another.size)
         return false
 
-    for (i in indices)
-        if (!this[i].isEqualTo(another[i]))
+    for (i in indices) {
+        if (!this[i].isEqualTo(another[i])) {
             return false
+        }
+    }
 
     return true
 }

@@ -30,7 +30,7 @@ class RestartCommand : Command {
 
     override suspend fun invoke(event: SlashCommandEvent) {
         val guild = event.guild ?: return
-        val audioPlayer = guild.audioPlayer ?: throw CommandException()
+        val audioPlayer = guild.audioPlayer ?: return
 
         if (audioPlayer.player.playingTrack !== null) {
             if (event.member?.voiceState?.channel == guild.selfMember.voiceState?.channel) {

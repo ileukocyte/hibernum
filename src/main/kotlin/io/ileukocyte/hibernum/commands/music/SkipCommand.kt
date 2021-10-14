@@ -24,7 +24,8 @@ class SkipCommand : Command {
 
                 audioPlayer.scheduler.nextTrack()
 
-                val description = "Playback has been successfully stopped!".takeIf { audioPlayer.player.playingTrack === null }
+                val description = "Playback has been stopped!"
+                    .takeIf { audioPlayer.player.playingTrack === null }
 
                 description?.let { event.channel.sendSuccess(it).queue() }
             } else throw CommandException("You are not connected to the required voice channel!")
@@ -33,7 +34,7 @@ class SkipCommand : Command {
 
     override suspend fun invoke(event: SlashCommandEvent) {
         val guild = event.guild ?: return
-        val audioPlayer = guild.audioPlayer ?: throw CommandException()
+        val audioPlayer = guild.audioPlayer ?: return
 
         if (audioPlayer.player.playingTrack !== null) {
             if (event.member?.voiceState?.channel == guild.selfMember.voiceState?.channel) {
@@ -41,7 +42,8 @@ class SkipCommand : Command {
 
                 audioPlayer.scheduler.nextTrack(event)
 
-                val description = "Playback has been successfully stopped!".takeIf { audioPlayer.player.playingTrack === null }
+                val description = "Playback has been stopped!"
+                    .takeIf { audioPlayer.player.playingTrack === null }
 
                 description?.let { event.replyEmbeds(defaultEmbed(it, EmbedType.SUCCESS)).queue() }
             } else throw CommandException("You are not connected to the required voice channel!")

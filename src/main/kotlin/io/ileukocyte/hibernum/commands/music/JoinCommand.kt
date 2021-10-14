@@ -19,8 +19,9 @@ class JoinCommand : Command {
             if (it == event.guild.selfMember.voiceState?.channel)
                 throw CommandException("${event.jda.selfUser.name} is already connected to the voice channel!")
 
-            if (event.guild.selfMember.voiceState?.channel === null)
+            if (event.guild.selfMember.voiceState?.channel === null) {
                 event.guild.audioPlayer?.stop()
+            }
 
             event.guild.audioManager.openAudioConnection(it)
 
@@ -33,8 +34,9 @@ class JoinCommand : Command {
             if (it == event.guild?.selfMember?.voiceState?.channel)
                 throw CommandException("${event.jda.selfUser.name} is already connected to the voice channel!")
 
-            if (event.guild?.selfMember?.voiceState?.channel === null)
+            if (event.guild?.selfMember?.voiceState?.channel === null) {
                 event.guild?.audioPlayer?.stop()
+            }
 
             event.guild?.audioManager?.openAudioConnection(it)
 

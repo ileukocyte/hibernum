@@ -84,7 +84,7 @@ class GuessNumberCommand : Command {
         val range = min..max
         val random = range.random()
 
-        event.replyEmbed {
+        val message = event.replyEmbed {
             color = Immutable.SUCCESS
             description = "Now try to guess the number between ${DecimalFormat("#,###").format(min)} and ${
                 DecimalFormat("#,###").format(max)
@@ -94,7 +94,12 @@ class GuessNumberCommand : Command {
             footer { text = "Type in \"exit\" to finish the session!" }
         }.await()
 
-        awaitMessage(number = random, channel = event.channel, message = null, user = event.user)
+        awaitMessage(
+            number = random,
+            channel = event.channel,
+            message = message.retrieveOriginal().await(),
+            user = event.user,
+        )
     }
 
     @OptIn(ExperimentalTime::class)
@@ -124,7 +129,13 @@ class GuessNumberCommand : Command {
     }
 
     @OptIn(ExperimentalTime::class)
-    private suspend fun awaitMessage(_attempt: Int = 1, number: Int, channel: MessageChannel, message: Message?, user: User) {
+    private suspend fun awaitMessage(
+        _attempt: Int = 1,
+        number: Int,
+        channel: MessageChannel,
+        message: Message?,
+        user: User,
+    ) {
         var attempt = _attempt
 
         val received = channel.awaitMessage(user, this, message, delay = 5)
@@ -152,13 +163,16 @@ class GuessNumberCommand : Command {
                     val (desc, embedType) = when {
                         asInt > number -> {
                             attempt++
+
                             "The answer is greater than the expected number!" to EmbedType.FAILURE
                         }
                         asInt < number -> {
                             attempt++
+
                             "The answer is lesser than the expected number!" to EmbedType.FAILURE
                         }
-                        else -> "It took you $attempt ${"attempt".singularOrPlural(attempt)} to guess the number!" to EmbedType.SUCCESS
+                        else ->
+                            "It took you $attempt ${"attempt".singularOrPlural(attempt)} to guess the number!" to EmbedType.SUCCESS
                     }
 
                     if (embedType == EmbedType.SUCCESS) {

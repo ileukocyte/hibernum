@@ -54,12 +54,14 @@ fun asText(time: Long, unit: DurationUnit = DurationUnit.MILLISECONDS): String {
         }
 
         if (hours > 0L) {
-            if (alreadyPresent && (minutes != 0L || seconds != 0L))
+            if (alreadyPresent && (minutes != 0L || seconds != 0L)) {
                 append(", ")
+            }
 
             if (isNotEmpty() && (minutes == 0L && seconds == 0L)) {
-                if (", " in this)
+                if (", " in this) {
                     append(",")
+                }
 
                 append(" and ")
             }
@@ -70,12 +72,14 @@ fun asText(time: Long, unit: DurationUnit = DurationUnit.MILLISECONDS): String {
         }
 
         if (minutes > 0L) {
-            if (alreadyPresent && seconds != 0L)
+            if (alreadyPresent && seconds != 0L) {
                 append(", ")
+            }
 
             if (isNotEmpty() && seconds == 0L) {
-                if (", " in this)
+                if (", " in this) {
                     append(",")
+                }
 
                 append(" and ")
             }
@@ -87,8 +91,9 @@ fun asText(time: Long, unit: DurationUnit = DurationUnit.MILLISECONDS): String {
 
         if (seconds > 0L) {
             if (alreadyPresent) {
-                if (", " in this)
+                if (", " in this) {
                     append(",")
+                }
 
                 append(" and ")
             }
@@ -96,8 +101,9 @@ fun asText(time: Long, unit: DurationUnit = DurationUnit.MILLISECONDS): String {
             append("$seconds ${"second".singularOrPlural(seconds)}")
         }
 
-        if (isEmpty() && !alreadyPresent)
+        if (isEmpty() && !alreadyPresent) {
             append("0 seconds")
+        }
     }
 }
 
@@ -140,11 +146,13 @@ fun asDuration(
     val days = duration.inWholeDays % 30L
 
     return buildString {
-        if (prependZeroDays || days > 0)
+        if (prependZeroDays || days > 0) {
             append("0$days:".takeIf { days < 10 } ?: "$days:")
+        }
 
-        if (prependZeroHours || days > 0 || prependZeroDays || hours > 0)
+        if (prependZeroHours || days > 0 || prependZeroDays || hours > 0) {
             append("0$hours:".takeIf { hours < 10 } ?: "$hours:")
+        }
 
         append("0$minutes:".takeIf { minutes < 10 } ?: "$minutes:")
         append("0$seconds".takeIf { seconds < 10 } ?: "$seconds")
@@ -193,7 +201,7 @@ fun timeCodeToMillis(timeCode: String) = TIME_CODE_REGEX.find(timeCode)?.let {
     val timeData = Time(
         it.groups["seconds"]?.value?.toLongOrNull() to DurationUnit.SECONDS,
         it.groups["minutes"]?.value?.toLongOrNull() to DurationUnit.MINUTES,
-        it.groups["hours"]?.value?.toLongOrNull() to DurationUnit.HOURS
+        it.groups["hours"]?.value?.toLongOrNull() to DurationUnit.HOURS,
     )
 
     timeData.millisSum

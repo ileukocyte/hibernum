@@ -50,6 +50,7 @@ class SpotifyCommand : Command {
             }
 
             event.channel.sendMessageEmbeds(trackEmbed(track, api)).queue()
+
             return
         }
 
@@ -59,6 +60,7 @@ class SpotifyCommand : Command {
 
         if (items.size == 1) {
             event.channel.sendMessageEmbeds(trackEmbed(items.first(), api)).queue()
+
             return
         }
 

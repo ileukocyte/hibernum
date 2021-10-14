@@ -94,12 +94,11 @@ class UserCommand : Command {
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
-            val value = event.selectedOptions?.firstOrNull()?.value ?: return
-
             event.message.delete().queue()
 
-            if (value == "exit")
-                return
+            val value = event.selectedOptions?.firstOrNull()?.value
+                ?.takeUnless { it == "exit" }
+                ?: return
 
             chooseUserInfoOrPfp(event.guild?.getMemberById(value)?.user ?: return, event.user, event)
         } else throw CommandException("You did not invoke the initial command!")
@@ -130,7 +129,7 @@ class UserCommand : Command {
         if (user.isBot) {
             when (event) {
                 is GuildMessageReceivedEvent -> event.channel.sendMessageEmbeds(pfpEmbed(user)).queue()
-                is GenericInteractionCreateEvent -> event.replyEmbeds(pfpEmbed(user)).queue()
+                is SlashCommandEvent -> event.replyEmbeds(pfpEmbed(user)).queue()
             }
 
             return
@@ -145,7 +144,11 @@ class UserCommand : Command {
                 event.channel.sendConfirmation("Choose the type of information that you want to check!")
                     .setActionRow(info, pfp, exit)
                     .queue()
-            is GenericInteractionCreateEvent ->
+            is SelectionMenuEvent ->
+                event.channel.sendConfirmation("Choose the type of information that you want to check!")
+                    .setActionRow(info, pfp, exit)
+                    .queue()
+            is SlashCommandEvent ->
                 event.replyConfirmation("Choose the type of information that you want to check!")
                     .addActionRow(info, pfp, exit)
                     .queue()
@@ -300,7 +303,6 @@ class UserCommand : Command {
     }
 
     private suspend fun pfpEmbed(user: User) = buildEmbed {
-
         "${user.effectiveAvatarUrl}?size=2048".let { pfp ->
             author {
                 name = user.asTag
