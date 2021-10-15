@@ -2,6 +2,7 @@ package io.ileukocyte.hibernum.handlers
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.commands.*
+import io.ileukocyte.hibernum.commands.developer.KillCommand
 import io.ileukocyte.hibernum.commands.developer.ShutdownCommand
 import io.ileukocyte.hibernum.extensions.isDeveloper
 import io.ileukocyte.hibernum.extensions.replyFailure
@@ -102,7 +103,9 @@ object CommandHandler : MutableSet<Command> {
                     ?.takeIf { it !is SlashOnlyCommand }
                     ?.let { command ->
                         CoroutineScope(CommandContext).launch {
-                            if (event.jda.getProcessByEntities(event.author, event.channel) === null || command is ShutdownCommand) {
+                            val isSpecial = command is ShutdownCommand || command is KillCommand
+
+                            if (event.jda.getProcessByEntities(event.author, event.channel) === null || isSpecial) {
                                 if (command.isDeveloper && !event.author.isDeveloper) {
                                     event.channel.sendFailure("You cannot execute the command since you are not a developer!").queue()
 
@@ -169,7 +172,9 @@ object CommandHandler : MutableSet<Command> {
         if (event.isFromGuild) {
             this[event.name]?.takeIf { it !is TextOnlyCommand }?.let { command ->
                 CoroutineScope(CommandContext).launch {
-                    if (event.jda.getProcessByEntities(event.user, event.channel) === null || command is ShutdownCommand) {
+                    val isSpecial = command is ShutdownCommand || command is KillCommand
+
+                    if (event.jda.getProcessByEntities(event.user, event.channel) === null || isSpecial) {
                         if (command.isDeveloper && !event.user.isDeveloper) {
                             event.replyFailure("You cannot execute the command since you are not a developer!").queue()
 
@@ -221,7 +226,7 @@ object CommandHandler : MutableSet<Command> {
                             }
                         }
                     } else
-                        event.replyFailure("You have some other processes running right now!")
+                        event.replyFailure("You have some other command processes running right now!")
                             .setEphemeral(true)
                             .queue()
                 }
