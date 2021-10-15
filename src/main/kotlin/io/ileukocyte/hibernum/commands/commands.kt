@@ -1,5 +1,4 @@
-@file:JvmName("Commands")
-@file:Suppress("UNNECESSARY_SAFE_CALL")
+@file:[JvmName("Commands") Suppress("UNNECESSARY_SAFE_CALL")]
 
 package io.ileukocyte.hibernum.commands
 

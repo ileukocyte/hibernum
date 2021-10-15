@@ -22,7 +22,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
 
-import net.dv8tion.jda.api.EmbedBuilder.ZERO_WIDTH_SPACE
 import net.dv8tion.jda.api.entities.Emoji
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageChannel
@@ -131,10 +130,11 @@ class AkinatorCommand : Command {
                     }
 
                     val lang = optionValue?.let { Language.valueOf(it) } ?: Language.ENGLISH
-                    val deferred = event
-                        .editMessage("Waiting for Akinator's response\u2026".surroundWith('_'))
-                        .setEmbeds()
-                        .setActionRows()
+                    val deferred = event.editComponents()
+                        .setEmbeds(buildEmbed {
+                            color = Immutable.SUCCESS
+                            description = "Waiting for Akinator's response\u2026"
+                        })
                         .await()
 
                     try {
@@ -169,15 +169,14 @@ class AkinatorCommand : Command {
                                 text = buildString {
                                     append("Type in \"help\"/\"aliases\" for further help or \"exit\" for termination!")
 
-                                    if (event.textChannel.isNSFW) append(" | NSFW mode")
+                                    if (event.textChannel.isNSFW) {
+                                        append(" | NSFW mode")
+                                    }
                                 }
                             }
                         }
 
-                        val invoker = deferred.editOriginal(ZERO_WIDTH_SPACE)
-                            .setEmbeds(embed)
-                            .setActionRows()
-                            .await()
+                        val invoker = deferred.editOriginalEmbeds(embed).await()
 
                         awaitAnswer(event.channel, event.user, akiwrapper, invoker)
                     } catch (e: Exception) {
@@ -302,13 +301,13 @@ class AkinatorCommand : Command {
 
     @OptIn(ExperimentalTime::class)
     private suspend fun awaitAnswer(
-        messageChannel: MessageChannel,
+        channel: MessageChannel,
         player: User,
         akiwrapper: Akiwrapper,
         invokingMessage: Message? = null,
     ) {
         try {
-            val message = messageChannel.awaitMessage(player, this, invokingMessage, delay = 5)
+            val message = channel.awaitMessage(player, this, invokingMessage, delay = 5)
                 ?: return
 
             when (val content = message.contentRaw.lowercase()) {
@@ -319,16 +318,17 @@ class AkinatorCommand : Command {
                             Button.secondary("$name-${player.idLong}-stay", "No"),
                         ).await()
 
-                    messageChannel.jda.awaitEvent<ButtonClickEvent>(waiterProcess = waiterProcess {
-                        channel = messageChannel.idLong
+                    channel.jda.awaitEvent<ButtonClickEvent>(waiterProcess = waiterProcess {
+                        this.channel = channel.idLong
                         users += player.idLong
                         command = this@AkinatorCommand
                         invoker = m.idLong
                     }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
                 }
                 "debug" -> {
-                    if (player.isDeveloper) {
-                        message.reply(akiwrapper.guesses.filter { declinedGuesses[player.idLong]?.contains(it.idLong) == false }
+                    val reply = if (player.isDeveloper) {
+                        message.reply(akiwrapper.guesses
+                            .filter { declinedGuesses[player.idLong]?.contains(it.idLong) == false }
                             .joinToString("\n") { "${it.name} (${it.id}): ${it.probability}" }
                             .ifEmpty { "No guesses available" }
                             .let { "$it\n\nCurrent server: ${akiwrapper.server.url}" }
@@ -337,10 +337,15 @@ class AkinatorCommand : Command {
                                     ?.let { "$s\nDeclined guesses: $it" }
                                     ?: s
                             }
-                        ).await()
+                        )
+                    } else {
+                        message
+                            .replyFailure("Debugging is only available for the bot's developers!")
                     }
 
-                    awaitAnswer(messageChannel, player, akiwrapper, invokingMessage)
+                    reply.queue()
+
+                    awaitAnswer(channel, player, akiwrapper, invokingMessage)
                 }
                 "aliases", "help" -> {
                     message.replyEmbed {
@@ -348,7 +353,7 @@ class AkinatorCommand : Command {
 
                         author {
                             name = "Possible Answers"
-                            iconUrl = messageChannel.jda.selfUser.effectiveAvatarUrl
+                            iconUrl = channel.jda.selfUser.effectiveAvatarUrl
                         }
 
                         for ((answer, variations) in possibleAnswers) {
@@ -363,27 +368,29 @@ class AkinatorCommand : Command {
                         }
                     }.await()
 
-                    awaitAnswer(messageChannel, player, akiwrapper, invokingMessage)
+                    awaitAnswer(channel, player, akiwrapper, invokingMessage)
                 }
                 "b", "back" -> {
                     val invoker = message.replyEmbed {
-                        val isFirst = akiwrapper.currentQuestion?.step != 0
-                        val question =
-                            if (isFirst) akiwrapper.undoAnswer() else akiwrapper.currentQuestion
+                        val (question, embedColor) = if (akiwrapper.currentQuestion?.step != 0) {
+                            akiwrapper.undoAnswer() to Immutable.SUCCESS
+                        } else {
+                            akiwrapper.currentQuestion to Immutable.FAILURE
+                        }
 
-                        color = Immutable.SUCCESS
+                        color = embedColor
                         description = question?.question ?: "N/A"
 
-                        author { name = "Question #${(question?.step ?: -1) + 1}" }
+                        author { name = "Question #${question?.step?.inc() ?: 0}" }
 
                         footer {
-                            text = if (isFirst)
-                                "Type in \"help\"/\"aliases\" for further help or \"exit\" for termination!"
-                            else "Type in \"exit\" to finish the session!"
+                            text = "Type in \"exit\" to finish the session!"
+                                .takeUnless { akiwrapper.currentQuestion?.step == 0 }
+                                ?: "Type in \"help\"/\"aliases\" for further help or \"exit\" for termination!"
                         }
                     }.await()
 
-                    awaitAnswer(messageChannel, player, akiwrapper, invoker)
+                    awaitAnswer(channel, player, akiwrapper, invoker)
                 }
                 else -> {
                     if (content in possibleAnswers.values.flatten()) {
@@ -400,27 +407,24 @@ class AkinatorCommand : Command {
                                     color = Immutable.SUCCESS
                                     description = nextQuestion.question
 
+                                    author { name = "Question #${nextQuestion.step + 1}" }
                                     footer { text = "Type in \"exit\" to finish the session!" }
-
-                                    author {
-                                        name = "Question #${nextQuestion.step + 1}"
-                                    }
                                 }.await()
 
-                                awaitAnswer(messageChannel, player, akiwrapper, invoker)
+                                awaitAnswer(channel, player, akiwrapper, invoker)
                             } else {
                                 akiwrapper.guesses // always empty for an unknown reason
                                     .firstOrNull { declinedGuesses[player.idLong]?.contains(it.idLong) == false }
                                     ?.let { finalGuess ->
                                         val m = guessMessage(finalGuess, true, player.idLong, message.channel, message.idLong)
 
-                                        messageChannel.jda.awaitEvent<ButtonClickEvent>(waiterProcess = waiterProcess {
-                                            channel = messageChannel.idLong
+                                        channel.jda.awaitEvent<ButtonClickEvent>(waiterProcess = waiterProcess {
+                                            this.channel = channel.idLong
                                             users += player.idLong
                                             command = this@AkinatorCommand
                                             invoker = m.idLong
                                         }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
-                                    } ?: messageChannel.let { channel ->
+                                    } ?: channel.let { channel ->
                                         declinedGuesses -= player.idLong
                                         types -= player.idLong
                                         akiwrappers -= player.idLong
@@ -431,8 +435,8 @@ class AkinatorCommand : Command {
                         } else {
                             val m = guessMessage(guess, false, player.idLong, message.channel, content = content)
 
-                            messageChannel.jda.awaitEvent<ButtonClickEvent>(waiterProcess = waiterProcess {
-                                channel = messageChannel.idLong
+                            channel.jda.awaitEvent<ButtonClickEvent>(waiterProcess = waiterProcess {
+                                this.channel = channel.idLong
                                 users += player.idLong
                                 command = this@AkinatorCommand
                                 invoker = m.idLong
@@ -446,7 +450,7 @@ class AkinatorCommand : Command {
 
                         incorrect.delete().queueAfter(5, DurationUnit.SECONDS, {}) {}
 
-                        awaitAnswer(messageChannel, player, akiwrapper, invokingMessage)
+                        awaitAnswer(channel, player, akiwrapper, invokingMessage)
                     }
                 }
             }
@@ -455,7 +459,7 @@ class AkinatorCommand : Command {
             types -= player.idLong
             akiwrappers -= player.idLong
 
-            messageChannel.jda.getProcessByEntities(player, messageChannel)?.kill(messageChannel.jda) // just in case
+            channel.jda.getProcessByEntities(player, channel)?.kill(channel.jda) // just in case
 
             throw CommandException(
                 if (e is TimeoutCancellationException) "Time is out!" else (e.message ?: "Something went wrong!"),
@@ -600,6 +604,8 @@ class AkinatorCommand : Command {
         val action = messageIdForReply?.let { messageChannel.retrieveMessageById(it).await().replyEmbeds(embed) }
             ?: messageChannel.sendMessageEmbeds(embed)
 
-        return action.flatMap { it.replyConfirmation("Is this your character?").setActionRow(buttons) }.await()
+        return action
+            .flatMap { it.replyConfirmation("Is this your character?").setActionRow(buttons) }
+            .await()
     }
 }
