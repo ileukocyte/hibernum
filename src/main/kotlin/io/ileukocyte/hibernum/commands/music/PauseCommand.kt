@@ -21,7 +21,7 @@ class PauseCommand : Command {
                 if (!audioPlayer.player.isPaused) {
                     audioPlayer.player.isPaused = true
 
-                    event.channel.sendSuccess("The track has been successfully paused!").queue()
+                    event.channel.sendSuccess("The track has been paused!").queue()
                 } else throw CommandException("The track is already paused!")
             } else throw CommandException("You are not connected to the required voice channel!")
         } else throw CommandException("No track is currently playing!")
@@ -36,7 +36,7 @@ class PauseCommand : Command {
                 if (!audioPlayer.player.isPaused) {
                     audioPlayer.player.isPaused = true
 
-                    event.replySuccess("The track has been successfully paused!").queue()
+                    event.replySuccess("The track has been paused!").queue()
                 } else throw CommandException("The track is already paused!")
             } else throw CommandException("You are not connected to the required voice channel!")
         } else throw CommandException("No track is currently playing!")

@@ -74,7 +74,7 @@ class PlayCommand : Command {
 
                             event.channel.sendSuccess(
                                 "${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else "\"${playlist.name}\""} playlist " +
-                                        "has been successfully added to the queue!"
+                                        "has been added to the queue!"
                             ).queue()
                         }
 
@@ -121,7 +121,7 @@ class PlayCommand : Command {
                     override fun playlistLoaded(playlist: AudioPlaylist) {
                         event.replySuccess(
                             "${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else "\"${playlist.name}\""} playlist " +
-                                    "has been successfully added to the queue!").queue()
+                                    "has been added to the queue!").queue()
 
                         for (track in playlist.tracks) {
                             val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value

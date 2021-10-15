@@ -50,7 +50,7 @@ class MoveCommand : Command {
                 list.removeAt(song)
                 list.add(max(0, min(index, audioPlayer.scheduler.queue.size.dec())), track)
 
-                val description = "[${track.info.title}](${track.info.uri}) has been successfully moved to the new position!"
+                val description = "[${track.info.title}](${track.info.uri}) has been moved to the new position!"
 
                 audioPlayer.scheduler.queue = ConcurrentLinkedQueue(list)
 
@@ -77,7 +77,7 @@ class MoveCommand : Command {
                 list.removeAt(song)
                 list.add(max(0, min(index, audioPlayer.scheduler.queue.size.dec())), track)
 
-                val description = "[${track.info.title}](${track.info.uri}) has been successfully moved to the new position!"
+                val description = "[${track.info.title}](${track.info.uri}) has been moved to the new position!"
 
                 audioPlayer.scheduler.queue = ConcurrentLinkedQueue(list)
 

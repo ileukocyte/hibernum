@@ -155,9 +155,9 @@ class YouTubePlayCommand : Command {
 
                 override fun playlistLoaded(playlist: AudioPlaylist) {
                     ifFromSlashCommand?.replySuccess( "[${playlist.name}]($query) playlist " +
-                            "has been successfully added to the queue!")?.queue()
+                            "has been added to the queue!")?.queue()
                         ?: channel.sendSuccess("[${playlist.name}]($query) playlist " +
-                                "has been successfully added to the queue!").queue()
+                                "has been added to the queue!").queue()
 
                     for (track in playlist.tracks) {
                         val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value

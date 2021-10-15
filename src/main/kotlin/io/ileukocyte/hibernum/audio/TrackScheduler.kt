@@ -28,9 +28,9 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
 
             if (userData.announceQueued) {
                 val action = userData.ifFromSlashCommand?.replySuccess("[${track.info.title}](${track.info.uri}) " +
-                        "has been successfully added to the queue!")
+                        "has been added to the queue!")
                     ?: userData.channel.sendSuccess("[${track.info.title}](${track.info.uri}) " +
-                            "has been successfully added to the queue!")
+                            "has been added to the queue!")
 
                 action.queue({}) {}
             }
@@ -42,6 +42,7 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
     fun nextTrack(ifFromSlashCommand: SlashCommandEvent? = null) {
         if (queue.isNotEmpty()) {
             val next = queue.poll()
+
             next.userData = next.userData.cast<TrackUserData>().copy(ifFromSlashCommand = ifFromSlashCommand)
 
             player.startTrack(next, false)
@@ -56,10 +57,10 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
         val embedDescription = "[${track.info.title}](${track.info.uri}) is playing now!"
         val userData = track.userData as TrackUserData
         val action =
-            if (userData.firstTrackPlaying && userData.playCount == 0)
+            if (userData.firstTrackPlaying && userData.playCount == 0) {
                 userData.ifFromSlashCommand?.replySuccess(embedDescription)
                     ?: userData.channel.sendSuccess(embedDescription)
-            else
+            } else {
                 userData.ifFromSlashCommand?.replyEmbed {
                     color = Immutable.SUCCESS
                     description = embedDescription
@@ -67,8 +68,13 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
                     color = Immutable.SUCCESS
                     description = embedDescription
                 }
+            }
 
-        action.queue({ track.userData = userData.copy(announcement = it as? Message, playCount = userData.playCount + 1) }) {}
+        action.queue({
+            // Messages are saved to user data instances so a song announcement can be deleted after the song stops playing
+            // Replies to slash commands won't be cast to Message in order that the command won't be deleted as well
+            track.userData = userData.copy(announcement = it as? Message, playCount = userData.playCount + 1)
+        }) {}
     }
 
     override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {

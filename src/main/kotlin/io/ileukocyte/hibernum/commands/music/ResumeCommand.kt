@@ -21,7 +21,7 @@ class ResumeCommand : Command {
                 if (audioPlayer.player.isPaused) {
                     audioPlayer.player.isPaused = false
 
-                    event.channel.sendSuccess("The track has been successfully resumed!").queue()
+                    event.channel.sendSuccess("The track has been resumed!").queue()
                 } else throw CommandException("The track is already playing!")
             } else throw CommandException("You are not connected to the required voice channel!")
         } else throw CommandException("No track is currently playing!")
@@ -36,7 +36,7 @@ class ResumeCommand : Command {
                 if (audioPlayer.player.isPaused) {
                     audioPlayer.player.isPaused = false
 
-                    event.replySuccess("The track has been successfully resumed!").queue()
+                    event.replySuccess("The track has been resumed!").queue()
                 } else throw CommandException("The track is already playing!")
             } else throw CommandException("You are not connected to the required voice channel!")
         } else throw CommandException("No track is currently playing!")

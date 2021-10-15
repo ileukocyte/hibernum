@@ -23,7 +23,7 @@ class RestartCommand : Command {
 
                 audioPlayer.player.playingTrack.position = 0
 
-                event.channel.sendSuccess("The track has been successfully restarted!").queue()
+                event.channel.sendSuccess("The track has been restarted!").queue()
             } else throw CommandException("You are not connected to the required voice channel!")
         } else throw CommandException("No track is currently playing!")
     }
@@ -39,7 +39,7 @@ class RestartCommand : Command {
 
                 audioPlayer.player.playingTrack.position = 0
 
-                event.replySuccess("The track has been successfully restarted!").queue()
+                event.replySuccess("The track has been restarted!").queue()
             } else throw CommandException("You are not connected to the required voice channel!")
         } else throw CommandException("No track is currently playing!")
     }

@@ -28,7 +28,7 @@ class RemoveCommand : Command {
                 val track = audioPlayer.scheduler.queue.toList().getOrNull(number - 1)
                     ?: throw CommandException("You have specified a wrong number!")
 
-                val description = "[${track.info.title}](${track.info.uri}) has been successfully removed from the queue!"
+                val description = "[${track.info.title}](${track.info.uri}) has been removed from the queue!"
 
                 audioPlayer.scheduler.queue -= track
 
@@ -48,7 +48,7 @@ class RemoveCommand : Command {
                 val track = audioPlayer.scheduler.queue.toList().getOrNull(number - 1)
                     ?: throw CommandException("You have specified a wrong number!")
 
-                val description = "[${track.info.title}](${track.info.uri}) has been successfully removed from the queue!"
+                val description = "[${track.info.title}](${track.info.uri}) has been removed from the queue!"
 
                 audioPlayer.scheduler.queue -= track
 

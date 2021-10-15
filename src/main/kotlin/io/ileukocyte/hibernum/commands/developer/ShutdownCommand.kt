@@ -30,7 +30,7 @@ class ShutdownCommand : Command {
         if (event.user.id == id.first()) {
             when (id.last()) {
                 "shut" -> {
-                    event.replySuccess("${event.jda.selfUser.name} has been successfully shut down!")
+                    event.replySuccess("${event.jda.selfUser.name} has been shut down!")
                         .setEphemeral(true)
                         .flatMap { event.message.delete() }
                         .queue({
