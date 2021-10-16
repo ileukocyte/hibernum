@@ -6,7 +6,6 @@ import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.extensions.*
-import io.ileukocyte.hibernum.handlers.CommandContext
 import io.ileukocyte.hibernum.utils.RequiredAttributes
 import io.ileukocyte.hibernum.utils.getPerspectiveApiProbability
 
@@ -14,19 +13,19 @@ import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.features.ClientRequestException
 import io.ktor.client.request.*
+import io.ktor.http.formUrlEncode
 
-import java.net.URLEncoder
-import java.time.OffsetDateTime
-
-import kotlinx.coroutines.withContext
+import kotlinx.datetime.Instant
+import kotlinx.datetime.toJavaInstant
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.*
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-
-import org.json.JSONObject
 
 class UrbanCommand : Command {
     override val name = "urban"
@@ -38,6 +37,7 @@ class UrbanCommand : Command {
         OptionData(OptionType.STRING, "term", "A word or a phrase to define", true))
 
     private val client = HttpClient(CIO)
+    private val jsonSerializer = Json { ignoreUnknownKeys = true }
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val query = args ?: throw NoArgumentsException
@@ -84,29 +84,24 @@ class UrbanCommand : Command {
 
     private suspend fun lookForDefinition(client: HttpClient, query: String, isNSFWChannel: Boolean): Term {
         val api = "http://api.urbandictionary.com/v0/define"
-        val linkRegex = Regex("\\[([^]]+)]")
 
         val urbanRequest = try {
-            client.get<String>(api) { parameter("term", query) }.toJSONObject()
+            client.get<String>(api) { parameter("term", query) }
         } catch (_: ClientRequestException) {
             throw CommandException("Urban Dictionary is not available at the moment!")
         }
-        val response = urbanRequest.getJSONArray("list").takeUnless { it.isEmpty }
-            ?.take(7)
-        var result = response?.toJSONArray()?.getJSONObject(0)
+
+        val response = jsonSerializer
+            .parseToJsonElement(urbanRequest)
+            .jsonObject["list"]
+            ?.jsonArray
+            ?.takeUnless { it.isEmpty() }
+            ?.take(10)
+
+        val result = response?.firstOrNull()?.jsonObject
             ?: throw CommandException("No definition has been found by the query!")
 
-        var term = result.let {
-            Term(
-                it.getString("word"),
-                it.getString("definition"),
-                it.getString("example"),
-                it.getString("author"),
-                it.getInt("thumbs_up"),
-                it.getInt("thumbs_down"),
-                OffsetDateTime.parse(it.getString("written_on"),
-            )
-        ) }
+        var term = jsonSerializer.decodeFromJsonElement<Term>(result)
 
         if (!isNSFWChannel) {
             val hasFoundNsfw = arrayOf(term.definition, term.example)
@@ -120,17 +115,24 @@ class UrbanCommand : Command {
                 }.any { it >= 0.9f }
 
             if (hasFoundNsfw) {
-                result = response
-                    .filterIsInstance<JSONObject>()
+                val nonNsfwResult = response
+                    .filterIsInstance<JsonObject>()
                     .filter { it != result }
                     .firstOrNull {
-                        arrayOf(it.getString("definition"), it.getString("example"))
-                            .filter { s -> s.isNotEmpty() }
-                            .mapNotNull { s ->
-                                try {
-                                    getPerspectiveApiProbability(client, s, RequiredAttributes.SEXUALLY_EXPLICIT)
-                                } catch (_: ClientRequestException) {
-                                    null
+                        arrayOf(it["definition"], it["example"])
+                            .mapNotNull { e ->
+                                val property = e?.jsonPrimitive?.content?.takeUnless { s -> s.isEmpty() }
+
+                                property?.let { content ->
+                                    try {
+                                        getPerspectiveApiProbability(
+                                            client,
+                                            content,
+                                            RequiredAttributes.SEXUALLY_EXPLICIT,
+                                        )
+                                    } catch (_: ClientRequestException) {
+                                        null
+                                    }
                                 }
                             }.none { p -> p >= 0.9f }
                     } ?: throw CommandException(
@@ -138,58 +140,40 @@ class UrbanCommand : Command {
                         footer = "Try using the command in a channel that is intended for NSFW bot commands!",
                     )
 
-                term = result.let {
-                    Term(
-                        it.getString("word"),
-                        it.getString("definition"),
-                        it.getString("example"),
-                        it.getString("author"),
-                        it.getInt("thumbs_up"),
-                        it.getInt("thumbs_down"),
-                        OffsetDateTime.parse(it.getString("written_on")),
-                    )
-                }
+                term = jsonSerializer.decodeFromJsonElement(nonNsfwResult)
             }
         }
 
-        val definition: String by lazy {
-            var definition = result.getString("definition")
+        with(term) {
+            val linkRegex = Regex("\\[([^]]+)]")
 
             for (match in linkRegex.findAll(definition)) {
-                val param = URLEncoder.encode(match.value.removePrefix("[").removeSuffix("]"), "UTF-8")
+                val params = listOf(("term" to match.value.removePrefix("[").removeSuffix("]")))
+                    .formUrlEncode()
 
                 definition = definition
-                    .replace(match.value, "${match.value}(https://www.urbandictionary.com/define.php?term=$param)")
+                    .replace(match.value, "${match.value}(https://www.urbandictionary.com/define.php?$params)")
             }
-
-            definition
-        }
-
-        val example: String by lazy {
-            var example = result.getString("example")
 
             for (match in linkRegex.findAll(example)) {
-                val param = URLEncoder.encode(match.value.removePrefix("[").removeSuffix("]"), "UTF-8")
+                val params = listOf(("term" to match.value.removePrefix("[").removeSuffix("]")))
+                    .formUrlEncode()
 
                 example = example
-                    .replace(match.value, "${match.value}(https://www.urbandictionary.com/define.php?term=$param)")
+                    .replace(match.value, "${match.value}(https://www.urbandictionary.com/define.php?$params)")
             }
-
-            example
         }
 
-        return term.copy(definition = definition, example = example)
+        return term
     }
 
-    private suspend fun urbanEmbed(jda: JDA, term: Term) = buildEmbed {
+    private fun urbanEmbed(jda: JDA, term: Term) = buildEmbed {
         color = Immutable.SUCCESS
-        timestamp = term.dateAdded
-
-        footer { text = "Added on" }
+        timestamp = term.dateAdded.toJavaInstant()
 
         author {
-            name = term.term
-            url = withContext(CommandContext) { term.url }
+            name = term.word
+            url = term.url
             iconUrl = jda.selfUser.effectiveAvatarUrl
         }
 
@@ -221,15 +205,16 @@ class UrbanCommand : Command {
         }
     }
 
+    @Serializable
     private data class Term(
-        val term: String,
-        val definition: String,
-        val example: String,
+        val word: String,
         val author: String,
-        val likes: Int,
-        val dislikes: Int,
-        val dateAdded: OffsetDateTime,
+        var definition: String,
+        var example: String,
+        @SerialName("thumbs_up") val likes: Int,
+        @SerialName("thumbs_down") val dislikes: Int,
+        @SerialName("written_on") val dateAdded: Instant,
     ) {
-        val url = "https://www.urbandictionary.com/define.php?term=" + URLEncoder.encode(term, "UTF-8")
+        val url = "https://www.urbandictionary.com/define.php?" + listOf(("term" to "word")).formUrlEncode()
     }
 }

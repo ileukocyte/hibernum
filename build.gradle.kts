@@ -9,6 +9,7 @@ plugins {
     java
 
     kotlin("jvm") version "1.5.31"
+    kotlin("plugin.serialization") version "1.5.31"
 
     id("com.github.johnrengelman.shadow") version "7.1.0"
     id("com.github.ben-manes.versions") version "0.39.0"
@@ -67,6 +68,8 @@ dependencies {
     implementation(kotlin("scripting-jsr223", kotlinVersion))
     implementation(kotlin("scripting-jvm-host", kotlinVersion))
     implementation(kotlinx("coroutines-core", "1.5.2"))
+    implementation(kotlinx("serialization-json", "1.3.0"))
+    implementation(kotlinx("datetime", "0.3.0"))
 
     // Testing
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
