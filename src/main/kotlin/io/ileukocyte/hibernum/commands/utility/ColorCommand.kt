@@ -41,7 +41,7 @@ class ColorCommand : Command {
     }
 
     private val client = HttpClient(CIO) {
-        install(JsonFeature) { serializer = KotlinxSerializer() }
+        install(JsonFeature) { serializer = KotlinxSerializer(jsonSerializer) }
     }
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {

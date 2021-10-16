@@ -11,7 +11,7 @@ import io.ileukocyte.hibernum.utils.getPerspectiveApiProbability
 
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
-import io.ktor.client.features.ClientRequestException
+import io.ktor.client.features.ResponseException
 import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.features.json.serializer.KotlinxSerializer
 import io.ktor.client.request.*
@@ -40,7 +40,7 @@ class UrbanCommand : Command {
 
     private val jsonSerializer = Json { ignoreUnknownKeys = true }
     private val client = HttpClient(CIO) {
-        install(JsonFeature) { serializer = KotlinxSerializer() }
+        install(JsonFeature) { serializer = KotlinxSerializer(jsonSerializer) }
     }
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
@@ -90,14 +90,12 @@ class UrbanCommand : Command {
         val api = "http://api.urbandictionary.com/v0/define"
 
         val urbanRequest = try {
-            client.get<String>(api) { parameter("term", query) }
-        } catch (_: ClientRequestException) {
+            client.get<JsonObject>(api) { parameter("term", query) }
+        } catch (_: ResponseException) {
             throw CommandException("Urban Dictionary is not available at the moment!")
         }
 
-        val response = jsonSerializer
-            .parseToJsonElement(urbanRequest)
-            .jsonObject["list"]
+        val response = urbanRequest["list"]
             ?.jsonArray
             ?.takeUnless { it.isEmpty() }
             ?.take(10)
@@ -113,7 +111,7 @@ class UrbanCommand : Command {
                 .mapNotNull {
                     try {
                         getPerspectiveApiProbability(client, it, RequiredAttributes.SEXUALLY_EXPLICIT)
-                    } catch (_: ClientRequestException) {
+                    } catch (_: ResponseException) {
                         null
                     }
                 }.any { it >= 0.9f }
@@ -134,7 +132,7 @@ class UrbanCommand : Command {
                                             content,
                                             RequiredAttributes.SEXUALLY_EXPLICIT,
                                         )
-                                    } catch (_: ClientRequestException) {
+                                    } catch (_: ResponseException) {
                                         null
                                     }
                                 }
