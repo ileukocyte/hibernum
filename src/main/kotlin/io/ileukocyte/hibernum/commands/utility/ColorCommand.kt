@@ -4,16 +4,22 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
-import io.ileukocyte.hibernum.extensions.orNull
-import io.ileukocyte.hibernum.extensions.toJSONObject
 import io.ileukocyte.hibernum.utils.getImageBytes
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
-import io.ktor.client.features.ClientRequestException
+import io.ktor.client.features.ResponseException
+import io.ktor.client.features.json.JsonFeature
+import io.ktor.client.features.json.serializer.KotlinxSerializer
 import io.ktor.client.request.get
 
-import java.awt.Color
+import java.awt.Color as JColor
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
 
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
@@ -29,6 +35,15 @@ class ColorCommand : Command {
         OptionData(OptionType.STRING, "hex", "The color's hexadecimal representation", true))
     override val cooldown = 3L
 
+    private val jsonSerializer = Json {
+        coerceInputValues = true
+        ignoreUnknownKeys = true
+    }
+
+    private val client = HttpClient(CIO) {
+        install(JsonFeature) { serializer = KotlinxSerializer() }
+    }
+
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val input = (args ?: throw NoArgumentsException)
             .takeIf { it matches HEX_REGEX }
@@ -36,8 +51,10 @@ class ColorCommand : Command {
         val info = getColorInfo(input)
 
         event.channel.sendMessageEmbeds(colorEmbed(info))
-            .addFile(info.javaColor.getImageBytes(150, 150), "${info.hexString.removePrefix("#")}.png")
-            .queue()
+            .addFile(
+                info.javaColor.getImageBytes(150, 150),
+                "${info.hex.value.lowercase().removePrefix("#")}.png",
+            ).queue()
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
@@ -46,75 +63,69 @@ class ColorCommand : Command {
         val info = getColorInfo(input)
 
         event.replyEmbeds(colorEmbed(info))
-            .addFile(info.javaColor.getImageBytes(150, 150), "${info.hexString.removePrefix("#")}.png")
-            .queue()
+            .addFile(
+                info.javaColor.getImageBytes(150, 150),
+                "${info.hex.value.lowercase().removePrefix("#")}.png",
+            ).queue()
     }
 
     private fun colorEmbed(colorInfo: Color) = buildEmbed {
         color = colorInfo.javaColor
-        image = "attachment://${colorInfo.hexString.removePrefix("#")}.png"
-        description = """**HEX**: ${colorInfo.hexString}
+        image = "attachment://${colorInfo.hex.value.lowercase().removePrefix("#")}.png"
+        description = """**HEX**: ${colorInfo.hex.value.lowercase()}
             |**RGB**: ${colorInfo.rgb.red}, ${colorInfo.rgb.green}, ${colorInfo.rgb.blue}
-            |**DEC**: ${colorInfo.hexString.removePrefix("#").toInt(16)}
+            |**DEC**: ${colorInfo.hex.value.removePrefix("#").toInt(16)}
             |**CMYK**: ${colorInfo.cmyk.cyan}, ${colorInfo.cmyk.magenta}, ${colorInfo.cmyk.yellow}, ${colorInfo.cmyk.key}
             |**HSL**: ${colorInfo.hsl.hue}, ${colorInfo.hsl.saturation}%, ${colorInfo.hsl.lightness}%""".trimMargin()
 
-        author { name = colorInfo.name }
+        author { name = colorInfo.name.value }
     }
 
     private suspend fun getColorInfo(input: String): Color {
-        val client = HttpClient(CIO)
         val api = "http://www.thecolorapi.com/id?hex=${input.removePrefix("#").lowercase()}"
         val response = try {
-            client.get<String>(api).toJSONObject()
-        } catch (_: ClientRequestException) {
+            client.get<JsonObject>(api)
+        } catch (_: ResponseException) {
             throw CommandException("The Color API is not available at the moment!")
         }
 
-        val rgb = response.getJSONObject("rgb").let {
-            Color.RGB(
-                red = it.orNull("r") ?: 0,
-                green = it.orNull("g") ?: 0,
-                blue = it.orNull("b") ?: 0,
-            )
-        }
-        val cmyk = response.getJSONObject("cmyk").let {
-            Color.CMYK(
-                cyan = it.orNull("c") ?: 0,
-                magenta = it.orNull("m") ?: 0,
-                yellow = it.orNull("y") ?: 0,
-                key = it.orNull("k") ?: 1,
-            )
-        }
-        val hsl = response.getJSONObject("hsl").let {
-            Color.HSL(
-                hue = it.orNull("h") ?: 0,
-                saturation = it.orNull("s") ?: 0,
-                lightness = it.orNull("l") ?: 0,
-            )
-        }
-
-        return Color(
-            response.getJSONObject("name").getString("value"),
-            response.getJSONObject("hex").getString("value").lowercase(),
-            rgb,
-            hsl,
-            cmyk,
-        )
+        return jsonSerializer.decodeFromJsonElement(response)
     }
 
+    @Serializable
     private data class Color(
-        val name: String,
-        val hexString: String,
+        val name: Value,
+        val hex: Value,
         val rgb: RGB,
         val hsl: HSL,
         val cmyk: CMYK,
     ) {
-        data class RGB(val red: Int, val green: Int, val blue: Int)
-        data class HSL(val hue: Int, val saturation: Int, val lightness: Int)
-        data class CMYK(val cyan: Int, val magenta: Int, val yellow: Int, val key: Int)
+        @Serializable
+        data class Value(val value: String)
 
-        val javaColor get() = Color(rgb.red, rgb.green, rgb.blue)
+        @Serializable
+        data class RGB(
+            @SerialName("r") val red: Int,
+            @SerialName("g") val green: Int,
+            @SerialName("b") val blue: Int,
+        )
+
+        @Serializable
+        data class HSL(
+            @SerialName("h") val hue: Int,
+            @SerialName("s") val saturation: Int,
+            @SerialName("l") val lightness: Int,
+        )
+
+        @Serializable
+        data class CMYK(
+            @SerialName("c") val cyan: Int = 0,
+            @SerialName("m") val magenta: Int = 0,
+            @SerialName("y") val yellow: Int = 0,
+            @SerialName("k") val key: Int = 1,
+        )
+
+        val javaColor get() = JColor(rgb.red, rgb.green, rgb.blue)
     }
 
     companion object {
