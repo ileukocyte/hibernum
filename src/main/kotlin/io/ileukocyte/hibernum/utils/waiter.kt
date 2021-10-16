@@ -1,5 +1,5 @@
-@file:JvmName("EventWaiter")
-@file:Suppress("UNCHECKED_CAST", "UNUSED")
+@file:[JvmName("EventWaiter") Suppress("UNCHECKED_CAST", "UNUSED")]
+
 package io.ileukocyte.hibernum.utils
 
 import io.ileukocyte.hibernum.commands.Command
@@ -30,13 +30,14 @@ object WaiterContext : CoroutineContext by waiterContextDispatcher, AutoCloseabl
 val JDA.processes get() = WaiterProcess.CURRENTLY_RUNNING.keys
 val User.processes get() = jda.getUserProcesses(this)
 
-inline fun waiterProcess(block: WaiterProcess.Builder.() -> Unit)  = WaiterProcess.Builder().apply(block)()
+inline fun waiterProcess(block: WaiterProcess.Builder.() -> Unit) = WaiterProcess.Builder().apply(block)()
 
 fun JDA.getProcessById(id: String) = processes.firstOrNull { it.id == id }
 
 fun JDA.getProcessByEntitiesIds(usersIds: Set<Long>, channelId: Long) = processes.firstOrNull {
     it.users.containsAll(usersIds) && it.channel == channelId
 }
+
 fun JDA.getProcessByEntities(users: Set<User>, channel: MessageChannel) =
     getProcessByEntitiesIds(users.map { it.idLong }.toSet(), channel.idLong)
 
@@ -63,7 +64,8 @@ fun WaiterProcess.kill(jda: JDA) = WaiterProcess.CURRENTLY_RUNNING[this]?.kill(j
  * @param invoker
  * An ID of the message the process might have been launched from
  * @param id
- * The unique 4-digit identificational key of the process used in several contexts. **Strongly unrecommended to change!**
+ * The unique 4-digit identification key of the process used in several contexts.
+ * **Strongly unrecommended to change!**
  * @param timeCreated
  * The date and time when the process was launched. **Strongly unrecommended to change!**
  *
@@ -71,13 +73,13 @@ fun WaiterProcess.kill(jda: JDA) = WaiterProcess.CURRENTLY_RUNNING[this]?.kill(j
  *
  * @see awaitEvent
  */
-data class WaiterProcess(
+data class WaiterProcess internal constructor(
     val users: MutableSet<Long>,
     val channel: Long,
     val command: Command?,
     val invoker: Long?,
     val id: String = "%04d".format((1..9999).filter {
-        "%04d".format(it) !in CURRENTLY_RUNNING.keys.map { p -> p.id }
+        it !in CURRENTLY_RUNNING.keys.map { p -> p.id.toInt() }
     }.random()),
     val timeCreated: OffsetDateTime = OffsetDateTime.now(ZoneId.of("Etc/GMT0")),
     var eventType: KClass<out GenericEvent>? = null,

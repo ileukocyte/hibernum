@@ -81,7 +81,7 @@ class AkinatorCommand : Command {
 
     private val languagesAvailableForTypes get() =
         mapOf(
-            GuessType.ANIMAL to setOf(
+            GuessType.ANIMAL to sortedSetOf(
                 Language.ENGLISH,
                 Language.FRENCH,
                 Language.GERMAN,
@@ -89,9 +89,9 @@ class AkinatorCommand : Command {
                 Language.JAPANESE,
                 Language.SPANISH,
             ),
-            GuessType.MOVIE_TV_SHOW to setOf(Language.ENGLISH, Language.FRENCH),
+            GuessType.MOVIE_TV_SHOW to sortedSetOf(Language.ENGLISH, Language.FRENCH),
             GuessType.CHARACTER to Language.values().toSortedSet(),
-            GuessType.OBJECT to setOf(Language.ENGLISH, Language.FRENCH),
+            GuessType.OBJECT to sortedSetOf(Language.ENGLISH, Language.FRENCH),
         )
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) =
@@ -163,7 +163,7 @@ class AkinatorCommand : Command {
                             color = Immutable.SUCCESS
                             description = akiwrapper.currentQuestion?.question ?: "N/A"
 
-                            author { name = "Question #${(akiwrapper.currentQuestion?.step ?: -1) + 1}" }
+                            author { name = "Question #${akiwrapper.currentQuestion?.step?.inc() ?: -1}" }
 
                             footer {
                                 text = buildString {
@@ -424,12 +424,12 @@ class AkinatorCommand : Command {
                                             command = this@AkinatorCommand
                                             invoker = m.idLong
                                         }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
-                                    } ?: channel.let { channel ->
+                                    } ?: channel.let {
                                         declinedGuesses -= player.idLong
                                         types -= player.idLong
                                         akiwrappers -= player.idLong
 
-                                        channel.sendSuccess("Bravo! You have defeated me!").queue()
+                                        it.sendSuccess("Bravo! You have defeated me!").queue()
                                     }
                             }
                         } else {

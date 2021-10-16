@@ -11,9 +11,6 @@ import io.ileukocyte.hibernum.extensions.searchRoles
 import io.ileukocyte.hibernum.extensions.sendEmbed
 import io.ileukocyte.hibernum.utils.getImageBytes
 
-import java.time.format.DateTimeFormatter
-import java.util.Date
-
 import net.dv8tion.jda.api.entities.Emoji
 import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
@@ -24,8 +21,6 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
-
-import org.ocpsoft.prettytime.PrettyTime
 
 class RoleCommand : Command {
     override val name = "role"
@@ -204,13 +199,10 @@ class RoleCommand : Command {
         }
 
         field {
-            val time = role.timeCreated
-                .format(DateTimeFormatter.ofPattern("E, d MMM yyyy, h:mm:ss a"))
-                .removeSuffix(" GMT")
-            val ago = PrettyTime().format(Date.from(role.timeCreated.toInstant()))
+            val timestamp = role.timeCreated.toEpochSecond()
 
             title = "Creation Date"
-            description = "$time ($ago)"
+            description = "<t:$timestamp:F> (<t:$timestamp:R>)"
             isInline = true
         }
 

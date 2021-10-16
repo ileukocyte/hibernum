@@ -7,9 +7,6 @@ import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.asText
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
-import java.time.format.DateTimeFormatter
-import java.util.Date
-
 import kotlin.time.ExperimentalTime
 
 import net.dv8tion.jda.api.EmbedBuilder.ZERO_WIDTH_SPACE
@@ -21,8 +18,6 @@ import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.interactions.components.Button
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
-
-import org.ocpsoft.prettytime.PrettyTime
 
 class ServerCommand : Command {
     override val name = "server"
@@ -226,13 +221,10 @@ class ServerCommand : Command {
         }
 
         field {
-            val time = guild.timeCreated
-                .format(DateTimeFormatter.ofPattern("E, d MMM yyyy, h:mm:ss a"))
-                .removeSuffix(" GMT")
-            val ago = PrettyTime().format(Date.from(guild.timeCreated.toInstant()))
+            val timestamp = guild.timeCreated.toEpochSecond()
 
             title = "Creation Date"
-            description = "$time ($ago)"
+            description = "<t:$timestamp:F> (<t:$timestamp:R>)"
             isInline = true
         }
 

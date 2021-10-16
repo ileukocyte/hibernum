@@ -5,13 +5,8 @@ import io.ileukocyte.hibernum.commands.TextOnlyCommand
 import io.ileukocyte.hibernum.extensions.sendEmbed
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
-import java.time.format.DateTimeFormatter
-import java.util.Date
-
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
-
-import org.ocpsoft.prettytime.PrettyTime
 
 class EmojiCommand : TextOnlyCommand {
     override val name = "emoji"
@@ -58,13 +53,10 @@ class EmojiCommand : TextOnlyCommand {
             }
 
             field {
-                val time = emote.timeCreated
-                    .format(DateTimeFormatter.ofPattern("E, d MMM yyyy, h:mm:ss a"))
-                    .removeSuffix(" GMT")
-                val ago = PrettyTime().format(Date.from(emote.timeCreated.toInstant()))
+                val timestamp = emote.timeCreated.toEpochSecond()
 
                 title = "Creation Date"
-                description = "$time ($ago)"
+                description = "<t:$timestamp:F> (<t:$timestamp:R>)"
                 isInline = true
             }
         }.queue()

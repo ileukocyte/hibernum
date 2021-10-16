@@ -7,15 +7,11 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
-import java.time.format.DateTimeFormatter
-import java.util.Date
-
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.entities.Activity.ActivityType
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
-import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
@@ -25,8 +21,6 @@ import net.dv8tion.jda.api.interactions.components.Button
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
-
-import org.ocpsoft.prettytime.PrettyTime
 
 class UserCommand : Command {
     override val name = "user"
@@ -156,7 +150,6 @@ class UserCommand : Command {
     }
 
     private suspend fun infoEmbed(member: Member) = buildEmbed {
-        val dateFormatter = DateTimeFormatter.ofPattern("E, d MMM yyyy, h:mm:ss a")
         val user = member.user
 
         color = getDominantColorByImageUrl(user.effectiveAvatarUrl)
@@ -233,20 +226,18 @@ class UserCommand : Command {
         }
 
         field {
-            val time = member.timeCreated.format(dateFormatter).removeSuffix(" GMT")
-            val ago = PrettyTime().format(Date.from(member.timeCreated.toInstant()))
+            val timestamp = member.timeCreated.toEpochSecond()
 
-            title = "Creation Date"
-            description = "$time ($ago)"
+            title = "Registration Date"
+            description = "<t:$timestamp:F> (<t:$timestamp:R>)"
             isInline = true
         }
 
         field {
-            val time = member.timeJoined.format(dateFormatter).removeSuffix(" GMT")
-            val ago = PrettyTime().format(Date.from(member.timeJoined.toInstant()))
+            val timestamp = member.timeJoined.toEpochSecond()
 
-            title = "Join Date"
-            description = "$time ($ago)"
+            title = "Creation Date"
+            description = "<t:$timestamp:F> (<t:$timestamp:R>)"
             isInline = true
         }
 
