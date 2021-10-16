@@ -36,7 +36,7 @@ class UserCommand : Command {
     override val cooldown = 3L
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
-        if (!event.guild.isLoaded) event.guild.loadMembers().await()
+        event.guild.takeUnless { it.isLoaded }?.loadMembers()?.await()
 
         if (args !== null) {
             val exception = CommandException("No users have been found by the query!")
@@ -77,7 +77,7 @@ class UserCommand : Command {
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
-        if (event.guild?.isLoaded == false) event.guild?.loadMembers()?.await()
+        event.guild?.takeUnless { it.isLoaded }?.loadMembers()?.await()
 
         val user = event.getOption("user")?.asUser ?: event.user
 
@@ -112,10 +112,13 @@ class UserCommand : Command {
 
             val member = event.guild?.getMemberById(id[1]) ?: return
 
-            when (type) {
-                "info" -> event.editMessageEmbeds(infoEmbed(member)).setActionRows().queue()
-                "pfp" -> event.editMessageEmbeds(pfpEmbed(member.user)).setActionRows().queue()
+            val embed = when (type) {
+                "info" -> infoEmbed(member)
+                "pfp" -> pfpEmbed(member.user)
+                else -> return
             }
+
+            event.editMessageEmbeds(embed).setActionRows().queue()
         } else throw CommandException("You did not invoke the initial command!")
     }
 

@@ -148,7 +148,7 @@ class RoleCommand : Command {
     }
 
     private suspend fun infoEmbed(role: Role) = buildEmbed {
-        if (!role.guild.isLoaded) role.guild.loadMembers().await()
+        role.guild.takeUnless { it.isLoaded }?.loadMembers()?.await()
 
         color = role.color
 

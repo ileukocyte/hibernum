@@ -37,7 +37,7 @@ class ServerCommand : Command {
         }
 
         if (buttons.size == 1) {
-            if (!event.guild.isLoaded) event.guild.loadMembers().await()
+            event.guild.takeUnless { it.isLoaded }?.loadMembers()?.await()
 
             event.channel.sendMessageEmbeds(infoEmbed(event.guild)).queue()
 
@@ -67,7 +67,7 @@ class ServerCommand : Command {
         if (buttons.size == 1) {
             val deferred = event.deferReply().await()
 
-            if (!guild.isLoaded) guild.loadMembers().await()
+            guild.takeUnless { it.isLoaded }?.loadMembers()?.await()
 
             deferred.editOriginalEmbeds(infoEmbed(guild)).queue()
 
@@ -99,23 +99,20 @@ class ServerCommand : Command {
                 .setActionRows()
                 .await()
 
-            when (type) {
+            val embed = when (type) {
                 "info" -> {
-                    if (event.guild?.isLoaded == false) event.guild?.loadMembers()?.await()
+                    guild.takeUnless { it.isLoaded }?.loadMembers()?.await()
 
-                    deferred.editOriginal(ZERO_WIDTH_SPACE)
-                        .setEmbeds(infoEmbed(guild))
-                        .queue()
+                    infoEmbed(guild)
                 }
-                "icon" ->
-                    deferred.editOriginal(ZERO_WIDTH_SPACE)
-                        .setEmbeds(iconEmbed(guild))
-                        .queue()
-                "emotes" ->
-                    deferred.editOriginal(ZERO_WIDTH_SPACE)
-                        .setEmbeds(emotesEmbed(guild))
-                        .queue()
+                "icon" -> iconEmbed(guild)
+                "emotes" -> emotesEmbed(guild)
+                else -> return
             }
+
+            deferred.editOriginal(ZERO_WIDTH_SPACE)
+                .setEmbeds(embed)
+                .queue()
         } else throw CommandException("You did not invoke the initial command!")
     }
 
