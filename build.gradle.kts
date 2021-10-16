@@ -50,8 +50,6 @@ dependencies {
     implementation(group = "com.google.oauth-client", name = "google-oauth-client-jetty", version = "1.32.1")
     implementation(group = "com.google.apis", name = "google-api-services-youtube", version = "v3-rev20210915-1.32.1")
     implementation(group = "com.google.guava", name = "guava", version = "31.0.1-jre")
-    implementation(group = "io.ktor", name = "ktor-client-core", version = ktorVersion)
-    implementation(group = "io.ktor", name = "ktor-client-cio", version = ktorVersion)
     implementation(group = "org.jsoup", name = "jsoup", version = "1.14.3")
     implementation(group = "commons-validator", name = "commons-validator", version = "1.7")
     implementation(group = "com.github.kenglxn.QRGen", name = "javase", version = "2.6.0")
@@ -71,6 +69,11 @@ dependencies {
     implementation(kotlinx("serialization-json", "1.3.0"))
     implementation(kotlinx("datetime", "0.3.0"))
 
+    // Ktor
+    implementation(ktor("client-core"))
+    implementation(ktor("client-cio"))
+    implementation(ktor("client-serialization"))
+
     // Testing
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
     testImplementation(kotlin("test-junit", kotlinVersion))
@@ -78,6 +81,8 @@ dependencies {
 }
 
 fun kotlinx(module: String, version: String) = "org.jetbrains.kotlinx:kotlinx-$module:$version"
+
+fun ktor(module: String, version: String = ktorVersion) = "io.ktor:ktor-$module:$version"
 
 val build: DefaultTask by tasks
 val clean: Delete by tasks

@@ -2,14 +2,16 @@
 package io.ileukocyte.hibernum.utils
 
 import io.ileukocyte.hibernum.Immutable
-import io.ileukocyte.hibernum.extensions.jsonObject
-import io.ileukocyte.hibernum.extensions.set
-import io.ileukocyte.hibernum.extensions.toJSONObject
 
 import io.ktor.client.*
 import io.ktor.client.request.*
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 
-import org.json.JSONObject
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.*
+
+const val PERSPECTIVE_API_URL = "https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze"
 
 suspend fun getPerspectiveApiProbability(
     client: HttpClient,
@@ -17,25 +19,33 @@ suspend fun getPerspectiveApiProbability(
     mode: RequiredAttributes,
     isExperimentalMode: Boolean = false,
 ): Float {
-    val api = "https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze"
-
     val requiredAttributes = mode.apply { isExperimental = isExperimentalMode }
 
-    val response = client.post<String>(api) {
-        val json = jsonObject {
-            this["comment"] = jsonObject { this["text"] = comment }
-            this["requestedAttributes"] = jsonObject { this[requiredAttributes.toString()] = JSONObject() }
-        }
+    @Serializable
+    data class Comment(val text: String)
 
-        body = json.toString()
+    @Serializable
+    data class Body(
+        val comment: Comment,
+        val requestedAttributes: JsonObject,
+    )
 
+    val response = client.post<JsonObject>(PERSPECTIVE_API_URL) {
         parameter("key", Immutable.PERSPECTIVE_API_KEY)
-    }.toJSONObject()
+        contentType(ContentType.Application.Json)
 
-    return response.getJSONObject("attributeScores")
-        .getJSONObject(requiredAttributes.toString())
-        .getJSONObject("summaryScore")
-        .getFloat("value")
+        body = Body(
+            Comment(comment),
+            buildJsonObject { putJsonObject(requiredAttributes.toString()) {} },
+        )
+    }
+
+    val attributeScores = response["attributeScores"]?.jsonObject
+    val attributes = attributeScores?.get(requiredAttributes.toString())?.jsonObject
+    val summaryScore = attributes?.get("summaryScore")?.jsonObject
+    val value = summaryScore?.get("value")?.jsonPrimitive
+
+    return value?.floatOrNull ?: -1f
 }
 
 enum class RequiredAttributes(private val hasExperimentalImplPrefix: Boolean = true) {

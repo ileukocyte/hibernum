@@ -12,6 +12,8 @@ import io.ileukocyte.hibernum.utils.getPerspectiveApiProbability
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.features.ClientRequestException
+import io.ktor.client.features.json.JsonFeature
+import io.ktor.client.features.json.serializer.KotlinxSerializer
 import io.ktor.client.request.*
 import io.ktor.http.formUrlEncode
 
@@ -36,8 +38,10 @@ class UrbanCommand : Command {
     override val options = setOf(
         OptionData(OptionType.STRING, "term", "A word or a phrase to define", true))
 
-    private val client = HttpClient(CIO)
     private val jsonSerializer = Json { ignoreUnknownKeys = true }
+    private val client = HttpClient(CIO) {
+        install(JsonFeature) { serializer = KotlinxSerializer() }
+    }
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         val query = args ?: throw NoArgumentsException
