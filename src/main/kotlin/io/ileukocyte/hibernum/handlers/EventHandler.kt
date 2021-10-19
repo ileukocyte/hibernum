@@ -69,14 +69,18 @@ object EventHandler : ListenerAdapter() {
 
                             select<Unit> {
                                 eventsAwaited.forEach { deferred ->
-                                    deferred.onAwait {
+                                    deferred.onAwait { e ->
+                                        eventsAwaited.forEach { if (it.isActive) it.cancelAndJoin() }
+
                                         delay(1000)
 
-                                        it?.guild?.audioPlayer?.player?.isPaused = false
+                                        e?.guild?.audioPlayer?.player?.isPaused = false
                                     }
                                 }
 
                                 onTimeout(90000) {
+                                    eventsAwaited.forEach { if (it.isActive) it.cancelAndJoin() }
+
                                     event.guild.audioPlayer?.player?.playingTrack?.userData
                                         ?.cast<TrackUserData>()
                                         ?.channel
@@ -90,8 +94,6 @@ object EventHandler : ListenerAdapter() {
                                     event.guild.audioManager.closeAudioConnection()
                                 }
                             }
-
-                            eventsAwaited.filter { it.isActive }.forEach { it.cancel() }
                         }
                     }
                 }
@@ -130,14 +132,18 @@ object EventHandler : ListenerAdapter() {
 
                         select<Unit> {
                             eventsAwaited.forEach { deferred ->
-                                deferred.onAwait {
+                                deferred.onAwait { e ->
+                                    eventsAwaited.forEach { if (it.isActive) it.cancelAndJoin() }
+
                                     delay(1000)
 
-                                    it?.guild?.audioPlayer?.player?.isPaused = false
+                                    e?.guild?.audioPlayer?.player?.isPaused = false
                                 }
                             }
 
                             onTimeout(90000) {
+                                eventsAwaited.forEach { if (it.isActive) it.cancelAndJoin() }
+
                                 event.guild.audioPlayer?.player?.playingTrack?.userData
                                     ?.cast<TrackUserData>()
                                     ?.channel
@@ -151,8 +157,6 @@ object EventHandler : ListenerAdapter() {
                                 event.guild.audioManager.closeAudioConnection()
                             }
                         }
-
-                        eventsAwaited.filter { it.isActive }.forEach { it.cancel() }
                     }
                 }
             }
