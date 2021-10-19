@@ -21,6 +21,7 @@
 * [QRGen](https://github.com/kenglxn/QRGen)
 * [Spotify Web API Java](https://github.com/thelinmichael/spotify-web-api-java)
 * [Color Thief](https://github.com/SvenWoltmann/color-thief-java)
+* [Arrow](https://github.com/arrow-kt/arrow)
 * [PrettyTime](https://github.com/ocpsoft/prettytime)
 * [JSON-Java (org.json)](https://github.com/stleary/JSON-java)
 * [logback-classic](http://logback.qos.ch/)

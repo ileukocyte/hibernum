@@ -2,6 +2,8 @@
 
 package io.ileukocyte.hibernum.utils
 
+import arrow.fx.coroutines.onCancel
+
 import io.ileukocyte.hibernum.commands.Command
 
 import java.time.OffsetDateTime
@@ -123,7 +125,9 @@ class AwaitableEventListener<E : GenericEvent>(
 
         jda.removeEventListener(this)
 
-        if (completeWithNull) deferred.complete(null)
+        if (completeWithNull) {
+            deferred.complete(null)
+        }
     }
 
     override fun onEvent(event: GenericEvent) {
@@ -178,14 +182,19 @@ suspend inline fun <reified E : GenericEvent> JDA.awaitEvent(
 
     addEventListener(listener)
 
-    return if (delay > 0) {
-        try {
-            withTimeout(unit.toMillis(delay)) { deferred.await() }
-        } catch (e: TimeoutCancellationException) {
-            waiterProcess?.let { WaiterProcess.CURRENTLY_RUNNING -= it }
-            removeEventListener(listener)
+    return onCancel({
+        if (delay > 0) {
+            try {
+                withTimeout(unit.toMillis(delay)) { deferred.await() }
+            } catch (e: TimeoutCancellationException) {
+                waiterProcess?.let { WaiterProcess.CURRENTLY_RUNNING -= it }
+                removeEventListener(listener)
 
-            throw e
-        }
-    } else deferred.await()
+                throw e
+            }
+        } else deferred.await()
+    }) {
+        waiterProcess?.let { WaiterProcess.CURRENTLY_RUNNING -= it }
+        removeEventListener(listener)
+    }
 }

@@ -10,13 +10,12 @@ import io.ileukocyte.hibernum.utils.kill
 
 import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.selects.select
 
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
@@ -39,7 +38,7 @@ object EventHandler : ListenerAdapter() {
     override fun onGuildMessageReceived(event: GuildMessageReceivedEvent) =
         CommandHandler(event)
 
-    @OptIn(ExperimentalTime::class)
+    @OptIn(ExperimentalCoroutinesApi::class, ExperimentalTime::class)
     override fun onGuildVoiceLeave(event: GuildVoiceLeaveEvent) {
         if (event.member != event.guild.selfMember) {
             if (event.channelLeft == event.guild.selfMember.voiceState?.channel) {
@@ -51,21 +50,99 @@ object EventHandler : ListenerAdapter() {
                         event.guild.audioPlayer?.player?.isPaused = true
 
                         CoroutineScope(CommandContext).launch {
-                            try {
-                                val joinEvent = event.jda.awaitEvent<GuildVoiceJoinEvent>(90, DurationUnit.SECONDS) {
+                            val joinEventDeferred = async {
+                                event.jda.awaitEvent<GuildVoiceJoinEvent> {
                                     it.channelJoined == event.channelLeft && !it.member.user.isBot
                                 }
+                            }
 
-                                delay(1000)
+                            val moveEventDeferred = async {
+                                event.jda.awaitEvent<GuildVoiceMoveEvent> {
+                                    (it.channelJoined == event.channelLeft && !it.member.user.isBot)
+                                        || (it.member == event.guild.selfMember
+                                            && it.channelJoined.members.any { m -> !m.user.isBot })
+                                }
+                            }
 
-                                joinEvent?.guild?.audioPlayer?.player?.isPaused = false
-                            } catch (e: TimeoutCancellationException) {
+                            val eventsAwaited = setOf(joinEventDeferred, moveEventDeferred)
+
+                            select<Unit> {
+                                eventsAwaited.forEach { deferred ->
+                                    deferred.onAwait {
+                                        delay(1000)
+
+                                        it?.guild?.audioPlayer?.player?.isPaused = false
+                                    }
+                                }
+
+                                onTimeout(90000) {
+                                    event.guild.audioPlayer?.player?.playingTrack?.userData
+                                        ?.cast<TrackUserData>()
+                                        ?.channel
+                                        ?.let {
+                                            it.sendWarning("${event.jda.selfUser.name} has been inactive for too long to stay in the voice channel! The bot has left!") {
+                                                text = "This message will self-delete in a minute"
+                                            }.queue({ w -> w.delete().queueAfter(1, DurationUnit.MINUTES, {}) {} }) {}
+                                        }
+
+                                    event.guild.audioPlayer?.stop()
+                                    event.guild.audioManager.closeAudioConnection()
+                                }
+                            }
+
+                            eventsAwaited.filter { it.isActive }.forEach { it.cancel() }
+                        }
+                    }
+                }
+            }
+        } else event.guild.audioPlayer?.stop() // just in case
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class, ExperimentalTime::class)
+    override fun onGuildVoiceMove(event: GuildVoiceMoveEvent) {
+        val vc = event.guild.selfMember.voiceState?.channel
+
+        if (vc !== null) {
+            if (vc.members.none { !it.user.isBot }) {
+                if (event.guild.audioPlayer?.player?.playingTrack === null) {
+                    event.guild.audioPlayer?.stop()
+                    event.guild.audioManager.closeAudioConnection()
+                } else {
+                    event.guild.audioPlayer?.player?.isPaused = true
+
+                    CoroutineScope(CommandContext).launch {
+                        val joinEventDeferred = async {
+                            event.jda.awaitEvent<GuildVoiceJoinEvent> {
+                                it.channelJoined == vc && !it.member.user.isBot
+                            }
+                        }
+
+                        val moveEventDeferred = async {
+                            event.jda.awaitEvent<GuildVoiceMoveEvent> {
+                                (it.channelJoined == vc && !it.member.user.isBot)
+                                    || (it.member == event.guild.selfMember
+                                        && it.channelJoined.members.any { m -> !m.user.isBot })
+                            }
+                        }
+
+                        val eventsAwaited = setOf(joinEventDeferred, moveEventDeferred)
+
+                        select<Unit> {
+                            eventsAwaited.forEach { deferred ->
+                                deferred.onAwait {
+                                    delay(1000)
+
+                                    it?.guild?.audioPlayer?.player?.isPaused = false
+                                }
+                            }
+
+                            onTimeout(90000) {
                                 event.guild.audioPlayer?.player?.playingTrack?.userData
                                     ?.cast<TrackUserData>()
                                     ?.channel
                                     ?.let {
                                         it.sendWarning("${event.jda.selfUser.name} has been inactive for too long to stay in the voice channel! The bot has left!") {
-                                            text = "This message will self-delete in 1 minute"
+                                            text = "This message will self-delete in a minute"
                                         }.queue({ w -> w.delete().queueAfter(1, DurationUnit.MINUTES, {}) {} }) {}
                                     }
 
@@ -73,10 +150,12 @@ object EventHandler : ListenerAdapter() {
                                 event.guild.audioManager.closeAudioConnection()
                             }
                         }
+
+                        eventsAwaited.filter { it.isActive }.forEach { it.cancel() }
                     }
                 }
             }
-        } else event.guild.audioPlayer?.stop() // just in case
+        }
     }
 
     @OptIn(ExperimentalTime::class)

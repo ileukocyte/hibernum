@@ -19,7 +19,6 @@ import io.ileukocyte.hibernum.utils.isEqualTo
 import io.ileukocyte.hibernum.utils.toOptionData
 
 import kotlin.reflect.full.createInstance
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 import net.dv8tion.jda.api.OnlineStatus
@@ -37,6 +36,7 @@ fun main() = runBlocking {
         token = DISCORD_TOKEN
         includePrivilegedIntents = true
         onlineStatus = OnlineStatus.DO_NOT_DISTURB
+
         activity {
             name = "loading..."
             type = ActivityType.WATCHING
@@ -54,7 +54,7 @@ fun main() = runBlocking {
     LOGGER.info("All the guilds have loaded their music managers!")
 
     // registering commands
-    val handlerInit = launch {
+    runBlocking {
         Reflections("io.ileukocyte.hibernum.commands")
             .getSubtypesOf<Command>()
             .filter { !it.isInterface }
@@ -62,33 +62,33 @@ fun main() = runBlocking {
             .forEach { CommandHandler += it.createInstance() }
     }
 
-    handlerInit.join()
-
     if (CommandHandler.isNotEmpty()) {
         LOGGER.info("CommandHandler has successfully loaded ${CommandHandler.size} commands!")
     }
 
     // updating global slash commands
-    discord.retrieveCommands().queue { discordCommands ->
-        val predicate = { cmd: Command ->
-            cmd.name !in discordCommands.map { it.name }
-                    || cmd.description !in discordCommands.map { it.description.removePrefix("(Developer-only) ") }
-                    || discordCommands.any {
-                        cmd.name == it.name && !cmd.options.toList().isEqualTo(it.options.map(Option::toOptionData))
-                    }
-        }
-
-        CommandHandler.filter { it !is TextOnlyCommand }.filter(predicate).forEach {
-            discord.upsertCommand(it.asSlashCommand!!).queue { cmd ->
-                LOGGER.info("UPDATE: Discord has updated the following slash command: ${cmd.name}!")
+    runBlocking {
+        discord.retrieveCommands().queue { discordCommands ->
+            val predicate = { cmd: Command ->
+                cmd.name !in discordCommands.map { it.name }
+                        || cmd.description !in discordCommands.map { it.description.removePrefix("(Developer-only) ") }
+                        || discordCommands.any {
+                    cmd.name == it.name && !cmd.options.toList().isEqualTo(it.options.map(Option::toOptionData))
+                }
             }
-        }
 
-        discordCommands.filter {
-            CommandHandler[it.name] is TextOnlyCommand || it.name !in CommandHandler.map(Command::name)
-        }.takeUnless { it.isEmpty() }?.forEach {
-            discord.deleteCommandById(it.id).queue { _ ->
-                LOGGER.info("${it.name} is no longer a slash command!")
+            CommandHandler.filter { it !is TextOnlyCommand }.filter(predicate).forEach {
+                discord.upsertCommand(it.asSlashCommand!!).queue { cmd ->
+                    LOGGER.info("UPDATE: Discord has updated the following slash command: ${cmd.name}!")
+                }
+            }
+
+            discordCommands.filter {
+                CommandHandler[it.name] is TextOnlyCommand || it.name !in CommandHandler.map(Command::name)
+            }.takeUnless { it.isEmpty() }?.forEach {
+                discord.deleteCommandById(it.id).queue { _ ->
+                    LOGGER.info("${it.name} is no longer a slash command!")
+                }
             }
         }
     }
