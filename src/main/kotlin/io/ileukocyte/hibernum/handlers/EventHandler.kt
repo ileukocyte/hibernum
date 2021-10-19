@@ -4,6 +4,7 @@ import io.ileukocyte.hibernum.audio.TrackUserData
 import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.audio.stop
 import io.ileukocyte.hibernum.extensions.*
+import io.ileukocyte.hibernum.utils.WaiterContext
 import io.ileukocyte.hibernum.utils.awaitEvent
 import io.ileukocyte.hibernum.utils.getProcessByMessage
 import io.ileukocyte.hibernum.utils.kill
@@ -49,7 +50,7 @@ object EventHandler : ListenerAdapter() {
                     } else {
                         event.guild.audioPlayer?.player?.isPaused = true
 
-                        CoroutineScope(CommandContext).launch {
+                        CoroutineScope(WaiterContext).launch {
                             val joinEventDeferred = async {
                                 event.jda.awaitEvent<GuildVoiceJoinEvent> {
                                     it.channelJoined == event.channelLeft && !it.member.user.isBot
@@ -110,7 +111,7 @@ object EventHandler : ListenerAdapter() {
                 } else {
                     event.guild.audioPlayer?.player?.isPaused = true
 
-                    CoroutineScope(CommandContext).launch {
+                    CoroutineScope(WaiterContext).launch {
                         val joinEventDeferred = async {
                             event.jda.awaitEvent<GuildVoiceJoinEvent> {
                                 it.channelJoined == vc && !it.member.user.isBot
