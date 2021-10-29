@@ -27,16 +27,16 @@ class HelpCommand : Command {
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
         if (args !== null) {
             val command = CommandHandler[args.lowercase()]
-            val action = command?.let { event.channel.sendMessageEmbeds(it.commandHelp(event.jda)) }
+            val action = command?.let { event.channel.sendMessageEmbeds(it.getHelp(event.jda)) }
                 ?: throw CommandException("The specified command has not been found!")
 
             action.queue()
         } else {
             event.author.openPrivateChannel().queue {
-                it.sendMessageEmbeds(commandList(event.jda, event.author, false)).queue({
+                it.sendMessageEmbeds(getCommandList(event.jda, event.author, false)).queue({
                     event.message.addReaction("\u2705").queue(null) {}
                 }) {
-                    event.channel.sendMessageEmbeds(commandList(event.jda, event.author,
+                    event.channel.sendMessageEmbeds(getCommandList(event.jda, event.author,
                         isFromSlashCommand = false,
                         isInDm = false,
                     )).queue()
@@ -50,21 +50,21 @@ class HelpCommand : Command {
 
         if (option !== null) {
             CommandHandler[option.asString]
-                ?.let { event.replyEmbeds(it.commandHelp(event.jda)).setEphemeral(true).queue() }
+                ?.let { event.replyEmbeds(it.getHelp(event.jda)).setEphemeral(true).queue() }
                 ?: throw CommandException("The provided command name is invalid!")
         } else {
-            event.replyEmbeds(commandList(event.jda, event.user, true, isInDm = false))
+            event.replyEmbeds(getCommandList(event.jda, event.user, true, isInDm = false))
                 .setEphemeral(true)
                 .queue()
         }
     }
 
     @OptIn(ExperimentalTime::class)
-    private fun Command.commandHelp(jda: JDA) = buildEmbed {
-        val nameWithPrefix = "${Immutable.DEFAULT_PREFIX.takeUnless { this@commandHelp is SlashOnlyCommand } ?: "/"}$name"
+    private fun Command.getHelp(jda: JDA) = buildEmbed {
+        val nameWithPrefix = "${Immutable.DEFAULT_PREFIX.takeUnless { this@getHelp is SlashOnlyCommand } ?: "/"}$name"
 
         color = Immutable.SUCCESS
-        description = this@commandHelp.fullDescription
+        description = this@getHelp.fullDescription
 
         if (aliases.isNotEmpty()) {
             field {
@@ -107,45 +107,51 @@ class HelpCommand : Command {
 
         author {
             name = nameWithPrefix +
-                    " (text-only)".takeIf { this@commandHelp is TextOnlyCommand }.orEmpty() +
-                    " (slash-only)".takeIf { this@commandHelp is SlashOnlyCommand }.orEmpty()
+                    " (text-only)".takeIf { this@getHelp is TextOnlyCommand }.orEmpty() +
+                    " (slash-only)".takeIf { this@getHelp is SlashOnlyCommand }.orEmpty()
             iconUrl = jda.selfUser.effectiveAvatarUrl
         }
     }
 
-    private fun commandList(jda: JDA, author: User, isFromSlashCommand: Boolean, isInDm: Boolean = true) =
-        buildEmbed {
-            color = Immutable.SUCCESS
+    private fun getCommandList(
+        jda: JDA,
+        author: User,
+        isFromSlashCommand: Boolean,
+        isInDm: Boolean = true,
+    ) = buildEmbed {
+        color = Immutable.SUCCESS
 
-            description = buildString {
-                val inviteLink = Immutable.INVITE_LINK_FORMAT.format(jda.selfUser.id)
+        description = buildString {
+            val inviteLink = Immutable.INVITE_LINK_FORMAT.format(jda.selfUser.id)
 
-                if (!isFromSlashCommand) {
-                    appendLine("*Try using ${jda.selfUser.name}'s slash command menu via typing \"/\" on a server!*\n")
-                }
-
-                appendLine("**[Invite Link]($inviteLink)** • **[GitHub Repository](${Immutable.GITHUB_REPOSITORY})**")
+            if (!isFromSlashCommand) {
+                appendLine("*Try using ${jda.selfUser.name}'s slash command menu via typing \"/\" on a server!*\n")
             }
 
-            author {
-                name = "${jda.selfUser.name} Help"
-                iconUrl = jda.selfUser.effectiveAvatarUrl
+            appendLine("**[Invite Link]($inviteLink)** • **[GitHub Repository](${Immutable.GITHUB_REPOSITORY})**")
+        }
+
+        author {
+            name = "${jda.selfUser.name} Help"
+            iconUrl = jda.selfUser.effectiveAvatarUrl
+        }
+
+        if (!isInDm && !isFromSlashCommand)
+            footer {
+                text = "Requested by ${author.asTag}"
+                iconUrl = author.effectiveAvatarUrl
             }
 
-            if (!isInDm && !isFromSlashCommand)
-                footer {
-                    text = "Requested by ${author.asTag}"
-                    iconUrl = author.effectiveAvatarUrl
-                }
-
-            for ((category, cmd) in CommandHandler.groupBy { it.category }.toSortedMap())
-                field {
-                    title = "$category Commands"
-                    description = cmd.sortedBy { it.name }.joinToString { cmd ->
-                        cmd.name.let {
-                            if (cmd is TextOnlyCommand || cmd is SlashOnlyCommand) it.surroundWith('*') else it
-                        }
+        for ((category, cmd) in CommandHandler.groupBy { it.category }.toSortedMap())
+            field {
+                title = "$category Commands"
+                description = cmd.sortedBy { it.name }.joinToString { cmd ->
+                    when (cmd) {
+                        is TextOnlyCommand -> cmd.name.surroundWith('*')
+                        is SlashOnlyCommand -> "*/${cmd.name}*"
+                        else -> cmd.name
                     }
                 }
-        }
+            }
+    }
 }

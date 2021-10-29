@@ -15,7 +15,7 @@ class EmojiCommand : TextOnlyCommand {
     override val usages = setOf(setOf("custom emoji"))
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
-        val emote = event.message.emotes.firstOrNull() ?: throw CommandException()
+        val emote = event.message.emotes.firstOrNull() ?: throw CommandException("No custom emoji has been provided!")
 
         event.channel.sendEmbed {
             val img = emote.imageUrl

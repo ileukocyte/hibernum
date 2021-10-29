@@ -37,7 +37,7 @@ suspend fun <T> RestAction<T>.await() = suspendCoroutine<T> {
 @OptIn(ExperimentalTime::class)
 suspend fun <T> RestAction<T>.awaitAfter(
     delay: Long,
-    unit: DurationUnit
+    unit: DurationUnit,
 ): T {
     delay(unit.toMillis(delay))
 

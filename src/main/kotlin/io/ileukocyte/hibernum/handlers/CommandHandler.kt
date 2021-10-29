@@ -97,7 +97,7 @@ object CommandHandler : MutableSet<Command> {
     internal operator fun invoke(event: GuildMessageReceivedEvent) {
         if (!event.author.isBot && !event.author.isSystem && event.message.type == MessageType.DEFAULT) {
             if (event.message.contentRaw.trim().startsWith(Immutable.DEFAULT_PREFIX)) {
-                val args = event.message.contentRaw.split("\\s+".toRegex(), 2)
+                val args = event.message.contentRaw.split(Regex("\\s+"), 2)
 
                 this[args.first().removePrefix(Immutable.DEFAULT_PREFIX).lowercase()]
                     ?.takeIf { it !is SlashOnlyCommand }
@@ -107,7 +107,9 @@ object CommandHandler : MutableSet<Command> {
 
                             if (event.jda.getProcessByEntities(event.author, event.channel) === null || isSpecial) {
                                 if (command.isDeveloper && !event.author.isDeveloper) {
-                                    event.channel.sendFailure("You cannot execute the command since you are not a developer!").queue()
+                                    event.channel
+                                        .sendFailure("You cannot execute the command since you are not a developer!")
+                                        .queue()
 
                                     return@launch
                                 }
@@ -135,18 +137,18 @@ object CommandHandler : MutableSet<Command> {
                                     when (e) {
                                         is CommandException ->
                                             event.channel.sendFailure(e.message ?: "CommandException has occurred!") {
-                                                text = e.footer ?: e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
+                                                text = e.footer ?: e.selfDeletion?.let { sd ->
+                                                    "This message will self-delete in ${asText(sd.delay, sd.unit)}"
+                                                }
                                             }.queue({
                                                 e.selfDeletion?.let { sd -> it.delete().queueAfter(sd.delay, sd.unit, {}) {} }
                                             }) { e.printStackTrace() }
                                         is InsufficientPermissionException -> {} // ignored
                                         else -> {
-                                            event.channel.sendFailure(
-                                                """
-                                           |${e::class.simpleName ?: "An unknown exception"} has occurred:
-                                           |${e.message ?: "No message provided"}
-                                           |""".trimMargin()
-                                            ).queue()
+                                            event.channel.sendFailure("""
+                                                |${e::class.simpleName ?: "An unknown exception"} has occurred:
+                                                |${e.message ?: "No message provided"}
+                                                |""".trimMargin()).queue()
 
                                             e.printStackTrace()
                                         }
@@ -207,19 +209,19 @@ object CommandHandler : MutableSet<Command> {
                                         .setEphemeral(true)
                                         .queue({}) {
                                             event.channel.sendFailure(e.message ?: "CommandException has occurred!") {
-                                                text = e.footer ?: e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
+                                                text = e.footer ?: e.selfDeletion?.let { sd ->
+                                                    "This message will self-delete in ${asText(sd.delay, sd.unit)}"
+                                                }
                                             }.queue({
                                                 e.selfDeletion?.let { sd -> it.delete().queueAfter(sd.delay, sd.unit, {}) {} }
                                             }) { e.printStackTrace() }
                                         }
                                 is InsufficientPermissionException -> {} // ignored
                                 else -> {
-                                    event.replyFailure(
-                                        """
-                                           |${e::class.simpleName ?: "An unknown exception"} has occurred:
-                                           |${e.message ?: "No message provided"}
-                                           |""".trimMargin()
-                                    ).queue()
+                                    event.replyFailure("""
+                                        |${e::class.simpleName ?: "An unknown exception"} has occurred:
+                                        |${e.message ?: "No message provided"}
+                                        |""".trimMargin()).queue()
 
                                     e.printStackTrace()
                                 }
@@ -256,19 +258,19 @@ object CommandHandler : MutableSet<Command> {
                                 .setEphemeral(true)
                                 .queue({}) {
                                     event.channel.sendFailure(e.message ?: "CommandException has occurred!") {
-                                        text = e.footer ?: e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
+                                        text = e.footer ?: e.selfDeletion?.let { sd ->
+                                            "This message will self-delete in ${asText(sd.delay, sd.unit)}"
+                                        }
                                     }.queue({
                                         e.selfDeletion?.let { sd -> it.delete().queueAfter(sd.delay, sd.unit, {}) {} }
                                     }) { e.printStackTrace() }
                                 }
                             is InsufficientPermissionException -> {} // ignored
                             else -> {
-                                event.replyFailure(
-                                    """
-                                           |${e::class.simpleName ?: "An unknown exception"} has occurred:
-                                           |${e.message ?: "No message provided"}
-                                           |""".trimMargin()
-                                ).queue()
+                                event.replyFailure("""
+                                    |${e::class.simpleName ?: "An unknown exception"} has occurred:
+                                    |${e.message ?: "No message provided"}
+                                    |""".trimMargin()).queue()
 
                                 e.printStackTrace()
                             }
@@ -302,19 +304,19 @@ object CommandHandler : MutableSet<Command> {
                                 .setEphemeral(true)
                                 .queue({}) {
                                     event.channel.sendFailure(e.message ?: "CommandException has occurred!") {
-                                        text = e.footer ?: e.selfDeletion?.let { sd -> "This message will self-delete in ${asText(sd.delay, sd.unit)}" }
+                                        text = e.footer ?: e.selfDeletion?.let { sd ->
+                                            "This message will self-delete in ${asText(sd.delay, sd.unit)}"
+                                        }
                                     }.queue({
                                         e.selfDeletion?.let { sd -> it.delete().queueAfter(sd.delay, sd.unit, {}) {} }
                                     }) { e.printStackTrace() }
                                 }
                             is InsufficientPermissionException -> {} // ignored
                             else -> {
-                                event.replyFailure(
-                                    """
-                                           |${e::class.simpleName ?: "An unknown exception"} has occurred:
-                                           |${e.message ?: "No message provided"}
-                                           |""".trimMargin()
-                                ).queue()
+                                event.replyFailure("""
+                                    |${e::class.simpleName ?: "An unknown exception"} has occurred:
+                                    |${e.message ?: "No message provided"}
+                                    |""".trimMargin()).queue()
 
                                 e.printStackTrace()
                             }

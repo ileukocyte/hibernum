@@ -34,7 +34,7 @@ repositories {
 
 dependencies {
     // Discord
-    implementation(group = "net.dv8tion", name = "JDA", version = "4.3.0_334") { exclude(module = "opus-java") }
+    implementation(group = "net.dv8tion", name = "JDA", version = "4.3.0_339") { exclude(module = "opus-java") }
     implementation(group = "com.sedmelluq", name = "lavaplayer", version = "1.3.78")
 
     // Logging
@@ -46,7 +46,7 @@ dependencies {
     implementation(group = "com.github.ileukocyte", name = "openweather-kt", version = "dfaea810a8")
     implementation(group = "org.reflections", name = "reflections", version = "0.10.1")
     implementation(group = "org.json", name = "json", version = "20210307")
-    implementation(group = "com.google.api-client", name = "google-api-client", version = "1.32.1")
+    implementation(group = "com.google.api-client", name = "google-api-client", version = "1.32.2")
     implementation(group = "com.google.oauth-client", name = "google-oauth-client-jetty", version = "1.32.1")
     implementation(group = "com.google.apis", name = "google-api-services-youtube", version = "v3-rev20210915-1.32.1")
     implementation(group = "com.google.guava", name = "guava", version = "31.0.1-jre")
@@ -103,6 +103,7 @@ tasks.withType<ShadowJar> {
 }
 
 tasks.withType<KotlinCompile> {
+    kotlinOptions.jvmTarget = "16"
     kotlinOptions.freeCompilerArgs += setOf("-Xopt-in=kotlin.RequiresOptIn", "-Xunrestricted-builder-inference")
     //kotlinOptions.languageVersion = "1.6"
 }
