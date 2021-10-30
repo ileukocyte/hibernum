@@ -239,7 +239,7 @@ class UserCommand : Command {
         field {
             val timestamp = member.timeJoined.toEpochSecond()
 
-            title = "Creation Date"
+            title = "Join Date"
             description = "<t:$timestamp:F> (<t:$timestamp:R>)"
             isInline = true
         }
