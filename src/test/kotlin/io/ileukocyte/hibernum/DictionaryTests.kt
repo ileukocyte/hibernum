@@ -93,7 +93,7 @@ class DictionaryTests {
 
                         buildString {
                             appendLine("--- #${index.inc()}: ---")
-                            appendLine("Part of Speech: ${it.partOfSpeech}")
+                            appendLine("Part of Speech: ${it.partOfSpeech ?: "N/A"}")
                             appendLine("Definitions:\n${definitions.joinToString("\n\n")}")
                         }
                     })
@@ -119,7 +119,7 @@ class DictionaryTests {
     ) {
         @Serializable
         data class Meaning(
-            val partOfSpeech: String,
+            val partOfSpeech: String? = null,
             val definitions: Set<Definition>,
         )
 
