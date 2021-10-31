@@ -18,8 +18,6 @@ import java.awt.Color as JColor
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.decodeFromJsonElement
 
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
@@ -81,15 +79,10 @@ class ColorCommand : Command {
         author { name = colorInfo.name.value }
     }
 
-    private suspend fun getColorInfo(input: String): Color {
-        val api = "http://www.thecolorapi.com/id?hex=${input.removePrefix("#").lowercase()}"
-        val response = try {
-            client.get<JsonObject>(api)
-        } catch (_: ResponseException) {
-            throw CommandException("The Color API is not available at the moment!")
-        }
-
-        return jsonSerializer.decodeFromJsonElement(response)
+    private suspend fun getColorInfo(input: String) = try {
+        client.get<Color>("http://www.thecolorapi.com/id?hex=${input.removePrefix("#").lowercase()}")
+    } catch (_: ResponseException) {
+        throw CommandException("The Color API is not available at the moment!")
     }
 
     @Serializable
