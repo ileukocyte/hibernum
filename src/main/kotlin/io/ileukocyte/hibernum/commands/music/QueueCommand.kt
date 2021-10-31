@@ -71,6 +71,12 @@ class QueueCommand : Command {
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
+            if (id.last() == "exit") {
+                event.editComponents().queue()
+
+                return
+            }
+
             val audioPlayer = event.guild?.audioPlayer ?: return
             val track = audioPlayer.player.playingTrack.let {
                 if (it === null) {
@@ -90,7 +96,15 @@ class QueueCommand : Command {
                         it.takeIf { audioPlayer.scheduler.queue.size > 7 }
                             ?.setActionRow(pageButtons(id.first(), 0))
                             ?: it
-                    }.queue()
+                    }.queue(null) { _ ->
+                        event.message.editMessageEmbeds(
+                            queueEmbed(event.jda, audioPlayer, track, 0)
+                        ).setActionRows().let {
+                            it.takeIf { audioPlayer.scheduler.queue.size > 7 }
+                                ?.setActionRow(pageButtons(id.first(), 0))
+                                ?: it
+                        }.queue()
+                    }
                 }
                 "last" -> {
                     val partition = Lists.partition(audioPlayer.scheduler.queue.toList(), 7)
@@ -102,7 +116,15 @@ class QueueCommand : Command {
                         it.takeIf { audioPlayer.scheduler.queue.size > 7 }
                             ?.setActionRow(pageButtons(id.first(), lastPage))
                             ?: it
-                    }.queue()
+                    }.queue(null) { _ ->
+                        event.message.editMessageEmbeds(
+                            queueEmbed(event.jda, audioPlayer, track, lastPage)
+                        ).setActionRows().let {
+                            it.takeIf { audioPlayer.scheduler.queue.size > 7 }
+                                ?.setActionRow(pageButtons(id.first(), lastPage))
+                                ?: it
+                        }.queue()
+                    }
                 }
                 "back" -> {
                     val newPage = max(0, pageNumber - 1)
@@ -113,7 +135,15 @@ class QueueCommand : Command {
                         it.takeIf { audioPlayer.scheduler.queue.size > 7 }
                             ?.setActionRow(pageButtons(id.first(), newPage))
                             ?: it
-                    }.queue()
+                    }.queue(null) { _ ->
+                        event.message.editMessageEmbeds(
+                            queueEmbed(event.jda, audioPlayer, track, newPage)
+                        ).setActionRows().let {
+                            it.takeIf { audioPlayer.scheduler.queue.size > 7 }
+                                ?.setActionRow(pageButtons(id.first(), newPage))
+                                ?: it
+                        }.queue()
+                    }
                 }
                 "next" -> {
                     val partition = Lists.partition(audioPlayer.scheduler.queue.toList(), 7)
@@ -126,7 +156,16 @@ class QueueCommand : Command {
                             it.takeIf { audioPlayer.scheduler.queue.size > 7 }
                                 ?.setActionRow(pageButtons(id.first(), newPage))
                                 ?: it
-                        }.queue()
+                        }.queue(null) { _ ->
+                            event.message
+                                .editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, newPage))
+                                .setActionRows()
+                                .let {
+                                    it.takeIf { audioPlayer.scheduler.queue.size > 7 }
+                                        ?.setActionRow(pageButtons(id.first(), newPage))
+                                        ?: it
+                                }.queue()
+                        }
                 }
             }
         } else throw CommandException("You did not invoke the initial command!")
@@ -137,6 +176,7 @@ class QueueCommand : Command {
         Button.secondary("$name-$userId-$page-back", "Back"),
         Button.secondary("$name-$userId-$page-next", "Next"),
         Button.secondary("$name-$userId-$page-last", "Last Page"),
+        Button.danger("$name-$userId-exit", "Exit"),
     )
 
     @OptIn(ExperimentalTime::class)

@@ -94,7 +94,12 @@ class KillCommand : Command {
 
                     event.editMessageEmbeds(defaultEmbed("The process has been terminated!", EmbedType.SUCCESS))
                         .setActionRows()
-                        .queue()
+                        .queue(null) {
+                            event.message
+                                .editMessageEmbeds(defaultEmbed("The process has been terminated!", EmbedType.SUCCESS))
+                                .setActionRows()
+                                .queue()
+                        }
 
                     val description =
                         "The ${process.command?.let { it::class.simpleName } ?: event.jda.selfUser.name} process " +
@@ -125,7 +130,14 @@ class KillCommand : Command {
                                 .setActionRow(
                                     pageButtons(id.first(), 0).takeIf { processes.size > 5 }
                                         ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
-                                ).queue()
+                                ).queue(null) {
+                                    event.message
+                                        .editMessageEmbeds(processesListEmbed(processes, 0, event.jda))
+                                        .setActionRow(
+                                            pageButtons(id.first(), 0).takeIf { processes.size > 5 }
+                                                ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
+                                        ).queue()
+                                }
                         }
                         "last" -> {
                             val partition = Lists.partition(processes.toList(), 5)
@@ -135,7 +147,14 @@ class KillCommand : Command {
                                 .setActionRow(
                                     pageButtons(id.first(), lastPage).takeIf { processes.size > 5 }
                                         ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
-                                ).queue()
+                                ).queue(null) {
+                                    event.message
+                                        .editMessageEmbeds(processesListEmbed(processes, lastPage, event.jda))
+                                        .setActionRow(
+                                            pageButtons(id.first(), lastPage).takeIf { processes.size > 5 }
+                                                ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
+                                        ).queue()
+                                }
                         }
                         "back" -> {
                             val newPage = max(0, page - 1)
@@ -144,7 +163,14 @@ class KillCommand : Command {
                                 .setActionRow(
                                     pageButtons(id.first(), newPage).takeIf { processes.size > 5 }
                                         ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
-                                ).queue()
+                                ).queue(null) {
+                                    event.message
+                                        .editMessageEmbeds(processesListEmbed(processes, newPage, event.jda))
+                                        .setActionRow(
+                                            pageButtons(id.first(), newPage).takeIf { processes.size > 5 }
+                                                ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
+                                        ).queue()
+                                }
                         }
                         "next" -> {
                             val partition = Lists.partition(processes.toList(), 5)
@@ -155,7 +181,14 @@ class KillCommand : Command {
                                 .setActionRow(
                                     pageButtons(id.first(), newPage).takeIf { processes.size > 5 }
                                         ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
-                                ).queue()
+                                ).queue(null) {
+                                    event.message
+                                        .editMessageEmbeds(processesListEmbed(processes, newPage, event.jda))
+                                        .setActionRow(
+                                            pageButtons(id.first(), newPage).takeIf { processes.size > 5 }
+                                                ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
+                                        ).queue()
+                                }
                         }
                     }
                 }
