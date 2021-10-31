@@ -32,7 +32,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 class UrbanCommand : Command {
     override val name = "urban"
     override val description = "Sends an Urban Dictionary definition of the specified term (executes faster in a NSFW channel)"
-    override val aliases = setOf("ud", "urbandictionary", "define")
+    override val aliases = setOf("ud", "urbandictionary")
     override val cooldown = 4L
     override val usages = setOf(setOf("term"))
     override val options = setOf(
