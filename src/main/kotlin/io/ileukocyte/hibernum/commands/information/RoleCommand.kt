@@ -176,7 +176,7 @@ class RoleCommand : Command {
 
         field {
             title = "Position"
-            description = "#${role.guild.roleCache.indexOf(role).inc()}"
+            description = "#${role.guild.roleCache.indexOf(role) + 1}"
             isInline = true
         }
 

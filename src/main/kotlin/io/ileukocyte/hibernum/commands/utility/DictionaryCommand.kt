@@ -192,7 +192,7 @@ class DictionaryCommand : Command {
                     .editMessageEmbeds(results.last())
                     .queue()
 
-                awaitButtonClick(results, results.size.dec(), jda, message, author)
+                awaitButtonClick(results, results.size - 1, jda, message, author)
             }
         }
     }
@@ -224,7 +224,7 @@ class DictionaryCommand : Command {
             val (partOfSpeech, def) = value
 
             with(def) {
-                append("**${index.inc()}.** ")
+                append("**${index + 1}.** ")
 
                 partOfSpeech?.let { append("($it) ") }
 
