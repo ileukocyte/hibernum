@@ -76,14 +76,14 @@ class DictionaryTests {
             for ((index, definition) in response.withIndex()) {
                 val word = json.decodeFromJsonElement<Word>(definition)
                 val output = buildString {
-                    appendLine("------- Result #${index.inc()}: -------")
+                    appendLine("------- Result #${index + 1}: -------")
                     appendLine("Word: ${word.word}")
                     appendLine("Etymology: ${word.origin ?: "N/A"}")
                     appendLine("Meanings:")
                     appendLine(word.meanings.withIndex().joinToString("\n") { (index, it) ->
                         val definitions = it.definitions.withIndex().map { (index, it) ->
                             buildString {
-                                appendLine("- Meaning #${index.inc()}: -")
+                                appendLine("- Meaning #${index + 1}: -")
                                 appendLine("Definition: ${it.definition}")
                                 appendLine("Example: ${it.example ?: "N/A"}")
                                 appendLine("Synonyms: ${it.synonyms.joinToString().takeUnless(String::isEmpty) ?: "N/A"}")
@@ -92,7 +92,7 @@ class DictionaryTests {
                         }
 
                         buildString {
-                            appendLine("--- #${index.inc()}: ---")
+                            appendLine("--- #${index + 1}: ---")
                             appendLine("Part of Speech: ${it.partOfSpeech ?: "N/A"}")
                             appendLine("Definitions:\n${definitions.joinToString("\n\n")}")
                         }

@@ -121,15 +121,12 @@ class HelpCommand : Command {
     ) = buildEmbed {
         color = Immutable.SUCCESS
 
-        description = buildString {
-            val inviteLink = Immutable.INVITE_LINK_FORMAT.format(jda.selfUser.id)
+        val inviteLink = Immutable.INVITE_LINK_FORMAT.format(jda.selfUser.id)
 
-            if (!isFromSlashCommand) {
-                appendLine("*Try using ${jda.selfUser.name}'s slash command menu via typing \"/\" on a server!*\n")
-            }
-
-            appendLine("**[Invite Link]($inviteLink)** • **[GitHub Repository](${Immutable.GITHUB_REPOSITORY})**")
-        }
+        appendLine("Commands in italics can only be used either as text commands or slash commands " +
+                "(the ones prefixed with \"/\")!")
+        appendLine()
+        appendLine("**[Invite Link]($inviteLink)** \u2022 **[GitHub Repository](${Immutable.GITHUB_REPOSITORY})**")
 
         author {
             name = "${jda.selfUser.name} Help"
@@ -153,5 +150,9 @@ class HelpCommand : Command {
                     }
                 }
             }
+
+        if (!isFromSlashCommand) {
+            footer { text = "Try using ${jda.selfUser.name}'s slash command menu via typing \"/\" on a server!" }
+        }
     }
 }

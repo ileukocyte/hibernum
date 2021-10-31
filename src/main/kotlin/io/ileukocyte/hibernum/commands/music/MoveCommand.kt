@@ -48,7 +48,7 @@ class MoveCommand : Command {
                     ?: throw CommandException("You have specified an invalid song index!")
 
                 list.removeAt(song)
-                list.add(max(0, min(index, audioPlayer.scheduler.queue.size.dec())), track)
+                list.add(max(0, min(index, audioPlayer.scheduler.queue.size - 1)), track)
 
                 val description = "[${track.info.title}](${track.info.uri}) has been moved to the new position!"
 
@@ -75,7 +75,7 @@ class MoveCommand : Command {
                     ?: throw CommandException("You have specified an invalid song index!")
 
                 list.removeAt(song)
-                list.add(max(0, min(index, audioPlayer.scheduler.queue.size.dec())), track)
+                list.add(max(0, min(index, audioPlayer.scheduler.queue.size - 1)), track)
 
                 val description = "[${track.info.title}](${track.info.uri}) has been moved to the new position!"
 
