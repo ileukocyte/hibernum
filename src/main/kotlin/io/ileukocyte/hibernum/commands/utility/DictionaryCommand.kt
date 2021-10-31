@@ -58,11 +58,12 @@ class DictionaryCommand : Command {
         val results = searchDefinition(args ?: throw NoArgumentsException)
             .takeUnless { it.isEmpty() }
             ?: throw CommandException("No definition has been found by the query!")
+        val total = results.size
 
         val message = event.channel
             .sendMessageEmbeds(results.first().getEmbed(event.jda.selfUser, 0, results.size))
             .let {
-                if (results.size > 1) {
+                if (total > 1) {
                     it.setActionRow(
                         Button.secondary("first", "First Page"),
                         Button.secondary("back", "Back"),
@@ -73,8 +74,12 @@ class DictionaryCommand : Command {
                 } else it
             }.await()
 
-        if (results.size > 1) {
-            awaitButtonClick(results, 0, event.jda, message, event.author)
+        if (total > 1) {
+            val resultEmbeds = results.withIndex().map { (i, r) ->
+                r.getEmbed(event.jda.selfUser, i, total)
+            }
+
+            awaitButtonClick(resultEmbeds, 0, event.jda, message, event.author)
         }
     }
 
@@ -94,10 +99,12 @@ class DictionaryCommand : Command {
             return
         }
 
+        val total = results.size
+
         val message = deferred
             .editOriginalEmbeds(results.first().getEmbed(event.jda.selfUser, 0, results.size))
             .let {
-                if (results.size > 1) {
+                if (total > 1) {
                     it.setActionRow(
                         Button.secondary("first", "First Page"),
                         Button.secondary("back", "Back"),
@@ -108,14 +115,18 @@ class DictionaryCommand : Command {
                 } else it
             }.await()
 
-        if (results.size > 1) {
-            awaitButtonClick(results, 0, event.jda, message, event.user)
+        if (total > 1) {
+            val resultEmbeds = results.withIndex().map { (i, r) ->
+                r.getEmbed(event.jda.selfUser, i, total)
+            }
+
+            awaitButtonClick(resultEmbeds, 0, event.jda, message, event.user)
         }
     }
 
     @OptIn(ExperimentalTime::class)
     private suspend fun awaitButtonClick(
-        results: List<Word>,
+        results: List<MessageEmbed>,
         page: Int,
         jda: JDA,
         message: Message,
@@ -141,7 +152,7 @@ class DictionaryCommand : Command {
             "exit" -> deferred.editMessageComponents().queue()
             "first" -> {
                 deferred
-                    .editMessageEmbeds(results.first().getEmbed(jda.selfUser, 0, results.size))
+                    .editMessageEmbeds(results.first())
                     .queue()
 
                 awaitButtonClick(results, 0, jda, message, author)
@@ -149,7 +160,7 @@ class DictionaryCommand : Command {
             "back" -> {
                 if (page.dec() >= 0) {
                     deferred
-                        .editMessageEmbeds(results[page - 1].getEmbed(jda.selfUser, page - 1, results.size))
+                        .editMessageEmbeds(results[page - 1])
                         .queue()
                 }
 
@@ -164,7 +175,7 @@ class DictionaryCommand : Command {
             "next" -> {
                 if (page.inc() < results.size) {
                     deferred
-                        .editMessageEmbeds(results[page + 1].getEmbed(jda.selfUser, page + 1, results.size))
+                        .editMessageEmbeds(results[page + 1])
                         .queue()
                 }
 
@@ -178,7 +189,7 @@ class DictionaryCommand : Command {
             }
             "last" -> {
                 deferred
-                    .editMessageEmbeds(results.last().getEmbed(jda.selfUser, results.size - 1, results.size))
+                    .editMessageEmbeds(results.last())
                     .queue()
 
                 awaitButtonClick(results, results.size.dec(), jda, message, author)
