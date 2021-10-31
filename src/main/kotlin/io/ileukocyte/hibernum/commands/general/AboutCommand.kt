@@ -56,7 +56,7 @@ class AboutCommand : Command {
             appendLine("**Total Commands**: ${CommandHandler.size} " +
                     "(text-only: ${CommandHandler.count { it is TextOnlyCommand }}, " +
                     "slash-only: ${CommandHandler.count { it is SlashOnlyCommand }})")
-            appendLine("**Discord-Side Slash Commands**: ${jda.retrieveCommands().await().size}")
+            appendLine("**Available Slash Commands**: ${jda.retrieveCommands().await().size}")
             append("**Servers**: ${jda.guildCache.size()}")
 
             if (jda.unavailableGuilds.isNotEmpty())
