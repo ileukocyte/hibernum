@@ -16,7 +16,7 @@ plugins {
 }
 
 group = "io.ileukocyte"
-version = Version(major = 2, minor = 2, stability = Version.Stability.Beta)
+version = Version(major = 2, minor = 2)
 
 repositories {
     mavenCentral()
@@ -103,8 +103,8 @@ tasks.withType<ShadowJar> {
 }
 
 tasks.withType<KotlinCompile> {
+    kotlinOptions.jvmTarget = "16"
     kotlinOptions.freeCompilerArgs += setOf("-Xopt-in=kotlin.RequiresOptIn", "-Xunrestricted-builder-inference")
-    //kotlinOptions.jvmTarget = "16"
     //kotlinOptions.languageVersion = "1.6"
 }
 

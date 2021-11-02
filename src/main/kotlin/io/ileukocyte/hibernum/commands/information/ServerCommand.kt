@@ -272,7 +272,7 @@ class ServerCommand : Command {
 
         field {
             title = "MFA Requirement"
-            description = if (guild.requiredMFALevel == Guild.MFALevel.TWO_FACTOR_AUTH) "Yes" else "No"
+            description = (guild.requiredMFALevel == Guild.MFALevel.TWO_FACTOR_AUTH).asWord
             isInline = true
         }
     }

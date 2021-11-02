@@ -2,20 +2,21 @@ package io.ileukocyte.hibernum.commands.information
 
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.TextOnlyCommand
+import io.ileukocyte.hibernum.extensions.asWord
 import io.ileukocyte.hibernum.extensions.sendEmbed
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
-class EmojiCommand : TextOnlyCommand {
-    override val name = "emoji"
-    override val description = "Sends the available information about the provided custom emoji"
-    override val aliases = setOf("emote", "emojiinfo", "emoji-info", "emoteinfo", "emote-info")
+class EmoteCommand : TextOnlyCommand {
+    override val name = "emote"
+    override val description = "Sends the available information about the provided **custom** emoji"
+    override val aliases = setOf("emoji", "emojiinfo", "emoji-info", "emoteinfo", "emote-info")
     override val usages = setOf(setOf("custom emoji"))
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
-        val emote = event.message.emotes.firstOrNull() ?: throw CommandException("No custom emoji has been provided!")
+        val emote = event.message.emotes.firstOrNull() ?: throw CommandException("No **custom** emoji has been provided!")
 
         event.channel.sendEmbed {
             val img = emote.imageUrl
@@ -48,7 +49,7 @@ class EmojiCommand : TextOnlyCommand {
 
             field {
                 title = "Animated"
-                description = if (emote.isAnimated) "Yes" else "No"
+                description = emote.isAnimated.asWord
                 isInline = true
             }
 
