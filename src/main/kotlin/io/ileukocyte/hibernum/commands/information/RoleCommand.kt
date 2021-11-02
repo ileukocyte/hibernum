@@ -6,6 +6,7 @@ import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.information.UserCommand.Companion.KEY_PERMISSIONS
+import io.ileukocyte.hibernum.extensions.asWord
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.searchRoles
 import io.ileukocyte.hibernum.extensions.sendEmbed
@@ -182,13 +183,13 @@ class RoleCommand : Command {
 
         field {
             title = "Mentionable"
-            description = if (role.isMentionable) "Yes" else "No"
+            description = role.isMentionable.asWord
             isInline = true
         }
 
         field {
             title = "Hoisted"
-            description = if (role.isHoisted) "Yes" else "No"
+            description = role.isHoisted.asWord
             isInline = true
         }
 

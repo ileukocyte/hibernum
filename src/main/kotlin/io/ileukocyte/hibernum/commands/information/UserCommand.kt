@@ -269,7 +269,7 @@ class UserCommand : Command {
 
         field {
             title = "Booster"
-            description = if (member.timeBoosted !== null) "Yes" else "No"
+            description = (member.timeBoosted !== null).asWord
             isInline = true
         }
 

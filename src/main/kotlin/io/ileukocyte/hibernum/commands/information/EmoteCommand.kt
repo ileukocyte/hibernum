@@ -2,6 +2,7 @@ package io.ileukocyte.hibernum.commands.information
 
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.TextOnlyCommand
+import io.ileukocyte.hibernum.extensions.asWord
 import io.ileukocyte.hibernum.extensions.sendEmbed
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
@@ -48,7 +49,7 @@ class EmoteCommand : TextOnlyCommand {
 
             field {
                 title = "Animated"
-                description = if (emote.isAnimated) "Yes" else "No"
+                description = emote.isAnimated.asWord
                 isInline = true
             }
 

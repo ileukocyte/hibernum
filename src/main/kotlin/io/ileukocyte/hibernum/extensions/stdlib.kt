@@ -12,6 +12,9 @@ suspend fun <T> CompletableFuture<T>.await() = suspendCoroutine<T> { c ->
     whenComplete { r, e -> e?.let { c.resumeWithException(it) } ?: c.resume(r) }
 }
 
+// kotlin.Boolean
+val Boolean.asWord get() = if (this) "Yes" else "No"
+
 // kotlin.Int
 val Int.charName: String? get() = Character.getName(this)
 

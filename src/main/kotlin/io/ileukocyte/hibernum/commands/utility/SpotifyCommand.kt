@@ -7,10 +7,7 @@ import com.wrapper.spotify.model_objects.specification.Track
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.*
-import io.ileukocyte.hibernum.extensions.await
-import io.ileukocyte.hibernum.extensions.limitTo
-import io.ileukocyte.hibernum.extensions.replyEmbed
-import io.ileukocyte.hibernum.extensions.sendEmbed
+import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.asDuration
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
@@ -216,7 +213,7 @@ class SpotifyCommand : Command {
 
         field {
             title = "Explicit"
-            description = if (track.isExplicit) "Yes" else "No"
+            description = track.isExplicit.asWord
             isInline = true
         }
 
