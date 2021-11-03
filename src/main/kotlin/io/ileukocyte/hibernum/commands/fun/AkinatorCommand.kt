@@ -16,6 +16,8 @@ import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.handlers.CommandContext
 import io.ileukocyte.hibernum.utils.*
 
+import java.util.concurrent.ConcurrentHashMap
+
 import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineScope
@@ -65,22 +67,27 @@ class AkinatorCommand : Command {
         setOf(option)
     }
 
-    private val akiwrappers = mutableMapOf<Long, Akiwrapper>()
-    private val declinedGuesses = mutableMapOf<Long, MutableSet<Long>>()
-    private val types = mutableMapOf<Long, GuessType>()
+    /*private*/ companion object {
+        const val PROBABILITY_THRESHOLD = 0.8125
 
-    private val probabilityThreshold = 0.8125
+        @JvmField
+        val AKIWRAPPERS = ConcurrentHashMap<Long, Akiwrapper>()
+        @JvmField
+        val DECLINED_GUESSES = ConcurrentHashMap<Long, MutableSet<Long>>()
+        @JvmField
+        val GUESS_TYPES = ConcurrentHashMap<Long, GuessType>()
 
-    private val possibleAnswers = mapOf(
-        Answer.YES to setOf("yes", "y"),
-        Answer.NO to setOf("no", "n"),
-        Answer.DONT_KNOW to setOf("don't know", "i", "idk", "dk", "dont know"),
-        Answer.PROBABLY to setOf("probably", "p"),
-        Answer.PROBABLY_NOT to setOf("probably not", "pn"),
-    )
+        @JvmField
+        val POSSIBLE_ANSWERS = mapOf(
+            Answer.YES to setOf("yes", "y"),
+            Answer.NO to setOf("no", "n"),
+            Answer.DONT_KNOW to setOf("don't know", "i", "idk", "dk", "dont know"),
+            Answer.PROBABLY to setOf("probably", "p"),
+            Answer.PROBABLY_NOT to setOf("probably not", "pn"),
+        )
 
-    private val languagesAvailableForTypes get() =
-        mapOf(
+        @JvmField
+        val LANGUAGES_AVAILABLE_FOR_TYPES = mapOf(
             GuessType.ANIMAL to sortedSetOf(
                 Language.ENGLISH,
                 Language.FRENCH,
@@ -93,6 +100,7 @@ class AkinatorCommand : Command {
             GuessType.CHARACTER to Language.values().toSortedSet(),
             GuessType.OBJECT to sortedSetOf(Language.ENGLISH, Language.FRENCH),
         )
+    }
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) =
         sendGuessTypeMenu(event.channel.idLong, event.author.idLong, event)
@@ -108,6 +116,9 @@ class AkinatorCommand : Command {
         if (event.user.id == id.first()) {
             if (optionValue == "exit") {
                 event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda)
+
+                DECLINED_GUESSES -= event.user.idLong
+                GUESS_TYPES -= event.user.idLong
 
                 event.replySuccess("The Akinator session has been finished!")
                     .setEphemeral(true)
@@ -149,13 +160,13 @@ class AkinatorCommand : Command {
                         }
 
                         val akiwrapper = buildAkiwrapper {
-                            guessType = types[event.user.idLong] ?: GuessType.CHARACTER
+                            guessType = GUESS_TYPES[event.user.idLong] ?: GuessType.CHARACTER
                             language = lang
                             filterProfanity = !event.textChannel.isNSFW
                         }
 
-                        declinedGuesses += event.user.idLong to mutableSetOf()
-                        akiwrappers += event.user.idLong to akiwrapper
+                        AKIWRAPPERS += event.user.idLong to akiwrapper
+                        DECLINED_GUESSES += event.user.idLong to mutableSetOf()
 
                         event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda)
 
@@ -184,9 +195,9 @@ class AkinatorCommand : Command {
 
                         event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda)
 
-                        declinedGuesses -= event.user.idLong
-                        types -= event.user.idLong
-                        akiwrappers -= event.user.idLong
+                        AKIWRAPPERS -= event.user.idLong
+                        DECLINED_GUESSES -= event.user.idLong
+                        GUESS_TYPES -= event.user.idLong
 
                         throw CommandException(e.message ?: "Something went wrong!", SelfDeletion(60))
                     }
@@ -200,13 +211,13 @@ class AkinatorCommand : Command {
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
-            val akiwrapper = akiwrappers[event.user.idLong] ?: return
+            val akiwrapper = AKIWRAPPERS[event.user.idLong] ?: return
 
             when (id.last()) {
                 "exit" -> {
-                    declinedGuesses -= event.user.idLong
-                    types -= event.user.idLong
-                    akiwrappers -= event.user.idLong
+                    DECLINED_GUESSES -= event.user.idLong
+                    GUESS_TYPES -= event.user.idLong
+                    AKIWRAPPERS -= event.user.idLong
 
                     event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda)
 
@@ -224,9 +235,9 @@ class AkinatorCommand : Command {
                     awaitAnswer(event.channel, event.user, akiwrapper)
                 }
                 "guessYes", "finalGuessYes" -> {
-                    declinedGuesses -= event.user.idLong
-                    types -= event.user.idLong
-                    akiwrappers -= event.user.idLong
+                    AKIWRAPPERS -= event.user.idLong
+                    DECLINED_GUESSES -= event.user.idLong
+                    GUESS_TYPES -= event.user.idLong
 
                     event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda)
 
@@ -236,9 +247,9 @@ class AkinatorCommand : Command {
                         .await()
                 }
                 "finalGuessNo" -> {
-                    declinedGuesses -= event.user.idLong
-                    types -= event.user.idLong
-                    akiwrappers -= event.user.idLong
+                    AKIWRAPPERS -= event.user.idLong
+                    DECLINED_GUESSES -= event.user.idLong
+                    GUESS_TYPES -= event.user.idLong
 
                     event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda)
 
@@ -251,10 +262,10 @@ class AkinatorCommand : Command {
                         event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda)
 
                         id.last().removePrefix("guessNo").toLongOrNull()?.let { g ->
-                            declinedGuesses[event.user.idLong]?.let { it += g }
+                            DECLINED_GUESSES[event.user.idLong]?.let { it += g }
                         }
 
-                        val previousAnswer = possibleAnswers.keys.first { id[1] in possibleAnswers[it]!! }
+                        val previousAnswer = POSSIBLE_ANSWERS.keys.first { id[1] in POSSIBLE_ANSWERS[it]!! }
                         val nextQuestion = akiwrapper.answerCurrentQuestion(previousAnswer)
 
                         if (nextQuestion !== null) {
@@ -275,7 +286,7 @@ class AkinatorCommand : Command {
                             awaitAnswer(event.channel, event.user, akiwrapper)
                         } else {
                             akiwrapper.guesses // always empty for an unknown reason
-                                .firstOrNull { declinedGuesses[event.user.idLong]?.contains(it.idLong) == false }
+                                .firstOrNull { DECLINED_GUESSES[event.user.idLong]?.contains(it.idLong) == false }
                                 ?.let { finalGuess ->
                                     val m = guessMessage(finalGuess, true, event.user.idLong, event.channel, event.message.idLong)
 
@@ -286,9 +297,9 @@ class AkinatorCommand : Command {
                                         invoker = m.idLong
                                     }) { it.user.idLong == event.user.idLong && it.message == m } // used to block other commands
                                 } ?: event.channel.let { channel ->
-                                    declinedGuesses -= event.user.idLong
-                                    types -= event.user.idLong
-                                    akiwrappers -= event.user.idLong
+                                    AKIWRAPPERS -= event.user.idLong
+                                    DECLINED_GUESSES -= event.user.idLong
+                                    GUESS_TYPES -= event.user.idLong
 
                                     channel.sendSuccess("Bravo! You have defeated me!").queue()
                                 }
@@ -328,12 +339,12 @@ class AkinatorCommand : Command {
                 "debug" -> {
                     val reply = if (player.isDeveloper) {
                         message.reply(akiwrapper.guesses
-                            .filter { declinedGuesses[player.idLong]?.contains(it.idLong) == false }
+                            .filter { DECLINED_GUESSES[player.idLong]?.contains(it.idLong) == false }
                             .joinToString("\n") { "${it.name} (${it.id}): ${it.probability}" }
                             .ifEmpty { "No guesses available" }
                             .let { "$it\n\nCurrent server: ${akiwrapper.server.url}" }
                             .let { s ->
-                                declinedGuesses[player.idLong]?.takeUnless { it.isEmpty() }
+                                DECLINED_GUESSES[player.idLong]?.takeUnless { it.isEmpty() }
                                     ?.let { "$s\nDeclined guesses: $it" }
                                     ?: s
                             }
@@ -356,7 +367,7 @@ class AkinatorCommand : Command {
                             iconUrl = channel.jda.selfUser.effectiveAvatarUrl
                         }
 
-                        for ((answer, variations) in possibleAnswers) {
+                        for ((answer, variations) in POSSIBLE_ANSWERS) {
                             field {
                                 title = answer.name
                                     .replace('_', ' ')
@@ -393,13 +404,13 @@ class AkinatorCommand : Command {
                     awaitAnswer(channel, player, akiwrapper, invoker)
                 }
                 else -> {
-                    if (content in possibleAnswers.values.flatten()) {
+                    if (content in POSSIBLE_ANSWERS.values.flatten()) {
                         val guess = akiwrapper.guesses
-                            .firstOrNull { it.probability >= probabilityThreshold
-                                    && declinedGuesses[player.idLong]?.contains(it.idLong) == false }
+                            .firstOrNull { it.probability >= PROBABILITY_THRESHOLD
+                                    && DECLINED_GUESSES[player.idLong]?.contains(it.idLong) == false }
 
                         if (guess === null) {
-                            val answer = possibleAnswers.keys.first { content in possibleAnswers[it]!! }
+                            val answer = POSSIBLE_ANSWERS.keys.first { content in POSSIBLE_ANSWERS[it]!! }
                             val nextQuestion = akiwrapper.answerCurrentQuestion(answer)
 
                             if (nextQuestion !== null) {
@@ -414,7 +425,7 @@ class AkinatorCommand : Command {
                                 awaitAnswer(channel, player, akiwrapper, invoker)
                             } else {
                                 akiwrapper.guesses // always empty for an unknown reason
-                                    .firstOrNull { declinedGuesses[player.idLong]?.contains(it.idLong) == false }
+                                    .firstOrNull { DECLINED_GUESSES[player.idLong]?.contains(it.idLong) == false }
                                     ?.let { finalGuess ->
                                         val m = guessMessage(finalGuess, true, player.idLong, message.channel, message.idLong)
 
@@ -425,9 +436,9 @@ class AkinatorCommand : Command {
                                             invoker = m.idLong
                                         }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
                                     } ?: channel.let {
-                                        declinedGuesses -= player.idLong
-                                        types -= player.idLong
-                                        akiwrappers -= player.idLong
+                                        AKIWRAPPERS -= player.idLong
+                                        DECLINED_GUESSES -= player.idLong
+                                        GUESS_TYPES -= player.idLong
 
                                         it.sendSuccess("Bravo! You have defeated me!").queue()
                                     }
@@ -455,14 +466,18 @@ class AkinatorCommand : Command {
                 }
             }
         } catch (e: Exception) {
-            declinedGuesses -= player.idLong
-            types -= player.idLong
-            akiwrappers -= player.idLong
+            AKIWRAPPERS -= player.idLong
+            DECLINED_GUESSES -= player.idLong
+            GUESS_TYPES -= player.idLong
 
             channel.jda.getProcessByEntities(player, channel)?.kill(channel.jda) // just in case
 
             throw CommandException(
-                if (e is TimeoutCancellationException) "Time is out!" else (e.message ?: "Something went wrong!"),
+                if (e is TimeoutCancellationException) {
+                    "Time is out!"
+                } else {
+                    e.message ?: "Something went wrong!"
+                },
                 SelfDeletion(30),
             )
         }
@@ -532,9 +547,9 @@ class AkinatorCommand : Command {
 
         val type = optionValue?.let { GuessType.valueOf(it) } ?: GuessType.CHARACTER
 
-        types += event.user.idLong to type
+        GUESS_TYPES += event.user.idLong to type
 
-        val availableLanguages = languagesAvailableForTypes[type] ?: Language.values().toSortedSet()
+        val availableLanguages = LANGUAGES_AVAILABLE_FOR_TYPES[type] ?: Language.values().toSortedSet()
 
         val menu = SelectionMenu
             .create("$name-${event.user.idLong}-lang")
@@ -578,11 +593,15 @@ class AkinatorCommand : Command {
             Button.danger(buildString {
                 append("$name-$playerId-")
 
-                if (!isFinal) append("$content-")
+                if (!isFinal) {
+                    append("$content-")
+                }
 
                 append("${prefix}No")
 
-                if (!isFinal) append(guess.id)
+                if (!isFinal) {
+                    append(guess.id)
+                }
             }, "No"),
         )
         val embed = buildEmbed {

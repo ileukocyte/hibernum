@@ -3,6 +3,7 @@ package io.ileukocyte.hibernum.handlers
 import io.ileukocyte.hibernum.audio.TrackUserData
 import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.audio.stop
+import io.ileukocyte.hibernum.commands.`fun`.AkinatorCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.WaiterContext
 import io.ileukocyte.hibernum.utils.awaitEvent
@@ -27,6 +28,9 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter
 import org.jetbrains.kotlin.utils.addToStdlib.cast
 
 object EventHandler : ListenerAdapter() {
+    override fun onGuildMessageReceived(event: GuildMessageReceivedEvent) =
+        CommandHandler(event)
+
     override fun onSlashCommand(event: SlashCommandEvent) =
         CommandHandler(event)
 
@@ -34,9 +38,6 @@ object EventHandler : ListenerAdapter() {
         CommandHandler(event)
 
     override fun onSelectionMenu(event: SelectionMenuEvent) =
-        CommandHandler(event)
-
-    override fun onGuildMessageReceived(event: GuildMessageReceivedEvent) =
         CommandHandler(event)
 
     @OptIn(ExperimentalCoroutinesApi::class, ExperimentalTime::class)
@@ -167,6 +168,14 @@ object EventHandler : ListenerAdapter() {
     override fun onGuildMessageDelete(event: GuildMessageDeleteEvent) {
         event.jda.getProcessByMessage(event.messageIdLong)?.let { process ->
             process.kill(event.jda)
+
+            if (process.command is AkinatorCommand) {
+                for (id in process.users) {
+                    AkinatorCommand.AKIWRAPPERS -= id
+                    AkinatorCommand.DECLINED_GUESSES -= id
+                    AkinatorCommand.GUESS_TYPES -= id
+                }
+            }
 
             val description =
                 "The ${process.command?.let { it::class.simpleName } ?: event.jda.selfUser.name} process " +

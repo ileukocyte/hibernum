@@ -50,7 +50,7 @@ class PlayCommand : Command {
                                 event.author,
                                 event.channel,
                                 thumbnail,
-                                announceQueued = musicManager.player.playingTrack !== null,
+                                announceQueueing = musicManager.player.playingTrack !== null,
                                 firstTrackPlaying = musicManager.player.playingTrack === null,
                             )
 
@@ -110,7 +110,7 @@ class PlayCommand : Command {
                             event.user,
                             event.channel,
                             thumbnail,
-                            announceQueued = musicManager.player.playingTrack !== null,
+                            announceQueueing = musicManager.player.playingTrack !== null,
                             firstTrackPlaying = musicManager.player.playingTrack === null,
                             ifFromSlashCommand = event,
                         )

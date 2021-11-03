@@ -6,6 +6,7 @@ import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.`fun`.AkinatorCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.WaiterProcess
 import io.ileukocyte.hibernum.utils.getProcessById
@@ -91,6 +92,14 @@ class KillCommand : Command {
                     val process = event.jda.getProcessById(id[1]) ?: return
 
                     process.kill(event.jda)
+
+                    if (process.command is AkinatorCommand) {
+                        for (userId in process.users) {
+                            AkinatorCommand.AKIWRAPPERS -= userId
+                            AkinatorCommand.DECLINED_GUESSES -= userId
+                            AkinatorCommand.GUESS_TYPES -= userId
+                        }
+                    }
 
                     event.editMessageEmbeds(defaultEmbed("The process has been terminated!", EmbedType.SUCCESS))
                         .setActionRows()

@@ -74,7 +74,7 @@ data class TrackUserData(
     val channel: MessageChannel,
     val thumbnail: String? = null,
     val announcement: Message? = null,
-    val announceQueued: Boolean = false,
+    val announceQueueing: Boolean = false,
     val firstTrackPlaying: Boolean = false,
     val ifFromSlashCommand: SlashCommandEvent? = null,
     val playCount: Int = 0,

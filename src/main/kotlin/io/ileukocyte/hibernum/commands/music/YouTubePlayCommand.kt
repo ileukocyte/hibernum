@@ -145,7 +145,7 @@ class YouTubePlayCommand : Command {
                         user,
                         channel,
                         "https://i3.ytimg.com/vi/$id/hqdefault.jpg",
-                        announceQueued = musicManager.player.playingTrack !== null,
+                        announceQueueing = musicManager.player.playingTrack !== null,
                         firstTrackPlaying = musicManager.player.playingTrack === null,
                         ifFromSlashCommand = ifFromSlashCommand,
                     )

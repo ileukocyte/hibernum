@@ -26,7 +26,7 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
         if (!player.startTrack(track, true)) {
             val userData = track.userData as TrackUserData
 
-            if (userData.announceQueued) {
+            if (userData.announceQueueing) {
                 val action = userData.ifFromSlashCommand?.replySuccess("[${track.info.title}](${track.info.uri}) " +
                         "has been added to the queue!")
                     ?: userData.channel.sendSuccess("[${track.info.title}](${track.info.uri}) " +
