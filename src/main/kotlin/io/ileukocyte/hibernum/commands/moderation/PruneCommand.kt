@@ -4,8 +4,7 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
 import io.ileukocyte.hibernum.extensions.*
 
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
+import java.util.concurrent.TimeUnit
 
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.User
@@ -40,7 +39,6 @@ class PruneCommand : SlashOnlyCommand {
     override val memberPermissions = setOf(Permission.MESSAGE_MANAGE)
     override val botPermissions = setOf(Permission.MESSAGE_MANAGE)
 
-    @OptIn(ExperimentalTime::class)
     override suspend fun invoke(event: SlashCommandEvent) {
         if (event.getOption("text-filter") !== null && event.getOption("text") === null)
             throw CommandException("The \"text\" option must be initialized in case of the \"text-filter\" option being provided!")
@@ -98,7 +96,7 @@ class PruneCommand : SlashOnlyCommand {
 
         event.channel.sendWarning("${event.user.asMention} has used the `$name` command!") {
             text = "This message will self-delete in 5 seconds"
-        }.queue { it.delete().queueAfter(5, DurationUnit.SECONDS, {}) {} }
+        }.queue { it.delete().queueAfter(5, TimeUnit.SECONDS, {}) {} }
     }
 
     private fun getResponse(

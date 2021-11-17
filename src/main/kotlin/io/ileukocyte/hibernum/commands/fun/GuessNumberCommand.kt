@@ -11,9 +11,7 @@ import io.ileukocyte.hibernum.utils.kill
 import io.ileukocyte.hibernum.utils.waiterProcess
 
 import java.text.DecimalFormat
-
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
+import java.util.concurrent.TimeUnit
 
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageChannel
@@ -102,7 +100,6 @@ class GuessNumberCommand : Command {
         )
     }
 
-    @OptIn(ExperimentalTime::class)
     override suspend fun invoke(event: ButtonClickEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
 
@@ -128,7 +125,6 @@ class GuessNumberCommand : Command {
         }
     }
 
-    @OptIn(ExperimentalTime::class)
     private suspend fun awaitMessage(
         _attempt: Int = 1,
         number: Int,
@@ -149,7 +145,7 @@ class GuessNumberCommand : Command {
                         Button.secondary("$name-${user.idLong}-$attempt-$number-stay", "No"),
                     ).await()
 
-                channel.jda.awaitEvent<ButtonClickEvent>(15, DurationUnit.MINUTES, waiterProcess = waiterProcess {
+                channel.jda.awaitEvent<ButtonClickEvent>(15, TimeUnit.MINUTES, waiterProcess = waiterProcess {
                     this.channel = channel.idLong
                     users += user.idLong
                     command = this@GuessNumberCommand
@@ -193,7 +189,7 @@ class GuessNumberCommand : Command {
                         text = "This message will self-delete in 5 seconds"
                     }.await()
 
-                    incorrect.delete().queueAfter(5, DurationUnit.SECONDS, {}) {}
+                    incorrect.delete().queueAfter(5, TimeUnit.SECONDS, {}) {}
 
                     awaitMessage(attempt, number, channel, message, user)
                 }

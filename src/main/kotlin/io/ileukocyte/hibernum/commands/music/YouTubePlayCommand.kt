@@ -16,7 +16,6 @@ import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.*
 
-import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.withContext
 
 import net.dv8tion.jda.api.entities.*
@@ -74,7 +73,6 @@ class YouTubePlayCommand : Command {
         } else throw CommandException("You did not invoke the initial command!")
     }
 
-    @OptIn(ExperimentalTime::class)
     private suspend fun sendMenu(
         member: Member,
         textChannel: TextChannel,

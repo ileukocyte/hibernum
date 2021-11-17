@@ -34,7 +34,7 @@ repositories {
 
 dependencies {
     // Discord
-    implementation(group = "net.dv8tion", name = "JDA", version = "4.3.0_339") { exclude(module = "opus-java") }
+    implementation(group = "net.dv8tion", name = "JDA", version = "4.3.0_346") { exclude(module = "opus-java") }
     implementation(group = "com.sedmelluq", name = "lavaplayer", version = "1.3.78")
 
     // Logging
@@ -44,7 +44,7 @@ dependencies {
     // APIs and libraries
     implementation(group = "com.github.markozajc", name = "akiwrapper", version = "1.5.1.1")
     implementation(group = "com.github.ileukocyte", name = "openweather-kt", version = "dfaea810a8")
-    implementation(group = "org.reflections", name = "reflections", version = "0.10.1")
+    implementation(group = "org.reflections", name = "reflections", version = "0.10.2")
     implementation(group = "org.json", name = "json", version = "20210307")
     implementation(group = "com.google.api-client", name = "google-api-client", version = "1.32.2")
     implementation(group = "com.google.oauth-client", name = "google-oauth-client-jetty", version = "1.32.1")
@@ -53,13 +53,15 @@ dependencies {
     implementation(group = "org.jsoup", name = "jsoup", version = "1.14.3")
     implementation(group = "commons-validator", name = "commons-validator", version = "1.7")
     implementation(group = "com.github.kenglxn.QRGen", name = "javase", version = "2.6.0")
-    implementation(group = "se.michaelthelin.spotify", name = "spotify-web-api-java", version = "6.5.4")
+    implementation(group = "se.michaelthelin.spotify", name = "spotify-web-api-java", version = "7.0.0")
     implementation(group = "com.github.SvenWoltmann", name = "color-thief-java", version = "v1.1.2")
     implementation(group = "org.ocpsoft.prettytime", name = "prettytime", version = "5.0.2.Final")
-    implementation(group = "io.arrow-kt", name = "arrow-fx-coroutines", version = "1.0.0")
+    implementation(group = "io.arrow-kt", name = "arrow-fx-coroutines", version = "1.0.1")
 
     // Kotlin
     implementation(kotlin("stdlib", kotlinVersion))
+    implementation(kotlin("stdlib-jdk7", kotlinVersion))
+    implementation(kotlin("stdlib-jdk8", kotlinVersion))
     implementation(kotlin("reflect", kotlinVersion))
     implementation(kotlin("compiler", kotlinVersion))
     implementation(kotlin("script-util", kotlinVersion))
@@ -76,8 +78,8 @@ dependencies {
     implementation(ktor("client-serialization"))
 
     // Testing
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
     testImplementation(kotlin("test-junit", kotlinVersion))
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
 }
 
@@ -104,7 +106,7 @@ tasks.withType<ShadowJar> {
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "16"
-    kotlinOptions.freeCompilerArgs += setOf("-Xopt-in=kotlin.RequiresOptIn", "-Xunrestricted-builder-inference")
+    kotlinOptions.freeCompilerArgs += setOf("-Xopt-in=kotlin.RequiresOptIn")
     //kotlinOptions.languageVersion = "1.6"
 }
 

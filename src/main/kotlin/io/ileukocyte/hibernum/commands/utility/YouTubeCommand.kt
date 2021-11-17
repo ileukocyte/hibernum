@@ -13,7 +13,6 @@ import io.ileukocyte.hibernum.utils.*
 
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
-import kotlin.time.ExperimentalTime
 
 import net.dv8tion.jda.api.entities.Emoji
 import net.dv8tion.jda.api.entities.MessageEmbed.DESCRIPTION_MAX_LENGTH
@@ -104,7 +103,6 @@ class YouTubeCommand : Command {
         } else throw CommandException("You did not invoke the initial command!")
     }
 
-    @OptIn(ExperimentalTime::class)
     private suspend fun videoEmbed(video: Video, author: User? = null) = buildEmbed {
         video.snippet.thumbnails?.let {
             it.maxres.url ?: it.standard.url ?: it.high.url ?: it.medium.url ?: it.default.url
@@ -141,7 +139,6 @@ class YouTubeCommand : Command {
         }
     }
 
-    @OptIn(ExperimentalTime::class)
     private suspend fun sendMenu(
         query: String,
         author: User,

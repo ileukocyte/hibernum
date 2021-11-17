@@ -10,8 +10,8 @@ import io.ileukocyte.hibernum.utils.awaitEvent
 import io.ileukocyte.hibernum.utils.getProcessByMessage
 import io.ileukocyte.hibernum.utils.kill
 
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
+import java.util.concurrent.TimeUnit
+
 import kotlinx.coroutines.*
 import kotlinx.coroutines.selects.select
 
@@ -40,7 +40,7 @@ object EventHandler : ListenerAdapter() {
     override fun onSelectionMenu(event: SelectionMenuEvent) =
         CommandHandler(event)
 
-    @OptIn(ExperimentalCoroutinesApi::class, ExperimentalTime::class)
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun onGuildVoiceLeave(event: GuildVoiceLeaveEvent) {
         if (event.member != event.guild.selfMember) {
             if (event.channelLeft == event.guild.selfMember.voiceState?.channel) {
@@ -88,7 +88,7 @@ object EventHandler : ListenerAdapter() {
                                         ?.let {
                                             it.sendWarning("${event.jda.selfUser.name} has been inactive for too long to stay in the voice channel! The bot has left!") {
                                                 text = "This message will self-delete in a minute"
-                                            }.queue({ w -> w.delete().queueAfter(1, DurationUnit.MINUTES, {}) {} }) {}
+                                            }.queue({ w -> w.delete().queueAfter(1, TimeUnit.MINUTES, {}) {} }) {}
                                         }
 
                                     event.guild.audioPlayer?.stop()
@@ -102,7 +102,7 @@ object EventHandler : ListenerAdapter() {
         } else event.guild.audioPlayer?.stop() // just in case
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class, ExperimentalTime::class)
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun onGuildVoiceMove(event: GuildVoiceMoveEvent) {
         val vc = event.guild.selfMember.voiceState?.channel
 
@@ -151,7 +151,7 @@ object EventHandler : ListenerAdapter() {
                                     ?.let {
                                         it.sendWarning("${event.jda.selfUser.name} has been inactive for too long to stay in the voice channel! The bot has left!") {
                                             text = "This message will self-delete in a minute"
-                                        }.queue({ w -> w.delete().queueAfter(1, DurationUnit.MINUTES, {}) {} }) {}
+                                        }.queue({ w -> w.delete().queueAfter(1, TimeUnit.MINUTES, {}) {} }) {}
                                     }
 
                                 event.guild.audioPlayer?.stop()
@@ -164,7 +164,6 @@ object EventHandler : ListenerAdapter() {
         }
     }
 
-    @OptIn(ExperimentalTime::class)
     override fun onGuildMessageDelete(event: GuildMessageDeleteEvent) {
         event.jda.getProcessByMessage(event.messageIdLong)?.let { process ->
             process.kill(event.jda)
@@ -188,7 +187,7 @@ object EventHandler : ListenerAdapter() {
                     process.users.mapNotNull { event.jda.getUserById(it)?.asMention }.joinToString()
                         .takeUnless { it.isEmpty() }
                         ?.let { content += it }
-                }?.queue({ it.delete().queueAfter(5, DurationUnit.SECONDS, {}) {} }, {})
+                }?.queue({ it.delete().queueAfter(5, TimeUnit.SECONDS, {}) {} }, {})
         }
     }
 }

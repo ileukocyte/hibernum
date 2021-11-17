@@ -1,9 +1,5 @@
 package io.ileukocyte.hibernum.commands.utility
 
-import com.wrapper.spotify.SpotifyApi
-import com.wrapper.spotify.exceptions.detailed.BadRequestException
-import com.wrapper.spotify.model_objects.specification.Track
-
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.*
@@ -12,7 +8,6 @@ import io.ileukocyte.hibernum.utils.asDuration
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
 import kotlin.math.round
-import kotlin.time.ExperimentalTime
 
 import net.dv8tion.jda.api.entities.Emoji
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
@@ -22,6 +17,10 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
+
+import se.michaelthelin.spotify.SpotifyApi
+import se.michaelthelin.spotify.exceptions.detailed.BadRequestException
+import se.michaelthelin.spotify.model_objects.specification.Track
 
 class SpotifyCommand : Command {
     override val name = "spotify"
@@ -160,7 +159,6 @@ class SpotifyCommand : Command {
         } else throw CommandException("You did not invoke the initial command!")
     }
 
-    @OptIn(ExperimentalTime::class)
     private suspend fun trackEmbed(track: Track, api: SpotifyApi) = buildEmbed {
         val album = api.getAlbum(track.album.id).build().executeAsync().await()
         val artist = api.getArtist(track.artists.first().id).build().executeAsync().await()

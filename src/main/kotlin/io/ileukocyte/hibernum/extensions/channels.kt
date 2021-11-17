@@ -9,8 +9,8 @@ import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.utils.awaitEvent
 import io.ileukocyte.hibernum.utils.waiterProcess
 
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
+import java.util.concurrent.TimeUnit
+
 import kotlinx.coroutines.TimeoutCancellationException
 
 import net.dv8tion.jda.api.EmbedBuilder.ZERO_WIDTH_SPACE
@@ -64,14 +64,13 @@ fun MessageChannel.sendActionRow(vararg components: Component) =
  *
  * @author Alexander Oksanich
  */
-@OptIn(ExperimentalTime::class)
 @Throws(TimeoutCancellationException::class)
 suspend inline fun MessageChannel.awaitMessage(
     authors: Set<User>,
     processCommand: Command? = null,
     invokingMessage: Message? = null,
     delay: Long = 1,
-    unit: DurationUnit = DurationUnit.MINUTES,
+    unit: TimeUnit = TimeUnit.MINUTES,
 ) = jda.awaitEvent<GuildMessageReceivedEvent>(
     delay = delay,
     unit = unit,
@@ -106,12 +105,11 @@ suspend inline fun MessageChannel.awaitMessage(
  *
  * @author Alexander Oksanich
  */
-@OptIn(ExperimentalTime::class)
 @Throws(TimeoutCancellationException::class)
 suspend inline fun MessageChannel.awaitMessage(
     author: User,
     processCommand: Command? = null,
     invokingMessage: Message? = null,
     delay: Long = 1,
-    unit: DurationUnit = DurationUnit.MINUTES,
+    unit: TimeUnit = TimeUnit.MINUTES,
 ) = awaitMessage(setOf(author), processCommand, invokingMessage, delay, unit)

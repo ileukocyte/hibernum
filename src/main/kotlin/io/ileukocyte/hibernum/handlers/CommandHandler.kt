@@ -13,10 +13,9 @@ import io.ileukocyte.hibernum.utils.getProcessByEntities
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.Executors.newFixedThreadPool
+import java.util.concurrent.TimeUnit
 
 import kotlin.coroutines.CoroutineContext
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
@@ -76,10 +75,9 @@ object CommandHandler : MutableSet<Command> {
             } else time
         } ?: 0
 
-    @OptIn(ExperimentalTime::class)
     private fun Command.getCooldownError(userId: Long) = getRemainingCooldown(userId)
         .takeUnless { it <= 0 }
-        ?.let { "Wait for ${asText(it, DurationUnit.SECONDS)} before using the command again!" }
+        ?.let { "Wait for ${asText(it, TimeUnit.SECONDS)} before using the command again!" }
 
     private fun Command.applyCooldown(userId: Long) {
         cooldowns += "$name|$userId" to OffsetDateTime.now().plusSeconds(cooldown)
@@ -93,7 +91,6 @@ object CommandHandler : MutableSet<Command> {
      *
      * @author Alexander Oksanich
      */
-    @OptIn(ExperimentalTime::class)
     internal operator fun invoke(event: GuildMessageReceivedEvent) {
         if (!event.author.isBot && !event.author.isSystem && event.message.type == MessageType.DEFAULT) {
             if (event.message.contentRaw.trim().startsWith(Immutable.DEFAULT_PREFIX)) {
@@ -169,7 +166,6 @@ object CommandHandler : MutableSet<Command> {
      *
      * @author Alexander Oksanich
      */
-    @OptIn(ExperimentalTime::class)
     internal operator fun invoke(event: SlashCommandEvent) {
         if (event.isFromGuild) {
             this[event.name]?.takeIf { it !is TextOnlyCommand }?.let { command ->
@@ -245,7 +241,6 @@ object CommandHandler : MutableSet<Command> {
      *
      * @author Alexander Oksanich
      */
-    @OptIn(ExperimentalTime::class)
     internal operator fun invoke(event: ButtonClickEvent) {
         if (event.isFromGuild && event.message.author == event.jda.selfUser) {
             this[event.componentId.split("-").first()]?.let { command ->
@@ -290,7 +285,6 @@ object CommandHandler : MutableSet<Command> {
      *
      * @author Alexander Oksanich
      */
-    @OptIn(ExperimentalTime::class)
     internal operator fun invoke(event: SelectionMenuEvent) {
         if (event.isFromGuild && event.message.author == event.jda.selfUser) {
             this[event.componentId.split("-").first()]?.let {

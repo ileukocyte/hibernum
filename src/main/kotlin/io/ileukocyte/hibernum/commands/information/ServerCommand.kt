@@ -7,8 +7,6 @@ import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.asText
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
-import kotlin.time.ExperimentalTime
-
 import net.dv8tion.jda.api.EmbedBuilder.ZERO_WIDTH_SPACE
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Guild
@@ -116,7 +114,6 @@ class ServerCommand : Command {
         } else throw CommandException("You did not invoke the initial command!")
     }
 
-    @OptIn(ExperimentalTime::class)
     private suspend fun infoEmbed(guild: Guild) = buildEmbed {
         val members = guild.memberCache
 

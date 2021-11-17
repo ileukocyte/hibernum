@@ -12,8 +12,6 @@ import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.utils.asDuration
 
-import kotlin.time.ExperimentalTime
-
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
@@ -39,7 +37,6 @@ class NowPlayingCommand : Command {
         event.replyEmbeds(playingEmbed(event.jda, audioPlayer, track)).queue()
     }
 
-    @OptIn(ExperimentalTime::class)
     private fun playingEmbed(jda: JDA, musicManager: GuildMusicManager, track: AudioTrack) = buildEmbed {
         val trackData = track.userData.cast<TrackUserData>()
 

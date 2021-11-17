@@ -7,8 +7,6 @@ import io.ileukocyte.hibernum.extensions.startDate
 import io.ileukocyte.hibernum.extensions.uptime
 import io.ileukocyte.hibernum.utils.asText
 
-import kotlin.time.ExperimentalTime
-
 import net.dv8tion.jda.api.events.Event
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
@@ -23,7 +21,6 @@ class UptimeCommand : Command {
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) =
         sendUptime(event)
 
-    @OptIn(ExperimentalTime::class)
     private fun <E : Event> sendUptime(event: E) {
         val embed = buildEmbed {
             color = Immutable.SUCCESS

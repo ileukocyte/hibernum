@@ -19,7 +19,8 @@ import io.ileukocyte.hibernum.utils.isEqualTo
 import io.ileukocyte.hibernum.utils.toOptionData
 
 import kotlin.reflect.full.createInstance
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Activity.ActivityType
@@ -30,7 +31,7 @@ import org.reflections.Reflections
 private inline fun <reified T> Reflections.getSubtypesOf() =
     getSubTypesOf(T::class.java)
 
-fun main() = runBlocking {
+suspend fun main() = coroutineScope {
     // initializing Discord
     val discord = buildJDA {
         token = DISCORD_TOKEN
@@ -46,28 +47,33 @@ fun main() = runBlocking {
     LOGGER.info("JDA has been successfully initialized!")
 
     // first evaluation
-    EVAL_KOTLIN_ENGINE.eval("io.ileukocyte.hibernum.Immutable.LOGGER.info(\"Kotlin JSR-223 engine is ready to use!\")")
+    launch {
+        EVAL_KOTLIN_ENGINE
+            .eval("io.ileukocyte.hibernum.Immutable.LOGGER.info(\"Kotlin JSR-223 engine is ready to use!\")")
+    }.join()
 
     // loading guild music managers
-    discord.loadGuildMusicManagers()
+    launch {
+        discord.loadGuildMusicManagers()
+    }.join()
 
     LOGGER.info("All the guilds have loaded their music managers!")
 
     // registering commands
-    runBlocking {
+    launch {
         Reflections("io.ileukocyte.hibernum.commands")
             .getSubtypesOf<Command>()
             .filter { !it.isInterface }
             .map { it.kotlin }
             .forEach { CommandHandler += it.createInstance() }
-    }
+    }.join()
 
     if (CommandHandler.isNotEmpty()) {
         LOGGER.info("CommandHandler has successfully loaded ${CommandHandler.size} commands!")
     }
 
     // updating global slash commands
-    runBlocking {
+    launch {
         discord.retrieveCommands().queue { discordCommands ->
             val predicate = { cmd: Command ->
                 cmd.name !in discordCommands.map { it.name }
@@ -91,7 +97,7 @@ fun main() = runBlocking {
                 }
             }
         }
-    }
+    }.join()
 
     // adding the event listener
     discord.addEventListener(EventHandler)

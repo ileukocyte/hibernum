@@ -17,7 +17,6 @@ import io.ileukocyte.hibernum.utils.asDuration
 
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.time.ExperimentalTime
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
@@ -179,7 +178,6 @@ class QueueCommand : Command {
         Button.danger("$name-$userId-exit", "Exit"),
     )
 
-    @OptIn(ExperimentalTime::class)
     private fun queueEmbed(
         jda: JDA,
         musicManager: GuildMusicManager,

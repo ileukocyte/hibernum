@@ -9,8 +9,6 @@ import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asText
 
-import kotlin.time.ExperimentalTime
-
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDAInfo
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
@@ -27,7 +25,6 @@ class AboutCommand : Command {
     override suspend fun invoke(event: SlashCommandEvent) =
         event.replyEmbeds(statsEmbed(event.jda)).queue()
 
-    @OptIn(ExperimentalTime::class)
     private suspend fun statsEmbed(jda: JDA) = buildEmbed {
         color = Immutable.SUCCESS
         thumbnail = jda.selfUser.effectiveAvatarUrl

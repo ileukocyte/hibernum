@@ -6,8 +6,8 @@ import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.utils.awaitEvent
 import io.ileukocyte.hibernum.utils.waiterProcess
 
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
+import java.util.concurrent.TimeUnit
+
 import kotlinx.coroutines.TimeoutCancellationException
 
 import net.dv8tion.jda.api.entities.Message
@@ -38,13 +38,12 @@ const val CROSS_MARK = "\u274E"
  *
  * @author Alexander Oksanich
  */
-@OptIn(ExperimentalTime::class)
 @Throws(TimeoutCancellationException::class)
 suspend fun Message.awaitConfirmationWithReactions(
     user: User,
     processCommand: Command? = null,
     delay: Long = 1,
-    unit: DurationUnit = DurationUnit.MINUTES,
+    unit: TimeUnit = TimeUnit.MINUTES,
 ): Boolean? {
     addReaction(CHECK_MARK).await()
     addReaction(CROSS_MARK).await()

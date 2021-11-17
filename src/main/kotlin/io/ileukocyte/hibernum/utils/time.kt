@@ -6,10 +6,7 @@ import io.ileukocyte.hibernum.extensions.singularOrPlural
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneId
-
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
-import kotlin.time.toDuration
+import java.util.concurrent.TimeUnit
 
 val TIME_CODE_REGEX =
     Regex("(?:(?<hours>\\d{1,2}):)?(?:(?<minutes>\\d{1,2}):)?(?<seconds>\\d{1,2})")
@@ -35,14 +32,11 @@ fun Long.millisToDate(zone: ZoneId = ZoneId.of("Etc/GMT0")): OffsetDateTime =
  *
  * @author Alexander Oksanich
  */
-@OptIn(ExperimentalTime::class)
-fun asText(time: Long, unit: DurationUnit = DurationUnit.MILLISECONDS): String {
-    val duration = time.toDuration(unit)
-
-    val days = duration.inWholeDays
-    val hours = duration.inWholeHours % 24L
-    val minutes = duration.inWholeMinutes % 60L
-    val seconds = duration.inWholeSeconds % 60L
+fun asText(time: Long, unit: TimeUnit = TimeUnit.MILLISECONDS): String {
+    val days = unit.toDays(time)
+    val hours = unit.toHours(time) % 24L
+    val minutes = unit.toMinutes(time) % 60L
+    val seconds = unit.toSeconds(time) % 60L
 
     return buildString {
         var alreadyPresent = false
@@ -131,31 +125,28 @@ fun asText(time: Long, unit: DurationUnit = DurationUnit.MILLISECONDS): String {
  *
  * @author Alexander Oksanich
  */
-@OptIn(ExperimentalTime::class)
 fun asDuration(
     time: Long,
-    unit: DurationUnit = DurationUnit.MILLISECONDS,
+    unit: TimeUnit = TimeUnit.MILLISECONDS,
     prependZeroDays: Boolean = false,
     prependZeroHours: Boolean = false,
 ): String {
-    val duration = time.toDuration(unit)
-
-    val seconds = duration.inWholeSeconds % 60L
-    val minutes = duration.inWholeMinutes % 60L
-    val hours = duration.inWholeHours % 24L
-    val days = duration.inWholeDays % 30L
+    val seconds = unit.toSeconds(time) % 60L
+    val minutes = unit.toMinutes(time) % 60L
+    val hours = unit.toHours(time) % 24L
+    val days = unit.toDays(time) % 30L
 
     return buildString {
         if (prependZeroDays || days > 0) {
-            append("0$days:".takeIf { days < 10 } ?: "$days:")
+            append("%02d:".format(days))
         }
 
         if (prependZeroHours || days > 0 || prependZeroDays || hours > 0) {
-            append("0$hours:".takeIf { hours < 10 } ?: "$hours:")
+            append("%02d:".format(hours))
         }
 
-        append("0$minutes:".takeIf { minutes < 10 } ?: "$minutes:")
-        append("0$seconds".takeIf { seconds < 10 } ?: "$seconds")
+        append("%02d:".format(minutes))
+        append("%02d".format(seconds))
     }
 }
 
@@ -177,7 +168,6 @@ fun asDuration(
  *
  * @author Alexander Oksanich
  */
-@OptIn(ExperimentalTime::class)
 fun timeCodeToMillis(timeCode: String) = TIME_CODE_REGEX.find(timeCode)?.let {
     data class Time(
         val seconds: ParsingTimeUnit,
@@ -199,13 +189,12 @@ fun timeCodeToMillis(timeCode: String) = TIME_CODE_REGEX.find(timeCode)?.let {
     }
 
     val timeData = Time(
-        it.groups["seconds"]?.value?.toLongOrNull() to DurationUnit.SECONDS,
-        it.groups["minutes"]?.value?.toLongOrNull() to DurationUnit.MINUTES,
-        it.groups["hours"]?.value?.toLongOrNull() to DurationUnit.HOURS,
+        it.groups["seconds"]?.value?.toLongOrNull() to TimeUnit.SECONDS,
+        it.groups["minutes"]?.value?.toLongOrNull() to TimeUnit.MINUTES,
+        it.groups["hours"]?.value?.toLongOrNull() to TimeUnit.HOURS,
     )
 
     timeData.millisSum
 } ?: throw IllegalArgumentException("You have entered an argument of a wrong format!")
 
-@ExperimentalTime
-private typealias ParsingTimeUnit = Pair<Long?, DurationUnit>
+private typealias ParsingTimeUnit = Pair<Long?, TimeUnit>

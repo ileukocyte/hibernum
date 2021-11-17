@@ -20,9 +20,8 @@ import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
 
 import java.net.URLEncoder
+import java.util.concurrent.TimeUnit
 
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -83,7 +82,6 @@ class DictionaryCommand : Command {
         }
     }
 
-    @OptIn(ExperimentalTime::class)
     override suspend fun invoke(event: SlashCommandEvent) {
         val deferred = event.deferReply().await()
         val results = searchDefinition(event.getOption("term")?.asString ?: return)
@@ -94,7 +92,7 @@ class DictionaryCommand : Command {
                     "No definition has been found by the query!",
                     EmbedType.FAILURE,
                 ) { text = "This message will self-delete in 5 seconds" }
-            ).queue { it.delete().queueAfter(5, DurationUnit.SECONDS, {}) {} }
+            ).queue { it.delete().queueAfter(5, TimeUnit.SECONDS, {}) {} }
 
             return
         }
@@ -124,7 +122,6 @@ class DictionaryCommand : Command {
         }
     }
 
-    @OptIn(ExperimentalTime::class)
     private suspend fun awaitButtonClick(
         results: List<MessageEmbed>,
         page: Int,
@@ -133,7 +130,7 @@ class DictionaryCommand : Command {
         author: User,
     ) {
         val event = try {
-            jda.awaitEvent<ButtonClickEvent>(5, DurationUnit.MINUTES) {
+            jda.awaitEvent<ButtonClickEvent>(5, TimeUnit.MINUTES) {
                 it.message == message && it.user == author
             } ?: return
         } catch (_: TimeoutCancellationException) {

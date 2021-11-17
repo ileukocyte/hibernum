@@ -17,9 +17,8 @@ import io.ileukocyte.hibernum.handlers.CommandContext
 import io.ileukocyte.hibernum.utils.*
 
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
@@ -108,7 +107,6 @@ class AkinatorCommand : Command {
     override suspend fun invoke(event: SlashCommandEvent) =
         sendLanguagesMenu(event, event.getOption("type")?.asString)
 
-    @OptIn(ExperimentalTime::class)
     override suspend fun invoke(event: SelectionMenuEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
         val optionValue = event.selectedOptions?.firstOrNull()?.value
@@ -206,7 +204,6 @@ class AkinatorCommand : Command {
         } else throw CommandException("You did not invoke the initial command!")
     }
 
-    @OptIn(ExperimentalTime::class)
     override suspend fun invoke(event: ButtonClickEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
 
@@ -290,7 +287,7 @@ class AkinatorCommand : Command {
                                 ?.let { finalGuess ->
                                     val m = guessMessage(finalGuess, true, event.user.idLong, event.channel, event.message.idLong)
 
-                                    event.jda.awaitEvent<ButtonClickEvent>(15, DurationUnit.MINUTES, waiterProcess = waiterProcess {
+                                    event.jda.awaitEvent<ButtonClickEvent>(15, TimeUnit.MINUTES, waiterProcess = waiterProcess {
                                         channel = event.channel.idLong
                                         users += event.user.idLong
                                         command = this@AkinatorCommand
@@ -310,7 +307,6 @@ class AkinatorCommand : Command {
         } else throw CommandException("You did not invoke the initial command!")
     }
 
-    @OptIn(ExperimentalTime::class)
     private suspend fun awaitAnswer(
         channel: MessageChannel,
         player: User,
@@ -459,7 +455,7 @@ class AkinatorCommand : Command {
                                 text = "This message will self-delete in 5 seconds"
                             }.await()
 
-                        incorrect.delete().queueAfter(5, DurationUnit.SECONDS, {}) {}
+                        incorrect.delete().queueAfter(5, TimeUnit.SECONDS, {}) {}
 
                         awaitAnswer(channel, player, akiwrapper, invokingMessage)
                     }
@@ -483,7 +479,6 @@ class AkinatorCommand : Command {
         }
     }
 
-    @OptIn(ExperimentalTime::class)
     private suspend fun <E : Event> sendGuessTypeMenu(channelId: Long, playerId: Long, event: E) {
         event.jda.getProcessByEntitiesIds(playerId, channelId)?.kill(event.jda) // just in case
 
@@ -535,7 +530,6 @@ class AkinatorCommand : Command {
         }) { it.user.idLong == playerId && it.message == message } // used to block other commands
     }
 
-    @OptIn(ExperimentalTime::class)
     private suspend fun sendLanguagesMenu(
         event: GenericInteractionCreateEvent,
         optionValue: String?,

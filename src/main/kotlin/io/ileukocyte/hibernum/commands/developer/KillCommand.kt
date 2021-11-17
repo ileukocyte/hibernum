@@ -13,10 +13,10 @@ import io.ileukocyte.hibernum.utils.getProcessById
 import io.ileukocyte.hibernum.utils.kill
 import io.ileukocyte.hibernum.utils.processes
 
+import java.util.concurrent.TimeUnit
+
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
@@ -78,7 +78,6 @@ class KillCommand : Command {
         }
     }
 
-    @OptIn(ExperimentalTime::class)
     override suspend fun invoke(event: ButtonClickEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
 
@@ -127,7 +126,7 @@ class KillCommand : Command {
                             process.users.mapNotNull { event.jda.getUserById(it)?.asMention }.joinToString()
                                 .takeUnless { it.isEmpty() }
                                 ?.let { content += it }
-                        }.queue({ it.delete().queueAfter(5, DurationUnit.SECONDS, {}) {} }, {})
+                        }.queue({ it.delete().queueAfter(5, TimeUnit.SECONDS, {}) {} }, {})
                     }
                 }
                 else -> {

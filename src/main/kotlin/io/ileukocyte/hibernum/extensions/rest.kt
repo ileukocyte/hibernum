@@ -1,11 +1,11 @@
 @file:JvmName("RestActionExtensions")
 package io.ileukocyte.hibernum.extensions
 
+import java.util.concurrent.TimeUnit
+
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.delay
 
 import net.dv8tion.jda.api.requests.RestAction
@@ -34,10 +34,9 @@ suspend fun <T> RestAction<T>.await() = suspendCoroutine<T> {
  *
  * @return the response value
  */
-@OptIn(ExperimentalTime::class)
 suspend fun <T> RestAction<T>.awaitAfter(
     delay: Long,
-    unit: DurationUnit,
+    unit: TimeUnit,
 ): T {
     delay(unit.toMillis(delay))
 

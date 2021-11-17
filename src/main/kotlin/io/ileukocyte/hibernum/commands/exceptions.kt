@@ -1,10 +1,8 @@
 package io.ileukocyte.hibernum.commands
 
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
+import java.util.concurrent.TimeUnit
 
-data class SelfDeletion
-    @OptIn(ExperimentalTime::class) constructor(val delay: Long, val unit: DurationUnit = DurationUnit.SECONDS)
+data class SelfDeletion(val delay: Long, val unit: TimeUnit = TimeUnit.SECONDS)
 
 open class CommandException(
     message: String? = null,

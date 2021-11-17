@@ -7,8 +7,7 @@ import io.ileukocyte.hibernum.extensions.surroundWith
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asText
 
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
+import java.util.concurrent.TimeUnit
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.User
@@ -59,7 +58,6 @@ class HelpCommand : Command {
         }
     }
 
-    @OptIn(ExperimentalTime::class)
     private fun Command.getHelp(jda: JDA) = buildEmbed {
         val nameWithPrefix = "${Immutable.DEFAULT_PREFIX.takeUnless { this@getHelp is SlashOnlyCommand } ?: "/"}$name"
 
@@ -81,7 +79,7 @@ class HelpCommand : Command {
         if (cooldown > 0) {
             field {
                 title = "Cooldown"
-                description = asText(cooldown, DurationUnit.SECONDS)
+                description = asText(cooldown, TimeUnit.SECONDS)
             }
         }
 

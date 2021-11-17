@@ -9,11 +9,10 @@ import io.ileukocyte.hibernum.commands.Command
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.util.concurrent.Executors.newFixedThreadPool
+import java.util.concurrent.TimeUnit
 
 import kotlin.coroutines.CoroutineContext
 import kotlin.reflect.KClass
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.*
 
 import net.dv8tion.jda.api.JDA
@@ -167,11 +166,10 @@ class AwaitableEventListener<E : GenericEvent>(
  * @see io.ileukocyte.hibernum.extensions.awaitConfirmationWithReactions
  * @see io.ileukocyte.hibernum.extensions.awaitMessage
  */
-@OptIn(ExperimentalTime::class)
 @Throws(TimeoutCancellationException::class)
 suspend inline fun <reified E : GenericEvent> JDA.awaitEvent(
     delay: Long = -1,
-    unit: DurationUnit = DurationUnit.MILLISECONDS,
+    unit: TimeUnit = TimeUnit.MILLISECONDS,
     waiterProcess: WaiterProcess? = null,
     noinline condition: suspend (E) -> Boolean,
 ): E? {
