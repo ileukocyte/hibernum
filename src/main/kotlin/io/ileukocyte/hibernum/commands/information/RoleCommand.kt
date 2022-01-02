@@ -156,6 +156,7 @@ class RoleCommand : Command {
         val color = role.color?.rgb?.and(0xffffff)?.toString(16)
 
         thumbnail = color?.let { "attachment://$it.png" }
+        image = role.icon?.iconUrl?.let { "$it?size=2048" }
 
         field {
             title = "Name"
@@ -205,6 +206,14 @@ class RoleCommand : Command {
             title = "Creation Date"
             description = "<t:$timestamp:F> (<t:$timestamp:R>)"
             isInline = true
+        }
+
+        role.icon?.emoji?.let {
+            field {
+                title = "Role Icon Emoji"
+                description = it
+                isInline = true
+            }
         }
 
         role.permissions.intersect(KEY_PERMISSIONS).takeUnless { it.isEmpty() }?.let { keyPermissions ->
