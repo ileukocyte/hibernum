@@ -28,8 +28,12 @@ class GuessNumberCommand : Command {
     override val description = "Launches a game where the user is supposed to guess some number within the specified range"
     override val aliases = setOf("guessnum", "guessnumber", "guess-number")
     override val options = setOf(
-        OptionData(OptionType.INTEGER, "min", "The beginning of the range (minimum: 1)", true),
-        OptionData(OptionType.INTEGER, "max", "The maximal value of the range (maximum: 500,000)", true),
+        OptionData(OptionType.INTEGER, "min", "The beginning of the range (minimum: 1)", true)
+            .setMinValue(1)
+            .setMaxValue(499_995),
+        OptionData(OptionType.INTEGER, "max", "The maximal value of the range (maximum: 500,000)", true)
+            .setMinValue(6)
+            .setMaxValue(500_000),
     )
     override val usages = setOf(setOf("min", "max"))
 
@@ -72,9 +76,6 @@ class GuessNumberCommand : Command {
 
         if (min >= max)
             throw CommandException("The minimal value cannot be greater than the maximum value!")
-
-        if (min < 1 || max > 500_000)
-            throw CommandException("The specified values are out of the possible range of 1 through 500,000!")
 
         if ((max - min) < 5)
             throw CommandException("The difference between the maximal value and the minimal one must equal to or be greater than 5!")
