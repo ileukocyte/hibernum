@@ -11,10 +11,7 @@ import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.extensions.replyFailure
-import io.ileukocyte.hibernum.extensions.replySuccess
-import io.ileukocyte.hibernum.extensions.sendFailure
-import io.ileukocyte.hibernum.extensions.sendSuccess
+import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.YOUTUBE_LINK_REGEX
 
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
@@ -51,7 +48,7 @@ class PlayCommand : Command {
                                 event.channel,
                                 thumbnail,
                                 announceQueueing = musicManager.player.playingTrack !== null,
-                                firstTrackPlaying = musicManager.player.playingTrack === null,
+                                isFirstTrackPlaying = musicManager.player.playingTrack === null,
                             )
 
                             musicManager.scheduler += track
@@ -66,7 +63,7 @@ class PlayCommand : Command {
                                     event.author,
                                     event.channel,
                                     thumbnail,
-                                    firstTrackPlaying = musicManager.player.playingTrack === null,
+                                    isFirstTrackPlaying = musicManager.player.playingTrack === null,
                                 )
 
                                 musicManager.scheduler += track
@@ -95,6 +92,8 @@ class PlayCommand : Command {
         val guild = event.guild ?: return
 
         event.member?.voiceState?.channel?.let {
+            val deferred = event.deferReply().await()
+
             val channel = it.takeUnless { vc -> guild.selfMember.voiceState?.channel == vc }
             val url = event.getOption("query")?.asString ?: return@invoke
 
@@ -111,17 +110,23 @@ class PlayCommand : Command {
                             event.channel,
                             thumbnail,
                             announceQueueing = musicManager.player.playingTrack !== null,
-                            firstTrackPlaying = musicManager.player.playingTrack === null,
-                            ifFromSlashCommand = event,
+                            isFirstTrackPlaying = musicManager.player.playingTrack === null,
+                            ifFromSlashCommand = deferred,
                         )
 
                         musicManager.scheduler += track
                     }
 
                     override fun playlistLoaded(playlist: AudioPlaylist) {
-                        event.replySuccess(
-                            "${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else "\"${playlist.name}\""} playlist " +
-                                    "has been added to the queue!").queue()
+                        val embed = defaultEmbed(
+                            desc = "${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else "\"${playlist.name}\""} playlist " +
+                                "has been added to the queue!",
+                            type = EmbedType.SUCCESS,
+                        )
+
+                        deferred.editOriginalEmbeds(embed).queue(null) {
+                            event.channel.sendMessageEmbeds(embed).queue()
+                        }
 
                         for (track in playlist.tracks) {
                             val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
@@ -131,7 +136,7 @@ class PlayCommand : Command {
                                 event.user,
                                 event.channel,
                                 thumbnail,
-                                firstTrackPlaying = musicManager.player.playingTrack === null,
+                                isFirstTrackPlaying = musicManager.player.playingTrack === null,
                             )
 
                             musicManager.scheduler += track
@@ -139,12 +144,22 @@ class PlayCommand : Command {
                     }
 
                     override fun noMatches() =
-                        event.replyFailure("No results have been found by the query!") {
-                            text = "Try using the \"ytplay\" command instead!"
-                        }.queue()
+                        deferred.editOriginalEmbeds(defaultEmbed(
+                            desc = "No results have been found by the query!",
+                            type = EmbedType.FAILURE,
+                        ) { text = "Try using the \"ytplay\" command instead!" }).queue(null) {
+                            event.channel.sendFailure("No results have been found by the query!") {
+                                text = "Try using the \"ytplay\" command instead!"
+                            }.queue()
+                        }
 
                     override fun loadFailed(exception: FriendlyException) =
-                        event.replyFailure("The track cannot be played!").queue()
+                        deferred.editOriginalEmbeds(defaultEmbed(
+                            desc = "The track cannot be played!",
+                            type = EmbedType.FAILURE,
+                        )).queue(null) {
+                            event.channel.sendFailure("The track cannot be played!").queue()
+                        }
                 })
             }
         } ?: throw CommandException("You are not connected to a voice channel!")

@@ -6,15 +6,13 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 
 import io.ileukocyte.hibernum.Immutable
-import io.ileukocyte.hibernum.extensions.replyEmbed
-import io.ileukocyte.hibernum.extensions.replySuccess
-import io.ileukocyte.hibernum.extensions.sendEmbed
-import io.ileukocyte.hibernum.extensions.sendSuccess
+import io.ileukocyte.hibernum.builders.buildEmbed
+import io.ileukocyte.hibernum.extensions.*
 
 import java.util.concurrent.ConcurrentLinkedQueue
 
 import net.dv8tion.jda.api.entities.Message
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
+import net.dv8tion.jda.api.interactions.InteractionHook
 
 import org.jetbrains.kotlin.utils.addToStdlib.cast
 
@@ -27,19 +25,24 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
             val userData = track.userData as TrackUserData
 
             if (userData.announceQueueing) {
-                val action = userData.ifFromSlashCommand?.replySuccess("[${track.info.title}](${track.info.uri}) " +
-                        "has been added to the queue!")
-                    ?: userData.channel.sendSuccess("[${track.info.title}](${track.info.uri}) " +
-                            "has been added to the queue!")
+                val embed = defaultEmbed(
+                    desc = "[${track.info.title}](${track.info.uri}) " +
+                            "has been added to the queue!",
+                    type = EmbedType.SUCCESS,
+                )
 
-                action.queue({}) {}
+                userData.ifFromSlashCommand?.let {
+                    it.editOriginalComponents().setEmbeds(embed).queue(null) {
+                        userData.channel.sendMessageEmbeds(embed).queue()
+                    }
+                } ?: userData.channel.sendMessageEmbeds(embed).queue()
             }
 
             queue.offer(track)
         }
     }
 
-    fun nextTrack(ifFromSlashCommand: SlashCommandEvent? = null) {
+    fun nextTrack(ifFromSlashCommand: InteractionHook? = null) {
         if (queue.isNotEmpty()) {
             val next = queue.poll()
 
@@ -54,27 +57,29 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
     }
 
     override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {
-        val embedDescription = "[${track.info.title}](${track.info.uri}) is playing now!"
         val userData = track.userData as TrackUserData
-        val action =
-            if (userData.firstTrackPlaying && userData.playCount == 0) {
-                userData.ifFromSlashCommand?.replySuccess(embedDescription)
-                    ?: userData.channel.sendSuccess(embedDescription)
-            } else {
-                userData.ifFromSlashCommand?.replyEmbed {
-                    color = Immutable.SUCCESS
-                    description = embedDescription
-                } ?: userData.channel.sendEmbed {
-                    color = Immutable.SUCCESS
-                    description = embedDescription
-                }
-            }
 
-        action.queue({
-            // Messages are saved to user data instances so a song announcement can be deleted after the song stops playing
-            // Replies to slash commands won't be cast to Message in order that the command won't be deleted as well
-            track.userData = userData.copy(announcement = it as? Message, playCount = userData.playCount + 1)
-        }) {}
+        val embed = if (userData.isFirstTrackPlaying && userData.playCount == 0) {
+            defaultEmbed(
+                desc = "[${track.info.title}](${track.info.uri}) is playing now!",
+                type = EmbedType.SUCCESS,
+            )
+        } else {
+            buildEmbed {
+                color = Immutable.SUCCESS
+                description = "[${track.info.title}](${track.info.uri}) is playing now!"
+            }
+        }
+
+        val consumer = { message: Message ->
+            track.userData = userData.copy(announcement = message, playCount = userData.playCount + 1)
+        }
+
+        userData.ifFromSlashCommand?.let {
+            it.editOriginalComponents().setEmbeds(embed).queue(consumer) {
+                userData.channel.sendMessageEmbeds(embed).queue(consumer)
+            }
+        } ?: userData.channel.sendMessageEmbeds(embed).queue(consumer)
     }
 
     override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {

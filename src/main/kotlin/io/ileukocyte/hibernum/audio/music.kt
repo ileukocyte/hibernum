@@ -13,7 +13,7 @@ import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.entities.User
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
+import net.dv8tion.jda.api.interactions.InteractionHook
 
 import org.jetbrains.kotlin.utils.addToStdlib.cast
 
@@ -75,7 +75,7 @@ data class TrackUserData(
     val thumbnail: String? = null,
     val announcement: Message? = null,
     val announceQueueing: Boolean = false,
-    val firstTrackPlaying: Boolean = false,
-    val ifFromSlashCommand: SlashCommandEvent? = null,
+    val isFirstTrackPlaying: Boolean = false,
+    val ifFromSlashCommand: InteractionHook? = null,
     val playCount: Int = 0,
 )

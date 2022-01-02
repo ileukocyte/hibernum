@@ -7,7 +7,9 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
+import io.ileukocyte.hibernum.extensions.EmbedType
 import io.ileukocyte.hibernum.extensions.await
+import io.ileukocyte.hibernum.extensions.defaultEmbed
 import io.ileukocyte.hibernum.extensions.limitTo
 import io.ileukocyte.hibernum.utils.*
 
@@ -67,7 +69,19 @@ class YouTubeCommand : Command {
                 list.key = Immutable.YOUTUBE_API_KEY
 
                 it.resume(list.execute().items.firstOrNull())
-            } ?: throw CommandException("No results have been found by the query!")
+            }
+
+            if (video === null) {
+                try {
+                    deferred.editOriginalEmbeds(
+                        defaultEmbed("No results have been found by the query!", EmbedType.FAILURE)
+                    ).await()
+
+                    return
+                } catch (_: ErrorResponseException) {
+                    throw CommandException("No results have been found by the query!")
+                }
+            }
 
             try {
                 deferred.editOriginalEmbeds(videoEmbed(video)).await()
@@ -80,11 +94,11 @@ class YouTubeCommand : Command {
     }
 
     override suspend fun invoke(event: SelectionMenuEvent) {
-        val deferred = event.deferEdit().await()
-
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
+            val deferred = event.deferEdit().await()
+
             if (event.selectedOptions?.firstOrNull()?.value == "exit") {
                 deferred.deleteOriginal().queue()
 
@@ -157,8 +171,19 @@ class YouTubeCommand : Command {
     ) {
         val videos = searchVideos(query)
 
-        if (videos.isEmpty())
-            throw CommandException("No results have been found by the query!")
+        if (videos.isEmpty()) {
+            val error = "No results have been found by the query!"
+
+            ifFromSlashCommand?.let {
+                try {
+                    it.editOriginalEmbeds(defaultEmbed(error, EmbedType.FAILURE)).await()
+
+                    return
+                } catch (_: ErrorResponseException) {
+                    throw CommandException(error)
+                }
+            } ?: throw CommandException(error)
+        }
 
         val menu by lazy {
             val options = videos.map {
@@ -180,7 +205,7 @@ class YouTubeCommand : Command {
 
         val embed = buildEmbed {
             color = Immutable.SUCCESS
-            description = "Select the video you want to check information for!"
+            description = "Select the video you want to check details for!"
         }
 
         ifFromSlashCommand?.let {

@@ -97,7 +97,15 @@ class SpotifyCommand : Command {
             val track = try {
                 api.getTrack(regexMatches.first().groups.last()?.value ?: return).build().executeAsync().await()
             } catch (_: BadRequestException) {
-                throw CommandException("You have provided an invalid URL!")
+                try {
+                    deferred.editOriginalEmbeds(
+                        defaultEmbed("You have provided an invalid URL!", EmbedType.FAILURE)
+                    ).await()
+
+                    return
+                } catch (_: ErrorResponseException) {
+                    throw CommandException("You have provided an invalid URL!")
+                }
             }
 
             try {
@@ -111,7 +119,18 @@ class SpotifyCommand : Command {
 
         val request = api.searchTracks(query).limit(5).build()
         val items = request.executeAsync().await().items.takeUnless { it.isEmpty() }
-            ?: throw CommandException("No track has been found by the query!")
+
+        if (items === null) {
+            try {
+                deferred.editOriginalEmbeds(
+                    defaultEmbed("No track has been found by the query!", EmbedType.FAILURE)
+                ).await()
+
+                return
+            } catch (_: ErrorResponseException) {
+                throw CommandException("No track has been found by the query!")
+            }
+        }
 
         if (items.size == 1) {
             try {
@@ -152,11 +171,11 @@ class SpotifyCommand : Command {
     }
 
     override suspend fun invoke(event: SelectionMenuEvent) {
-        val deferred = event.deferEdit().await()
-
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
+            val deferred = event.deferEdit().await()
+
             if (event.selectedOptions?.firstOrNull()?.value == "exit") {
                 deferred.deleteOriginal().queue()
 

@@ -5,6 +5,9 @@ import io.ileukocyte.hibernum.audio.TrackUserData
 import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.extensions.EmbedType
+import io.ileukocyte.hibernum.extensions.await
+import io.ileukocyte.hibernum.extensions.defaultEmbed
 
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -12,6 +15,8 @@ import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.exceptions.ErrorResponseException
+import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
@@ -33,26 +38,43 @@ class SelectCommand : Command {
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
+        val deferred = event.deferReply().await()
+
         val number = event.getOption("song")?.asString?.toIntOrNull()
             ?: throw CommandException("You have specified a wrong number!")
 
         val audioPlayer = event.guild?.audioPlayer ?: return
 
-        select(number, audioPlayer, event.guild ?: return, event.member ?: return, event)
+        select(number, audioPlayer, event.guild ?: return, event.member ?: return, deferred)
     }
 
-    private fun select(
+    private suspend fun select(
         number: Int,
         audioPlayer: GuildMusicManager,
         guild: Guild,
         member: Member,
-        ifFromSlashCommandEvent: SlashCommandEvent? = null,
+        ifFromSlashCommandEvent: InteractionHook? = null,
     ) {
         if (audioPlayer.scheduler.queue.isNotEmpty()) {
             if (member.voiceState?.channel == guild.selfMember.voiceState?.channel) {
+                audioPlayer.player.playingTrack.userData.cast<TrackUserData>().announcement?.delete()?.queue({}) {}
+
                 val queue = audioPlayer.scheduler.queue.toMutableList()
                 val track = queue.getOrNull(number - 1)
-                    ?: throw CommandException("You have specified a wrong number!")
+
+                if (track === null) {
+                    val error = "You have specified a wrong number!"
+
+                    ifFromSlashCommandEvent?.let {
+                        try {
+                            it.editOriginalEmbeds(defaultEmbed(error, EmbedType.FAILURE)).await()
+
+                            return
+                        } catch (_: ErrorResponseException) {
+                            throw CommandException(error)
+                        }
+                    } ?: throw CommandException(error)
+                }
 
                 queue -= track
 
@@ -61,7 +83,21 @@ class SelectCommand : Command {
 
                 audioPlayer.player.startTrack(track, false)
                 audioPlayer.scheduler.queue = ConcurrentLinkedQueue(queue)
-            } else throw CommandException("You are not connected to the required voice channel!")
-        } else throw CommandException("The current queue is empty!")
+            } else {
+                val error = "You are not connected to the required voice channel!"
+
+                ifFromSlashCommandEvent
+                    ?.editOriginalEmbeds(defaultEmbed(error, EmbedType.FAILURE))
+                    ?.queue(null) { throw CommandException(error) }
+                    ?: throw CommandException(error)
+            }
+        } else {
+            val error = "The current queue is empty!"
+
+            ifFromSlashCommandEvent
+                ?.editOriginalEmbeds(defaultEmbed(error, EmbedType.FAILURE))
+                ?.queue(null) { throw CommandException(error) }
+                ?: throw CommandException(error)
+        }
     }
 }
