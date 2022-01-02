@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.entities.Emoji
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
@@ -83,6 +84,8 @@ class SpotifyCommand : Command {
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
+        val deferred = event.deferReply().await()
+
         val query = event.getOption("query")?.asString ?: return
         val api = SPOTIFY_API.apply {
             accessToken = clientCredentials().build().executeAsync().await().accessToken
@@ -97,7 +100,11 @@ class SpotifyCommand : Command {
                 throw CommandException("You have provided an invalid URL!")
             }
 
-            event.replyEmbeds(trackEmbed(track, api)).queue()
+            try {
+                deferred.editOriginalEmbeds(trackEmbed(track, api)).await()
+            } catch (_: ErrorResponseException) {
+                event.channel.sendMessageEmbeds(trackEmbed(track, api)).queue()
+            }
 
             return
         }
@@ -107,7 +114,11 @@ class SpotifyCommand : Command {
             ?: throw CommandException("No track has been found by the query!")
 
         if (items.size == 1) {
-            event.replyEmbeds(trackEmbed(items.first(), api)).queue()
+            try {
+                deferred.editOriginalEmbeds(trackEmbed(items.first(), api)).await()
+            } catch (_: ErrorResponseException) {
+                event.channel.sendMessageEmbeds(trackEmbed(items.first(), api)).queue()
+            }
 
             return
         }
@@ -128,18 +139,26 @@ class SpotifyCommand : Command {
                 ).build()
         }
 
-        event.replyEmbed {
+        val embed = buildEmbed {
             color = Immutable.SUCCESS
             description = "Select the track you want to check information about!"
-        }.addActionRow(menu).queue()
+        }
+
+        try {
+            deferred.editOriginalEmbeds(embed).setActionRow(menu).await()
+        } catch (_: ErrorResponseException) {
+            event.channel.sendMessageEmbeds(embed).setActionRow(menu).queue()
+        }
     }
 
     override suspend fun invoke(event: SelectionMenuEvent) {
+        val deferred = event.deferEdit().await()
+
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
             if (event.selectedOptions?.firstOrNull()?.value == "exit") {
-                event.message.delete().queue()
+                deferred.deleteOriginal().queue()
 
                 return
             }
@@ -151,7 +170,7 @@ class SpotifyCommand : Command {
                 val track = api.getTrack(event.selectedOptions?.firstOrNull()?.value).build().executeAsync().await()
 
                 try {
-                    event.editComponents().setEmbeds(trackEmbed(track, api)).await()
+                    deferred.editOriginalComponents().setEmbeds(trackEmbed(track, api)).await()
                 } catch (_: Exception) {
                     event.channel.sendMessageEmbeds(trackEmbed(track, api)).queue()
                 }
