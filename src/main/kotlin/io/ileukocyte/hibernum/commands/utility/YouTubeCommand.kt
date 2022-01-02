@@ -21,6 +21,8 @@ import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.exceptions.ErrorResponseException
+import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
@@ -53,6 +55,8 @@ class YouTubeCommand : Command {
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
+        val deferred = event.deferReply().await()
+
         val query = event.getOption("query")?.asString ?: return
 
         if (query matches YOUTUBE_LINK_REGEX) {
@@ -65,18 +69,24 @@ class YouTubeCommand : Command {
                 it.resume(list.execute().items.firstOrNull())
             } ?: throw CommandException("No results have been found by the query!")
 
-            event.replyEmbeds(videoEmbed(video)).queue()
+            try {
+                deferred.editOriginalEmbeds(videoEmbed(video)).await()
+            } catch (_: ErrorResponseException) {
+                event.replyEmbeds(videoEmbed(video)).queue()
+            }
         } else {
-            sendMenu(query, event.user, event.textChannel, event)
+            sendMenu(query, event.user, event.textChannel, deferred)
         }
     }
 
     override suspend fun invoke(event: SelectionMenuEvent) {
+        val deferred = event.deferEdit().await()
+
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
             if (event.selectedOptions?.firstOrNull()?.value == "exit") {
-                event.message.delete().queue()
+                deferred.deleteOriginal().queue()
 
                 return
             }
@@ -92,7 +102,7 @@ class YouTubeCommand : Command {
                 } ?: return
 
                 try {
-                    event.editComponents()
+                    deferred.editOriginalComponents()
                         .setEmbeds(videoEmbed(video, event.user.takeIf { id.getOrNull(1) == "slash" }))
                         .await()
                 } catch (_: Exception) {
@@ -105,7 +115,7 @@ class YouTubeCommand : Command {
 
     private suspend fun videoEmbed(video: Video, author: User? = null) = buildEmbed {
         video.snippet.thumbnails?.let {
-            it.maxres.url ?: it.standard.url ?: it.high.url ?: it.medium.url ?: it.default.url
+            it.maxres?.url ?: it.standard?.url ?: it.high?.url ?: it.medium?.url ?: it.default?.url
         }?.let {
             image = it
             color = getDominantColorByImageUrl(it)
@@ -143,7 +153,7 @@ class YouTubeCommand : Command {
         query: String,
         author: User,
         textChannel: TextChannel,
-        ifFromSlashCommand: SlashCommandEvent? = null,
+        ifFromSlashCommand: InteractionHook? = null,
     ) {
         val videos = searchVideos(query)
 
@@ -170,10 +180,15 @@ class YouTubeCommand : Command {
 
         val embed = buildEmbed {
             color = Immutable.SUCCESS
-            description = "Select the video you want to play!"
+            description = "Select the video you want to check information for!"
         }
 
-        ifFromSlashCommand?.replyEmbeds(embed)?.addActionRow(menu)?.queue()
-            ?: textChannel.sendMessageEmbeds(embed).setActionRow(menu).queue()
+        ifFromSlashCommand?.let {
+            try {
+                it.editOriginalEmbeds(embed).setActionRow(menu).await()
+            } catch (_: ErrorResponseException) {
+                textChannel.sendMessageEmbeds(embed).setActionRow(menu).queue()
+            }
+        } ?: textChannel.sendMessageEmbeds(embed).setActionRow(menu).queue()
     }
 }
