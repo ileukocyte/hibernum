@@ -38,14 +38,14 @@ dependencies {
     implementation(group = "com.sedmelluq", name = "lavaplayer", version = "1.3.78")
 
     // Logging
-    implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.2.6")
-    implementation(group = "io.github.microutils", name = "kotlin-logging-jvm", version = "2.0.11")
+    implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.2.10")
+    implementation(group = "io.github.microutils", name = "kotlin-logging-jvm", version = "2.1.21")
 
     // APIs and libraries
     implementation(group = "com.github.markozajc", name = "akiwrapper", version = "1.5.1.1")
     implementation(group = "com.github.ileukocyte", name = "openweather-kt", version = "dfaea810a8")
     implementation(group = "org.reflections", name = "reflections", version = "0.10.2")
-    implementation(group = "org.json", name = "json", version = "20210307")
+    implementation(group = "org.json", name = "json", version = "20211205")
     implementation(group = "com.google.api-client", name = "google-api-client", version = "1.32.2")
     implementation(group = "com.google.oauth-client", name = "google-oauth-client-jetty", version = "1.32.1")
     implementation(group = "com.google.apis", name = "google-api-services-youtube", version = "v3-rev20210915-1.32.1")
@@ -68,8 +68,8 @@ dependencies {
     implementation(kotlin("scripting-compiler", kotlinVersion))
     implementation(kotlin("scripting-jsr223", kotlinVersion))
     implementation(kotlin("scripting-jvm-host", kotlinVersion))
-    implementation(kotlinx("coroutines-core", "1.5.2"))
-    implementation(kotlinx("serialization-json", "1.3.0"))
+    implementation(kotlinx("coroutines-core", "1.6.0"))
+    implementation(kotlinx("serialization-json", "1.3.1"))
     implementation(kotlinx("datetime", "0.3.0"))
 
     // Ktor
@@ -79,8 +79,8 @@ dependencies {
 
     // Testing
     testImplementation(kotlin("test-junit", kotlinVersion))
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")
 }
 
 fun kotlinx(module: String, version: String) = "org.jetbrains.kotlinx:kotlinx-$module:$version"
