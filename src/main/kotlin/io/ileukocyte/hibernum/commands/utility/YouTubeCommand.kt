@@ -16,19 +16,19 @@ import io.ileukocyte.hibernum.utils.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-import net.dv8tion.jda.api.entities.Emoji
 import net.dv8tion.jda.api.entities.MessageEmbed.DESCRIPTION_MAX_LENGTH
 import net.dv8tion.jda.api.entities.TextChannel
 import net.dv8tion.jda.api.entities.User
-import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.entities.emoji.Emoji
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
-import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
 
 class YouTubeCommand : Command {
     override val name = "youtube"
@@ -39,7 +39,7 @@ class YouTubeCommand : Command {
     override val usages = setOf(setOf("query"))
     override val cooldown = 5L
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         if ((args ?: throw NoArgumentsException) matches YOUTUBE_LINK_REGEX) {
             val video = suspendCoroutine<Video?> {
                 val list = YOUTUBE.videos().list(listOf("id", "snippet", "contentDetails"))
@@ -52,11 +52,11 @@ class YouTubeCommand : Command {
 
             event.channel.sendMessageEmbeds(videoEmbed(video)).queue()
         } else {
-            sendMenu(args, event.author, event.channel)
+            sendMenu(args, event.author, event.textChannel)
         }
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val deferred = event.deferReply().await()
 
         val query = event.getOption("query")?.asString ?: return
@@ -93,13 +93,13 @@ class YouTubeCommand : Command {
         }
     }
 
-    override suspend fun invoke(event: SelectionMenuEvent) {
+    override suspend fun invoke(event: SelectMenuInteractionEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
             val deferred = event.deferEdit().await()
 
-            if (event.selectedOptions?.firstOrNull()?.value == "exit") {
+            if (event.selectedOptions.firstOrNull()?.value == "exit") {
                 deferred.deleteOriginal().queue()
 
                 return
@@ -109,7 +109,7 @@ class YouTubeCommand : Command {
                 val video = suspendCoroutine<Video?> {
                     val list = YOUTUBE.videos().list(listOf("id", "snippet", "contentDetails"))
 
-                    list.id = listOf(event.selectedOptions?.firstOrNull()?.value ?: return@suspendCoroutine)
+                    list.id = listOf(event.selectedOptions.firstOrNull()?.value ?: return@suspendCoroutine)
                     list.key = Immutable.YOUTUBE_API_KEY
 
                     it.resume(list.execute().items.firstOrNull())
@@ -196,7 +196,7 @@ class YouTubeCommand : Command {
                 )
             }
 
-            SelectionMenu.create("$name-${author.idLong}${"-slash".takeIf { ifFromSlashCommand !== null }.orEmpty()}-videos")
+            SelectMenu.create("$name-${author.idLong}${"-slash".takeIf { ifFromSlashCommand !== null }.orEmpty()}-videos")
                 .addOptions(
                     *options.toTypedArray(),
                     SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),

@@ -16,12 +16,12 @@ import java.util.concurrent.TimeUnit
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.entities.User
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import net.dv8tion.jda.api.interactions.components.Button
+import net.dv8tion.jda.api.interactions.components.buttons.Button
 
 class GuessNumberCommand : Command {
     override val name = "guess"
@@ -37,7 +37,7 @@ class GuessNumberCommand : Command {
     )
     override val usages = setOf(setOf("min", "max"))
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val (min, max) = args?.split(" ")?.filter { it.toIntOrNull() !== null }?.take(2)
             ?.takeUnless { it.size != 2 }
             ?.map { it.toInt() }
@@ -68,7 +68,7 @@ class GuessNumberCommand : Command {
         awaitMessage(number = random, channel = event.channel, message = message, user = event.author)
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val (min, max) = event.getOptionsByType(OptionType.INTEGER).take(2)
             .mapNotNull { it.asString.toIntOrNull() }
             .takeUnless { it.size != 2 }
@@ -101,7 +101,7 @@ class GuessNumberCommand : Command {
         )
     }
 
-    override suspend fun invoke(event: ButtonClickEvent) {
+    override suspend fun invoke(event: ButtonInteractionEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
@@ -146,7 +146,7 @@ class GuessNumberCommand : Command {
                         Button.secondary("$name-${user.idLong}-$attempt-$number-stay", "No"),
                     ).await()
 
-                channel.jda.awaitEvent<ButtonClickEvent>(15, TimeUnit.MINUTES, waiterProcess = waiterProcess {
+                channel.jda.awaitEvent<ButtonInteractionEvent>(15, TimeUnit.MINUTES, waiterProcess = waiterProcess {
                     this.channel = channel.idLong
                     users += user.idLong
                     command = this@GuessNumberCommand

@@ -19,12 +19,12 @@ import kotlin.math.max
 import kotlin.math.min
 
 import net.dv8tion.jda.api.JDA
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import net.dv8tion.jda.api.interactions.components.Button
+import net.dv8tion.jda.api.interactions.components.buttons.Button
 
 class KillCommand : Command {
     override val name = "kill"
@@ -33,7 +33,7 @@ class KillCommand : Command {
     override val usages = setOf(setOf("process ID (optional)"))
     override val options = setOf(OptionData(OptionType.STRING, "pid", "The ID of the process to kill"))
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val processes = event.jda.processes.takeUnless { it.isEmpty() }
             ?: throw CommandException("No processes are currently running!")
 
@@ -55,7 +55,7 @@ class KillCommand : Command {
         }
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val processes = event.jda.processes.takeUnless { it.isEmpty() }
             ?: throw CommandException("No processes are currently running!")
         val input = event.getOption("pid")?.asString
@@ -78,7 +78,7 @@ class KillCommand : Command {
         }
     }
 
-    override suspend fun invoke(event: ButtonClickEvent) {
+    override suspend fun invoke(event: ButtonInteractionEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {

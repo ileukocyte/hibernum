@@ -12,7 +12,8 @@ import kotlinx.coroutines.TimeoutCancellationException
 
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.User
-import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent
+import net.dv8tion.jda.api.entities.emoji.Emoji
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
 
 const val CHECK_MARK = "\u2705"
 const val CROSS_MARK = "\u274E"
@@ -45,10 +46,10 @@ suspend fun Message.awaitConfirmationWithReactions(
     delay: Long = 1,
     unit: TimeUnit = TimeUnit.MINUTES,
 ): Boolean? {
-    addReaction(CHECK_MARK).await()
-    addReaction(CROSS_MARK).await()
+    addReaction(Emoji.fromUnicode(CHECK_MARK)).await()
+    addReaction(Emoji.fromUnicode(CROSS_MARK)).await()
 
-    val name = jda.awaitEvent<GuildMessageReactionAddEvent>(
+    val name = jda.awaitEvent<MessageReactionAddEvent>(
         delay = delay,
         unit = unit,
         waiterProcess = waiterProcess {
@@ -57,10 +58,10 @@ suspend fun Message.awaitConfirmationWithReactions(
             command = processCommand
         },
     ) {
-        it.user.idLong == user.idLong
+        it.user?.idLong == user.idLong
                 && it.messageIdLong == idLong
-                && it.reactionEmote.name in setOf(CHECK_MARK, CROSS_MARK)
-    }?.reactionEmote?.name
+                && it.emoji.name in setOf(CHECK_MARK, CROSS_MARK)
+    }?.emoji?.name
 
     return name?.let { it == CHECK_MARK }
 }

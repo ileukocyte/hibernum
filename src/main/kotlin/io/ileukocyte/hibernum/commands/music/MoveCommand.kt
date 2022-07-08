@@ -13,8 +13,8 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.math.max
 import kotlin.math.min
 
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
@@ -27,7 +27,7 @@ class MoveCommand : Command {
         OptionData(OptionType.INTEGER, "index", "The index to move the song to", true),
     )
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val (song, index) = (args ?: throw NoArgumentsException)
             .split(" ")
             .take(2)
@@ -59,7 +59,7 @@ class MoveCommand : Command {
         } else throw CommandException("The current queue is empty!")
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val song = event.getOption("song")?.asString?.toIntOrNull()?.dec() ?: return
         val index = event.getOption("index")?.asString?.toIntOrNull()?.dec() ?: return
 

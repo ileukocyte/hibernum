@@ -6,7 +6,8 @@ import io.ileukocyte.hibernum.extensions.asWord
 import io.ileukocyte.hibernum.extensions.sendEmbed
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
 class EmoteCommand : TextOnlyCommand {
@@ -15,8 +16,9 @@ class EmoteCommand : TextOnlyCommand {
     override val aliases = setOf("emoji", "emojiinfo", "emoji-info", "emoteinfo", "emote-info")
     override val usages = setOf(setOf("custom emoji"))
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
-        val emote = event.message.emotes.firstOrNull() ?: throw CommandException("No **custom** emoji has been provided!")
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
+        val emote = event.message.mentions.customEmojis.firstOrNull()
+            ?: throw CommandException("No **custom** emoji has been provided!")
 
         event.channel.sendEmbed {
             val img = emote.imageUrl
@@ -37,7 +39,8 @@ class EmoteCommand : TextOnlyCommand {
 
             field {
                 title = "Server"
-                description = emote.guild?.name?.let { MarkdownSanitizer.escape(it) } ?: "Unknown"
+                description =
+                    (emote as? RichCustomEmoji)?.guild?.name?.let { MarkdownSanitizer.escape(it) } ?: "Unknown"
                 isInline = true
             }
 

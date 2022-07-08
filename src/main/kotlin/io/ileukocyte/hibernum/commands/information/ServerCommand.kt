@@ -11,10 +11,10 @@ import net.dv8tion.jda.api.EmbedBuilder.ZERO_WIDTH_SPACE
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.MessageEmbed
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-import net.dv8tion.jda.api.interactions.components.Button
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
 class ServerCommand : Command {
@@ -23,13 +23,13 @@ class ServerCommand : Command {
     override val aliases = setOf("guild", "guildinfo", "guild-info", "serverinfo", "server-info")
     override val cooldown = 5L
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val buttons by lazy {
             val info = Button.secondary("$name-${event.author.idLong}-info", "Information")
             val icon = Button.secondary("$name-${event.author.idLong}-icon", "Server Icon")
                 .takeUnless { event.guild.iconUrl === null }
             val emotes = Button.secondary("$name-${event.author.idLong}-emotes", "Custom Emojis")
-                .takeUnless { event.guild.emoteCache.isEmpty }
+                .takeUnless { event.guild.emojiCache.isEmpty }
 
             setOfNotNull(info, icon, emotes)
         }
@@ -49,7 +49,7 @@ class ServerCommand : Command {
             ).queue()
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val guild = event.guild ?: return
 
         val buttons by lazy {
@@ -57,7 +57,7 @@ class ServerCommand : Command {
             val icon = Button.secondary("$name-${event.user.idLong}-icon", "Server Icon")
                 .takeUnless { guild.iconUrl === null }
             val emotes = Button.secondary("$name-${event.user.idLong}-emotes", "Custom Emojis")
-                .takeUnless { guild.emoteCache.isEmpty }
+                .takeUnless { guild.emojiCache.isEmpty }
 
             setOfNotNull(info, icon, emotes)
         }
@@ -79,7 +79,7 @@ class ServerCommand : Command {
             ).queue()
     }
 
-    override suspend fun invoke(event: ButtonClickEvent) {
+    override suspend fun invoke(event: ButtonInteractionEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
@@ -210,7 +210,7 @@ class ServerCommand : Command {
 
         field {
             title = "Custom Emojis"
-            description = "${guild.emoteCache.size()}"
+            description = "${guild.emojiCache.size()}"
             isInline = true
         }
 
@@ -234,7 +234,7 @@ class ServerCommand : Command {
             title = "Boost Tier"
             description = "**Level ${tier.key}**:\n" +
                     "Bitrate: ${tier.maxBitrate / 1000} kbps\n" +
-                    "Emojis: ${tier.maxEmotes} slots\n" +
+                    "Emojis: ${tier.maxEmojis} slots\n" +
                     "File Size: ${tier.maxFileSize shr 20} MB"
             isInline = true
         }
@@ -291,7 +291,7 @@ class ServerCommand : Command {
     }
 
     private suspend fun emotesEmbed(guild: Guild) = buildEmbed {
-        val emotes = guild.emoteCache.filter { it.isAvailable }.map { it.asMention }
+        val emotes = guild.emojiCache.filter { it.isAvailable }.map { it.asMention }
 
         author {
             name = "Custom Emojis"

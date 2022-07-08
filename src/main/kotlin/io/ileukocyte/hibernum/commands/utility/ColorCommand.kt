@@ -20,8 +20,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
@@ -43,7 +43,7 @@ class ColorCommand : Command {
         install(ContentNegotiation) { json(jsonSerializer) }
     }
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val input = (args ?: throw NoArgumentsException)
             .takeIf { it matches HEX_REGEX }
             ?: throw CommandException("You have provided invalid arguments!")
@@ -56,7 +56,7 @@ class ColorCommand : Command {
             ).queue()
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val input = event.getOption("hex")?.asString?.takeIf { it matches HEX_REGEX }
             ?: throw CommandException("You have provided invalid arguments!")
         val info = getColorInfo(input)

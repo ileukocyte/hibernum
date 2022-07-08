@@ -7,14 +7,14 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendSuccess
 
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
 class JoinCommand : Command {
     override val name = "join"
     override val description = "Makes the bot join your voice channel"
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         event.member?.voiceState?.channel?.let {
             if (it == event.guild.selfMember.voiceState?.channel)
                 throw CommandException("${event.jda.selfUser.name} is already connected to the voice channel!")
@@ -29,7 +29,7 @@ class JoinCommand : Command {
         } ?: throw CommandException("You are not connected to a voice channel!")
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         event.member?.voiceState?.channel?.let {
             if (it == event.guild?.selfMember?.voiceState?.channel)
                 throw CommandException("${event.jda.selfUser.name} is already connected to the voice channel!")

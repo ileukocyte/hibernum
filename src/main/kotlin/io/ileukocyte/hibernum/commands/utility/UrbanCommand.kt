@@ -25,8 +25,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 
 import net.dv8tion.jda.api.JDA
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
@@ -44,7 +44,7 @@ class UrbanCommand : Command {
         install(ContentNegotiation) { json(jsonSerializer) }
     }
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val query = args ?: throw NoArgumentsException
 
         val deferred = event.channel.sendEmbed {
@@ -52,10 +52,10 @@ class UrbanCommand : Command {
             description = "Looking for a non-NSFW definition\u2026"
 
             footer { text = "The command will execute faster in a NSFW channel!" }
-        }.takeUnless { event.channel.isNSFW }?.await()
+        }.takeUnless { event.textChannel.isNSFW }?.await()
 
         val embed = try {
-            urbanEmbed(event.jda, lookForDefinition(client, query, event.channel.isNSFW))
+            urbanEmbed(event.jda, lookForDefinition(client, query, event.textChannel.isNSFW))
         } catch (e: Exception) {
             defaultEmbed(e.message ?: "An exception has occurred!", EmbedType.FAILURE)
         }
@@ -65,7 +65,7 @@ class UrbanCommand : Command {
         } ?: event.channel.sendMessageEmbeds(embed).queue()
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val query = event.getOption("term")?.asString ?: return
 
         val deferred = event.deferReply().takeIf { event.textChannel.isNSFW }?.await()
@@ -82,7 +82,7 @@ class UrbanCommand : Command {
             defaultEmbed(e.message ?: "An exception has occurred!", EmbedType.FAILURE)
         }
 
-        deferred?.editOriginalEmbeds(embed)?.queue({}) {
+        deferred.editOriginalEmbeds(embed).queue({}) {
             event.channel.sendMessageEmbeds(embed).queue()
         }
     }

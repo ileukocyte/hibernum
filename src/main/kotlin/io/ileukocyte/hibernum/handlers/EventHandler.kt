@@ -18,26 +18,26 @@ import kotlinx.coroutines.selects.select
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
-import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageDeleteEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageDeleteEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 
 import org.jetbrains.kotlin.utils.addToStdlib.cast
 
 object EventHandler : ListenerAdapter() {
-    override fun onGuildMessageReceived(event: GuildMessageReceivedEvent) =
+    override fun onMessageReceived(event: MessageReceivedEvent) =
         CommandHandler(event)
 
-    override fun onSlashCommand(event: SlashCommandEvent) =
+    override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) =
         CommandHandler(event)
 
-    override fun onButtonClick(event: ButtonClickEvent) =
+    override fun onButtonInteraction(event: ButtonInteractionEvent) =
         CommandHandler(event)
 
-    override fun onSelectionMenu(event: SelectionMenuEvent) =
+    override fun onSelectMenuInteraction(event: SelectMenuInteractionEvent) =
         CommandHandler(event)
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -68,7 +68,7 @@ object EventHandler : ListenerAdapter() {
 
                             val eventsAwaited = setOf(joinEventDeferred, moveEventDeferred)
 
-                            select<Unit> {
+                            select {
                                 eventsAwaited.forEach { deferred ->
                                     deferred.onAwait { e ->
                                         eventsAwaited.forEach { if (it.isActive) it.cancelAndJoin() }
@@ -131,7 +131,7 @@ object EventHandler : ListenerAdapter() {
 
                         val eventsAwaited = setOf(joinEventDeferred, moveEventDeferred)
 
-                        select<Unit> {
+                        select {
                             eventsAwaited.forEach { deferred ->
                                 deferred.onAwait { e ->
                                     eventsAwaited.forEach { if (it.isActive) it.cancelAndJoin() }
@@ -164,7 +164,7 @@ object EventHandler : ListenerAdapter() {
         }
     }
 
-    override fun onGuildMessageDelete(event: GuildMessageDeleteEvent) {
+    override fun onMessageDelete(event: MessageDeleteEvent) {
         event.jda.getProcessByMessage(event.messageIdLong)?.let { process ->
             process.kill(event.jda)
 

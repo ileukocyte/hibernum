@@ -10,16 +10,18 @@ import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.entities.Activity.ActivityType
+import net.dv8tion.jda.api.entities.emoji.Emoji
+import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji
 import net.dv8tion.jda.api.events.GenericEvent
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
-import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import net.dv8tion.jda.api.interactions.components.Button
+import net.dv8tion.jda.api.interactions.components.buttons.Button
+import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
-import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
 class UserCommand : Command {
@@ -35,7 +37,7 @@ class UserCommand : Command {
         OptionData(OptionType.USER, "user", "The user to check information about"))
     override val cooldown = 3L
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         event.guild.takeUnless { it.isLoaded }?.loadMembers()?.await()
 
         if (args !== null) {
@@ -44,8 +46,8 @@ class UserCommand : Command {
             when {
                 args matches Regex("\\d{17,20}") ->
                     chooseUserInfoOrPfp(event.guild.getMemberById(args)?.user ?: throw exception, event.author, event)
-                event.message.mentionedMembers.isNotEmpty() ->
-                    chooseUserInfoOrPfp(event.message.mentionedMembers.firstOrNull()?.user ?: return, event.author, event)
+                event.message.mentions.membersBag.isNotEmpty() ->
+                    chooseUserInfoOrPfp(event.message.mentions.membersBag.firstOrNull()?.user ?: return, event.author, event)
                 args matches User.USER_TAG.toRegex() ->
                     chooseUserInfoOrPfp(event.guild.getMemberByTag(args)?.user ?: throw exception, event.author, event)
                 else -> {
@@ -60,7 +62,7 @@ class UserCommand : Command {
                         return
                     }
 
-                    val menu = SelectionMenu
+                    val menu = SelectMenu
                         .create("$name-${event.author.idLong}-search")
                         .addOptions(
                             *results.filter { !it.user.isBot }.take(10).map { SelectOption.of(it.user.asTag, it.user.id) }.toTypedArray(),
@@ -76,7 +78,7 @@ class UserCommand : Command {
         } else chooseUserInfoOrPfp(event.author, event.author, event)
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         event.guild?.takeUnless { it.isLoaded }?.loadMembers()?.await()
 
         val user = event.getOption("user")?.asUser ?: event.user
@@ -84,13 +86,13 @@ class UserCommand : Command {
         chooseUserInfoOrPfp(user, event.user, event)
     }
 
-    override suspend fun invoke(event: SelectionMenuEvent) {
+    override suspend fun invoke(event: SelectMenuInteractionEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
             event.message.delete().queue()
 
-            val value = event.selectedOptions?.firstOrNull()?.value
+            val value = event.selectedOptions.firstOrNull()?.value
                 ?.takeUnless { it == "exit" }
                 ?: return
 
@@ -98,7 +100,7 @@ class UserCommand : Command {
         } else throw CommandException("You did not invoke the initial command!")
     }
 
-    override suspend fun invoke(event: ButtonClickEvent) {
+    override suspend fun invoke(event: ButtonInteractionEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
@@ -125,8 +127,8 @@ class UserCommand : Command {
     private suspend fun <E: GenericEvent> chooseUserInfoOrPfp(user: User, author: User, event: E) {
         if (user.isBot) {
             when (event) {
-                is GuildMessageReceivedEvent -> event.channel.sendMessageEmbeds(pfpEmbed(user)).queue()
-                is SlashCommandEvent -> event.replyEmbeds(pfpEmbed(user)).queue()
+                is MessageReceivedEvent -> event.channel.sendMessageEmbeds(pfpEmbed(user)).queue()
+                is SlashCommandInteractionEvent -> event.replyEmbeds(pfpEmbed(user)).queue()
             }
 
             return
@@ -137,15 +139,15 @@ class UserCommand : Command {
         val exit = Button.danger("$name-${author.idLong}-exit", "Exit")
 
         when (event) {
-            is GuildMessageReceivedEvent ->
+            is MessageReceivedEvent ->
                 event.channel.sendConfirmation("Choose the type of information that you want to check!")
                     .setActionRow(info, pfp, exit)
                     .queue()
-            is SelectionMenuEvent ->
+            is SelectMenuInteractionEvent ->
                 event.channel.sendConfirmation("Choose the type of information that you want to check!")
                     .setActionRow(info, pfp, exit)
                     .queue()
-            is SlashCommandEvent ->
+            is SlashCommandInteractionEvent ->
                 event.replyConfirmation("Choose the type of information that you want to check!")
                     .addActionRow(info, pfp, exit)
                     .queue()
@@ -192,7 +194,7 @@ class UserCommand : Command {
 
         member.activities.let { activities ->
             fun ActivityType.humanized() = when (this) {
-                ActivityType.DEFAULT -> "Playing"
+                ActivityType.PLAYING -> "Playing"
                 ActivityType.STREAMING -> "Streaming"
                 ActivityType.LISTENING -> "Listening To"
                 ActivityType.WATCHING -> "Watching"
@@ -203,16 +205,10 @@ class UserCommand : Command {
             field {
                 title = "Custom Status"
                 description = activities.firstOrNull { it.type == ActivityType.CUSTOM_STATUS }?.let { cs ->
-                    val emoji = cs.emoji?.let { e ->
-                        if (e.isEmoji) {
-                            Emoji.fromUnicode(e.asCodepoints).name
-                        } else {
-                            e.asMention
-                                .takeUnless { member.jda.emoteCache.getElementById(e.idLong) === null }
-                        }
-                    }
-
-                    emoji?.let { "$it " }.orEmpty() + cs.name
+                    cs.emoji
+                        ?.takeIf { it is RichCustomEmoji || it.type == Emoji.Type.UNICODE }
+                        ?.let { "${it.formatted} " }
+                        .orEmpty() + cs.name
                 } ?: "None"
                 isInline = true
             }
@@ -315,9 +311,11 @@ class UserCommand : Command {
             Permission.ADMINISTRATOR,
             Permission.BAN_MEMBERS,
             Permission.CREATE_INSTANT_INVITE,
+            Permission.CREATE_PRIVATE_THREADS,
+            Permission.CREATE_PUBLIC_THREADS,
             Permission.KICK_MEMBERS,
             Permission.MANAGE_CHANNEL,
-            Permission.MANAGE_EMOTES,
+            Permission.MANAGE_EMOJIS_AND_STICKERS,
             Permission.MANAGE_PERMISSIONS,
             Permission.MANAGE_ROLES,
             Permission.MANAGE_SERVER,
@@ -326,6 +324,7 @@ class UserCommand : Command {
             Permission.MESSAGE_MANAGE,
             Permission.MESSAGE_MENTION_EVERYONE,
             Permission.MESSAGE_TTS,
+            Permission.MODERATE_MEMBERS,
             Permission.NICKNAME_MANAGE,
             Permission.PRIORITY_SPEAKER,
             Permission.VIEW_AUDIT_LOGS,

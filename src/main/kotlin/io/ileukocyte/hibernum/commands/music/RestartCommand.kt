@@ -6,14 +6,14 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendSuccess
 
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
 class RestartCommand : Command {
     override val name = "restart"
     override val description = "Restarts the track that is currently playing"
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
 
         if (audioPlayer.player.playingTrack !== null) {
@@ -28,7 +28,7 @@ class RestartCommand : Command {
         } else throw CommandException("No track is currently playing!")
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val guild = event.guild ?: return
         val audioPlayer = guild.audioPlayer ?: return
 

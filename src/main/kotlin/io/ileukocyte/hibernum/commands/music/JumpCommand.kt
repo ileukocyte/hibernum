@@ -11,8 +11,8 @@ import io.ileukocyte.hibernum.utils.timeCodeToMillis
 
 import kotlin.math.max
 
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
@@ -30,7 +30,7 @@ class JumpCommand : Command {
         )
     )
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
 
         if (audioPlayer.player.playingTrack !== null) {
@@ -70,7 +70,7 @@ class JumpCommand : Command {
         } else throw CommandException("No track is currently playing!")
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val audioPlayer = event.guild?.audioPlayer ?: throw CommandException()
 
         if (audioPlayer.player.playingTrack !== null) {

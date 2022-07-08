@@ -3,12 +3,13 @@
 package io.ileukocyte.hibernum.commands
 
 import net.dv8tion.jda.api.Permission
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
-import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 
 /**
  * A generic type that is to be implemented by all the bot's command classes
@@ -45,10 +46,10 @@ interface Command : Comparable<Command> {
     val options: Set<OptionData> get() = emptySet()
 
     /**
-     * A [CommandData] instance of this slash command
+     * A [SlashCommandData] instance of the slash command
      */
-    val asSlashCommand: CommandData? get() =
-        CommandData(name, "(Developer-only) ".takeIf { isDeveloper }.orEmpty() + description)
+    val asSlashCommand: SlashCommandData? get() =
+        Commands.slash(name, "(Developer-only) ".takeIf { isDeveloper }.orEmpty() + description)
             .addOptions(options)
 
     /** **DO NOT OVERRIDE!** */
@@ -58,35 +59,35 @@ interface Command : Comparable<Command> {
      * A function that is executed when the command is invoked as a classic text command
      *
      * @param event
-     * [GuildMessageReceivedEvent] occurring once the command is invoked
+     * [MessageReceivedEvent] occurring once the command is invoked
      * @param args
      * The arguments that may be attached to the command request
      */
-    suspend operator fun invoke(event: GuildMessageReceivedEvent, args: String?)
+    suspend operator fun invoke(event: MessageReceivedEvent, args: String?)
 
     /**
      * A function that is executed when the command is invoked as a slash command
      *
      * @param event
-     * The [SlashCommandEvent] occurring once the command is invoked
+     * The [SlashCommandInteractionEvent] occurring once the command is invoked
      */
-    suspend operator fun invoke(event: SlashCommandEvent)
+    suspend operator fun invoke(event: SlashCommandInteractionEvent)
 
     /**
      * A function that is executed when the command's button menu is utilized by a user
      *
      * @param event
-     * The [ButtonClickEvent] occurring once the command is invoked
+     * The [ButtonInteractionEvent] occurring once the command is invoked
      */
-    suspend operator fun invoke(event: ButtonClickEvent) {}
+    suspend operator fun invoke(event: ButtonInteractionEvent) {}
 
     /**
      * A function that is executed when the command's selection menu is utilized by a user
      *
      * @param event
-     * The [SelectionMenuEvent] occurring once the command is invoked
+     * The [SelectMenuInteractionEvent] occurring once the command is invoked
      */
-    suspend operator fun invoke(event: SelectionMenuEvent) {}
+    suspend operator fun invoke(event: SelectMenuInteractionEvent) {}
 
     override fun compareTo(other: Command) = name.compareTo(other.name)
 }
@@ -100,9 +101,9 @@ interface Command : Comparable<Command> {
  * @see SlashOnlyCommand
  */
 interface TextOnlyCommand : Command {
-    override val asSlashCommand: CommandData? get() = null
+    override val asSlashCommand: SlashCommandData? get() = null
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         // must be left empty
     }
 }
@@ -116,7 +117,7 @@ interface TextOnlyCommand : Command {
  * @see TextOnlyCommand
  */
 interface SlashOnlyCommand : Command {
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         // must be left empty
     }
 }

@@ -20,15 +20,16 @@ import io.ileukocyte.hibernum.utils.*
 import kotlinx.coroutines.withContext
 
 import net.dv8tion.jda.api.entities.*
-import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.entities.emoji.Emoji
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
-import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
 
 class YouTubePlayCommand : Command {
     override val name = "ytplay"
@@ -39,15 +40,15 @@ class YouTubePlayCommand : Command {
     override val usages = setOf(setOf("query"))
     override val cooldown = 5L
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         sendMenu(
             event.member ?: return,
-            event.channel,
+            event.textChannel,
             args ?: throw NoArgumentsException,
         )
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val deferred = event.deferReply().await()
 
         sendMenu(
@@ -58,20 +59,20 @@ class YouTubePlayCommand : Command {
         )
     }
 
-    override suspend fun invoke(event: SelectionMenuEvent) {
+    override suspend fun invoke(event: SelectMenuInteractionEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
             val deferred = event.deferEdit().await()
 
-            if (event.selectedOptions?.firstOrNull()?.value == "exit") {
+            if (event.selectedOptions.firstOrNull()?.value == "exit") {
                 deferred.deleteOriginal().queue()
 
                 return
             }
 
             if (id.last() == "videos") {
-                val videoUrl = event.selectedOptions?.firstOrNull()?.value ?: return
+                val videoUrl = event.selectedOptions.firstOrNull()?.value ?: return
 
                 play(videoUrl, event.textChannel, event.user, true, deferred)
             }
@@ -122,7 +123,7 @@ class YouTubePlayCommand : Command {
                     )
                 }
 
-                SelectionMenu.create("$name-${member.user.idLong}-videos")
+                SelectMenu.create("$name-${member.user.idLong}-videos")
                     .addOptions(
                         *options.toTypedArray(),
                         SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),

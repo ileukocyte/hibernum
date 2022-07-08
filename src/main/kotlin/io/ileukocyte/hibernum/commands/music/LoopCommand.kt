@@ -6,17 +6,17 @@ import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.*
 
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-import net.dv8tion.jda.api.interactions.components.Button
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.interactions.components.buttons.Button
 
 class LoopCommand : Command {
     override val name = "loop"
     override val description = "Sets a repeating mode for the music player"
     override val aliases = setOf("repeat")
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         if (event.guild.selfMember.voiceState?.channel !== null) {
             if (event.member?.voiceState?.channel == event.guild.selfMember.voiceState?.channel) {
                 val buttons = LoopMode.values()
@@ -32,7 +32,7 @@ class LoopCommand : Command {
         } else throw CommandException("${event.jda.selfUser.name} is not connected to a voice channel!")
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         if (event.guild?.selfMember?.voiceState?.channel !== null) {
             if (event.member?.voiceState?.channel == event.guild?.selfMember?.voiceState?.channel) {
                 val buttons = LoopMode.values()
@@ -48,7 +48,7 @@ class LoopCommand : Command {
         } else throw CommandException("${event.jda.selfUser.name} is not connected to a voice channel!")
     }
 
-    override suspend fun invoke(event: ButtonClickEvent) {
+    override suspend fun invoke(event: ButtonInteractionEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {

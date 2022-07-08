@@ -17,8 +17,8 @@ import net.dv8tion.jda.api.EmbedBuilder.ZERO_WIDTH_SPACE
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.entities.User
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-import net.dv8tion.jda.api.interactions.components.Component
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.interactions.components.ActionComponent
 
 inline fun MessageChannel.sendMessage(block: KMessageBuilder.() -> Unit) =
     sendMessage(buildMessage(block))
@@ -38,7 +38,7 @@ fun MessageChannel.sendConfirmation(desc: String, footer: (KEmbedBuilder.Footer.
 fun MessageChannel.sendWarning(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
     sendMessageEmbeds(defaultEmbed(desc, EmbedType.WARNING, footer))
 
-fun MessageChannel.sendActionRow(vararg components: Component) =
+fun MessageChannel.sendActionRow(vararg components: ActionComponent) =
     sendMessage(ZERO_WIDTH_SPACE).setActionRow(*components)
 
 /**
@@ -71,7 +71,7 @@ suspend inline fun MessageChannel.awaitMessage(
     invokingMessage: Message? = null,
     delay: Long = 1,
     unit: TimeUnit = TimeUnit.MINUTES,
-) = jda.awaitEvent<GuildMessageReceivedEvent>(
+) = jda.awaitEvent<MessageReceivedEvent>(
     delay = delay,
     unit = unit,
     waiterProcess = waiterProcess {

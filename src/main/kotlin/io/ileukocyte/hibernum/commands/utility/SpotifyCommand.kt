@@ -9,15 +9,15 @@ import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
 import kotlin.math.round
 
-import net.dv8tion.jda.api.entities.Emoji
-import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.entities.emoji.Emoji
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
-import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
 
 import se.michaelthelin.spotify.SpotifyApi
 import se.michaelthelin.spotify.exceptions.detailed.BadRequestException
@@ -31,7 +31,7 @@ class SpotifyCommand : Command {
         OptionData(OptionType.STRING, "query", "A search term", true))
     override val cooldown = 5L
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val query = args ?: throw NoArgumentsException
         val api = SPOTIFY_API.apply {
             accessToken = clientCredentials().build().executeAsync().await().accessToken
@@ -70,7 +70,7 @@ class SpotifyCommand : Command {
                 SelectOption.of("$artist - $title - $album".limitTo(SelectOption.LABEL_MAX_LENGTH), it.id)
             }
 
-            SelectionMenu.create("$name-${event.author.idLong}-spotify")
+            SelectMenu.create("$name-${event.author.idLong}-spotify")
                 .addOptions(
                     *options.toTypedArray(),
                     SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),
@@ -83,7 +83,7 @@ class SpotifyCommand : Command {
         }.setActionRow(menu).queue()
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val deferred = event.deferReply().await()
 
         val query = event.getOption("query")?.asString ?: return
@@ -151,7 +151,7 @@ class SpotifyCommand : Command {
                 SelectOption.of("$artist - $title - $album".limitTo(SelectOption.LABEL_MAX_LENGTH), it.id)
             }
 
-            SelectionMenu.create("$name-${event.user.idLong}-spotify")
+            SelectMenu.create("$name-${event.user.idLong}-spotify")
                 .addOptions(
                     *options.toTypedArray(),
                     SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),
@@ -170,13 +170,13 @@ class SpotifyCommand : Command {
         }
     }
 
-    override suspend fun invoke(event: SelectionMenuEvent) {
+    override suspend fun invoke(event: SelectMenuInteractionEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
             val deferred = event.deferEdit().await()
 
-            if (event.selectedOptions?.firstOrNull()?.value == "exit") {
+            if (event.selectedOptions.firstOrNull()?.value == "exit") {
                 deferred.deleteOriginal().queue()
 
                 return
@@ -186,7 +186,7 @@ class SpotifyCommand : Command {
                 val api = SPOTIFY_API.apply {
                     accessToken = clientCredentials().build().executeAsync().await().accessToken
                 }
-                val track = api.getTrack(event.selectedOptions?.firstOrNull()?.value).build().executeAsync().await()
+                val track = api.getTrack(event.selectedOptions.firstOrNull()?.value).build().executeAsync().await()
 
                 try {
                     deferred.editOriginalComponents().setEmbeds(trackEmbed(track, api)).await()
@@ -283,6 +283,6 @@ class SpotifyCommand : Command {
             .build()
 
         @JvmField
-        val SPOTIFY_TRACK_URL_REGEX = Regex("(?:https?://)?(open.spotify.com/track/)([A-Za-z0-9]+)")
+        val SPOTIFY_TRACK_URL_REGEX = Regex("(?:https?://)?(open.spotify.com/track/)([A-Za-z\\d]+)")
     }
 }

@@ -20,8 +20,8 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
 import net.dv8tion.jda.api.JDA
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
@@ -33,7 +33,7 @@ class WeatherCommand : Command {
     override val options = setOf(
         OptionData(OptionType.STRING, "location", "A location to get the weather for", true))
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val api = openWeatherApi(Immutable.WEATHER_API_KEY, Units.METRIC)
 
         val forecast = api.fromNameOrNull(args ?: throw NoArgumentsException)
@@ -42,7 +42,7 @@ class WeatherCommand : Command {
         event.channel.sendMessageEmbeds(weatherEmbed(event.jda, forecast)).queue()
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val deferred = event.deferReply().await()
 
         val api = openWeatherApi(Immutable.WEATHER_API_KEY, Units.METRIC)

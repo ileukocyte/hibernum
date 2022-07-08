@@ -11,8 +11,9 @@ import java.util.concurrent.TimeUnit
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.User
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.entities.emoji.Emoji
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
@@ -23,7 +24,7 @@ class HelpCommand : Command {
     override val options =
         setOf(OptionData(OptionType.STRING, "command", "The command to provide help for"))
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         if (args !== null) {
             val command = CommandHandler[args.lowercase()]
             val action = command?.let { event.channel.sendMessageEmbeds(it.getHelp(event.jda)) }
@@ -33,7 +34,7 @@ class HelpCommand : Command {
         } else {
             event.author.openPrivateChannel().queue {
                 it.sendMessageEmbeds(getCommandList(event.jda, event.author, false)).queue({
-                    event.message.addReaction("\u2705").queue(null) {}
+                    event.message.addReaction(Emoji.fromUnicode("\u2705")).queue(null) {}
                 }) {
                     event.channel.sendMessageEmbeds(getCommandList(event.jda, event.author,
                         isFromSlashCommand = false,
@@ -44,7 +45,7 @@ class HelpCommand : Command {
         }
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val option = event.getOption("command")
 
         if (option !== null) {

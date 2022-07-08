@@ -79,7 +79,7 @@ class KEmbedBuilder {
             if (field.title === null || field.description === null) {
                 javaBuilder.addBlankField(field.isInline)
             } else {
-                javaBuilder.addField(field.title, field.description, field.isInline)
+                javaBuilder.addField(field.title.orEmpty(), field.description.orEmpty(), field.isInline)
             }
         }
 

@@ -18,8 +18,8 @@ import javax.imageio.ImageIO
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
@@ -42,7 +42,7 @@ class InvertCommand : Command {
     )
     override val cooldown = 7L
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         if (event.message.attachments.any { it.isImage }) {
             val deferred = event.channel.sendEmbed {
                 color = Immutable.SUCCESS
@@ -51,7 +51,7 @@ class InvertCommand : Command {
 
             val attachment = event.message.attachments.first { it.isImage }
 
-            attachment.retrieveInputStream().thenAccept {
+            attachment.proxy.download().thenAccept {
                 val image = ImageIO.read(ByteArrayInputStream(it.readAllBytes()))
                     .apply { invert() }
 
@@ -68,7 +68,7 @@ class InvertCommand : Command {
                 throw CommandException("${it::class.qualifiedName ?: "An unknown exception"}: ${it.message ?: "something went wrong!"}")
             }
         } else {
-            val input = event.message.mentionedUsers.firstOrNull()?.effectiveAvatarUrl
+            val input = event.message.mentions.usersBag.firstOrNull()?.effectiveAvatarUrl
                 ?.let { "$it?size=2048".replace("gif", "png") }
                 ?: args?.apply { if (!UrlValidator().isValid(this)) throw CommandException("The provided input is invalid!") }
                 ?: "${event.author.effectiveAvatarUrl}?size=2048".replace("gif", "png")
@@ -99,7 +99,7 @@ class InvertCommand : Command {
         }
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val input = event.getOption("user")?.asUser?.effectiveAvatarUrl
             ?.let { "$it?size=2048".replace("gif", "png") }
             ?: event.getOption("link")

@@ -9,22 +9,22 @@ import io.ileukocyte.hibernum.extensions.sendConfirmation
 import kotlin.system.exitProcess
 
 import net.dv8tion.jda.api.events.Event
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-import net.dv8tion.jda.api.interactions.components.Button
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.interactions.components.buttons.Button
 
 class ShutdownCommand : Command {
     override val name = "shutdown"
     override val description = "Shuts the bot down"
 
-    override suspend fun invoke(event: SlashCommandEvent) =
+    override suspend fun invoke(event: SlashCommandInteractionEvent) =
         sendShutdownConfirmation(event.user.idLong, event)
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) =
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) =
         sendShutdownConfirmation(event.author.idLong, event)
 
-    override suspend fun invoke(event: ButtonClickEvent) {
+    override suspend fun invoke(event: ButtonInteractionEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
@@ -56,9 +56,9 @@ class ShutdownCommand : Command {
         )
 
         when (event) {
-            is GuildMessageReceivedEvent ->
+            is MessageReceivedEvent ->
                 event.channel.sendConfirmation(description).setActionRow(buttons).queue()
-            is SlashCommandEvent ->
+            is SlashCommandInteractionEvent ->
                 event.replyConfirmation(description).addActionRow(buttons).queue()
         }
     }

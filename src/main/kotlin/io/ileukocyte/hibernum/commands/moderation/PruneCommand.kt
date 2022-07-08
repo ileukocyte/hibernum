@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
 
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.User
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
@@ -39,7 +39,7 @@ class PruneCommand : SlashOnlyCommand {
     override val memberPermissions = setOf(Permission.MESSAGE_MANAGE)
     override val botPermissions = setOf(Permission.MESSAGE_MANAGE)
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         if (event.getOption("text-filter") !== null && event.getOption("text") === null)
             throw CommandException("The \"text\" option must be initialized in case of the \"text-filter\" option being provided!")
 
@@ -59,7 +59,7 @@ class PruneCommand : SlashOnlyCommand {
                     "embeds" -> message.embeds.isNotEmpty()
                     "invites" -> message.invites.isNotEmpty()
                     "links" -> message.contentRaw.split(" ").any { s -> UrlValidator.getInstance().isValid(s) }
-                    "mentions" -> message.mentionedRoles.isNotEmpty() || message.mentionedUsers.isNotEmpty()
+                    "mentions" -> message.mentions.roles.isNotEmpty() || message.mentions.users.isNotEmpty()
                     else -> true
                 }
             } ?: true

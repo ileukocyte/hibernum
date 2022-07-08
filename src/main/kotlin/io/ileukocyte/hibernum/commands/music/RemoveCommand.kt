@@ -6,8 +6,8 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendSuccess
 
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
@@ -18,7 +18,7 @@ class RemoveCommand : Command {
     override val options = setOf(
         OptionData(OptionType.INTEGER, "song", "The number of the song to remove", true))
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val number = args?.toIntOrNull() ?: throw CommandException("You have specified a wrong number!")
 
         val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
@@ -37,7 +37,7 @@ class RemoveCommand : Command {
         } else throw CommandException("The current queue is empty!")
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val number = event.getOption("song")?.asString?.toIntOrNull()
             ?: throw CommandException("You have specified a wrong number!")
 

@@ -13,8 +13,8 @@ import java.util.concurrent.ConcurrentLinkedQueue
 
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Member
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.commands.OptionType
@@ -29,7 +29,7 @@ class SelectCommand : Command {
     override val options = setOf(
         OptionData(OptionType.INTEGER, "song", "The number of the song to play", true))
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val number = args?.toIntOrNull() ?: throw CommandException("You have specified a wrong number!")
 
         val audioPlayer = event.guild.audioPlayer ?: return
@@ -37,7 +37,7 @@ class SelectCommand : Command {
         select(number, audioPlayer, event.guild, event.member ?: return)
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val deferred = event.deferReply().await()
 
         val number = event.getOption("song")?.asString?.toIntOrNull()

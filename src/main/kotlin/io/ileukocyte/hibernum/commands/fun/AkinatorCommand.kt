@@ -23,23 +23,23 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
 
-import net.dv8tion.jda.api.entities.Emoji
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.entities.User
+import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.Event
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
-import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent
-import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.ActionRow
-import net.dv8tion.jda.api.interactions.components.Button
+import net.dv8tion.jda.api.interactions.components.buttons.Button
+import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
-import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
 
 class AkinatorCommand : Command {
     override val name = "akinator"
@@ -101,15 +101,15 @@ class AkinatorCommand : Command {
         )
     }
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) =
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) =
         sendGuessTypeMenu(event.channel.idLong, event.author.idLong, event)
 
-    override suspend fun invoke(event: SlashCommandEvent) =
+    override suspend fun invoke(event: SlashCommandInteractionEvent) =
         sendLanguagesMenu(event, event.getOption("type")?.asString)
 
-    override suspend fun invoke(event: SelectionMenuEvent) {
+    override suspend fun invoke(event: SelectMenuInteractionEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
-        val optionValue = event.selectedOptions?.firstOrNull()?.value
+        val optionValue = event.selectedOptions.firstOrNull()?.value
 
         if (event.user.id == id.first()) {
             if (optionValue == "exit") {
@@ -150,7 +150,7 @@ class AkinatorCommand : Command {
                         event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda)
 
                         CoroutineScope(CommandContext).launch {
-                            event.jda.awaitEvent<GuildMessageReceivedEvent>(waiterProcess = waiterProcess {
+                            event.jda.awaitEvent<MessageReceivedEvent>(waiterProcess = waiterProcess {
                                 channel = event.channel.idLong
                                 users += event.user.idLong
                                 command = this@AkinatorCommand
@@ -204,7 +204,7 @@ class AkinatorCommand : Command {
         } else throw CommandException("You did not invoke the initial command!")
     }
 
-    override suspend fun invoke(event: ButtonClickEvent) {
+    override suspend fun invoke(event: ButtonInteractionEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
@@ -287,7 +287,7 @@ class AkinatorCommand : Command {
                                 ?.let { finalGuess ->
                                     val m = guessMessage(finalGuess, true, event.user.idLong, event.channel, event.message.idLong)
 
-                                    event.jda.awaitEvent<ButtonClickEvent>(15, TimeUnit.MINUTES, waiterProcess = waiterProcess {
+                                    event.jda.awaitEvent<ButtonInteractionEvent>(15, TimeUnit.MINUTES, waiterProcess = waiterProcess {
                                         channel = event.channel.idLong
                                         users += event.user.idLong
                                         command = this@AkinatorCommand
@@ -325,7 +325,7 @@ class AkinatorCommand : Command {
                             Button.secondary("$name-${player.idLong}-stay", "No"),
                         ).await()
 
-                    channel.jda.awaitEvent<ButtonClickEvent>(waiterProcess = waiterProcess {
+                    channel.jda.awaitEvent<ButtonInteractionEvent>(waiterProcess = waiterProcess {
                         this.channel = channel.idLong
                         users += player.idLong
                         command = this@AkinatorCommand
@@ -425,7 +425,7 @@ class AkinatorCommand : Command {
                                     ?.let { finalGuess ->
                                         val m = guessMessage(finalGuess, true, player.idLong, message.channel, message.idLong)
 
-                                        channel.jda.awaitEvent<ButtonClickEvent>(waiterProcess = waiterProcess {
+                                        channel.jda.awaitEvent<ButtonInteractionEvent>(waiterProcess = waiterProcess {
                                             this.channel = channel.idLong
                                             users += player.idLong
                                             command = this@AkinatorCommand
@@ -442,7 +442,7 @@ class AkinatorCommand : Command {
                         } else {
                             val m = guessMessage(guess, false, player.idLong, message.channel, content = content)
 
-                            channel.jda.awaitEvent<ButtonClickEvent>(waiterProcess = waiterProcess {
+                            channel.jda.awaitEvent<ButtonInteractionEvent>(waiterProcess = waiterProcess {
                                 this.channel = channel.idLong
                                 users += player.idLong
                                 command = this@AkinatorCommand
@@ -485,7 +485,7 @@ class AkinatorCommand : Command {
         if (event.jda.getUserProcesses(playerId).any { it.command is AkinatorCommand && it.channel != channelId })
             throw CommandException("You have another Akinator command running somewhere else! Finish the process first!")
 
-        val menu = SelectionMenu
+        val menu = SelectMenu
             .create("$name-$playerId-type")
             .addOptions(
                 *GuessType.values()
@@ -504,16 +504,16 @@ class AkinatorCommand : Command {
             ).build()
 
         val message = when (event) {
-            is GuildMessageReceivedEvent ->
+            is MessageReceivedEvent ->
                 event.message.replyConfirmation("Choose your guess type!")
                     .setActionRow(menu)
                     .await()
-            is SlashCommandEvent ->
+            is SlashCommandInteractionEvent ->
                 event.reply {
                     embeds += defaultEmbed("Choose your guess type!", EmbedType.CONFIRMATION)
                     actionRows += ActionRow.of(menu)
                 }.await().retrieveOriginal().await()
-            is SelectionMenuEvent ->
+            is SelectMenuInteractionEvent ->
                 event.deferEdit()
                     .await()
                     .editOriginalEmbeds(defaultEmbed("Choose your guess type!", EmbedType.CONFIRMATION))
@@ -522,7 +522,7 @@ class AkinatorCommand : Command {
             else -> null // must never occur
         } as Message
 
-        event.jda.awaitEvent<SelectionMenuEvent>(waiterProcess = waiterProcess {
+        event.jda.awaitEvent<SelectMenuInteractionEvent>(waiterProcess = waiterProcess {
             channel = channelId
             users += playerId
             command = this@AkinatorCommand
@@ -531,46 +531,46 @@ class AkinatorCommand : Command {
     }
 
     private suspend fun sendLanguagesMenu(
-        event: GenericInteractionCreateEvent,
+        callback: IReplyCallback,
         optionValue: String?,
     ) {
-        if (event is SlashCommandEvent) {
-            if (event.user.processes.any { it.command is AkinatorCommand && it.channel != event.messageChannel.idLong })
+        if (callback is SlashCommandInteractionEvent) {
+            if (callback.user.processes.any { it.command is AkinatorCommand && it.channel != callback.messageChannel.idLong })
                 throw CommandException("You have another Akinator command running somewhere else! Finish the process first!")
         }
 
         val type = optionValue?.let { GuessType.valueOf(it) } ?: GuessType.CHARACTER
 
-        GUESS_TYPES += event.user.idLong to type
+        GUESS_TYPES += callback.user.idLong to type
 
         val availableLanguages = LANGUAGES_AVAILABLE_FOR_TYPES[type] ?: Language.values().toSortedSet()
 
-        val menu = SelectionMenu
-            .create("$name-${event.user.idLong}-lang")
+        val menu = SelectMenu
+            .create("$name-${callback.user.idLong}-lang")
             .addOptions(
                 *availableLanguages.map { SelectOption.of(it.name.capitalizeAll(), it.name) }.toTypedArray(),
                 SelectOption.of("Return", "return").withEmoji(Emoji.fromUnicode("\u25C0\uFE0F")),
                 SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),
             ).build()
 
-        val message = if (event is SelectionMenuEvent) {
-            event.deferEdit().await()
+        val message = if (callback is SelectMenuInteractionEvent) {
+            callback.deferEdit().await()
                 .editOriginalEmbeds(defaultEmbed("Choose your language!", EmbedType.CONFIRMATION))
                 .setActionRow(menu)
                 .await()
         } else {
-            event.reply {
+            callback.reply {
                 embeds += defaultEmbed("Choose your language!", EmbedType.CONFIRMATION)
                 actionRows += ActionRow.of(menu)
             }.await().retrieveOriginal().await()
         }
 
-        event.jda.awaitEvent<SelectionMenuEvent>(waiterProcess = waiterProcess {
-            channel = event.messageChannel.idLong
-            users += event.user.idLong
+        callback.jda.awaitEvent<SelectMenuInteractionEvent>(waiterProcess = waiterProcess {
+            channel = callback.messageChannel.idLong
+            users += callback.user.idLong
             command = this@AkinatorCommand
             invoker = message.idLong
-        }) { it.user.idLong == event.user.idLong && it.message == message } // used to block other commands
+        }) { it.user.idLong == callback.user.idLong && it.message == message } // used to block other commands
     }
 
     private suspend fun guessMessage(

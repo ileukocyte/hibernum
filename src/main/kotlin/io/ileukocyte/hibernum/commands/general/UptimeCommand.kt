@@ -8,17 +8,17 @@ import io.ileukocyte.hibernum.extensions.uptime
 import io.ileukocyte.hibernum.utils.asText
 
 import net.dv8tion.jda.api.events.Event
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
 class UptimeCommand : Command {
     override val name = "uptime"
     override val description = "Sends Hibernum's uptime separately from the statistics"
 
-    override suspend fun invoke(event: SlashCommandEvent) =
+    override suspend fun invoke(event: SlashCommandInteractionEvent) =
         sendUptime(event)
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) =
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) =
         sendUptime(event)
 
     private fun <E : Event> sendUptime(event: E) {
@@ -35,8 +35,8 @@ class UptimeCommand : Command {
         }
 
         when (event) {
-            is GuildMessageReceivedEvent -> event.channel.sendMessageEmbeds(embed).queue()
-            is SlashCommandEvent -> event.replyEmbeds(embed).queue()
+            is MessageReceivedEvent -> event.channel.sendMessageEmbeds(embed).queue()
+            is SlashCommandInteractionEvent -> event.replyEmbeds(embed).queue()
         }
     }
 }

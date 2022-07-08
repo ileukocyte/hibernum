@@ -11,18 +11,18 @@ import io.ileukocyte.hibernum.utils.asText
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDAInfo
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
 class AboutCommand : Command {
     override val name = "about"
     override val description = "Sends the bot's detailed technical statistics"
     override val aliases = setOf("info", "stats")
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) =
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) =
         event.channel.sendMessageEmbeds(statsEmbed(event.jda)).queue()
 
-    override suspend fun invoke(event: SlashCommandEvent) =
+    override suspend fun invoke(event: SlashCommandInteractionEvent) =
         event.replyEmbeds(statsEmbed(event.jda)).queue()
 
     private suspend fun statsEmbed(jda: JDA) = buildEmbed {
@@ -34,7 +34,7 @@ class AboutCommand : Command {
             val restPing = jda.restPing.await()
             val inviteLink = Immutable.INVITE_LINK_FORMAT.format(jda.selfUser.id)
             val musicStreamingServersCount = jda.guildCache
-                .count { it.selfMember.voiceState?.inVoiceChannel() == true }
+                .count { it.selfMember.voiceState?.inAudioChannel() == true }
 
             appendLine("${jda.selfUser.name} is a modern Discord multi-purpose 100% [Kotlin](https://kotlinlang.org/)-coded bot that currently relies mostly on its musical functionality")
             appendLine()

@@ -21,10 +21,10 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 
 import net.dv8tion.jda.api.entities.MessageType
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
-import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException
 
 private val commandContextDispatcher = newFixedThreadPool(3).asCoroutineDispatcher()
@@ -44,8 +44,8 @@ object CommandHandler : MutableSet<Command> {
     override fun add(element: Command) = registeredCommands.add(element)
     override fun remove(element: Command) = registeredCommands.remove(element)
     override fun addAll(elements: Collection<Command>) = registeredCommands.addAll(elements)
-    override fun removeAll(elements: Collection<Command>) = registeredCommands.removeAll(elements)
-    override fun retainAll(elements: Collection<Command>) = registeredCommands.retainAll(elements)
+    override fun removeAll(elements: Collection<Command>) = registeredCommands.removeAll(elements.toSet())
+    override fun retainAll(elements: Collection<Command>) = registeredCommands.retainAll(elements.toSet())
     override fun clear() = registeredCommands.clear()
 
     operator fun get(name: String): Command? {
@@ -84,15 +84,15 @@ object CommandHandler : MutableSet<Command> {
     }
 
     /**
-     * A function that handles [GuildMessageReceivedEvent] that may contain a text command
+     * A function that handles [MessageReceivedEvent] that may contain a text command
      *
      * @param event
-     * [GuildMessageReceivedEvent] occurring once the command is invoked
+     * [MessageReceivedEvent] occurring once the command is invoked
      *
      * @author Alexander Oksanich
      */
-    internal operator fun invoke(event: GuildMessageReceivedEvent) {
-        if (!event.author.isBot && !event.author.isSystem && event.message.type == MessageType.DEFAULT) {
+    internal operator fun invoke(event: MessageReceivedEvent) {
+        if (!event.author.isBot && !event.author.isSystem && event.message.type == MessageType.DEFAULT && event.isFromGuild) {
             if (event.message.contentRaw.trim().startsWith(Immutable.DEFAULT_PREFIX)) {
                 val args = event.message.contentRaw.split(Regex("\\s+"), 2)
 
@@ -159,14 +159,14 @@ object CommandHandler : MutableSet<Command> {
     }
 
     /**
-     * A function that handles [SlashCommandEvent] that contains a slash command
+     * A function that handles [SlashCommandInteractionEvent] that contains a slash command
      *
      * @param event
-     * [SlashCommandEvent] occurring once the command is invoked
+     * [SlashCommandInteractionEvent] occurring once the command is invoked
      *
      * @author Alexander Oksanich
      */
-    internal operator fun invoke(event: SlashCommandEvent) {
+    internal operator fun invoke(event: SlashCommandInteractionEvent) {
         if (event.isFromGuild) {
             this[event.name]?.takeIf { it !is TextOnlyCommand }?.let { command ->
                 CoroutineScope(CommandContext).launch {
@@ -233,15 +233,15 @@ object CommandHandler : MutableSet<Command> {
     }
 
     /**
-     * A function that handles [ButtonClickEvent] that occurs when
+     * A function that handles [ButtonInteractionEvent] that occurs when
      * a command's button menu is utilized by a user
      *
      * @param event
-     * [ButtonClickEvent] occurring once the command's button menu is used
+     * [ButtonInteractionEvent] occurring once the command's button menu is used
      *
      * @author Alexander Oksanich
      */
-    internal operator fun invoke(event: ButtonClickEvent) {
+    internal operator fun invoke(event: ButtonInteractionEvent) {
         if (event.isFromGuild && event.message.author == event.jda.selfUser) {
             this[event.componentId.split("-").first()]?.let { command ->
                 CoroutineScope(CommandContext).launch {
@@ -277,15 +277,15 @@ object CommandHandler : MutableSet<Command> {
     }
 
     /**
-     * A function that handles [SelectionMenuEvent] that occurs when
+     * A function that handles [SelectMenuInteractionEvent] that occurs when
      * a command's selection menu is utilized by a user
      *
      * @param event
-     * [SelectionMenuEvent] occurring once the command's selection menu is used
+     * [SelectMenuInteractionEvent] occurring once the command's selection menu is used
      *
      * @author Alexander Oksanich
      */
-    internal operator fun invoke(event: SelectionMenuEvent) {
+    internal operator fun invoke(event: SelectMenuInteractionEvent) {
         if (event.isFromGuild && event.message.author == event.jda.selfUser) {
             this[event.componentId.split("-").first()]?.let {
                     command ->

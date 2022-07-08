@@ -7,8 +7,8 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.extensions.*
 
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
@@ -19,7 +19,7 @@ class CharacterCommand : Command {
     override val options = setOf(OptionData(OptionType.STRING, "input", "The characters provided", true))
     override val usages = setOf(setOf("input"))
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val input = args?.remove(" ")
             ?.run { takeIf { it.length <= 20 } ?: throw CommandException("The amount of characters must not exceed 20!") }
             ?: throw NoArgumentsException
@@ -27,7 +27,7 @@ class CharacterCommand : Command {
         event.channel.sendMessageEmbeds(charEmbed(input)).queue()
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val input = event.getOption("input")?.asString?.remove(" ")
             ?.run { takeIf { it.length <= 20 } ?: throw CommandException("The amount of characters must not exceed 20!") }
             ?: return

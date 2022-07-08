@@ -3,8 +3,8 @@ package io.ileukocyte.hibernum.commands.utility
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
@@ -19,7 +19,7 @@ class QRCommand : Command {
         OptionData(OptionType.STRING, "input", "The provided input", true))
     override val cooldown = 3L
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val qr = QRCode.from(args ?: throw NoArgumentsException)
             .withSize(768, 768)
             .withCharset("UTF-8")
@@ -29,7 +29,7 @@ class QRCommand : Command {
         qr.use { event.channel.sendFile(it.toByteArray(), "qr.png").queue() }
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val qr = QRCode.from(event.getOption("input")?.asString ?: return)
             .withSize(768, 768)
             .withCharset("UTF-8")

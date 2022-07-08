@@ -10,16 +10,16 @@ import io.ileukocyte.hibernum.extensions.sendConfirmation
 import io.ileukocyte.hibernum.extensions.sendSuccess
 
 import net.dv8tion.jda.api.events.Event
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-import net.dv8tion.jda.api.interactions.components.Button
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.interactions.components.buttons.Button
 
 class LeaveCommand : Command {
     override val name = "leave"
     override val description = "Makes the bot leave your voice channel"
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         event.guild.selfMember.voiceState?.channel?.let { botVc ->
             event.member?.voiceState?.channel?.let {
                 if (it == botVc) {
@@ -36,7 +36,7 @@ class LeaveCommand : Command {
         } ?: throw CommandException("${event.jda.selfUser.name} is not connected to a voice channel!")
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         event.guild?.selfMember?.voiceState?.channel?.let { botVc ->
             event.member?.voiceState?.channel?.let {
                 if (it == botVc) {
@@ -55,7 +55,7 @@ class LeaveCommand : Command {
         } ?: throw CommandException("${event.jda.selfUser.name} is not connected to a voice channel!")
     }
 
-    override suspend fun invoke(event: ButtonClickEvent) {
+    override suspend fun invoke(event: ButtonInteractionEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
@@ -84,9 +84,9 @@ class LeaveCommand : Command {
         )
 
         when (event) {
-            is GuildMessageReceivedEvent ->
+            is MessageReceivedEvent ->
                 event.channel.sendConfirmation(description).setActionRow(buttons).queue()
-            is SlashCommandEvent ->
+            is SlashCommandInteractionEvent ->
                 event.replyConfirmation(description).addActionRow(buttons).queue()
         }
     }

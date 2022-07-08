@@ -10,10 +10,11 @@ import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.io.File
+
 import javax.imageio.ImageIO
 
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
@@ -25,14 +26,14 @@ class TextToImageCommand : Command {
     override val options = setOf(OptionData(OptionType.STRING, "input", "The provided text", true))
     override val cooldown = 5L
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val lines = args?.split("\n")?.map { it.limitTo(100) } ?: throw NoArgumentsException
         val bytes = textToImage(lines.take(25), lines.maxByOrNull { it.length } ?: return)
 
         event.channel.sendFile(bytes, "tti.png").queue()
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val lines = event.getOption("input")?.asString?.split("\n")?.map { it.limitTo(100) }
             ?: return
         val bytes = textToImage(lines.take(25), lines.maxByOrNull { it.length } ?: return)

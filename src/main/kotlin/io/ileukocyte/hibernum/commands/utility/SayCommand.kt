@@ -6,8 +6,8 @@ import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.extensions.limitTo
 import io.ileukocyte.hibernum.extensions.sendEmbed
 
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
@@ -19,12 +19,12 @@ class SayCommand : Command {
     override val options = setOf(
         OptionData(OptionType.STRING, "message", "The message to send on behalf of the bot", true))
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         if (args === null && event.message.attachments.none { it.isImage })
             throw NoArgumentsException
 
         val (imageName, imageStream) = event.message.attachments.firstOrNull { it.isImage }
-            .let { it?.fileName to it?.retrieveInputStream() }
+            .let { it?.fileName to it?.proxy?.download() }
 
         event.message.delete().queue()
 
@@ -43,7 +43,7 @@ class SayCommand : Command {
             ?: restAction.queue()
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         event.deferReply().queue { it.deleteOriginal().queue({}) {} }
 
         event.channel.sendEmbed {

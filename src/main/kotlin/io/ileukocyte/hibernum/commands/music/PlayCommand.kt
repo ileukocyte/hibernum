@@ -14,8 +14,8 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.YOUTUBE_LINK_REGEX
 
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
@@ -27,7 +27,7 @@ class PlayCommand : Command {
         OptionData(OptionType.STRING, "query", "A link or a search term", true))
     override val usages = setOf(setOf("query"), setOf("file"))
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         event.member?.voiceState?.channel?.let {
             val channel = it.takeUnless { vc -> event.guild.selfMember.voiceState?.channel == vc }
             val urls = setOf(args).filterNotNull().takeUnless { s -> s.isEmpty() }
@@ -88,7 +88,7 @@ class PlayCommand : Command {
         } ?: throw CommandException("You are not connected to a voice channel!")
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val guild = event.guild ?: return
 
         event.member?.voiceState?.channel?.let {

@@ -12,7 +12,7 @@ import io.ileukocyte.openweather.OpenWeatherApi
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageEmbed
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.requests.RestAction
 
 import org.json.JSONObject
@@ -23,7 +23,7 @@ class EvalCommand : TextOnlyCommand {
     override val aliases = setOf("exec")
     override val usages = setOf(setOf("Kotlin code"))
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val code = args?.run {
             takeIf { it.startsWith("```") }
                 ?.removeSurrounding("```")
@@ -103,12 +103,22 @@ class EvalCommand : TextOnlyCommand {
                 "api.audit",
                 "api.entities",
                 "api.events",
+                "api.events.guild",
+                "api.events.guild.voice",
+                "api.events.interaction",
+                "api.events.interaction.command",
+                "api.events.interaction.component",
                 "api.events.message",
-                "api.events.message.guild",
+                "api.events.message",
                 "api.events.message.react",
                 "api.exceptions",
                 "api.hooks",
                 "api.interactions",
+                "api.interactions.commands",
+                "api.interactions.commands.build",
+                "api.interactions.components",
+                "api.interactions.components.buttons",
+                "api.interactions.components.selections",
                 "api.managers",
                 "api.requests",
                 "api.requests.restaction",
@@ -138,7 +148,20 @@ class EvalCommand : TextOnlyCommand {
                 "reflect.jvm",
                 "system",
             ),
-            "kotlinx" to setOf("coroutines"),
+            "kotlinx" to setOf(
+                "coroutines",
+                "serialization",
+                "serialization.json",
+            ),
+            "io.ktor" to setOf(
+                "client",
+                "client.call",
+                "client.engine.cio",
+                "client.plugins.contentnegotiation",
+                "client.request",
+                "http",
+                "serialization.kotlinx.json",
+            ),
             "org" to setOf("json", "jsoup", "reflections"),
             "mu" to emptySet(),
         )

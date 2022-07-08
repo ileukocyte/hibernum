@@ -6,14 +6,14 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendSuccess
 
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
 class ShuffleCommand : Command {
     override val name = "shuffle"
     override val description = "Shuffles the queue"
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val audioPlayer = event.guild.audioPlayer ?: return
 
         if (event.member?.voiceState?.channel == event.guild.selfMember.voiceState?.channel) {
@@ -25,7 +25,7 @@ class ShuffleCommand : Command {
         } else throw CommandException("You are not connected to the required voice channel!")
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val guild = event.guild ?: return
         val audioPlayer = guild.audioPlayer ?: return
 

@@ -31,13 +31,13 @@ import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.SelfUser
 import net.dv8tion.jda.api.entities.User
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import net.dv8tion.jda.api.interactions.components.Button
+import net.dv8tion.jda.api.interactions.components.buttons.Button
 
 class DictionaryCommand : Command {
     override val name = "dictionary"
@@ -55,7 +55,7 @@ class DictionaryCommand : Command {
         }
     }
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val results = searchDefinition(args ?: throw NoArgumentsException)
             .takeUnless { it.isEmpty() }
             ?: throw CommandException("No definition has been found by the query!")
@@ -84,7 +84,7 @@ class DictionaryCommand : Command {
         }
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val deferred = event.deferReply().await()
         val results = searchDefinition(event.getOption("term")?.asString ?: return)
 
@@ -132,7 +132,7 @@ class DictionaryCommand : Command {
         author: User,
     ) {
         val event = try {
-            jda.awaitEvent<ButtonClickEvent>(5, TimeUnit.MINUTES) {
+            jda.awaitEvent<ButtonInteractionEvent>(5, TimeUnit.MINUTES) {
                 it.message == message && it.user == author
             } ?: return
         } catch (_: TimeoutCancellationException) {

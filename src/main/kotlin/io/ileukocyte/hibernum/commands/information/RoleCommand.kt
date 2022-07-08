@@ -12,15 +12,15 @@ import io.ileukocyte.hibernum.extensions.searchRoles
 import io.ileukocyte.hibernum.extensions.sendEmbed
 import io.ileukocyte.hibernum.utils.getImageBytes
 
-import net.dv8tion.jda.api.entities.Emoji
 import net.dv8tion.jda.api.entities.Role
-import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.entities.emoji.Emoji
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
-import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
 class RoleCommand : Command {
@@ -36,7 +36,7 @@ class RoleCommand : Command {
         OptionData(OptionType.ROLE, "role", "The role to check information about", true))
     override val cooldown = 3L
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         if (args === null) throw NoArgumentsException
 
         val exception = CommandException("No users have been found by the query!")
@@ -55,8 +55,8 @@ class RoleCommand : Command {
                         } ?: it
                     }.queue()
             }
-            event.message.mentionedRoles.isNotEmpty() -> {
-                val role = event.message.mentionedRoles.first()
+            event.message.mentions.rolesBag.isNotEmpty() -> {
+                val role = event.message.mentions.rolesBag.first()
 
                 event.channel.sendMessageEmbeds(infoEmbed(role))
                     .let {
@@ -90,7 +90,7 @@ class RoleCommand : Command {
                     return
                 }
 
-                val menu = SelectionMenu
+                val menu = SelectMenu
                     .create("$name-${event.author.idLong}-search")
                     .addOptions(
                         *results.take(10).map { SelectOption.of(it.name, it.id) }.toTypedArray(),
@@ -105,7 +105,7 @@ class RoleCommand : Command {
         }
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val deferred = event.deferReply().await()
         val role = event.getOption("role")?.asRole ?: return
 
@@ -120,11 +120,11 @@ class RoleCommand : Command {
             }.queue()
     }
 
-    override suspend fun invoke(event: SelectionMenuEvent) {
+    override suspend fun invoke(event: SelectMenuInteractionEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
-            val value = event.selectedOptions?.firstOrNull()?.value ?: return
+            val value = event.selectedOptions.firstOrNull()?.value ?: return
 
             if (value == "exit") {
                 event.message.delete().queue()

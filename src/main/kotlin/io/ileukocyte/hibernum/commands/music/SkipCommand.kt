@@ -6,8 +6,8 @@ import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.*
 
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
 import org.jetbrains.kotlin.utils.addToStdlib.cast
 
@@ -15,7 +15,7 @@ class SkipCommand : Command {
     override val name = "skip"
     override val description = "Skips to the next song in the queue"
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
 
         if (audioPlayer.player.playingTrack !== null) {
@@ -32,7 +32,7 @@ class SkipCommand : Command {
         } else throw CommandException("No track is currently playing!")
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val guild = event.guild ?: return
         val audioPlayer = guild.audioPlayer ?: return
 

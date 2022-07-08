@@ -19,12 +19,12 @@ import kotlin.math.max
 import kotlin.math.min
 
 import net.dv8tion.jda.api.JDA
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import net.dv8tion.jda.api.interactions.components.Button
+import net.dv8tion.jda.api.interactions.components.buttons.Button
 
 class QueueCommand : Command {
     override val name = "queue"
@@ -34,7 +34,7 @@ class QueueCommand : Command {
     override val options = setOf(
         OptionData(OptionType.INTEGER, "page", "Initial page number"))
 
-    override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val audioPlayer = event.guild.audioPlayer ?: return
         val track = audioPlayer.player.playingTrack ?: throw CommandException("No track is currently playing!")
 
@@ -50,7 +50,7 @@ class QueueCommand : Command {
             }.queue()
     }
 
-    override suspend fun invoke(event: SlashCommandEvent) {
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val audioPlayer = event.guild?.audioPlayer ?: return
         val track = audioPlayer.player.playingTrack ?: throw CommandException("No track is currently playing!")
 
@@ -66,7 +66,7 @@ class QueueCommand : Command {
             }.queue()
     }
 
-    override suspend fun invoke(event: ButtonClickEvent) {
+    override suspend fun invoke(event: ButtonInteractionEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
