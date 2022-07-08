@@ -11,6 +11,7 @@ import io.ileukocyte.hibernum.utils.asText
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDAInfo
+import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
@@ -20,12 +21,12 @@ class AboutCommand : Command {
     override val aliases = setOf("info", "stats")
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) =
-        event.channel.sendMessageEmbeds(statsEmbed(event.jda)).queue()
+        event.channel.sendMessageEmbeds(statsEmbed(event.jda, event.guild)).queue()
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) =
-        event.replyEmbeds(statsEmbed(event.jda)).queue()
+        event.replyEmbeds(statsEmbed(event.jda, event.guild!!)).queue()
 
-    private suspend fun statsEmbed(jda: JDA) = buildEmbed {
+    private suspend fun statsEmbed(jda: JDA, guild: Guild) = buildEmbed {
         color = Immutable.SUCCESS
         thumbnail = jda.selfUser.effectiveAvatarUrl
         timestamp = jda.startDate
@@ -35,6 +36,7 @@ class AboutCommand : Command {
             val inviteLink = Immutable.INVITE_LINK_FORMAT.format(jda.selfUser.id)
             val musicStreamingServersCount = jda.guildCache
                 .count { it.selfMember.voiceState?.inAudioChannel() == true }
+            val owner = jda.retrieveApplicationInfo().await().owner
 
             appendLine("${jda.selfUser.name} is a modern Discord multi-purpose 100% [Kotlin](https://kotlinlang.org/)-coded bot that currently relies mostly on its musical functionality")
             appendLine()
@@ -45,7 +47,7 @@ class AboutCommand : Command {
             )
             appendLine()
             appendLine("**[Invite Link]($inviteLink)** • **[GitHub Repository](${Immutable.GITHUB_REPOSITORY})**")
-            appendLine("**Developer**: ${jda.retrieveApplicationInfo().await().owner.asTag}")
+            appendLine("**Developer**: ${if (guild.isMember(owner)) owner.asMention else owner.asTag}")
             appendLine("**Bot Version**: ${Immutable.VERSION}")
             appendLine("**JDA Version**: ${JDAInfo.VERSION}")
             appendLine("**Kotlin Version**: ${KotlinVersion.CURRENT}")
