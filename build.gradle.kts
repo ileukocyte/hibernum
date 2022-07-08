@@ -11,12 +11,12 @@ plugins {
     kotlin("jvm") version "1.7.0"
     kotlin("plugin.serialization") version "1.7.0"
 
-    id("com.github.johnrengelman.shadow") version "7.1.0"
-    id("com.github.ben-manes.versions") version "0.39.0"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("com.github.ben-manes.versions") version "0.42.0"
 }
 
 group = "io.ileukocyte"
-version = Version(major = 2, minor = 3, unstable = 3, stability = Version.Stability.Beta)
+version = Version(major = 2, minor = 3, stability = Version.Stability.ReleaseCandidate)
 
 repositories {
     mavenCentral()
