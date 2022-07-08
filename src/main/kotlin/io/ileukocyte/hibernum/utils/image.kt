@@ -3,6 +3,7 @@ package io.ileukocyte.hibernum.utils
 import de.androidpit.colorthief.ColorThief
 
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.get
 
@@ -30,7 +31,7 @@ fun Color.getImageBytes(width: Int, height: Int): ByteArray {
     }
 }
 
-suspend fun getDominantColorByImageUrl(url: String) = HttpClient(CIO).get<InputStream>(url).use {
+suspend fun getDominantColorByImageUrl(url: String) = HttpClient(CIO).get(url).body<InputStream>().use {
     val bufferedImage = withContext(Dispatchers.IO) { ImageIO.read(it) }
     val rgb = ColorThief.getColor(bufferedImage)
 

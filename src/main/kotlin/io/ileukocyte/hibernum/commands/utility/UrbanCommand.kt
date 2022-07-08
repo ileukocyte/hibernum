@@ -10,12 +10,13 @@ import io.ileukocyte.hibernum.utils.RequiredAttributes
 import io.ileukocyte.hibernum.utils.getPerspectiveApiProbability
 
 import io.ktor.client.*
+import io.ktor.client.call.body
 import io.ktor.client.engine.cio.*
-import io.ktor.client.features.ResponseException
-import io.ktor.client.features.json.JsonFeature
-import io.ktor.client.features.json.serializer.KotlinxSerializer
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.*
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.formUrlEncode
+import io.ktor.serialization.kotlinx.json.json
 
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toJavaInstant
@@ -40,7 +41,7 @@ class UrbanCommand : Command {
 
     private val jsonSerializer = Json { ignoreUnknownKeys = true }
     private val client = HttpClient(CIO) {
-        install(JsonFeature) { serializer = KotlinxSerializer(jsonSerializer) }
+        install(ContentNegotiation) { json(jsonSerializer) }
     }
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
@@ -89,11 +90,13 @@ class UrbanCommand : Command {
     private suspend fun lookForDefinition(client: HttpClient, query: String, isNSFWChannel: Boolean): Term {
         val api = "http://api.urbandictionary.com/v0/define"
 
-        val urbanRequest = try {
-            client.get<JsonObject>(api) { parameter("term", query) }
-        } catch (_: ResponseException) {
-            throw CommandException("Urban Dictionary is not available at the moment!")
-        }
+        val urbanRequest = client
+            .get(api) { parameter("term", query) }
+            .apply {
+                if (status != HttpStatusCode.OK) {
+                    throw CommandException("Urban Dictionary is not available at the moment!")
+                }
+            }.body<JsonObject>()
 
         val response = urbanRequest["list"]
             ?.jsonArray
@@ -111,7 +114,7 @@ class UrbanCommand : Command {
                 .mapNotNull {
                     try {
                         getPerspectiveApiProbability(client, it, RequiredAttributes.SEXUALLY_EXPLICIT)
-                    } catch (_: ResponseException) {
+                    } catch (_: IllegalStateException) {
                         null
                     }
                 }.any { it >= 0.9f }
@@ -132,7 +135,7 @@ class UrbanCommand : Command {
                                             content,
                                             RequiredAttributes.SEXUALLY_EXPLICIT,
                                         )
-                                    } catch (_: ResponseException) {
+                                    } catch (_: IllegalStateException) {
                                         null
                                     }
                                 }

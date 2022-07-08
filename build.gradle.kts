@@ -8,8 +8,8 @@ val ktorVersion: String by project
 plugins {
     java
 
-    kotlin("jvm") version "1.5.31"
-    kotlin("plugin.serialization") version "1.5.31"
+    kotlin("jvm") version "1.7.0"
+    kotlin("plugin.serialization") version "1.7.0"
 
     id("com.github.johnrengelman.shadow") version "7.1.0"
     id("com.github.ben-manes.versions") version "0.39.0"
@@ -38,25 +38,25 @@ dependencies {
     implementation(group = "com.sedmelluq", name = "lavaplayer", version = "1.3.78")
 
     // Logging
-    implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.2.10")
-    implementation(group = "io.github.microutils", name = "kotlin-logging-jvm", version = "2.1.21")
+    implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.3.0-alpha16")
+    implementation(group = "io.github.microutils", name = "kotlin-logging-jvm", version = "2.1.23")
 
     // APIs and libraries
-    implementation(group = "com.github.markozajc", name = "akiwrapper", version = "1.5.1.1")
-    implementation(group = "com.github.ileukocyte", name = "openweather-kt", version = "dfaea810a8")
+    implementation(group = "com.github.markozajc", name = "akiwrapper", version = "1.5.1.2")
+    implementation(group = "com.github.ileukocyte", name = "openweather-kt", version = "1.1.1")
     implementation(group = "org.reflections", name = "reflections", version = "0.10.2")
-    implementation(group = "org.json", name = "json", version = "20211205")
-    implementation(group = "com.google.api-client", name = "google-api-client", version = "1.32.2")
-    implementation(group = "com.google.oauth-client", name = "google-oauth-client-jetty", version = "1.32.1")
-    implementation(group = "com.google.apis", name = "google-api-services-youtube", version = "v3-rev20210915-1.32.1")
-    implementation(group = "com.google.guava", name = "guava", version = "31.0.1-jre")
+    implementation(group = "org.json", name = "json", version = "20220320")
+    implementation(group = "com.google.api-client", name = "google-api-client", version = "1.35.1")
+    implementation(group = "com.google.oauth-client", name = "google-oauth-client-jetty", version = "1.34.1")
+    implementation(group = "com.google.apis", name = "google-api-services-youtube", version = "v3-rev20220612-1.32.1")
+    implementation(group = "com.google.guava", name = "guava", version = "31.1-jre")
     implementation(group = "org.jsoup", name = "jsoup", version = "1.14.3")
     implementation(group = "commons-validator", name = "commons-validator", version = "1.7")
     implementation(group = "com.github.kenglxn.QRGen", name = "javase", version = "2.6.0")
-    implementation(group = "se.michaelthelin.spotify", name = "spotify-web-api-java", version = "7.0.0")
+    implementation(group = "se.michaelthelin.spotify", name = "spotify-web-api-java", version = "7.1.0")
     implementation(group = "com.github.SvenWoltmann", name = "color-thief-java", version = "v1.1.2")
-    implementation(group = "org.ocpsoft.prettytime", name = "prettytime", version = "5.0.2.Final")
-    implementation(group = "io.arrow-kt", name = "arrow-fx-coroutines", version = "1.0.1")
+    implementation(group = "org.ocpsoft.prettytime", name = "prettytime", version = "5.0.3.Final")
+    implementation(group = "io.arrow-kt", name = "arrow-fx-coroutines", version = "1.1.2")
 
     // Kotlin
     implementation(kotlin("stdlib", kotlinVersion))
@@ -68,14 +68,15 @@ dependencies {
     implementation(kotlin("scripting-compiler", kotlinVersion))
     implementation(kotlin("scripting-jsr223", kotlinVersion))
     implementation(kotlin("scripting-jvm-host", kotlinVersion))
-    implementation(kotlinx("coroutines-core", "1.6.0"))
-    implementation(kotlinx("serialization-json", "1.3.1"))
-    implementation(kotlinx("datetime", "0.3.0"))
+    implementation(kotlinx("coroutines-core", "1.6.3"))
+    implementation(kotlinx("serialization-json", "1.3.3"))
+    implementation(kotlinx("datetime", "0.4.0"))
 
     // Ktor
+    implementation(ktor("client-content-negotiation"))
     implementation(ktor("client-core"))
     implementation(ktor("client-cio"))
-    implementation(ktor("client-serialization"))
+    implementation(ktor("serialization-kotlinx-json"))
 
     // Testing
     testImplementation(kotlin("test-junit", kotlinVersion))
@@ -86,6 +87,12 @@ dependencies {
 fun kotlinx(module: String, version: String) = "org.jetbrains.kotlinx:kotlinx-$module:$version"
 
 fun ktor(module: String, version: String = ktorVersion) = "io.ktor:ktor-$module:$version"
+
+configurations {
+    all {
+        resolutionStrategy.sortArtifacts(ResolutionStrategy.SortOrder.DEPENDENCY_FIRST)
+    }
+}
 
 val build: DefaultTask by tasks
 val clean: Delete by tasks
@@ -105,9 +112,8 @@ tasks.withType<ShadowJar> {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "16"
-    kotlinOptions.freeCompilerArgs += setOf("-Xopt-in=kotlin.RequiresOptIn")
-    //kotlinOptions.languageVersion = "1.6"
+    kotlinOptions.jvmTarget = "17"
+    //kotlinOptions.freeCompilerArgs += setOf("-Xuse-k2")
 }
 
 tasks.getByName<Test>("test") {

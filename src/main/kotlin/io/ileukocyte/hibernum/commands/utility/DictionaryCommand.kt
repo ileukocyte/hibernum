@@ -12,12 +12,12 @@ import io.ileukocyte.hibernum.extensions.limitTo
 import io.ileukocyte.hibernum.utils.awaitEvent
 
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
-import io.ktor.client.features.ResponseException
-import io.ktor.client.features.json.JsonFeature
-import io.ktor.client.features.json.serializer.KotlinxSerializer
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
+import io.ktor.serialization.kotlinx.json.json
 
 import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
@@ -50,7 +50,9 @@ class DictionaryCommand : Command {
 
     private val jsonSerializer = Json { ignoreUnknownKeys = true }
     private val client = HttpClient(CIO) {
-        install(JsonFeature) { serializer = KotlinxSerializer(jsonSerializer) }
+        install(ContentNegotiation) {
+            json(jsonSerializer)
+        }
     }
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
@@ -141,7 +143,7 @@ class DictionaryCommand : Command {
 
         val deferred = try {
             event.deferEdit().await().retrieveOriginal().await()
-        } catch (e: ErrorResponseException) {
+        } catch (_: ErrorResponseException) {
             message
         }
 
@@ -194,15 +196,15 @@ class DictionaryCommand : Command {
         }
     }
 
-    private suspend fun searchDefinition(query: String) = try {
-        client.get<List<Word>>("$API_BASE_URL/en/$query")
-    } catch (e: ResponseException) {
-        if (e.response.status == HttpStatusCode.NotFound) {
-            emptyList()
-        } else {
-            throw e
+    private suspend fun searchDefinition(query: String) = client
+        .get("$API_BASE_URL/en/$query")
+        .let {
+            when (it.status) {
+                HttpStatusCode.OK -> it.body<List<Word>>()
+                HttpStatusCode.NotFound -> emptyList()
+                else -> throw IllegalStateException()
+            }
         }
-    }
 
     private fun Word.getEmbed(bot: SelfUser, current: Int, total: Int) = buildEmbed {
         color = Immutable.SUCCESS
@@ -269,8 +271,8 @@ class DictionaryCommand : Command {
         data class Definition(
             val definition: String,
             val example: String? = null,
-            val synonyms: Set<String>,
-            val antonyms: Set<String>,
+            val synonyms: Set<String> = emptySet(),
+            val antonyms: Set<String> = emptySet(),
         )
     }
 

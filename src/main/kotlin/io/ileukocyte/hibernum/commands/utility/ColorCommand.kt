@@ -7,11 +7,12 @@ import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.utils.getImageBytes
 
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
-import io.ktor.client.features.ResponseException
-import io.ktor.client.features.json.JsonFeature
-import io.ktor.client.features.json.serializer.KotlinxSerializer
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
+import io.ktor.http.HttpStatusCode
+import io.ktor.serialization.kotlinx.json.json
 
 import java.awt.Color as JColor
 
@@ -39,7 +40,7 @@ class ColorCommand : Command {
     }
 
     private val client = HttpClient(CIO) {
-        install(JsonFeature) { serializer = KotlinxSerializer(jsonSerializer) }
+        install(ContentNegotiation) { json(jsonSerializer) }
     }
 
     override suspend fun invoke(event: GuildMessageReceivedEvent, args: String?) {
@@ -79,11 +80,13 @@ class ColorCommand : Command {
         author { name = colorInfo.name.value }
     }
 
-    private suspend fun getColorInfo(input: String) = try {
-        client.get<Color>("http://www.thecolorapi.com/id?hex=${input.removePrefix("#").lowercase()}")
-    } catch (_: ResponseException) {
-        throw CommandException("The Color API is not available at the moment!")
-    }
+    private suspend fun getColorInfo(input: String) = client
+        .get("http://www.thecolorapi.com/id?hex=${input.removePrefix("#").lowercase()}")
+        .apply {
+            if (status != HttpStatusCode.OK) {
+                throw CommandException("The Color API is not available at the moment!")
+            }
+        }.body<Color>()
 
     @Serializable
     private data class Color(

@@ -9,6 +9,7 @@ import io.ileukocyte.hibernum.utils.invert
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.get
+import io.ktor.client.statement.readBytes
 
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -78,7 +79,7 @@ class InvertCommand : Command {
             }.await()
 
             val response = try {
-                HttpClient(CIO).get<ByteArray>(input)
+                HttpClient(CIO).get(input).readBytes()
             } catch (_: Exception) {
                 deferred.delete().queue({}) {}
 
@@ -112,11 +113,11 @@ class InvertCommand : Command {
         }.await()
 
         val response = try {
-            HttpClient(CIO).get<ByteArray>(input)
+            HttpClient(CIO).get(input).readBytes()
         } catch (_: Exception) {
-            deferred.editOriginalEmbeds(defaultEmbed("The provided link is invalid!", EmbedType.FAILURE)).queue({}) {
-                throw CommandException("The provided link is invalid!")
-            }
+            deferred.editOriginalEmbeds(
+                defaultEmbed("The provided link is invalid!", EmbedType.FAILURE)
+            ).queue(null) { throw CommandException("The provided link is invalid!") }
 
             return
         }
@@ -128,7 +129,7 @@ class InvertCommand : Command {
             .apply { withContext(Dispatchers.IO) { ImageIO.write(image, "png", this@apply) } }
             .toByteArray()
 
-        deferred.editOriginalEmbeds().addFile(bytesToSend, "inverted.png").queue({}) {
+        deferred.editOriginalEmbeds().addFile(bytesToSend, "inverted.png").queue(null) {
             event.channel.sendFile(bytesToSend, "inverted.png").queue()
         }
     }

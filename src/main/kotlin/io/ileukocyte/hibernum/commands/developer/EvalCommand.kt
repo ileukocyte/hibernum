@@ -117,12 +117,6 @@ class EvalCommand : TextOnlyCommand {
                 "api.utils",
                 "api.utils.cache",
             ),
-            "io.ktor" to setOf(
-                "client",
-                "client.engine.cio",
-                "client.features",
-                "client.request",
-            ),
             "java" to setOf(
                 "io",
                 "lang.management",

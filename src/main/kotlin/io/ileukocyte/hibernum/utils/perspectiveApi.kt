@@ -4,8 +4,10 @@ package io.ileukocyte.hibernum.utils
 import io.ileukocyte.hibernum.Immutable
 
 import io.ktor.client.*
+import io.ktor.client.call.body
 import io.ktor.client.request.*
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 
 import kotlinx.serialization.Serializable
@@ -30,15 +32,18 @@ suspend fun getPerspectiveApiProbability(
         val requestedAttributes: JsonObject,
     )
 
-    val response = client.post<JsonObject>(PERSPECTIVE_API_URL) {
+    val response = client.post(PERSPECTIVE_API_URL) {
         parameter("key", Immutable.PERSPECTIVE_API_KEY)
         contentType(ContentType.Application.Json)
-
-        body = Body(
+        setBody(Body(
             Comment(comment),
             buildJsonObject { putJsonObject(requiredAttributes.toString()) {} },
-        )
-    }
+        ))
+    }.apply {
+        if (status != HttpStatusCode.OK) {
+            throw IllegalStateException()
+        }
+    }.body<JsonObject>()
 
     val attributeScores = response["attributeScores"]?.jsonObject
     val attributes = attributeScores?.get(requiredAttributes.toString())?.jsonObject
