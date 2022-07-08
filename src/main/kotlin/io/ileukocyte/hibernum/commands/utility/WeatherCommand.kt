@@ -5,6 +5,9 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
+import io.ileukocyte.hibernum.extensions.EmbedType
+import io.ileukocyte.hibernum.extensions.await
+import io.ileukocyte.hibernum.extensions.defaultEmbed
 import io.ileukocyte.openweather.Forecast
 import io.ileukocyte.openweather.Units
 import io.ileukocyte.openweather.entities.Temperature.TemperatureUnit
@@ -40,23 +43,30 @@ class WeatherCommand : Command {
     }
 
     override suspend fun invoke(event: SlashCommandEvent) {
+        val deferred = event.deferReply().await()
+
         val api = openWeatherApi(Immutable.WEATHER_API_KEY, Units.METRIC)
 
-        val forecast = api.fromNameOrNull(event.getOption("location")?.asString ?: return)
-            ?: throw CommandException("No location has been found by the query!")
-
-        event.replyEmbeds(weatherEmbed(event.jda, forecast)).queue()
+        api.fromNameOrNull(event.getOption("location")?.asString ?: return)
+            ?.let { forecast ->
+                deferred.editOriginalEmbeds(weatherEmbed(event.jda, forecast)).queue(null) {
+                    event.channel.sendMessageEmbeds(weatherEmbed(event.jda, forecast)).queue()
+                }
+            } ?: deferred.editOriginalEmbeds(defaultEmbed(
+                desc = "No location has been found by the query!",
+                type = EmbedType.FAILURE,
+            )).queue(null) { throw CommandException("No location has been found by the query!") }
     }
 
     private fun weatherEmbed(jda: JDA, forecast: Forecast) = buildEmbed {
-        val location = forecast.location.let { "${it.name}, ${it.countryCode}" }
+        val location = forecast.location.let { "${it.name.removeSurrounding("\"")}, ${it.countryCode.removeSurrounding("\"")}" }
         val link = "https://openweathermap.org/city/${forecast.location.id}"
 
         color = Immutable.SUCCESS
 
         field {
             title = "Condition"
-            description = forecast.weather.main
+            description = forecast.weather.main.removeSurrounding("\"")
             isInline = true
         }
 
