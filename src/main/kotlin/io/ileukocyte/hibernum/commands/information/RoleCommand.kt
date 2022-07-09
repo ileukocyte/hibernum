@@ -50,7 +50,7 @@ class RoleCommand : Command {
                         role.color?.let { c ->
                             it.addFile(
                                 c.getImageBytes(150, 150),
-                                "${c.rgb.and(0xffffff).toString(16)}.png",
+                                "${"%02x%02x%02x".format(c.red, c.green, c.blue)}.png",
                             )
                         } ?: it
                     }.queue()
@@ -63,7 +63,7 @@ class RoleCommand : Command {
                         role.color?.let { c ->
                             it.addFile(
                                 c.getImageBytes(150, 150),
-                                "${c.rgb.and(0xffffff).toString(16)}.png",
+                                "${"%02x%02x%02x".format(c.red, c.green, c.blue)}.png",
                             )
                         } ?: it
                     }.queue()
@@ -82,7 +82,7 @@ class RoleCommand : Command {
                             role.color?.let { c ->
                                 it.addFile(
                                     c.getImageBytes(150, 150),
-                                    "${c.rgb.and(0xffffff).toString(16)}.png",
+                                    "${"%02x%02x%02x".format(c.red, c.green, c.blue)}.png",
                                 )
                             } ?: it
                         }.queue()
@@ -114,7 +114,7 @@ class RoleCommand : Command {
                 role.color?.let { c ->
                     it.addFile(
                         c.getImageBytes(150, 150),
-                        "${c.rgb.and(0xffffff).toString(16)}.png",
+                        "${"%02x%02x%02x".format(c.red, c.green, c.blue)}.png",
                     )
                 } ?: it
             }.queue()
@@ -141,7 +141,7 @@ class RoleCommand : Command {
                     role.color?.let { c ->
                         it.addFile(
                             c.getImageBytes(150, 150),
-                            "${c.rgb.and(0xffffff).toString(16)}.png",
+                            "${"%02x%02x%02x".format(c.red, c.green, c.blue)}.png",
                         )
                     } ?: it
                 }.queue()
@@ -153,7 +153,7 @@ class RoleCommand : Command {
 
         color = role.color
 
-        val color = role.color?.rgb?.and(0xffffff)?.toString(16)
+        val color = role.color?.let { "%02x%02x%02x".format(it.red, it.green, it.blue) }
 
         thumbnail = color?.let { "attachment://$it.png" }
         image = role.icon?.iconUrl?.let { "$it?size=2048" }

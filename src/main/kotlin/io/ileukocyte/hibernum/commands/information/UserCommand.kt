@@ -242,7 +242,7 @@ class UserCommand : Command {
 
         field {
             title = "Color"
-            description = member.color?.rgb?.and(0xffffff)?.toString(16)?.let { "#$it" } ?: "Default"
+            description = member.color?.let { "#%02x%02x%02x".format(it.red, it.green, it.blue) } ?: "Default"
             isInline = true
         }
 
@@ -273,7 +273,7 @@ class UserCommand : Command {
             field {
                 title = "Banner ${profile.bannerUrl?.let { "Image" } ?: "Color"}"
                 description = profile.bannerUrl?.let { "[Banner URL](${it}?size=2048)" }
-                    ?: profile.accentColor?.rgb?.and(0xffffff)?.toString(16)?.let { "#${it}" }
+                    ?: profile.accentColor?.let { "#%02x%02x%02x".format(it.red, it.green, it.blue) }
                     ?: "Default"
                 isInline = true
             }
