@@ -194,6 +194,26 @@ class RoleCommand : Command {
             isInline = true
         }
 
+        role.tags.let { tags ->
+            field {
+                title = "Bot Role"
+                description = tags.isBot.asWord
+                isInline = true
+            }
+
+            field {
+                title = "Integration Role"
+                description = tags.isIntegration.asWord
+                isInline = true
+            }
+
+            field {
+                title = "Booster's Role"
+                description = tags.isBoost.asWord
+                isInline = true
+            }
+        }
+
         field {
             title = "Color"
             description = color?.let { "#$it" } ?: "Default"
