@@ -19,6 +19,7 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 
 import net.dv8tion.jda.api.entities.MessageType
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
@@ -326,6 +327,50 @@ object CommandHandler : MutableSet<Command> {
                                 .setEphemeral(true)
                                 .queue({}) {
                                     event.channel.sendFailure(e.message ?: "CommandException has occurred!") {
+                                        text = e.footer ?: e.selfDeletion?.let { sd ->
+                                            "This message will self-delete in ${asText(sd.delay, sd.unit)}"
+                                        }
+                                    }.queue({
+                                        e.selfDeletion?.let { sd -> it.delete().queueAfter(sd.delay, sd.unit, {}) {} }
+                                    }) { e.printStackTrace() }
+                                }
+                            is InsufficientPermissionException -> {} // ignored
+                            else -> {
+                                event.replyFailure("""
+                                    |${e::class.simpleName ?: "An unknown exception"} has occurred:
+                                    |${e.message ?: "No message provided"}
+                                    |""".trimMargin()).queue()
+
+                                e.printStackTrace()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * A function that handles [ButtonInteractionEvent] that occurs when
+     * a user response to a command's modal
+     *
+     * @param event
+     * [ModalInteractionEvent] occurring once the command's modal is triggered
+     *
+     * @author Alexander Oksanich
+     */
+    internal operator fun invoke(event: ModalInteractionEvent) {
+        if (event.isFromGuild) {
+            this[event.modalId.split("-").first()]?.let { command ->
+                CoroutineScope(CommandContext).launch {
+                    try {
+                        command(event)
+                    } catch (e: Exception) {
+                        when (e) {
+                            is CommandException -> event.replyFailure(e.message ?: "CommandException has occurred!")
+                                .setEphemeral(true)
+                                .queue({}) {
+                                    event.messageChannel.sendFailure(e.message ?: "CommandException has occurred!") {
                                         text = e.footer ?: e.selfDeletion?.let { sd ->
                                             "This message will self-delete in ${asText(sd.delay, sd.unit)}"
                                         }
