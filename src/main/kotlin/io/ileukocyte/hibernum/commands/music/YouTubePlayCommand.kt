@@ -43,7 +43,7 @@ class YouTubePlayCommand : Command {
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         sendMenu(
             event.member ?: return,
-            event.textChannel,
+            event.channel as GuildMessageChannel,
             args ?: throw NoArgumentsException,
         )
     }
@@ -53,7 +53,7 @@ class YouTubePlayCommand : Command {
 
         sendMenu(
             event.member ?: return,
-            event.textChannel,
+            event.channel as GuildMessageChannel,
             event.getOption("query")?.asString ?: return,
             deferred,
         )
@@ -74,14 +74,14 @@ class YouTubePlayCommand : Command {
             if (id.last() == "videos") {
                 val videoUrl = event.selectedOptions.firstOrNull()?.value ?: return
 
-                play(videoUrl, event.textChannel, event.user, true, deferred)
+                play(videoUrl, event.channel as GuildMessageChannel, event.user, true, deferred)
             }
         } else throw CommandException("You did not invoke the initial command!")
     }
 
     private suspend fun sendMenu(
         member: Member,
-        textChannel: TextChannel,
+        textChannel: GuildMessageChannel,
         query: String,
         ifFromAnInteraction: InteractionHook? = null,
     ) {
@@ -155,7 +155,7 @@ class YouTubePlayCommand : Command {
 
     private fun play(
         query: String,
-        channel: TextChannel,
+        channel: GuildMessageChannel,
         user: User,
         isId: Boolean,
         ifFromSlashCommand: InteractionHook? = null,

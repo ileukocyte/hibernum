@@ -157,10 +157,16 @@ class AkinatorCommand : Command {
                             }) { false } // used to block other commands
                         }
 
+                        val enableNsfwMode = try {
+                            !event.textChannel.isNSFW
+                        } catch (_: IllegalStateException) {
+                            true
+                        }
+
                         val akiwrapper = buildAkiwrapper {
                             guessType = GUESS_TYPES[event.user.idLong] ?: GuessType.CHARACTER
                             language = lang
-                            filterProfanity = !event.textChannel.isNSFW
+                            filterProfanity = enableNsfwMode
                         }
 
                         AKIWRAPPERS += event.user.idLong to akiwrapper
@@ -178,7 +184,7 @@ class AkinatorCommand : Command {
                                 text = buildString {
                                     append("Type in \"help\"/\"aliases\" for further help or \"exit\" for termination!")
 
-                                    if (event.textChannel.isNSFW) {
+                                    if (!enableNsfwMode) {
                                         append(" | NSFW mode")
                                     }
                                 }

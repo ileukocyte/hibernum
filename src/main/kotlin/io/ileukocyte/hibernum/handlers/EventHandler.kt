@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.*
 import kotlinx.coroutines.selects.select
 
+import net.dv8tion.jda.api.entities.GuildMessageChannel
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent
@@ -180,7 +181,7 @@ object EventHandler : ListenerAdapter() {
                 "The ${process.command?.let { it::class.simpleName } ?: event.jda.selfUser.name} process " +
                         "running in this channel has been terminated via message deletion!"
 
-            event.jda.getTextChannelById(process.channel)
+            event.jda.getChannelById(GuildMessageChannel::class.java, process.channel)
                 ?.sendMessage {
                     embeds += defaultEmbed(description, EmbedType.WARNING) { text = "This message will self-delete in 5 seconds" }
 

@@ -47,15 +47,21 @@ class UrbanCommand : Command {
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val query = args ?: throw NoArgumentsException
 
+        val isNSFW = try {
+            event.textChannel.isNSFW
+        } catch (_: IllegalStateException) {
+            false
+        }
+
         val deferred = event.channel.sendEmbed {
             color = Immutable.SUCCESS
             description = "Looking for a non-NSFW definition\u2026"
 
             footer { text = "The command will execute faster in a NSFW channel!" }
-        }.takeUnless { event.textChannel.isNSFW }?.await()
+        }.takeUnless { isNSFW }?.await()
 
         val embed = try {
-            urbanEmbed(event.jda, lookForDefinition(client, query, event.textChannel.isNSFW))
+            urbanEmbed(event.jda, lookForDefinition(client, query, isNSFW))
         } catch (e: Exception) {
             defaultEmbed(e.message ?: "An exception has occurred!", EmbedType.FAILURE)
         }
@@ -68,7 +74,13 @@ class UrbanCommand : Command {
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val query = event.getOption("term")?.asString ?: return
 
-        val deferred = event.deferReply().takeIf { event.textChannel.isNSFW }?.await()
+        val isNSFW = try {
+            event.textChannel.isNSFW
+        } catch (_: IllegalStateException) {
+            false
+        }
+
+        val deferred = event.deferReply().takeIf { isNSFW }?.await()
             ?: event.replyEmbed {
                 color = Immutable.SUCCESS
                 description = "Looking for a non-NSFW definition\u2026"
@@ -77,7 +89,7 @@ class UrbanCommand : Command {
             }.await()
 
         val embed = try {
-            urbanEmbed(event.jda, lookForDefinition(client, query, event.textChannel.isNSFW))
+            urbanEmbed(event.jda, lookForDefinition(client, query, isNSFW))
         } catch (e: Exception) {
             defaultEmbed(e.message ?: "An exception has occurred!", EmbedType.FAILURE)
         }

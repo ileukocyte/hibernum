@@ -19,6 +19,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.entities.GuildMessageChannel
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
@@ -113,7 +114,7 @@ class KillCommand : Command {
                         "The ${process.command?.let { it::class.simpleName } ?: event.jda.selfUser.name} process " +
                                 "running in this channel has been terminated via message deletion!"
 
-                    event.jda.getTextChannelById(process.channel)?.let { channel ->
+                    event.jda.getChannelById(GuildMessageChannel::class.java, process.channel)?.let { channel ->
                         process.invoker?.let {
                             channel.retrieveMessageById(it).await().delete().queue({}) {}
                         }
@@ -218,7 +219,9 @@ class KillCommand : Command {
             val pid = process.id
             val command = process.command?.name ?: "Unknown"
             val users = process.users.joinToString { jda.getUserById(it)?.asTag?.let { t -> "$t ($it)" } ?: "$it" }
-            val channel = process.channel.let { jda.getTextChannelById(it)?.name?.let { c -> "#$c ($it)" } ?: "$it" }
+            val channel = process.channel.let {
+                jda.getChannelById(GuildMessageChannel::class.java, it)?.name?.let { c -> "#$c ($it)" } ?: "$it"
+            }
             val type = process.eventType?.simpleName ?: "Unknown"
             val timeCreated = process.timeCreated
 

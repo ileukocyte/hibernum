@@ -16,8 +16,8 @@ import io.ileukocyte.hibernum.utils.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
+import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.entities.MessageEmbed.DESCRIPTION_MAX_LENGTH
-import net.dv8tion.jda.api.entities.TextChannel
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -52,7 +52,7 @@ class YouTubeCommand : Command {
 
             event.channel.sendMessageEmbeds(videoEmbed(video)).queue()
         } else {
-            sendMenu(args, event.author, event.textChannel)
+            sendMenu(args, event.author, event.channel)
         }
     }
 
@@ -62,7 +62,7 @@ class YouTubeCommand : Command {
         val query = event.getOption("query")?.asString ?: return
 
         if (query matches YOUTUBE_LINK_REGEX) {
-            val video = suspendCoroutine<Video?> {
+            val video = suspendCoroutine {
                 val list = YOUTUBE.videos().list(listOf("id", "snippet", "contentDetails"))
 
                 list.id = listOf(YOUTUBE_LINK_REGEX.find(query)?.groups?.get(3)?.value)
@@ -89,7 +89,7 @@ class YouTubeCommand : Command {
                 event.replyEmbeds(videoEmbed(video)).queue()
             }
         } else {
-            sendMenu(query, event.user, event.textChannel, deferred)
+            sendMenu(query, event.user, event.channel, deferred)
         }
     }
 
@@ -166,7 +166,7 @@ class YouTubeCommand : Command {
     private suspend fun sendMenu(
         query: String,
         author: User,
-        textChannel: TextChannel,
+        channel: MessageChannel,
         ifFromSlashCommand: InteractionHook? = null,
     ) {
         val videos = searchVideos(query)
@@ -212,8 +212,8 @@ class YouTubeCommand : Command {
             try {
                 it.editOriginalEmbeds(embed).setActionRow(menu).await()
             } catch (_: ErrorResponseException) {
-                textChannel.sendMessageEmbeds(embed).setActionRow(menu).queue()
+                channel.sendMessageEmbeds(embed).setActionRow(menu).queue()
             }
-        } ?: textChannel.sendMessageEmbeds(embed).setActionRow(menu).queue()
+        } ?: channel.sendMessageEmbeds(embed).setActionRow(menu).queue()
     }
 }
