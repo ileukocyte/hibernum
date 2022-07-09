@@ -4,9 +4,7 @@ import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.commands.*
 import io.ileukocyte.hibernum.commands.developer.KillCommand
 import io.ileukocyte.hibernum.commands.developer.ShutdownCommand
-import io.ileukocyte.hibernum.extensions.isDeveloper
-import io.ileukocyte.hibernum.extensions.replyFailure
-import io.ileukocyte.hibernum.extensions.sendFailure
+import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.asText
 import io.ileukocyte.hibernum.utils.getProcessByEntities
 
@@ -245,6 +243,21 @@ object CommandHandler : MutableSet<Command> {
         if (event.isFromGuild && event.message.author == event.jda.selfUser) {
             this[event.componentId.split("-").first()]?.let { command ->
                 CoroutineScope(CommandContext).launch {
+                    if (event.message.timeCreated.isBefore(event.jda.startDate)) {
+                        event.message.delete().queue(null) {}
+
+                        event.channel.sendMessage {
+                            content += event.user.asMention
+                            embeds += defaultEmbed("The interaction has already expired!", EmbedType.FAILURE) {
+                                text = "This message will self-delete in 5 seconds"
+                            }
+                        }.queue {
+                            it.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
+                        }
+
+                        return@launch
+                    }
+
                     try {
                         command(event)
                     } catch (e: Exception) {
@@ -290,6 +303,21 @@ object CommandHandler : MutableSet<Command> {
             this[event.componentId.split("-").first()]?.let {
                     command ->
                 CoroutineScope(CommandContext).launch {
+                    if (event.message.timeCreated.isBefore(event.jda.startDate)) {
+                        event.message.delete().queue(null) {}
+
+                        event.channel.sendMessage {
+                            content += event.user.asMention
+                            embeds += defaultEmbed("The interaction has already expired!", EmbedType.FAILURE) {
+                                text = "This message will self-delete in 5 seconds"
+                            }
+                        }.queue {
+                            it.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
+                        }
+
+                        return@launch
+                    }
+
                     try {
                         command(event)
                     } catch (e: Exception) {
