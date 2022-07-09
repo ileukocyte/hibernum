@@ -192,6 +192,7 @@ class EvalCommand : Command {
                 "api.interactions.components",
                 "api.interactions.components.buttons",
                 "api.interactions.components.selections",
+                "api.interactions.components.text",
                 "api.managers",
                 "api.requests",
                 "api.requests.restaction",
