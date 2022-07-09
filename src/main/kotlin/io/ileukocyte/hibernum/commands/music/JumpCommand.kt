@@ -20,12 +20,12 @@ class JumpCommand : Command {
     override val name = "jump"
     override val description = "Jumps to the specified time while playing the track"
     override val aliases = setOf("seek")
-    override val usages = setOf(setOf("[rewind:/fast-forward:]time code"))
+    override val usages = setOf(setOf("[r(ewind):/f(ast-forward):]time code"))
     override val options = setOf(
         OptionData(
             OptionType.STRING,
             "time",
-            "The time to jump to (you can apply the prefixes \"rewind:\" or \"fast-forward:\" (e.g. rewind:1:00))",
+            "The time to jump to (you can apply the prefixes \"r(ewind):\" or \"f(ast-forward):\" (e.g. rewind:1:00))",
             true,
         )
     )
@@ -35,7 +35,12 @@ class JumpCommand : Command {
 
         if (audioPlayer.player.playingTrack !== null) {
             val time = (args ?: throw NoArgumentsException).takeIf {
-                it.removePrefix("rewind:").removePrefix("fast-forward:") matches TIME_CODE_REGEX
+                it
+                    .removePrefix("rewind:")
+                    .removePrefix("r:")
+                    .removePrefix("fast-forward:")
+                    .removePrefix("f:")
+                    .matches(TIME_CODE_REGEX)
             } ?: throw CommandException("You have provided an argument of a wrong format!")
 
             if (event.member?.voiceState?.channel != event.guild.selfMember.voiceState?.channel)
@@ -44,10 +49,15 @@ class JumpCommand : Command {
             if (audioPlayer.player.playingTrack.info.isStream)
                 throw CommandException("The track cannot be sought since it is recognized as a stream!")
 
-            val millis = timeCodeToMillis(time.removePrefix("rewind:").removePrefix("fast-forward:"))
+            val millis = time
+                .removePrefix("rewind:")
+                .removePrefix("r:")
+                .removePrefix("fast-forward:")
+                .removePrefix("f:")
+                .let { timeCodeToMillis(it) }
 
-            if (!time.startsWith("rewind:")) {
-                if (time.startsWith("fast-forward:")) {
+            if (!time.startsWith("rewind:") && !time.startsWith("r:")) {
+                if (time.startsWith("fast-forward:") || time.startsWith("f:")) {
                     if (audioPlayer.player.playingTrack.position + millis > audioPlayer.player.playingTrack.duration)
                         throw CommandException("You have exceeded the track duration!")
                 } else {
@@ -57,10 +67,10 @@ class JumpCommand : Command {
             }
 
             when {
-                time.startsWith("rewind:") ->
+                time.startsWith("rewind:") || time.startsWith("r:") ->
                     audioPlayer.player.playingTrack.position =
                         max(0, audioPlayer.player.playingTrack.position - millis)
-                time.startsWith("fast-forward:") ->
+                time.startsWith("fast-forward:") || time.startsWith("f:") ->
                     audioPlayer.player.playingTrack.position += millis
                 else ->
                     audioPlayer.player.playingTrack.position = millis
@@ -77,7 +87,12 @@ class JumpCommand : Command {
             val time = (event.getOption("time")?.asString ?: throw NoArgumentsException)
                 .lowercase()
                 .takeIf {
-                    it.removePrefix("rewind:").removePrefix("fast-forward:") matches TIME_CODE_REGEX
+                    it
+                        .removePrefix("rewind:")
+                        .removePrefix("r:")
+                        .removePrefix("fast-forward:")
+                        .removePrefix("f:")
+                        .matches(TIME_CODE_REGEX)
                 } ?: throw CommandException("You have provided an argument of a wrong format!")
 
             if (event.member?.voiceState?.channel != event.guild?.selfMember?.voiceState?.channel)
@@ -86,10 +101,15 @@ class JumpCommand : Command {
             if (audioPlayer.player.playingTrack.info.isStream)
                 throw CommandException("The track cannot be sought since it is recognized as a stream!")
 
-            val millis = timeCodeToMillis(time.removePrefix("rewind:").removePrefix("fast-forward:"))
+            val millis = time
+                .removePrefix("rewind:")
+                .removePrefix("r:")
+                .removePrefix("fast-forward:")
+                .removePrefix("f:")
+                .let { timeCodeToMillis(it) }
 
-            if (!time.startsWith("rewind:")) {
-                if (time.startsWith("fast-forward:")) {
+            if (!time.startsWith("rewind:") && !time.startsWith("r:")) {
+                if (time.startsWith("fast-forward:") || time.startsWith("f:")) {
                     if (audioPlayer.player.playingTrack.position + millis > audioPlayer.player.playingTrack.duration)
                         throw CommandException("You have exceeded the track duration!")
                 } else {
@@ -99,10 +119,10 @@ class JumpCommand : Command {
             }
 
             when {
-                time.startsWith("rewind:") ->
+                time.startsWith("rewind:") || time.startsWith("r:") ->
                     audioPlayer.player.playingTrack.position =
                         max(0, audioPlayer.player.playingTrack.position - millis)
-                time.startsWith("fast-forward:") ->
+                time.startsWith("fast-forward:") || time.startsWith("f:") ->
                     audioPlayer.player.playingTrack.position += millis
                 else ->
                     audioPlayer.player.playingTrack.position = millis
