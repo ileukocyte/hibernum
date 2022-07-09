@@ -22,7 +22,7 @@ class SkipCommand : Command {
             if (event.member?.voiceState?.channel == event.guild.selfMember.voiceState?.channel) {
                 audioPlayer.player.playingTrack.userData.cast<TrackUserData>().announcement?.delete()?.queue({}) {}
 
-                audioPlayer.scheduler.nextTrack()
+                audioPlayer.scheduler.nextTrack(newAnnouncementChannel = event.channel)
 
                 val description = "Playback has been stopped!"
                     .takeIf { audioPlayer.player.playingTrack === null }
@@ -42,7 +42,7 @@ class SkipCommand : Command {
 
                 audioPlayer.player.playingTrack.userData.cast<TrackUserData>().announcement?.delete()?.queue({}) {}
 
-                audioPlayer.scheduler.nextTrack(deferred)
+                audioPlayer.scheduler.nextTrack(deferred, event.channel)
 
                 val description = "Playback has been stopped!"
                     .takeIf { audioPlayer.player.playingTrack === null }

@@ -12,6 +12,7 @@ import io.ileukocyte.hibernum.extensions.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
 import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.interactions.InteractionHook
 
 import org.jetbrains.kotlin.utils.addToStdlib.cast
@@ -42,11 +43,17 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
         }
     }
 
-    fun nextTrack(ifFromSlashCommand: InteractionHook? = null) {
+    fun nextTrack(
+        ifFromSlashCommand: InteractionHook? = null,
+        newAnnouncementChannel: MessageChannel? = null,
+    ) {
         if (queue.isNotEmpty()) {
             val next = queue.poll()
 
-            next.userData = next.userData.cast<TrackUserData>().copy(ifFromSlashCommand = ifFromSlashCommand)
+            next.userData = next.userData.cast<TrackUserData>().copy(
+                ifFromSlashCommand = ifFromSlashCommand,
+                channel = newAnnouncementChannel ?: next.userData.cast<TrackUserData>().channel,
+            )
 
             player.startTrack(next, false)
         } else player.destroy()
