@@ -264,9 +264,27 @@ class UserCommand : Command {
         }
 
         field {
-            title = "Booster"
+            title = "Server Booster"
             description = (member.timeBoosted !== null).asWord
             isInline = true
+        }
+
+        user.retrieveProfile().await().let { profile ->
+            field {
+                title = "Banner ${profile.bannerUrl?.let { "Image" } ?: "Color"}"
+                description = profile.bannerUrl?.let { "[Banner URL](${it}?size=2048)" }
+                    ?: profile.accentColor?.rgb?.and(0xffffff)?.toString(16)?.let { "#${it}" }
+                    ?: "Default"
+                isInline = true
+            }
+        }
+
+        if (user.flags.isNotEmpty()) {
+            field {
+                title = "User Flags"
+                description = user.flags.sortedBy { it.offset }.joinToString("\n") { it.getName() }
+                isInline = true
+            }
         }
 
         member.permissions.intersect(KEY_PERMISSIONS).takeUnless { it.isEmpty() }?.let { keyPermissions ->
