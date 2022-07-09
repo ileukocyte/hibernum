@@ -13,7 +13,15 @@ import net.dv8tion.jda.api.utils.MarkdownSanitizer
 class EmoteCommand : TextOnlyCommand {
     override val name = "emote"
     override val description = "Sends the available information about the provided **custom** emoji"
-    override val aliases = setOf("emoji", "emojiinfo", "emoji-info", "emoteinfo", "emote-info")
+    override val aliases = setOf(
+        "customemoji",
+        "custom-emoji",
+        "emoji",
+        "emojiinfo",
+        "emoji-info",
+        "emoteinfo",
+        "emote-info",
+    )
     override val usages = setOf(setOf("custom emoji"))
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
