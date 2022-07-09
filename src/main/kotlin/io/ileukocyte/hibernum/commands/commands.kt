@@ -3,6 +3,7 @@
 package io.ileukocyte.hibernum.commands
 
 import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
@@ -88,6 +89,14 @@ interface Command : Comparable<Command> {
      * The [SelectMenuInteractionEvent] occurring once the command is invoked
      */
     suspend operator fun invoke(event: SelectMenuInteractionEvent) {}
+
+    /**
+     * A function that is executed when a user responds to the command's modal
+     *
+     * @param event
+     * The [ModalInteractionEvent] occurring once the command is invoked
+     */
+    suspend operator fun invoke(event: ModalInteractionEvent) {}
 
     override fun compareTo(other: Command) = name.compareTo(other.name)
 }
