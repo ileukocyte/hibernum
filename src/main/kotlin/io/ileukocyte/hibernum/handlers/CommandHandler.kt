@@ -105,7 +105,7 @@ object CommandHandler : MutableSet<Command> {
                             if (event.jda.getProcessByEntities(event.author, event.channel) === null || isSpecial) {
                                 if (command.isDeveloper && !event.author.isDeveloper) {
                                     event.channel
-                                        .sendFailure("You cannot execute the command since you are not a developer!")
+                                        .sendFailure("You cannot execute the command since you are not a developer of the bot!")
                                         .queue()
 
                                     return@launch
@@ -174,7 +174,7 @@ object CommandHandler : MutableSet<Command> {
 
                     if (event.jda.getProcessByEntities(event.user, event.channel) === null || isSpecial) {
                         if (command.isDeveloper && !event.user.isDeveloper) {
-                            event.replyFailure("You cannot execute the command since you are not a developer!").queue()
+                            event.replyFailure("You cannot execute the command since you are not a developer of the bot!").queue()
 
                             return@launch
                         }
