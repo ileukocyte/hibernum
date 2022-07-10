@@ -37,6 +37,10 @@ class AboutCommand : Command {
             val musicStreamingServersCount = jda.guildCache
                 .count { it.selfMember.voiceState?.inAudioChannel() == true }
             val owner = jda.retrieveApplicationInfo().await().owner
+            val commandCount = setOf(
+                CommandHandler.count { it is TextOnlyCommand }.takeIf { it > 0 }?.let { "text-only: $it" },
+                CommandHandler.count { it is SlashOnlyCommand }.takeIf { it > 0 }?.let { "slash-only: $it" },
+            )
 
             appendLine("${jda.selfUser.name} is a modern Discord multi-purpose 100% [Kotlin](https://kotlinlang.org/)-coded bot that currently relies mostly on its musical functionality")
             appendLine()
@@ -52,9 +56,9 @@ class AboutCommand : Command {
             appendLine("**JDA Version**: ${JDAInfo.VERSION}")
             appendLine("**Kotlin Version**: ${KotlinVersion.CURRENT}")
             appendLine("**Java Version**: ${System.getProperty("java.version") ?: "Unknown"}")
-            appendLine("**Total Commands**: ${CommandHandler.size} " +
-                    "(text-only: ${CommandHandler.count { it is TextOnlyCommand }}, " +
-                    "slash-only: ${CommandHandler.count { it is SlashOnlyCommand }})")
+            appendLine("**Total Commands**: ${CommandHandler.size}" +
+                    commandCount.filterNotNull().takeUnless { it.isEmpty() }
+                        ?.let { " (${it.joinToString(", ")})" }.orEmpty())
             appendLine("**Available Slash Commands**: ${jda.retrieveCommands().await().size}")
             append("**Servers**: ${jda.guildCache.size()}")
 
