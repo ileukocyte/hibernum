@@ -13,6 +13,7 @@ import kotlin.math.max
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
@@ -22,12 +23,12 @@ class JumpCommand : Command {
     override val aliases = setOf("seek")
     override val usages = setOf(setOf("[r(ewind):/f(ast-forward):]time code"))
     override val options = setOf(
-        OptionData(
-            OptionType.STRING,
-            "time",
-            "The time to jump to (you can apply the prefixes \"r(ewind):\" or \"f(ast-forward):\" (e.g. rewind:1:00))",
-            true,
-        )
+        OptionData(OptionType.STRING, "time", "The time to jump to (e.g. 0:30 sets the exact time)", true),
+        OptionData(OptionType.STRING, "mode", "The direction to jump to (backwards/forwards)")
+            .addChoices(
+                Choice("Rewind", "r"),
+                Choice("Fast Forward", "f"),
+            )
     )
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
@@ -86,14 +87,9 @@ class JumpCommand : Command {
         if (audioPlayer.player.playingTrack !== null) {
             val time = (event.getOption("time")?.asString ?: throw NoArgumentsException)
                 .lowercase()
-                .takeIf {
-                    it
-                        .removePrefix("rewind:")
-                        .removePrefix("r:")
-                        .removePrefix("fast-forward:")
-                        .removePrefix("f:")
-                        .matches(TIME_CODE_REGEX)
-                } ?: throw CommandException("You have provided an argument of a wrong format!")
+                .takeIf { it matches TIME_CODE_REGEX }
+                ?: throw CommandException("You have provided an argument of a wrong format!")
+            val mode = event.getOption("mode")?.asString.orEmpty()
 
             if (event.member?.voiceState?.channel != event.guild?.selfMember?.voiceState?.channel)
                 throw CommandException("You are not connected to the required voice channel!")
@@ -101,15 +97,10 @@ class JumpCommand : Command {
             if (audioPlayer.player.playingTrack.info.isStream)
                 throw CommandException("The track cannot be sought since it is recognized as a stream!")
 
-            val millis = time
-                .removePrefix("rewind:")
-                .removePrefix("r:")
-                .removePrefix("fast-forward:")
-                .removePrefix("f:")
-                .let { timeCodeToMillis(it) }
+            val millis = timeCodeToMillis(time)
 
-            if (!time.startsWith("rewind:") && !time.startsWith("r:")) {
-                if (time.startsWith("fast-forward:") || time.startsWith("f:")) {
+            if (mode != "r") {
+                if (mode == "f") {
                     if (audioPlayer.player.playingTrack.position + millis > audioPlayer.player.playingTrack.duration)
                         throw CommandException("You have exceeded the track duration!")
                 } else {
@@ -118,14 +109,11 @@ class JumpCommand : Command {
                 }
             }
 
-            when {
-                time.startsWith("rewind:") || time.startsWith("r:") ->
-                    audioPlayer.player.playingTrack.position =
-                        max(0, audioPlayer.player.playingTrack.position - millis)
-                time.startsWith("fast-forward:") || time.startsWith("f:") ->
-                    audioPlayer.player.playingTrack.position += millis
-                else ->
-                    audioPlayer.player.playingTrack.position = millis
+            when (mode) {
+                "r" -> audioPlayer.player.playingTrack.position =
+                    max(0, audioPlayer.player.playingTrack.position - millis)
+                "f" -> audioPlayer.player.playingTrack.position += millis
+                else -> audioPlayer.player.playingTrack.position = millis
             }
 
             event.replySuccess("Successfully jumped to the specified time!").queue()
