@@ -228,7 +228,6 @@ class AkinatorCommand : Command {
 
         if (event.user.id == id.first()) {
             val akiwrapper = AKIWRAPPERS[event.user.idLong] ?: return
-            val processId = id[1].toInt()
 
             when (id.last()) {
                 "exit" -> {
@@ -249,7 +248,7 @@ class AkinatorCommand : Command {
                         .flatMap { event.message.delete() }
                         .await()
 
-                    awaitAnswer(event.channel, event.user, akiwrapper, processId = processId)
+                    awaitAnswer(event.channel, event.user, akiwrapper, processId = id[1].toInt())
                 }
                 "guessYes", "finalGuessYes" -> {
                     AKIWRAPPERS -= event.user.idLong
@@ -300,19 +299,26 @@ class AkinatorCommand : Command {
                                 author { name = "Question #${nextQuestion.step + 1}" }
                             }.await()
 
-                            awaitAnswer(event.channel, event.user, akiwrapper, processId = processId)
+                            awaitAnswer(event.channel, event.user, akiwrapper, processId = id[2].toInt())
                         } else {
                             akiwrapper.guesses // always empty for an unknown reason
                                 .firstOrNull { DECLINED_GUESSES[event.user.idLong]?.contains(it.idLong) == false }
                                 ?.let { finalGuess ->
-                                    val m = guessMessage(finalGuess, true, event.user.idLong, event.channel, event.message.idLong)
+                                    val m = guessMessage(
+                                        finalGuess,
+                                        true,
+                                        event.user.idLong,
+                                        event.channel,
+                                        event.message.idLong,
+                                        processId = id[2].toInt(),
+                                    )
 
                                     event.jda.awaitEvent<ButtonInteractionEvent>(15, TimeUnit.MINUTES, waiterProcess = waiterProcess {
                                         channel = event.channel.idLong
                                         users += event.user.idLong
                                         command = this@AkinatorCommand
                                         invoker = m.idLong
-                                        this@waiterProcess.id = processId
+                                        this@waiterProcess.id = id[2].toInt()
                                     }) { it.user.idLong == event.user.idLong && it.message == m } // used to block other commands
                                 } ?: event.channel.let { channel ->
                                     AKIWRAPPERS -= event.user.idLong
@@ -348,7 +354,7 @@ class AkinatorCommand : Command {
                 "exit" -> {
                     val m = message.replyConfirmation("Are you sure you want to exit?")
                         .setActionRow(
-                            Button.danger("$name-${player.idLong}-$processId-exit", "Yes"),
+                            Button.danger("$name-${player.idLong}-exit", "Yes"),
                             Button.secondary("$name-${player.idLong}-$processId-stay", "No"),
                         ).await()
 
@@ -451,7 +457,14 @@ class AkinatorCommand : Command {
                                 akiwrapper.guesses // always empty for an unknown reason
                                     .firstOrNull { DECLINED_GUESSES[player.idLong]?.contains(it.idLong) == false }
                                     ?.let { finalGuess ->
-                                        val m = guessMessage(finalGuess, true, player.idLong, message.channel, message.idLong)
+                                        val m = guessMessage(
+                                            finalGuess,
+                                            true,
+                                            player.idLong,
+                                            message.channel,
+                                            message.idLong,
+                                            processId = processId,
+                                        )
 
                                         channel.jda.awaitEvent<ButtonInteractionEvent>(waiterProcess = waiterProcess {
                                             this.channel = channel.idLong
@@ -469,7 +482,14 @@ class AkinatorCommand : Command {
                                     }
                             }
                         } else {
-                            val m = guessMessage(guess, false, player.idLong, message.channel, content = content)
+                            val m = guessMessage(
+                                guess,
+                                false,
+                                player.idLong,
+                                message.channel,
+                                content = content,
+                                processId = processId,
+                            )
 
                             channel.jda.awaitEvent<ButtonInteractionEvent>(waiterProcess = waiterProcess {
                                 this.channel = channel.idLong
@@ -613,6 +633,7 @@ class AkinatorCommand : Command {
         messageChannel: MessageChannel,
         messageIdForReply: Long? = null,
         content: String? = null,
+        processId: Int,
     ): Message {
         val prefix = "g".let { if (isFinal) "final" + it.uppercase() else it } + "uess"
         val buttons = setOf(
@@ -621,7 +642,7 @@ class AkinatorCommand : Command {
                 append("$name-$playerId-")
 
                 if (!isFinal) {
-                    append("$content-")
+                    append("$content-$processId-")
                 }
 
                 append("${prefix}No")

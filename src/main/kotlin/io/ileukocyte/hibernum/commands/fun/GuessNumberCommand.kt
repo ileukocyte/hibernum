@@ -5,10 +5,7 @@ import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.extensions.*
-import io.ileukocyte.hibernum.utils.awaitEvent
-import io.ileukocyte.hibernum.utils.getProcessByEntities
-import io.ileukocyte.hibernum.utils.kill
-import io.ileukocyte.hibernum.utils.waiterProcess
+import io.ileukocyte.hibernum.utils.*
 
 import java.text.DecimalFormat
 import java.util.concurrent.TimeUnit
@@ -55,6 +52,10 @@ class GuessNumberCommand : Command {
         val range = min..max
         val random = range.random()
 
+        val staticProcessId = (1..9999).filter {
+            it !in event.jda.processes.map { p -> p.id.toInt() }
+        }.random()
+
         val message = event.channel.sendEmbed {
             color = Immutable.SUCCESS
             description = "Now try to guess the number between ${DecimalFormat("#,###").format(min)} and ${
@@ -65,7 +66,13 @@ class GuessNumberCommand : Command {
             footer { text = "Type in \"exit\" to finish the session!" }
         }.await()
 
-        awaitMessage(number = random, channel = event.channel, message = message, user = event.author)
+        awaitMessage(
+            number = random,
+            channel = event.channel,
+            message = message,
+            user = event.author,
+            processId = staticProcessId,
+        )
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
@@ -83,6 +90,10 @@ class GuessNumberCommand : Command {
         val range = min..max
         val random = range.random()
 
+        val staticProcessId = (1..9999).filter {
+            it !in event.jda.processes.map { p -> p.id.toInt() }
+        }.random()
+
         val message = event.replyEmbed {
             color = Immutable.SUCCESS
             description = "Now try to guess the number between ${DecimalFormat("#,###").format(min)} and ${
@@ -98,6 +109,7 @@ class GuessNumberCommand : Command {
             channel = event.channel,
             message = message.retrieveOriginal().await(),
             user = event.user,
+            processId = staticProcessId,
         )
     }
 
@@ -120,7 +132,14 @@ class GuessNumberCommand : Command {
                         .flatMap { event.message.delete() }
                         .await()
 
-                    awaitMessage(id[1].toInt(), id[2].toInt(), event.channel, null, event.user)
+                    awaitMessage(
+                        id[1].toInt(),
+                        id[2].toInt(),
+                        event.channel,
+                        null,
+                        event.user,
+                        id[3].toInt(),
+                    )
                 }
             }
         }
@@ -132,10 +151,11 @@ class GuessNumberCommand : Command {
         channel: MessageChannel,
         message: Message?,
         user: User,
+        processId: Int,
     ) {
         var attempt = _attempt
 
-        val received = channel.awaitMessage(user, this, message, delay = 5)
+        val received = channel.awaitMessage(user, this, message, delay = 5, processId = processId)
             ?: return
 
         when (val content = received.contentRaw.lowercase()) {
@@ -143,7 +163,7 @@ class GuessNumberCommand : Command {
                 val m = received.replyConfirmation("Are you sure you want to exit?")
                     .setActionRow(
                         Button.danger("$name-${user.idLong}-exit", "Yes"),
-                        Button.secondary("$name-${user.idLong}-$attempt-$number-stay", "No"),
+                        Button.secondary("$name-${user.idLong}-$attempt-$number-$processId-stay", "No"),
                     ).await()
 
                 channel.jda.awaitEvent<ButtonInteractionEvent>(15, TimeUnit.MINUTES, waiterProcess = waiterProcess {
@@ -151,6 +171,7 @@ class GuessNumberCommand : Command {
                     users += user.idLong
                     command = this@GuessNumberCommand
                     invoker = m.idLong
+                    id = processId
                 }) { it.user.idLong == user.idLong && it.message == m } // used to block other commands
             }
             else -> {
@@ -183,7 +204,7 @@ class GuessNumberCommand : Command {
                             footer { text = "Type in \"exit\" to finish the session!" }
                         }.await()
 
-                        awaitMessage(attempt, number, channel, m, user)
+                        awaitMessage(attempt, number, channel, m, user, processId)
                     }
                 } else {
                     val incorrect = received.replyFailure("You have provided an invalid argument!") {
@@ -192,7 +213,7 @@ class GuessNumberCommand : Command {
 
                     incorrect.delete().queueAfter(5, TimeUnit.SECONDS, {}) {}
 
-                    awaitMessage(attempt, number, channel, message, user)
+                    awaitMessage(attempt, number, channel, message, user, processId)
                 }
             }
         }
