@@ -66,13 +66,7 @@ class DictionaryCommand : Command {
             .sendMessageEmbeds(results.first().getEmbed(event.jda.selfUser, 0, results.size))
             .let {
                 if (total > 1) {
-                    it.setActionRow(
-                        Button.secondary("first", "First Page"),
-                        Button.secondary("back", "Back"),
-                        Button.secondary("next", "Next"),
-                        Button.secondary("last", "Last Page"),
-                        Button.danger("exit", "Exit"),
-                    )
+                    it.setActionRow(pageButtons(0, total))
                 } else it
             }.await()
 
@@ -106,13 +100,7 @@ class DictionaryCommand : Command {
             .editOriginalEmbeds(results.first().getEmbed(event.jda.selfUser, 0, results.size))
             .let {
                 if (total > 1) {
-                    it.setActionRow(
-                        Button.secondary("first", "First Page"),
-                        Button.secondary("back", "Back"),
-                        Button.secondary("next", "Next"),
-                        Button.secondary("last", "Last Page"),
-                        Button.danger("exit", "Exit"),
-                    )
+                    it.setActionRow(pageButtons(0, total))
                 } else it
             }.await()
 
@@ -148,11 +136,12 @@ class DictionaryCommand : Command {
             message
         }
 
-        when (event.componentId) {
+        when (event.componentId.removePrefix("$name-")) {
             "exit" -> deferred.editMessageComponents().queue()
             "first" -> {
                 deferred
                     .editMessageEmbeds(results.first())
+                    .setActionRow(pageButtons(0, results.size))
                     .queue()
 
                 awaitButtonClick(results, 0, jda, message, author)
@@ -160,7 +149,8 @@ class DictionaryCommand : Command {
             "back" -> {
                 if (page.dec() >= 0) {
                     deferred
-                        .editMessageEmbeds(results[page - 1])
+                        .editMessageEmbeds(results[page.dec()])
+                        .setActionRow(pageButtons(page.dec(), results.size))
                         .queue()
                 }
 
@@ -175,7 +165,8 @@ class DictionaryCommand : Command {
             "next" -> {
                 if (page.inc() < results.size) {
                     deferred
-                        .editMessageEmbeds(results[page + 1])
+                        .editMessageEmbeds(results[page.inc()])
+                        .setActionRow(pageButtons(page.inc(), results.size))
                         .queue()
                 }
 
@@ -190,9 +181,10 @@ class DictionaryCommand : Command {
             "last" -> {
                 deferred
                     .editMessageEmbeds(results.last())
+                    .setActionRow(pageButtons(results.size.dec(), results.size))
                     .queue()
 
-                awaitButtonClick(results, results.size - 1, jda, message, author)
+                awaitButtonClick(results, results.size.dec(), jda, message, author)
             }
         }
     }
@@ -252,7 +244,7 @@ class DictionaryCommand : Command {
         }
 
         if (total > 1) {
-            footer { text = "Definition #${current + 1} \u2022 Total: $total" }
+            footer { text = "Definition #${current.inc()} \u2022 Total: $total" }
         }
     }
 
@@ -280,4 +272,16 @@ class DictionaryCommand : Command {
     private companion object {
         const val API_BASE_URL = "https://api.dictionaryapi.dev/api/v2/entries"
     }
+
+    private fun pageButtons(page: Int, size: Int) = setOf(
+        Button.secondary("$name-first", "First Page")
+            .let { if (page == 0) it.asDisabled() else it },
+        Button.secondary("$name-back", "Back")
+            .let { if (page == 0) it.asDisabled() else it },
+        Button.secondary("$name-next", "Next")
+            .let { if (page == size.dec()) it.asDisabled() else it },
+        Button.secondary("$name-last", "Last Page")
+            .let { if (page == size.dec()) it.asDisabled() else it },
+        Button.danger("$name-exit", "Exit"),
+    )
 }

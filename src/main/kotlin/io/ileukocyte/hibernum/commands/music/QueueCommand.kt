@@ -182,9 +182,9 @@ class QueueCommand : Command {
         Button.secondary("$name-$userId-$page-back", "Back")
             .let { if (page == 0) it.asDisabled() else it },
         Button.secondary("$name-$userId-$page-next", "Next")
-            .let { if (page == size - 1) it.asDisabled() else it },
+            .let { if (page == size.dec()) it.asDisabled() else it },
         Button.secondary("$name-$userId-$page-last", "Last Page")
-            .let { if (page == size - 1) it.asDisabled() else it },
+            .let { if (page == size.dec()) it.asDisabled() else it },
         Button.danger("$name-$userId-exit", "Exit"),
     )
 

@@ -14,6 +14,7 @@ import io.ileukocyte.hibernum.utils.kill
 import io.ileukocyte.hibernum.utils.processes
 
 import java.util.concurrent.TimeUnit
+import kotlin.math.ceil
 
 import kotlin.math.max
 import kotlin.math.min
@@ -40,9 +41,11 @@ class KillCommand : Command {
             ?: throw CommandException("No processes are currently running!")
 
         if (args === null) {
+            val pages = ceil(processes.size / 5.0).toInt()
+
             event.channel.sendMessageEmbeds(processesListEmbed(processes, 0, event.jda))
                 .setActionRow(
-                    pageButtons(event.author.id, 0).takeIf { processes.size > 5 }
+                    pageButtons(event.author.id, 0, pages).takeIf { processes.size > 5 }
                         ?: setOf(Button.danger("$name-${event.author.idLong}-exit", "Close"))
                 ).queue()
         } else {
@@ -63,9 +66,11 @@ class KillCommand : Command {
         val input = event.getOption("pid")?.asString
 
         if (input === null) {
+            val pages = ceil(processes.size / 5.0).toInt()
+
             event.replyEmbeds(processesListEmbed(processes, 0, event.jda))
                 .addActionRow(
-                    pageButtons(event.user.id, 0).takeIf { processes.size > 5 }
+                    pageButtons(event.user.id, 0, pages).takeIf { processes.size > 5 }
                         ?: setOf(Button.danger("$name-${event.user.idLong}-exit", "Close"))
                 ).queue()
         } else {
@@ -136,15 +141,17 @@ class KillCommand : Command {
 
                     when (type) {
                         "first" -> {
+                            val pages = ceil(processes.size / 5.0).toInt()
+
                             event.editMessageEmbeds(processesListEmbed(processes, 0, event.jda))
                                 .setActionRow(
-                                    pageButtons(id.first(), 0).takeIf { processes.size > 5 }
+                                    pageButtons(id.first(), 0, pages).takeIf { processes.size > 5 }
                                         ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
                                 ).queue(null) {
                                     event.message
                                         .editMessageEmbeds(processesListEmbed(processes, 0, event.jda))
                                         .setActionRow(
-                                            pageButtons(id.first(), 0).takeIf { processes.size > 5 }
+                                            pageButtons(id.first(), 0, pages).takeIf { processes.size > 5 }
                                                 ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
                                         ).queue()
                                 }
@@ -155,29 +162,30 @@ class KillCommand : Command {
 
                             event.editMessageEmbeds(processesListEmbed(processes, lastPage, event.jda))
                                 .setActionRow(
-                                    pageButtons(id.first(), lastPage).takeIf { processes.size > 5 }
+                                    pageButtons(id.first(), lastPage, partition.size).takeIf { processes.size > 5 }
                                         ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
                                 ).queue(null) {
                                     event.message
                                         .editMessageEmbeds(processesListEmbed(processes, lastPage, event.jda))
                                         .setActionRow(
-                                            pageButtons(id.first(), lastPage).takeIf { processes.size > 5 }
+                                            pageButtons(id.first(), lastPage, partition.size).takeIf { processes.size > 5 }
                                                 ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
                                         ).queue()
                                 }
                         }
                         "back" -> {
                             val newPage = max(0, page - 1)
+                            val pages = ceil(processes.size / 5.0).toInt()
 
                             event.editMessageEmbeds(processesListEmbed(processes, newPage, event.jda))
                                 .setActionRow(
-                                    pageButtons(id.first(), newPage).takeIf { processes.size > 5 }
+                                    pageButtons(id.first(), newPage, pages).takeIf { processes.size > 5 }
                                         ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
                                 ).queue(null) {
                                     event.message
                                         .editMessageEmbeds(processesListEmbed(processes, newPage, event.jda))
                                         .setActionRow(
-                                            pageButtons(id.first(), newPage).takeIf { processes.size > 5 }
+                                            pageButtons(id.first(), newPage, pages).takeIf { processes.size > 5 }
                                                 ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
                                         ).queue()
                                 }
@@ -189,13 +197,13 @@ class KillCommand : Command {
 
                             event.editMessageEmbeds(processesListEmbed(processes, newPage, event.jda))
                                 .setActionRow(
-                                    pageButtons(id.first(), newPage).takeIf { processes.size > 5 }
+                                    pageButtons(id.first(), newPage, partition.size).takeIf { processes.size > 5 }
                                         ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
                                 ).queue(null) {
                                     event.message
                                         .editMessageEmbeds(processesListEmbed(processes, newPage, event.jda))
                                         .setActionRow(
-                                            pageButtons(id.first(), newPage).takeIf { processes.size > 5 }
+                                            pageButtons(id.first(), newPage, partition.size).takeIf { processes.size > 5 }
                                                 ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
                                         ).queue()
                                 }
@@ -240,11 +248,15 @@ class KillCommand : Command {
         if (partition.size > 1) footer { text = "Total processes: ${originalSet.size}" }
     }
 
-    private fun pageButtons(userId: String, page: Int) = setOf(
-        Button.secondary("$name-$userId-$page-first", "First Page"),
-        Button.secondary("$name-$userId-$page-back", "Back"),
-        Button.secondary("$name-$userId-$page-next", "Next"),
-        Button.secondary("$name-$userId-$page-last", "Last Page"),
+    private fun pageButtons(userId: String, page: Int, size: Int) = setOf(
+        Button.secondary("$name-$userId-$page-first", "First Page")
+            .let { if (page == 0) it.asDisabled() else it },
+        Button.secondary("$name-$userId-$page-back", "Back")
+            .let { if (page == 0) it.asDisabled() else it },
+        Button.secondary("$name-$userId-$page-next", "Next")
+            .let { if (page == size.dec()) it.asDisabled() else it },
+        Button.secondary("$name-$userId-$page-last", "Last Page")
+            .let { if (page == size.dec()) it.asDisabled() else it },
         Button.danger("$name-$userId-exit", "Exit"),
     )
 }
