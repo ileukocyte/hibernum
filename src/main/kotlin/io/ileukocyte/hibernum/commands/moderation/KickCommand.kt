@@ -61,8 +61,8 @@ class KickCommand : SlashOnlyCommand {
 
         try {
             val buttonEvent = event.jda.awaitEvent<ButtonInteractionEvent>(
-                5,
-                TimeUnit.SECONDS,
+                15,
+                TimeUnit.MINUTES,
                 waiterProcess {
                     users += event.user.idLong
                     channel = event.channel.idLong
