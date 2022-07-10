@@ -14,19 +14,23 @@ import io.ileukocyte.hibernum.utils.kill
 import io.ileukocyte.hibernum.utils.processes
 
 import java.util.concurrent.TimeUnit
-import kotlin.math.ceil
 
+import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.GuildMessageChannel
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.components.Modal
 import net.dv8tion.jda.api.interactions.components.buttons.Button
+import net.dv8tion.jda.api.interactions.components.text.TextInput
+import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 
 class KillCommand : Command {
     override val name = "kill"
@@ -46,7 +50,10 @@ class KillCommand : Command {
             event.channel.sendMessageEmbeds(processesListEmbed(processes, 0, event.jda))
                 .setActionRow(
                     pageButtons(event.author.id, 0, pages).takeIf { processes.size > 5 }
-                        ?: setOf(Button.danger("$name-${event.author.idLong}-exit", "Close"))
+                        ?: setOf(
+                            Button.primary("$name-${event.author.idLong}-kill", "Kill"),
+                            Button.danger("$name-${event.author.idLong}-exit", "Close"),
+                        )
                 ).queue()
         } else {
             val process = event.jda.getProcessById(args)
@@ -54,7 +61,7 @@ class KillCommand : Command {
 
             event.channel.sendConfirmation("Are you sure you want to terminate the process?")
                 .setActionRow(
-                    Button.danger("$name-${event.author.idLong}-${process.id}-kill", "Yes"),
+                    Button.danger("$name-${event.author.idLong}-${process.id}-killc", "Yes"),
                     Button.secondary("$name-${event.author.idLong}-exit", "No"),
                 ).queue()
         }
@@ -71,7 +78,10 @@ class KillCommand : Command {
             event.replyEmbeds(processesListEmbed(processes, 0, event.jda))
                 .addActionRow(
                     pageButtons(event.user.id, 0, pages).takeIf { processes.size > 5 }
-                        ?: setOf(Button.danger("$name-${event.user.idLong}-exit", "Close"))
+                        ?: setOf(
+                            Button.primary("$name-${event.user.idLong}-kill", "Kill"),
+                            Button.danger("$name-${event.user.idLong}-exit", "Close"),
+                        )
                 ).queue()
         } else {
             val process = event.jda.getProcessById(input)
@@ -79,7 +89,7 @@ class KillCommand : Command {
 
             event.replyConfirmation("Are you sure you want to terminate the process?")
                 .addActionRow(
-                    Button.danger("$name-${event.user.idLong}-${process.id}-kill", "Yes"),
+                    Button.danger("$name-${event.user.idLong}-${process.id}-killc", "Yes"),
                     Button.secondary("$name-${event.user.idLong}-exit", "No"),
                 ).queue()
         }
@@ -95,6 +105,18 @@ class KillCommand : Command {
             when (type) {
                 "exit" -> event.message.delete().queue()
                 "kill" -> {
+                    val input = TextInput
+                        .create("$name-pid", "Enter the Process ID:", TextInputStyle.SHORT)
+                        .setMaxLength(4)
+                        .build()
+                    val modal = Modal
+                        .create("$name-modal", "Process Killing")
+                        .addActionRow(input)
+                        .build()
+
+                    event.replyModal(modal).queue()
+                }
+                "killc" -> {
                     val process = event.jda.getProcessById(id[1]) ?: return
 
                     process.kill(event.jda)
@@ -146,13 +168,19 @@ class KillCommand : Command {
                             event.editMessageEmbeds(processesListEmbed(processes, 0, event.jda))
                                 .setActionRow(
                                     pageButtons(id.first(), 0, pages).takeIf { processes.size > 5 }
-                                        ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
+                                        ?: setOf(
+                                            Button.primary("$name-${id.first()}-kill", "Kill"),
+                                            Button.danger("$name-${id.first()}-exit", "Close"),
+                                        )
                                 ).queue(null) {
                                     event.message
                                         .editMessageEmbeds(processesListEmbed(processes, 0, event.jda))
                                         .setActionRow(
                                             pageButtons(id.first(), 0, pages).takeIf { processes.size > 5 }
-                                                ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
+                                                ?: setOf(
+                                                    Button.primary("$name-${id.first()}-kill", "Kill"),
+                                                    Button.danger("$name-${id.first()}-exit", "Close"),
+                                                )
                                         ).queue()
                                 }
                         }
@@ -169,7 +197,10 @@ class KillCommand : Command {
                                         .editMessageEmbeds(processesListEmbed(processes, lastPage, event.jda))
                                         .setActionRow(
                                             pageButtons(id.first(), lastPage, partition.size).takeIf { processes.size > 5 }
-                                                ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
+                                                ?: setOf(
+                                                    Button.primary("$name-${id.first()}-kill", "Kill"),
+                                                    Button.danger("$name-${id.first()}-exit", "Close"),
+                                                )
                                         ).queue()
                                 }
                         }
@@ -180,13 +211,19 @@ class KillCommand : Command {
                             event.editMessageEmbeds(processesListEmbed(processes, newPage, event.jda))
                                 .setActionRow(
                                     pageButtons(id.first(), newPage, pages).takeIf { processes.size > 5 }
-                                        ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
+                                        ?: setOf(
+                                            Button.primary("$name-${id.first()}-kill", "Kill"),
+                                            Button.danger("$name-${id.first()}-exit", "Close"),
+                                        )
                                 ).queue(null) {
                                     event.message
                                         .editMessageEmbeds(processesListEmbed(processes, newPage, event.jda))
                                         .setActionRow(
                                             pageButtons(id.first(), newPage, pages).takeIf { processes.size > 5 }
-                                                ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
+                                                ?: setOf(
+                                                    Button.primary("$name-${id.first()}-kill", "Kill"),
+                                                    Button.danger("$name-${id.first()}-exit", "Close"),
+                                                )
                                         ).queue()
                                 }
                         }
@@ -198,13 +235,19 @@ class KillCommand : Command {
                             event.editMessageEmbeds(processesListEmbed(processes, newPage, event.jda))
                                 .setActionRow(
                                     pageButtons(id.first(), newPage, partition.size).takeIf { processes.size > 5 }
-                                        ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
+                                        ?: setOf(
+                                            Button.primary("$name-${id.first()}-kill", "Kill"),
+                                            Button.danger("$name-${id.first()}-exit", "Close"),
+                                        )
                                 ).queue(null) {
                                     event.message
                                         .editMessageEmbeds(processesListEmbed(processes, newPage, event.jda))
                                         .setActionRow(
                                             pageButtons(id.first(), newPage, partition.size).takeIf { processes.size > 5 }
-                                                ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
+                                                ?: setOf(
+                                                    Button.primary("$name-${id.first()}-kill", "Kill"),
+                                                    Button.danger("$name-${id.first()}-exit", "Close"),
+                                                )
                                         ).queue()
                                 }
                         }
@@ -212,6 +255,25 @@ class KillCommand : Command {
                 }
             }
         } else throw CommandException("You did not invoke the initial command!")
+    }
+
+    override suspend fun invoke(event: ModalInteractionEvent) {
+        val pid = event.getValue("$name-pid")?.asString ?: return
+        val process = event.jda.getProcessById(pid)
+            ?: throw CommandException("No process has been found by the provided ID!")
+
+        event.editMessageEmbeds(
+            defaultEmbed("Are you sure you want to terminate the process?", EmbedType.CONFIRMATION)
+        ).setActionRow(
+            Button.danger("$name-${event.user.idLong}-${process.id}-killc", "Yes"),
+            Button.secondary("$name-${event.user.idLong}-exit", "No"),
+        ).queue(null) {
+            event.messageChannel.sendConfirmation("Are you sure you want to terminate the process?")
+                .setActionRow(
+                    Button.danger("$name-${event.user.idLong}-${process.id}-killc", "Yes"),
+                    Button.secondary("$name-${event.user.idLong}-exit", "No"),
+                ).queue()
+        }
     }
 
     private fun processesListEmbed(
@@ -249,6 +311,7 @@ class KillCommand : Command {
     }
 
     private fun pageButtons(userId: String, page: Int, size: Int) = setOf(
+        Button.primary("$name-$userId-kill", "Kill"),
         Button.secondary("$name-$userId-$page-first", "First Page")
             .let { if (page == 0) it.asDisabled() else it },
         Button.secondary("$name-$userId-$page-back", "Back")
@@ -257,6 +320,6 @@ class KillCommand : Command {
             .let { if (page == size.dec()) it.asDisabled() else it },
         Button.secondary("$name-$userId-$page-last", "Last Page")
             .let { if (page == size.dec()) it.asDisabled() else it },
-        Button.danger("$name-$userId-exit", "Exit"),
+        Button.danger("$name-$userId-exit", "Close"),
     )
 }
