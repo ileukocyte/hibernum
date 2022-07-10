@@ -1,16 +1,21 @@
 package io.ileukocyte.hibernum.commands.information
 
+import io.ileukocyte.hibernum.builders.buildEmbed
+import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.commands.TextOnlyCommand
 import io.ileukocyte.hibernum.extensions.asWord
-import io.ileukocyte.hibernum.extensions.sendEmbed
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
-import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji
+import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.entities.emoji.CustomEmoji
+import net.dv8tion.jda.api.entities.emoji.Emoji
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.interactions.commands.OptionType
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
-class EmoteCommand : TextOnlyCommand {
+class EmoteCommand : Command {
     override val name = "emote"
     override val description = "Sends the available information about the provided **custom** emoji"
     override val aliases = setOf(
@@ -22,55 +27,78 @@ class EmoteCommand : TextOnlyCommand {
         "emoteinfo",
         "emote-info",
     )
+    override val options = setOf(
+        OptionData(OptionType.STRING, "emote", "The custom emoji to check information about", true))
     override val usages = setOf(setOf("custom emoji"))
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val emote = event.message.mentions.customEmojis.firstOrNull()
             ?: throw CommandException("No **custom** emoji has been provided!")
 
-        event.channel.sendEmbed {
-            val img = emote.imageUrl
+        event.channel.sendMessageEmbeds(emoteEmbed(emote, event.jda)).queue()
+    }
 
-            color = getDominantColorByImageUrl(img)
-            image = "$img?size=2048"
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
+        val regex = "<a?:\\w+:\\d{18}>".toRegex()
+        val emote = event.getOption("emote")
+            ?.asString
+            ?.let { regex.find(it) }
+            ?.let { Emoji.fromFormatted(it.value) as? CustomEmoji }
+            ?: throw CommandException("No **custom** emoji has been provided!")
 
-            author {
-                name = "Custom Emoji"
-                iconUrl = img
-            }
+        try {
+            event.replyEmbeds(emoteEmbed(emote, event.jda)).queue()
+        } catch (_: Exception) {
+            throw CommandException("No **custom** emoji has been provided!")
+        }
+    }
 
-            field {
-                title = "Name"
-                description = emote.name
-                isInline = true
-            }
+    private suspend fun emoteEmbed(emote: CustomEmoji, jda: JDA) = buildEmbed {
+        val img = emote.imageUrl
 
-            field {
-                title = "Server"
-                description =
-                    (emote as? RichCustomEmoji)?.guild?.name?.let { MarkdownSanitizer.escape(it) } ?: "Unknown"
-                isInline = true
-            }
+        color = getDominantColorByImageUrl(img)
+        image = "$img?size=2048"
 
-            field {
-                title = "ID"
-                description = emote.id
-                isInline = true
-            }
+        author {
+            name = "Custom Emoji"
+            iconUrl = img
+        }
 
-            field {
-                title = "Animated"
-                description = emote.isAnimated.asWord
-                isInline = true
-            }
+        field {
+            title = "Name"
+            description = emote.name
+            isInline = true
+        }
 
-            field {
-                val timestamp = emote.timeCreated.toEpochSecond()
+        field {
+            title = "Server"
+            description = jda.emojiCache
+                .getElementById(emote.idLong)
+                ?.guild
+                ?.name
+                ?.let { MarkdownSanitizer.escape(it) }
+                ?: "Unknown"
+            isInline = true
+        }
 
-                title = "Creation Date"
-                description = "<t:$timestamp:F> (<t:$timestamp:R>)"
-                isInline = true
-            }
-        }.queue()
+        field {
+            title = "ID"
+            description = emote.id
+            isInline = true
+        }
+
+        field {
+            title = "Animated"
+            description = emote.isAnimated.asWord
+            isInline = true
+        }
+
+        field {
+            val timestamp = emote.timeCreated.toEpochSecond()
+
+            title = "Creation Date"
+            description = "<t:$timestamp:F> (<t:$timestamp:R>)"
+            isInline = true
+        }
     }
 }
