@@ -7,6 +7,7 @@ import io.ileukocyte.hibernum.extensions.*
 import java.util.concurrent.TimeUnit
 
 import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.entities.IMentionable
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
@@ -34,6 +35,7 @@ class PruneCommand : SlashOnlyCommand {
             .addChoice("Starts With", "startswith")
             .addChoice("Ends With", "endswith"),
         OptionData(OptionType.STRING, "text", "The content to filter messages by"),
+        OptionData(OptionType.MENTIONABLE, "mention", "The mentions that messages to delete contain"),
     )
     override val cooldown = 5L
     override val memberPermissions = setOf(Permission.MESSAGE_MANAGE)
@@ -53,13 +55,25 @@ class PruneCommand : SlashOnlyCommand {
 
         val filtered = history.takeAsync(amount + 1).await().filter { message ->
             val filter = event.getOption("filter")?.let {
+                val mention = event.getOption("mention")?.asMentionable
+
                 when (it.asString) {
                     "attachments" -> message.attachments.isNotEmpty()
                     "bots" -> message.author.isBot
                     "embeds" -> message.embeds.isNotEmpty()
                     "invites" -> message.invites.isNotEmpty()
                     "links" -> message.contentRaw.split(" ").any { s -> UrlValidator.getInstance().isValid(s) }
-                    "mentions" -> message.mentions.roles.isNotEmpty() || message.mentions.users.isNotEmpty()
+                    "mentions" -> {
+                        val users = message.mentions.users
+                        val roles = message.mentions.roles
+
+                        if (mention !== null) {
+                            users.any { u -> u.idLong == mention.idLong } ||
+                                    roles.any { r -> r.idLong == mention.idLong }
+                        } else {
+                            users.isNotEmpty() || roles.isNotEmpty()
+                        }
+                    }
                     else -> true
                 }
             } ?: true
@@ -88,6 +102,7 @@ class PruneCommand : SlashOnlyCommand {
             event.getOption("user")?.asUser,
             event.getOption("filter")?.asString,
             event.getOption("text-filter")?.asString,
+            event.getOption("mention")?.asMentionable,
         )
 
         event.channel.purgeMessages(filtered)
@@ -104,6 +119,7 @@ class PruneCommand : SlashOnlyCommand {
         user: User?,
         filter: String?,
         textFilter: String?,
+        mention: IMentionable?,
     ) = buildString {
         append("Deleted $deletedMessages ")
 
@@ -118,7 +134,7 @@ class PruneCommand : SlashOnlyCommand {
                 "embeds" -> ""
                 "invites" -> " containing invite links"
                 "links" -> " containing any links"
-                else -> " mentioning any users or any roles"
+                else -> " mentioning ${mention?.asMention ?: "any users or any roles"}"
             })
         }
 
