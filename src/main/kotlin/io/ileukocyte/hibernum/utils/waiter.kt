@@ -94,13 +94,20 @@ data class WaiterProcess internal constructor(
         var channel = 0L
         var command: Command? = null
         var invoker: Long? = null
+        var id: Int? = null
 
-        operator fun invoke() = WaiterProcess(
-            users = users,
-            channel = channel,
-            command = command,
-            invoker = invoker,
-        )
+        operator fun invoke(): WaiterProcess {
+            if (id !== null && id !in 1..9999) {
+                throw IllegalArgumentException("The process ID must be within the range of 1 through 9999!")
+            }
+
+            return WaiterProcess(
+                users = users,
+                channel = channel,
+                command = command,
+                invoker = invoker,
+            ).let { if (id !== null) it.copy(id = "%04d".format(id)) else it }
+        }
     }
 
     companion object {

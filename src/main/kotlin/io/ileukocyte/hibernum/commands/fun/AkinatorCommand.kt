@@ -101,11 +101,21 @@ class AkinatorCommand : Command {
         )
     }
 
-    override suspend fun invoke(event: MessageReceivedEvent, args: String?) =
-        sendGuessTypeMenu(event.channel.idLong, event.author.idLong, event)
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
+        val staticProcessId = (1..9999).filter {
+            it !in event.jda.processes.map { p -> p.id.toInt() }
+        }.random()
 
-    override suspend fun invoke(event: SlashCommandInteractionEvent) =
-        sendLanguagesMenu(event, event.getOption("type")?.asString)
+        sendGuessTypeMenu(event.channel.idLong, event.author.idLong, event, staticProcessId)
+    }
+
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
+        val staticProcessId = (1..9999).filter {
+            it !in event.jda.processes.map { p -> p.id.toInt() }
+        }.random()
+
+        sendLanguagesMenu(event, event.getOption("type")?.asString, staticProcessId)
+    }
 
     override suspend fun invoke(event: SelectMenuInteractionEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
@@ -126,14 +136,16 @@ class AkinatorCommand : Command {
                 return
             }
 
+            val processId = id[1].toInt()
+
             when (id.last()) {
                 "type" ->
-                    sendLanguagesMenu(event, optionValue)
+                    sendLanguagesMenu(event, optionValue, processId)
                 "lang" -> {
                     if (optionValue == "return") {
                         event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda)
 
-                        sendGuessTypeMenu(event.channel.idLong, event.user.idLong, event)
+                        sendGuessTypeMenu(event.channel.idLong, event.user.idLong, event, processId)
 
                         return
                     }
@@ -154,6 +166,7 @@ class AkinatorCommand : Command {
                                 channel = event.channel.idLong
                                 users += event.user.idLong
                                 command = this@AkinatorCommand
+                                this@waiterProcess.id = processId
                             }) { false } // used to block other commands
                         }
 
@@ -193,7 +206,7 @@ class AkinatorCommand : Command {
 
                         val invoker = deferred.editOriginalEmbeds(embed).await()
 
-                        awaitAnswer(event.channel, event.user, akiwrapper, invoker)
+                        awaitAnswer(event.channel, event.user, akiwrapper, invoker, processId)
                     } catch (e: Exception) {
                         deferred.deleteOriginal().queue()
 
@@ -215,6 +228,7 @@ class AkinatorCommand : Command {
 
         if (event.user.id == id.first()) {
             val akiwrapper = AKIWRAPPERS[event.user.idLong] ?: return
+            val processId = id[1].toInt()
 
             when (id.last()) {
                 "exit" -> {
@@ -235,7 +249,7 @@ class AkinatorCommand : Command {
                         .flatMap { event.message.delete() }
                         .await()
 
-                    awaitAnswer(event.channel, event.user, akiwrapper)
+                    awaitAnswer(event.channel, event.user, akiwrapper, processId = processId)
                 }
                 "guessYes", "finalGuessYes" -> {
                     AKIWRAPPERS -= event.user.idLong
@@ -286,7 +300,7 @@ class AkinatorCommand : Command {
                                 author { name = "Question #${nextQuestion.step + 1}" }
                             }.await()
 
-                            awaitAnswer(event.channel, event.user, akiwrapper)
+                            awaitAnswer(event.channel, event.user, akiwrapper, processId = processId)
                         } else {
                             akiwrapper.guesses // always empty for an unknown reason
                                 .firstOrNull { DECLINED_GUESSES[event.user.idLong]?.contains(it.idLong) == false }
@@ -298,6 +312,7 @@ class AkinatorCommand : Command {
                                         users += event.user.idLong
                                         command = this@AkinatorCommand
                                         invoker = m.idLong
+                                        this@waiterProcess.id = processId
                                     }) { it.user.idLong == event.user.idLong && it.message == m } // used to block other commands
                                 } ?: event.channel.let { channel ->
                                     AKIWRAPPERS -= event.user.idLong
@@ -318,17 +333,23 @@ class AkinatorCommand : Command {
         player: User,
         akiwrapper: Akiwrapper,
         invokingMessage: Message? = null,
+        processId: Int,
     ) {
         try {
-            val message = channel.awaitMessage(player, this, invokingMessage, delay = 5)
-                ?: return
+            val message = channel.awaitMessage(
+                player,
+                this,
+                invokingMessage,
+                delay = 5,
+                processId = processId,
+            ) ?: return
 
             when (val content = message.contentRaw.lowercase()) {
                 "exit" -> {
                     val m = message.replyConfirmation("Are you sure you want to exit?")
                         .setActionRow(
-                            Button.danger("$name-${player.idLong}-exit", "Yes"),
-                            Button.secondary("$name-${player.idLong}-stay", "No"),
+                            Button.danger("$name-${player.idLong}-$processId-exit", "Yes"),
+                            Button.secondary("$name-${player.idLong}-$processId-stay", "No"),
                         ).await()
 
                     channel.jda.awaitEvent<ButtonInteractionEvent>(waiterProcess = waiterProcess {
@@ -336,6 +357,7 @@ class AkinatorCommand : Command {
                         users += player.idLong
                         command = this@AkinatorCommand
                         invoker = m.idLong
+                        id = processId
                     }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
                 }
                 "debug" -> {
@@ -358,7 +380,7 @@ class AkinatorCommand : Command {
 
                     reply.queue()
 
-                    awaitAnswer(channel, player, akiwrapper, invokingMessage)
+                    awaitAnswer(channel, player, akiwrapper, invokingMessage, processId)
                 }
                 "aliases", "help" -> {
                     message.replyEmbed {
@@ -381,7 +403,7 @@ class AkinatorCommand : Command {
                         }
                     }.await()
 
-                    awaitAnswer(channel, player, akiwrapper, invokingMessage)
+                    awaitAnswer(channel, player, akiwrapper, invokingMessage, processId)
                 }
                 "b", "back" -> {
                     val invoker = message.replyEmbed {
@@ -403,7 +425,7 @@ class AkinatorCommand : Command {
                         }
                     }.await()
 
-                    awaitAnswer(channel, player, akiwrapper, invoker)
+                    awaitAnswer(channel, player, akiwrapper, invoker, processId)
                 }
                 else -> {
                     if (content in POSSIBLE_ANSWERS.values.flatten()) {
@@ -424,7 +446,7 @@ class AkinatorCommand : Command {
                                     footer { text = "Type in \"exit\" to finish the session!" }
                                 }.await()
 
-                                awaitAnswer(channel, player, akiwrapper, invoker)
+                                awaitAnswer(channel, player, akiwrapper, invoker, processId)
                             } else {
                                 akiwrapper.guesses // always empty for an unknown reason
                                     .firstOrNull { DECLINED_GUESSES[player.idLong]?.contains(it.idLong) == false }
@@ -436,6 +458,7 @@ class AkinatorCommand : Command {
                                             users += player.idLong
                                             command = this@AkinatorCommand
                                             invoker = m.idLong
+                                            id = processId
                                         }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
                                     } ?: channel.let {
                                         AKIWRAPPERS -= player.idLong
@@ -453,6 +476,7 @@ class AkinatorCommand : Command {
                                 users += player.idLong
                                 command = this@AkinatorCommand
                                 invoker = m.idLong
+                                id = processId
                             }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
                         }
                     } else {
@@ -463,7 +487,7 @@ class AkinatorCommand : Command {
 
                         incorrect.delete().queueAfter(5, TimeUnit.SECONDS, {}) {}
 
-                        awaitAnswer(channel, player, akiwrapper, invokingMessage)
+                        awaitAnswer(channel, player, akiwrapper, invokingMessage, processId)
                     }
                 }
             }
@@ -485,14 +509,14 @@ class AkinatorCommand : Command {
         }
     }
 
-    private suspend fun <E : Event> sendGuessTypeMenu(channelId: Long, playerId: Long, event: E) {
+    private suspend fun <E : Event> sendGuessTypeMenu(channelId: Long, playerId: Long, event: E, processId: Int) {
         event.jda.getProcessByEntitiesIds(playerId, channelId)?.kill(event.jda) // just in case
 
         if (event.jda.getUserProcesses(playerId).any { it.command is AkinatorCommand && it.channel != channelId })
             throw CommandException("You have another Akinator command running somewhere else! Finish the process first!")
 
         val menu = SelectMenu
-            .create("$name-$playerId-type")
+            .create("$name-$playerId-$processId-type")
             .addOptions(
                 *GuessType.values()
                     .filter { it != GuessType.PLACE }
@@ -533,12 +557,14 @@ class AkinatorCommand : Command {
             users += playerId
             command = this@AkinatorCommand
             invoker = message.idLong
+            id = processId
         }) { it.user.idLong == playerId && it.message == message } // used to block other commands
     }
 
     private suspend fun sendLanguagesMenu(
         callback: IReplyCallback,
         optionValue: String?,
+        processId: Int,
     ) {
         if (callback is SlashCommandInteractionEvent) {
             if (callback.user.processes.any { it.command is AkinatorCommand && it.channel != callback.messageChannel.idLong })
@@ -552,7 +578,7 @@ class AkinatorCommand : Command {
         val availableLanguages = LANGUAGES_AVAILABLE_FOR_TYPES[type] ?: Language.values().toSortedSet()
 
         val menu = SelectMenu
-            .create("$name-${callback.user.idLong}-lang")
+            .create("$name-${callback.user.idLong}-$processId-lang")
             .addOptions(
                 *availableLanguages.map { SelectOption.of(it.name.capitalizeAll(), it.name) }.toTypedArray(),
                 SelectOption.of("Return", "return").withEmoji(Emoji.fromUnicode("\u25C0\uFE0F")),
@@ -576,6 +602,7 @@ class AkinatorCommand : Command {
             users += callback.user.idLong
             command = this@AkinatorCommand
             invoker = message.idLong
+            id = processId
         }) { it.user.idLong == callback.user.idLong && it.message == message } // used to block other commands
     }
 
