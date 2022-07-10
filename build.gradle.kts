@@ -57,6 +57,7 @@ dependencies {
     implementation(group = "com.github.SvenWoltmann", name = "color-thief-java", version = "v1.1.2")
     implementation(group = "org.ocpsoft.prettytime", name = "prettytime", version = "5.0.3.Final")
     implementation(group = "io.arrow-kt", name = "arrow-fx-coroutines", version = "1.1.2")
+    implementation(group = "org.sejda.imageio", name = "webp-imageio", version = "0.1.6")
 
     // Kotlin
     implementation(kotlin("stdlib", kotlinVersion))

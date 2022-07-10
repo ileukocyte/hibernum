@@ -27,3 +27,4 @@
 * [JSON-Java (org.json)](https://github.com/stleary/JSON-java)
 * [logback-classic](http://logback.qos.ch/)
 * [kotlin-logging](https://github.com/MicroUtils/kotlin-logging)
+* [webp-imageio](https://github.com/sejda-pdf/webp-imageio)

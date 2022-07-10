@@ -13,6 +13,7 @@ import io.ktor.client.statement.readBytes
 
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+
 import javax.imageio.ImageIO
 
 import kotlinx.coroutines.Dispatchers
@@ -28,8 +29,8 @@ import org.apache.commons.validator.routines.UrlValidator
 class InvertCommand : Command {
     override val name = "invert"
     override val description = "Inverts the provided image (see the command's help menu)"
-    override val fullDescription = "Inverts the image provided as a link, a file (non-slash-only), " +
-            "or a profile picture of the mentioned user (or yours in case of no arguments provided)"
+    override val fullDescription = "Inverts the image provided as a link, a file, or " +
+            "a profile picture of the mentioned user (or yours in case of no arguments provided)"
     override val aliases = setOf("negative")
     override val usages = setOf(
         setOf("image file"),
@@ -38,7 +39,8 @@ class InvertCommand : Command {
     )
     override val options = setOf(
         OptionData(OptionType.STRING, "link", "The provided image"),
-        OptionData(OptionType.USER, "user", "The provided mention (has a higher priority)"),
+        OptionData(OptionType.USER, "user", "The provided mention (has a higher priority than a link)"),
+        OptionData(OptionType.ATTACHMENT, "attachment", "The provided image file (has the highest priority)"),
     )
     override val cooldown = 7L
 
@@ -100,8 +102,9 @@ class InvertCommand : Command {
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
-        val input = event.getOption("user")?.asUser?.effectiveAvatarUrl
-            ?.let { "$it?size=2048".replace("gif", "png") }
+        val input = event.getOption("attachment")?.asAttachment?.takeIf { it.isImage }?.proxyUrl
+            ?: event.getOption("user")?.asUser?.effectiveAvatarUrl
+                ?.let { "$it?size=2048".replace("gif", "png") }
             ?: event.getOption("link")
                 ?.asString
                 ?.apply { if (!UrlValidator().isValid(this)) throw CommandException("The provided input is invalid!") }
