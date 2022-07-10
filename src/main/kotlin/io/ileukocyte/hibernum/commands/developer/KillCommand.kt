@@ -132,10 +132,7 @@ class KillCommand : Command {
                     event.editMessageEmbeds(defaultEmbed("The process has been terminated!", EmbedType.SUCCESS))
                         .setActionRows()
                         .queue(null) {
-                            event.message
-                                .editMessageEmbeds(defaultEmbed("The process has been terminated!", EmbedType.SUCCESS))
-                                .setActionRows()
-                                .queue()
+                            event.channel.sendSuccess("The process has been terminated!").queue()
                         }
 
                     val description =
@@ -262,17 +259,40 @@ class KillCommand : Command {
         val process = event.jda.getProcessById(pid)
             ?: throw CommandException("No process has been found by the provided ID!")
 
-        event.editMessageEmbeds(
-            defaultEmbed("Are you sure you want to terminate the process?", EmbedType.CONFIRMATION)
-        ).setActionRow(
-            Button.danger("$name-${event.user.idLong}-${process.id}-killc", "Yes"),
-            Button.secondary("$name-${event.user.idLong}-exit", "No"),
-        ).queue(null) {
-            event.messageChannel.sendConfirmation("Are you sure you want to terminate the process?")
-                .setActionRow(
-                    Button.danger("$name-${event.user.idLong}-${process.id}-killc", "Yes"),
-                    Button.secondary("$name-${event.user.idLong}-exit", "No"),
-                ).queue()
+        process.kill(event.jda)
+
+        if (process.command is AkinatorCommand) {
+            for (userId in process.users) {
+                AkinatorCommand.AKIWRAPPERS -= userId
+                AkinatorCommand.DECLINED_GUESSES -= userId
+                AkinatorCommand.GUESS_TYPES -= userId
+            }
+        }
+
+        event.editMessageEmbeds(defaultEmbed("The process has been terminated!", EmbedType.SUCCESS))
+            .setActionRows()
+            .queue(null) {
+                event.messageChannel.sendSuccess("The process has been terminated!").queue()
+            }
+
+        val description =
+            "The ${process.command?.let { it::class.simpleName } ?: event.jda.selfUser.name} process " +
+                    "running in this channel has been terminated via message deletion!"
+
+        event.jda.getChannelById(GuildMessageChannel::class.java, process.channel)?.let { channel ->
+            process.invoker?.let {
+                channel.retrieveMessageById(it).await().delete().queue({}) {}
+            }
+
+            channel.sendMessage {
+                embeds += defaultEmbed(description, EmbedType.WARNING) {
+                    text = "This message will self-delete in 5 seconds"
+                }
+
+                process.users.mapNotNull { event.jda.getUserById(it)?.asMention }.joinToString()
+                    .takeUnless { it.isEmpty() }
+                    ?.let { content += it }
+            }.queue({ it.delete().queueAfter(5, TimeUnit.SECONDS, {}) {} }, {})
         }
     }
 
