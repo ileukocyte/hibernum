@@ -47,6 +47,7 @@ class DictionaryCommand : Command {
         OptionData(OptionType.STRING, "term", "The term to define", true))
     override val usages = setOf(setOf("term"))
     override val cooldown = 5L
+    override val eliminateStaleInteractions = false
 
     private val jsonSerializer = Json { ignoreUnknownKeys = true }
     private val client = HttpClient(CIO) {

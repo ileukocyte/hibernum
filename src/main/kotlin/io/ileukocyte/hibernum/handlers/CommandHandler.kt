@@ -245,15 +245,19 @@ object CommandHandler : MutableSet<Command> {
             this[event.componentId.split("-").first()]?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     if (event.message.timeCreated.isBefore(event.jda.startDate)) {
-                        event.message.delete().queue(null) {}
+                        if (command.eliminateStaleInteractions) {
+                            event.message.delete().queue(null) {}
 
-                        event.channel.sendMessage {
-                            content += event.user.asMention
-                            embeds += defaultEmbed("The interaction has already expired!", EmbedType.FAILURE) {
-                                text = "This message will self-delete in 5 seconds"
+                            event.channel.sendMessage {
+                                content += event.user.asMention
+                                embeds += defaultEmbed("The interaction has already expired!", EmbedType.FAILURE) {
+                                    text = "This message will self-delete in 5 seconds"
+                                }
+                            }.queue {
+                                it.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
                             }
-                        }.queue {
-                            it.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
+                        } else {
+                            event.message.editMessageComponents().queue(null) {}
                         }
 
                         return@launch
@@ -305,15 +309,19 @@ object CommandHandler : MutableSet<Command> {
                     command ->
                 CoroutineScope(CommandContext).launch {
                     if (event.message.timeCreated.isBefore(event.jda.startDate)) {
-                        event.message.delete().queue(null) {}
+                        if (command.eliminateStaleInteractions) {
+                            event.message.delete().queue(null) {}
 
-                        event.channel.sendMessage {
-                            content += event.user.asMention
-                            embeds += defaultEmbed("The interaction has already expired!", EmbedType.FAILURE) {
-                                text = "This message will self-delete in 5 seconds"
+                            event.channel.sendMessage {
+                                content += event.user.asMention
+                                embeds += defaultEmbed("The interaction has already expired!", EmbedType.FAILURE) {
+                                    text = "This message will self-delete in 5 seconds"
+                                }
+                            }.queue {
+                                it.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
                             }
-                        }.queue {
-                            it.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
+                        } else {
+                            event.message.editMessageComponents().queue(null) {}
                         }
 
                         return@launch

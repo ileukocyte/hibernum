@@ -37,6 +37,7 @@ interface Command : Comparable<Command> {
      */
     val isDeveloper: Boolean get() = category == CommandCategory.DEVELOPER
     val cooldown: Long get() = 0
+    val eliminateStaleInteractions: Boolean get() = true
     val botPermissions: Set<Permission> get() = emptySet()
     val memberPermissions: Set<Permission> get() = emptySet()
     val usages: Set<Set<String>> get() = emptySet()

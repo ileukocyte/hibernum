@@ -15,6 +15,7 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.limitTo
 import io.ileukocyte.hibernum.utils.asDuration
 
+import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
 
@@ -33,19 +34,21 @@ class QueueCommand : Command {
     override val usages = setOf(setOf("page (optional)"))
     override val options = setOf(
         OptionData(OptionType.INTEGER, "page", "Initial page number"))
+    override val eliminateStaleInteractions = false
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val audioPlayer = event.guild.audioPlayer ?: return
         val track = audioPlayer.player.playingTrack ?: throw CommandException("No track is currently playing!")
 
+        val partitionSize = Lists.partition(audioPlayer.scheduler.queue.toList(), 7).size
         val initialPage = args?.toIntOrNull()
-            ?.takeIf { it in 1..Lists.partition(audioPlayer.scheduler.queue.toList(), 7).size }
+            ?.takeIf { it in 1..partitionSize }
             ?.let { it - 1 }
             ?: 0
 
         event.channel.sendMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, initialPage))
             .let { it.takeIf { audioPlayer.scheduler.queue.size > 7 }
-                ?.setActionRow(pageButtons(event.author.id, initialPage))
+                ?.setActionRow(pageButtons(event.author.id, initialPage, partitionSize))
                 ?: it
             }.queue()
     }
@@ -54,14 +57,16 @@ class QueueCommand : Command {
         val audioPlayer = event.guild?.audioPlayer ?: return
         val track = audioPlayer.player.playingTrack ?: throw CommandException("No track is currently playing!")
 
+        val partitionSize = Lists.partition(audioPlayer.scheduler.queue.toList(), 7).size
+
         val initialPage = event.getOption("page")?.asString?.toIntOrNull()
-            ?.takeIf { it in 1..Lists.partition(audioPlayer.scheduler.queue.toList(), 7).size }
+            ?.takeIf { it in 1..partitionSize }
             ?.let { it - 1 }
             ?: 0
 
         event.replyEmbeds(queueEmbed(event.jda, audioPlayer, track, initialPage))
             .let { it.takeIf { audioPlayer.scheduler.queue.size > 7 }
-                ?.addActionRow(pageButtons(event.user.id, initialPage))
+                ?.addActionRow(pageButtons(event.user.id, initialPage, partitionSize))
                 ?: it
             }.queue()
     }
@@ -86,6 +91,7 @@ class QueueCommand : Command {
             }
 
             val pageNumber = id[1].toInt()
+            val pagesCount = ceil(audioPlayer.scheduler.queue.size / 7.0).toInt()
 
             when (id.last()) {
                 "first" -> {
@@ -93,14 +99,14 @@ class QueueCommand : Command {
                         queueEmbed(event.jda, audioPlayer, track, 0)
                     ).setActionRows().let {
                         it.takeIf { audioPlayer.scheduler.queue.size > 7 }
-                            ?.setActionRow(pageButtons(id.first(), 0))
+                            ?.setActionRow(pageButtons(id.first(), 0, pagesCount))
                             ?: it
                     }.queue(null) { _ ->
                         event.message.editMessageEmbeds(
                             queueEmbed(event.jda, audioPlayer, track, 0)
                         ).setActionRows().let {
                             it.takeIf { audioPlayer.scheduler.queue.size > 7 }
-                                ?.setActionRow(pageButtons(id.first(), 0))
+                                ?.setActionRow(pageButtons(id.first(), 0, pagesCount))
                                 ?: it
                         }.queue()
                     }
@@ -113,14 +119,14 @@ class QueueCommand : Command {
                         queueEmbed(event.jda, audioPlayer, track, lastPage)
                     ).setActionRows().let {
                         it.takeIf { audioPlayer.scheduler.queue.size > 7 }
-                            ?.setActionRow(pageButtons(id.first(), lastPage))
+                            ?.setActionRow(pageButtons(id.first(), lastPage, pagesCount))
                             ?: it
                     }.queue(null) { _ ->
                         event.message.editMessageEmbeds(
                             queueEmbed(event.jda, audioPlayer, track, lastPage)
                         ).setActionRows().let {
                             it.takeIf { audioPlayer.scheduler.queue.size > 7 }
-                                ?.setActionRow(pageButtons(id.first(), lastPage))
+                                ?.setActionRow(pageButtons(id.first(), lastPage, pagesCount))
                                 ?: it
                         }.queue()
                     }
@@ -132,14 +138,14 @@ class QueueCommand : Command {
                         queueEmbed(event.jda, audioPlayer, track, newPage)
                     ).setActionRows().let {
                         it.takeIf { audioPlayer.scheduler.queue.size > 7 }
-                            ?.setActionRow(pageButtons(id.first(), newPage))
+                            ?.setActionRow(pageButtons(id.first(), newPage, pagesCount))
                             ?: it
                     }.queue(null) { _ ->
                         event.message.editMessageEmbeds(
                             queueEmbed(event.jda, audioPlayer, track, newPage)
                         ).setActionRows().let {
                             it.takeIf { audioPlayer.scheduler.queue.size > 7 }
-                                ?.setActionRow(pageButtons(id.first(), newPage))
+                                ?.setActionRow(pageButtons(id.first(), newPage, pagesCount))
                                 ?: it
                         }.queue()
                     }
@@ -153,7 +159,7 @@ class QueueCommand : Command {
                         .setActionRows()
                         .let {
                             it.takeIf { audioPlayer.scheduler.queue.size > 7 }
-                                ?.setActionRow(pageButtons(id.first(), newPage))
+                                ?.setActionRow(pageButtons(id.first(), newPage, pagesCount))
                                 ?: it
                         }.queue(null) { _ ->
                             event.message
@@ -161,7 +167,7 @@ class QueueCommand : Command {
                                 .setActionRows()
                                 .let {
                                     it.takeIf { audioPlayer.scheduler.queue.size > 7 }
-                                        ?.setActionRow(pageButtons(id.first(), newPage))
+                                        ?.setActionRow(pageButtons(id.first(), newPage, pagesCount))
                                         ?: it
                                 }.queue()
                         }
@@ -170,11 +176,15 @@ class QueueCommand : Command {
         } else throw CommandException("You did not invoke the initial command!")
     }
 
-    private fun pageButtons(userId: String, page: Int) = setOf(
-        Button.secondary("$name-$userId-$page-first", "First Page"),
-        Button.secondary("$name-$userId-$page-back", "Back"),
-        Button.secondary("$name-$userId-$page-next", "Next"),
-        Button.secondary("$name-$userId-$page-last", "Last Page"),
+    private fun pageButtons(userId: String, page: Int, size: Int) = setOf(
+        Button.secondary("$name-$userId-$page-first", "First Page")
+            .let { if (page == 0) it.asDisabled() else it },
+        Button.secondary("$name-$userId-$page-back", "Back")
+            .let { if (page == 0) it.asDisabled() else it },
+        Button.secondary("$name-$userId-$page-next", "Next")
+            .let { if (page == size - 1) it.asDisabled() else it },
+        Button.secondary("$name-$userId-$page-last", "Last Page")
+            .let { if (page == size - 1) it.asDisabled() else it },
         Button.danger("$name-$userId-exit", "Exit"),
     )
 
