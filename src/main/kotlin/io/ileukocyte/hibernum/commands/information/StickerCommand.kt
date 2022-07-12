@@ -2,15 +2,14 @@ package io.ileukocyte.hibernum.commands.information
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.CommandCategory
+import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.TextOnlyCommand
 import io.ileukocyte.hibernum.extensions.asWord
 import io.ileukocyte.hibernum.extensions.await
-import io.ileukocyte.hibernum.extensions.surroundWith
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
+import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
-import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.entities.sticker.Sticker.StickerFormat
 import net.dv8tion.jda.api.entities.sticker.StickerItem
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
@@ -18,13 +17,23 @@ import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
 class StickerCommand : TextOnlyCommand {
     override val name = "sticker"
-    override val description = "N/A"
-    override val category = CommandCategory.BETA
+    override val description = "Sends the available information about the provided sticker"
+    override val aliases = setOf("stickerinfo", "sticker-info")
+    override val usages = setOf(setOf("sticker"))
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
-        val sticker = event.message.stickers.firstOrNull() ?: return
+        val sticker = event.message.stickers.firstOrNull()
+            ?: throw CommandException("No sticker has been provided!")
 
-        event.channel.sendMessageEmbeds(stickerEmbed(sticker, event.jda)).queue()
+        val response = stickerEmbed(sticker, event.jda).let {
+            if (it.color === null) {
+                EmbedBuilder(it).setColor(Immutable.SUCCESS).build()
+            } else {
+                it
+            }
+        }
+
+        event.channel.sendMessageEmbeds(response).queue()
     }
 
     private suspend fun stickerEmbed(sticker: StickerItem, jda: JDA) = buildEmbed {
@@ -46,8 +55,6 @@ class StickerCommand : TextOnlyCommand {
         icon?.let {
             color = getDominantColorByImageUrl(it)
             image = "$it?size=2048"
-        } ?: run {
-            color = Immutable.SUCCESS
         }
 
         author {
@@ -82,17 +89,7 @@ class StickerCommand : TextOnlyCommand {
 
             field {
                 title = "Tags"
-                description = gs.tags.joinToString {
-                    /*val reactionCode = Emoji.fromFormatted(":$it:").asReactionCode
-
-                    if (reactionCode != it) {
-                        reactionCode
-                    } else {
-                        it
-                    }*/
-
-                    it
-                }.ifEmpty { "None" }
+                description = gs.tags.joinToString().ifEmpty { "None" }
                 isInline = true
             }
 
@@ -112,17 +109,7 @@ class StickerCommand : TextOnlyCommand {
 
             field {
                 title = "Tags"
-                description = ss.tags.joinToString {
-                    /*val reactionCode = Emoji.fromFormatted(":$it:").asReactionCode
-
-                    if (reactionCode != it) {
-                        reactionCode
-                    } else {
-                        it
-                    }*/
-
-                    it
-                }.ifEmpty { "None" }
+                description = ss.tags.joinToString().ifEmpty { "None" }
                 isInline = true
             }
 
@@ -145,10 +132,19 @@ class StickerCommand : TextOnlyCommand {
                     isInline = true
                 }
 
-                field {
-                    title = "Pack Banner Image"
-                    description = pack.bannerUrl?.let { "[Pack Banner URL]($it?size=2048)" } ?: "None"
-                    isInline = true
+                pack.bannerUrl?.let {
+                    val hq = "$it?size=2048"
+
+                    if (ss.formatType == StickerFormat.LOTTIE) {
+                        image = hq
+                        color = getDominantColorByImageUrl(it)
+                    } else {
+                        field {
+                            title = "Pack Banner Image"
+                            description = "[Pack Banner URL]($hq)"
+                            isInline = true
+                        }
+                    }
                 }
 
                 field {
