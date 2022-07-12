@@ -20,7 +20,6 @@ import org.apache.commons.validator.routines.UrlValidator
 class PruneCommand : SlashOnlyCommand {
     override val name = "prune"
     override val description = "Deletes messages by the amount and filters provided"
-    override val fullDescription = "$description\n\n*Using filters leads to the deletion process being pretty slow!*"
     override val options = setOf(
         OptionData(OptionType.INTEGER, "count", "The amount of messages to delete (up to 1000)", true)
             .setMinValue(1)
