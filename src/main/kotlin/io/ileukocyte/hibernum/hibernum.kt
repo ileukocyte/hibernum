@@ -11,6 +11,8 @@ import io.ileukocyte.hibernum.audio.loadGuildMusicManagers
 import io.ileukocyte.hibernum.builders.buildActivity
 import io.ileukocyte.hibernum.builders.buildJDA
 import io.ileukocyte.hibernum.commands.Command
+import io.ileukocyte.hibernum.commands.ContextCommand
+import io.ileukocyte.hibernum.commands.GenericCommand
 import io.ileukocyte.hibernum.commands.TextOnlyCommand
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.handlers.CommandHandler
@@ -19,12 +21,16 @@ import io.ileukocyte.hibernum.utils.isEqualTo
 import io.ileukocyte.hibernum.utils.toOptionData
 
 import kotlin.reflect.full.createInstance
+
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Activity.ActivityType
+import net.dv8tion.jda.api.interactions.commands.Command.Type
 import net.dv8tion.jda.api.interactions.commands.Command.Option
+
+import org.jetbrains.kotlin.util.collectionUtils.filterIsInstanceAnd
 
 import org.reflections.Reflections
 
@@ -62,7 +68,7 @@ suspend fun main() = coroutineScope {
     // registering commands
     launch {
         Reflections("io.ileukocyte.hibernum.commands")
-            .getSubtypesOf<Command>()
+            .getSubtypesOf<GenericCommand>()
             .filter { !it.isInterface }
             .map { it.kotlin }
             .forEach { CommandHandler += it.createInstance() }
@@ -75,7 +81,7 @@ suspend fun main() = coroutineScope {
     // updating global slash commands
     launch {
         discord.retrieveCommands().queue { discordCommands ->
-            val predicate = { cmd: Command ->
+            val slashPredicate = { cmd: Command ->
                 cmd.name !in discordCommands.map { it.name }
                         || cmd.description !in discordCommands.map { it.description.removePrefix("(Developer-only) ") }
                         || discordCommands.any {
@@ -83,17 +89,38 @@ suspend fun main() = coroutineScope {
                 }
             }
 
-            CommandHandler.filter { it !is TextOnlyCommand }.filter(predicate).forEach {
-                discord.upsertCommand(it.asSlashCommand!!).queue { cmd ->
-                    LOGGER.info("UPDATE: Discord has updated the following slash command: ${cmd.name}!")
+            CommandHandler
+                .filterIsInstanceAnd<Command> { it !is TextOnlyCommand && slashPredicate(it) }
+                .forEach {
+                    discord.upsertCommand(it.asDiscordCommand!!).queue { cmd ->
+                        LOGGER.info("UPDATE: Discord has updated the following slash command: ${cmd.name}!")
+                    }
+                }
+
+            CommandHandler
+                .filterIsInstance<ContextCommand>()
+                .forEach {
+                    discord.upsertCommand(it.asDiscordCommand).queue { cmd ->
+                        //LOGGER.info
+                        println("UPDATE: Discord has updated the following ${cmd.type.name.lowercase()} context command: ${cmd.name}!")
+                    }
+                }
+
+            discordCommands.filter {
+                CommandHandler[it.name] is TextOnlyCommand || it.name !in CommandHandler.map(GenericCommand::name)
+            }.takeUnless { it.isEmpty() }?.forEach {
+                discord.deleteCommandById(it.id).queue { _ ->
+                    LOGGER.info("${it.name} is no longer a slash command!")
                 }
             }
 
             discordCommands.filter {
-                CommandHandler[it.name] is TextOnlyCommand || it.name !in CommandHandler.map(Command::name)
+                it.type in setOf(Type.MESSAGE, Type.USER)
+                        && it.name !in CommandHandler.filterIsInstance<ContextCommand>().map(ContextCommand::contextName)
             }.takeUnless { it.isEmpty() }?.forEach {
                 discord.deleteCommandById(it.id).queue { _ ->
-                    LOGGER.info("${it.name} is no longer a slash command!")
+                    //LOGGER.info
+                    println("${it.name} is no longer a context command!")
                 }
             }
         }

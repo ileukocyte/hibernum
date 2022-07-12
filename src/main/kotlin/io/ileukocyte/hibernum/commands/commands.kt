@@ -14,36 +14,62 @@ import net.dv8tion.jda.api.interactions.commands.Command as JDACommand
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 
 /**
- * A generic type that is to be implemented by all the bot's command classes
+ * A generic type that is to be implemented by classes of all the bot's commands
  *
  * @author Alexander Oksanich
  *
+ * @see Command
+ * @see TextOnlyCommand
+ * @see SlashOnlyCommand
+ * @see ContextCommand
+ * @see MessageContextCommand
+ * @see UserContextCommand
+ */
+interface GenericCommand : Comparable<GenericCommand> {
+    val name: String
+    val category: CommandCategory get() =
+        javaClass.`package`.name?.let { CommandCategory[it.split(".").last()] } ?: CommandCategory.UNKNOWN
+
+    /**
+     * A property that shows whether or not the command can only be used by a developer of the bot
+     */
+    val isDeveloper: Boolean get() = category == CommandCategory.DEVELOPER
+
+    val cooldown: Long get() = 0
+    val eliminateStaleInteractions: Boolean get() = true
+
+    val botPermissions: Set<Permission> get() = emptySet()
+    val memberPermissions: Set<Permission> get() = emptySet()
+
+    val asDiscordCommand: CommandData?
+
+    /** **DO NOT OVERRIDE!** */
+    val id: Int get() = name.hashCode()
+
+    override fun compareTo(other: GenericCommand) = name.compareTo(other.name)
+}
+
+/**
+ * A generic type that is to be implemented by classes of all the bot's commands
+ * that are invoked via Discord text input
+ *
+ * @author Alexander Oksanich
+ *
+ * @see GenericCommand
  * @see TextOnlyCommand
  * @see SlashOnlyCommand
  */
-@Suppress("UNUSED")
-interface Command : Comparable<Command> {
-    val name: String
+interface Command : GenericCommand {
     val description: String
     val aliases: Set<String> get() = emptySet()
-    val category: CommandCategory get() =
-        javaClass.`package`.name?.let { CommandCategory[it.split(".").last()] } ?: CommandCategory.UNKNOWN
 
     /**
      * Used for the help command if the main description is too long for slash command limits
      */
     val fullDescription: String get() = description
-    /**
-     * A property that shows whether or not the command can only be used by a developer of the bot
-     */
-    val isDeveloper: Boolean get() = category == CommandCategory.DEVELOPER
-    val cooldown: Long get() = 0
-    val eliminateStaleInteractions: Boolean get() = true
-    val botPermissions: Set<Permission> get() = emptySet()
-    val memberPermissions: Set<Permission> get() = emptySet()
+
     val usages: Set<Set<String>> get() = emptySet()
 
     /**
@@ -52,14 +78,11 @@ interface Command : Comparable<Command> {
     val options: Set<OptionData> get() = emptySet()
 
     /**
-     * A [SlashCommandData] instance of the slash command
+     * A [CommandData] instance of the slash command
      */
-    val asSlashCommand: SlashCommandData? get() =
+    override val asDiscordCommand: CommandData? get() =
         Commands.slash(name, "(Developer-only) ".takeIf { isDeveloper }.orEmpty() + description)
             .addOptions(options)
-
-    /** **DO NOT OVERRIDE!** */
-    val id: Int get() = name.hashCode()
 
     /**
      * A function that is executed when the command is invoked as a classic text command
@@ -102,8 +125,6 @@ interface Command : Comparable<Command> {
      * The [ModalInteractionEvent] occurring once the command is invoked
      */
     suspend operator fun invoke(event: ModalInteractionEvent) {}
-
-    override fun compareTo(other: Command) = name.compareTo(other.name)
 }
 
 /**
@@ -115,7 +136,7 @@ interface Command : Comparable<Command> {
  * @see SlashOnlyCommand
  */
 interface TextOnlyCommand : Command {
-    override val asSlashCommand: SlashCommandData? get() = null
+    override val asDiscordCommand: CommandData? get() = null
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
         // must be left empty
@@ -145,14 +166,15 @@ interface SlashOnlyCommand : Command {
  * @see MessageContextCommand
  * @see UserContextCommand
  */
-interface ContextCommand {
+interface ContextCommand : GenericCommand {
     val contextName: String
     val contextType: JDACommand.Type
 
     /**
      * A [CommandData] instance of the context menu command
      */
-    val asContextCommand: CommandData get() = Commands.context(contextType, contextName)
+    override val asDiscordCommand: CommandData get() =
+        Commands.context(contextType, name)
 }
 
 /**

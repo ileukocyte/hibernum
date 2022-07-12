@@ -14,37 +14,41 @@ import java.util.concurrent.Executors.newFixedThreadPool
 import java.util.concurrent.TimeUnit
 
 import kotlin.coroutines.CoroutineContext
+
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 
 import net.dv8tion.jda.api.entities.MessageType
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
+import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException
+import net.dv8tion.jda.api.interactions.commands.Command as JDACommand
 
 private val commandContextDispatcher = newFixedThreadPool(3).asCoroutineDispatcher()
 
 object CommandContext : CoroutineContext by commandContextDispatcher, AutoCloseable by commandContextDispatcher
 
-object CommandHandler : MutableSet<Command> {
-    private val registeredCommands = mutableSetOf<Command>()
+object CommandHandler : MutableSet<GenericCommand> {
+    private val registeredCommands = mutableSetOf<GenericCommand>()
     private val cooldowns = mutableMapOf<String, OffsetDateTime>()
 
     // Overridden from MutableSet
     override val size get() = registeredCommands.size
     override fun isEmpty() = registeredCommands.isEmpty()
-    override fun contains(element: Command) = element in registeredCommands
-    override fun containsAll(elements: Collection<Command>) = registeredCommands.containsAll(elements)
+    override fun contains(element: GenericCommand) = element in registeredCommands
+    override fun containsAll(elements: Collection<GenericCommand>) = registeredCommands.containsAll(elements)
     override fun iterator() = registeredCommands.iterator()
-    override fun add(element: Command) = registeredCommands.add(element)
-    override fun remove(element: Command) = registeredCommands.remove(element)
-    override fun addAll(elements: Collection<Command>) = registeredCommands.addAll(elements)
-    override fun removeAll(elements: Collection<Command>) = registeredCommands.removeAll(elements.toSet())
-    override fun retainAll(elements: Collection<Command>) = registeredCommands.retainAll(elements.toSet())
+    override fun add(element: GenericCommand) = registeredCommands.add(element)
+    override fun remove(element: GenericCommand) = registeredCommands.remove(element)
+    override fun addAll(elements: Collection<GenericCommand>) = registeredCommands.addAll(elements)
+    override fun removeAll(elements: Collection<GenericCommand>) = registeredCommands.removeAll(elements.toSet())
+    override fun retainAll(elements: Collection<GenericCommand>) = registeredCommands.retainAll(elements.toSet())
     override fun clear() = registeredCommands.clear()
 
     operator fun get(name: String): Command? {
@@ -55,6 +59,7 @@ object CommandHandler : MutableSet<Command> {
         }
 
         return registeredCommands
+            .filterIsInstance<Command>()
             .filter { checkPriority(name, it) > 0 }
             .maxByOrNull { checkPriority(name, it) }
     }
@@ -62,8 +67,12 @@ object CommandHandler : MutableSet<Command> {
     operator fun get(id: Int) = registeredCommands
         .firstOrNull { it.id == id }
 
+    fun getContextCommand(name: String, type: JDACommand.Type) = registeredCommands.firstOrNull {
+        it is ContextCommand && it.contextName == name && it.contextType == type
+    } as? ContextCommand
+
     // Command cooldown extensions
-    private fun Command.getRemainingCooldown(userId: Long) =
+    private fun GenericCommand.getRemainingCooldown(userId: Long) =
         cooldowns["$name|$userId"]?.let { cooldown ->
             val time = OffsetDateTime.now().until(cooldown, ChronoUnit.SECONDS)
 
@@ -74,11 +83,11 @@ object CommandHandler : MutableSet<Command> {
             } else time
         } ?: 0
 
-    private fun Command.getCooldownError(userId: Long) = getRemainingCooldown(userId)
+    private fun GenericCommand.getCooldownError(userId: Long) = getRemainingCooldown(userId)
         .takeUnless { it <= 0 }
         ?.let { "Wait for ${asText(it, TimeUnit.SECONDS)} before using the command again!" }
 
-    private fun Command.applyCooldown(userId: Long) {
+    private fun GenericCommand.applyCooldown(userId: Long) {
         cooldowns += "$name|$userId" to OffsetDateTime.now().plusSeconds(cooldown)
     }
 
@@ -111,15 +120,17 @@ object CommandHandler : MutableSet<Command> {
                                 }
 
                                 try {
-                                    if (!event.guild.selfMember.hasPermission(command.botPermissions))
+                                    if (!event.guild.selfMember.hasPermission(command.botPermissions)) {
                                         throw CommandException(
                                             "${event.jda.selfUser.name} is not able to execute the command " +
-                                                "since no required permissions (${command.botPermissions.joinToString { it.getName() }}) were granted!",
-                                                footer = "Try contacting the server's staff!",
+                                                    "since no required permissions (${command.botPermissions.joinToString { it.getName() }}) were granted!",
+                                            footer = "Try contacting the server's staff!",
                                         )
+                                    }
 
-                                    if (event.member?.hasPermission(command.memberPermissions) == false)
+                                    if (event.member?.hasPermission(command.memberPermissions) == false) {
                                         throw CommandException("You do not have the required permission to manage messages!")
+                                    }
 
                                     if (command.cooldown > 0) {
                                         command.getCooldownError(event.author.idLong)
@@ -128,7 +139,9 @@ object CommandHandler : MutableSet<Command> {
                                                 it.applyCooldown(event.author.idLong)
                                                 it(event, args.getOrNull(1))
                                             }
-                                    } else command(event, args.getOrNull(1))
+                                    } else {
+                                        command(event, args.getOrNull(1))
+                                    }
                                 } catch (e: Exception) {
                                     when (e) {
                                         is CommandException ->
@@ -179,15 +192,17 @@ object CommandHandler : MutableSet<Command> {
                         }
 
                         try {
-                            if (event.guild?.selfMember?.hasPermission(command.botPermissions) == false)
+                            if (event.guild?.selfMember?.hasPermission(command.botPermissions) == false) {
                                 throw CommandException(
                                     "${event.jda.selfUser.name} is not able to execute the command " +
                                             "since no required permissions (${command.botPermissions.joinToString { it.getName() }}) were granted!",
                                     footer = "Try contacting the server's staff!",
                                 )
+                            }
 
-                            if (event.member?.hasPermission(command.memberPermissions) == false)
+                            if (event.member?.hasPermission(command.memberPermissions) == false) {
                                 throw CommandException("You do not have the required permission to manage messages!")
+                            }
 
                             if (command.cooldown > 0) {
                                 command.getCooldownError(event.user.idLong)
@@ -196,7 +211,9 @@ object CommandHandler : MutableSet<Command> {
                                         it.applyCooldown(event.user.idLong)
                                         it(event)
                                     }
-                            } else command(event)
+                            } else {
+                                command(event)
+                            }
                         } catch (e: Exception) {
                             when (e) {
                                 is CommandException ->
@@ -222,10 +239,11 @@ object CommandHandler : MutableSet<Command> {
                                 }
                             }
                         }
-                    } else
+                    } else {
                         event.replyFailure("You have some other command processes running right now!")
                             .setEphemeral(true)
                             .queue()
+                    }
                 }
             }
         }
@@ -396,6 +414,160 @@ object CommandHandler : MutableSet<Command> {
                                 e.printStackTrace()
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * A function that handles [MessageContextInteractionEvent] that contains a command of a message context menu
+     *
+     * @param event
+     * [MessageContextInteractionEvent] occurring once the command is invoked
+     *
+     * @author Alexander Oksanich
+     */
+    internal operator fun invoke(event: MessageContextInteractionEvent) {
+        if (event.isFromGuild) {
+            getContextCommand(event.name, JDACommand.Type.MESSAGE)?.let { cc ->
+                val command = cc as MessageContextCommand
+
+                CoroutineScope(CommandContext).launch {
+                    if (event.jda.getProcessByEntities(event.user, event.messageChannel) === null) {
+                        if (command.isDeveloper && !event.user.isDeveloper) {
+                            event.replyFailure("You cannot execute the command since you are not a developer of the bot!").queue()
+
+                            return@launch
+                        }
+
+                        try {
+                            if (event.guild?.selfMember?.hasPermission(command.botPermissions) == false) {
+                                throw CommandException(
+                                    "${event.jda.selfUser.name} is not able to execute the command " +
+                                            "since no required permissions (${command.botPermissions.joinToString { it.getName() }}) were granted!",
+                                    footer = "Try contacting the server's staff!",
+                                )
+                            }
+
+                            if (event.member?.hasPermission(command.memberPermissions) == false) {
+                                throw CommandException("You do not have the required permission to manage messages!")
+                            }
+
+                            if (command.cooldown > 0) {
+                                cc.getCooldownError(event.user.idLong)
+                                    ?.let { event.replyFailure(it).setEphemeral(true).queue() }
+                                    ?: cc.let {
+                                        it.applyCooldown(event.user.idLong)
+                                        it(event)
+                                    }
+                            } else cc(event)
+                        } catch (e: Exception) {
+                            when (e) {
+                                is CommandException ->
+                                    event.replyFailure(e.message ?: "CommandException has occurred!") { text = e.footer }
+                                        .setEphemeral(true)
+                                        .queue({}) {
+                                            event.messageChannel.sendFailure(e.message ?: "CommandException has occurred!") {
+                                                text = e.footer ?: e.selfDeletion?.let { sd ->
+                                                    "This message will self-delete in ${asText(sd.delay, sd.unit)}"
+                                                }
+                                            }.queue({
+                                                e.selfDeletion?.let { sd -> it.delete().queueAfter(sd.delay, sd.unit, {}) {} }
+                                            }) { e.printStackTrace() }
+                                        }
+                                is InsufficientPermissionException -> {} // ignored
+                                else -> {
+                                    event.replyFailure("""
+                                        |${e::class.simpleName ?: "An unknown exception"} has occurred:
+                                        |${e.message ?: "No message provided"}
+                                        |""".trimMargin()).queue()
+
+                                    e.printStackTrace()
+                                }
+                            }
+                        }
+                    } else {
+                        event.replyFailure("You have some other command processes running right now!")
+                            .setEphemeral(true)
+                            .queue()
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * A function that handles [UserContextInteractionEvent] that contains a command of a user context menu
+     *
+     * @param event
+     * [UserContextInteractionEvent] occurring once the command is invoked
+     *
+     * @author Alexander Oksanich
+     */
+    internal operator fun invoke(event: UserContextInteractionEvent) {
+        if (event.isFromGuild) {
+            getContextCommand(event.name, JDACommand.Type.USER)?.let { cc ->
+                val command = cc as UserContextCommand
+
+                CoroutineScope(CommandContext).launch {
+                    if (event.jda.getProcessByEntities(event.user, event.messageChannel) === null) {
+                        if (command.isDeveloper && !event.user.isDeveloper) {
+                            event.replyFailure("You cannot execute the command since you are not a developer of the bot!").queue()
+
+                            return@launch
+                        }
+
+                        try {
+                            if (event.guild?.selfMember?.hasPermission(command.botPermissions) == false) {
+                                throw CommandException(
+                                    "${event.jda.selfUser.name} is not able to execute the command " +
+                                            "since no required permissions (${command.botPermissions.joinToString { it.getName() }}) were granted!",
+                                    footer = "Try contacting the server's staff!",
+                                )
+                            }
+
+                            if (event.member?.hasPermission(command.memberPermissions) == false) {
+                                throw CommandException("You do not have the required permission to manage messages!")
+                            }
+
+                            if (command.cooldown > 0) {
+                                cc.getCooldownError(event.user.idLong)
+                                    ?.let { event.replyFailure(it).setEphemeral(true).queue() }
+                                    ?: cc.let {
+                                        it.applyCooldown(event.user.idLong)
+                                        it(event)
+                                    }
+                            } else cc(event)
+                        } catch (e: Exception) {
+                            when (e) {
+                                is CommandException ->
+                                    event.replyFailure(e.message ?: "CommandException has occurred!") { text = e.footer }
+                                        .setEphemeral(true)
+                                        .queue({}) {
+                                            event.messageChannel.sendFailure(e.message ?: "CommandException has occurred!") {
+                                                text = e.footer ?: e.selfDeletion?.let { sd ->
+                                                    "This message will self-delete in ${asText(sd.delay, sd.unit)}"
+                                                }
+                                            }.queue({
+                                                e.selfDeletion?.let { sd -> it.delete().queueAfter(sd.delay, sd.unit, {}) {} }
+                                            }) { e.printStackTrace() }
+                                        }
+                                is InsufficientPermissionException -> {} // ignored
+                                else -> {
+                                    event.replyFailure("""
+                                        |${e::class.simpleName ?: "An unknown exception"} has occurred:
+                                        |${e.message ?: "No message provided"}
+                                        |""".trimMargin()).queue()
+
+                                    e.printStackTrace()
+                                }
+                            }
+                        }
+                    } else {
+                        event.replyFailure("You have some other command processes running right now!")
+                            .setEphemeral(true)
+                            .queue()
                     }
                 }
             }

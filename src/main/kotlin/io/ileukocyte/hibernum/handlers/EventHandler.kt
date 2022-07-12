@@ -20,7 +20,9 @@ import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
+import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent
@@ -43,6 +45,12 @@ object EventHandler : ListenerAdapter() {
         CommandHandler(event)
 
     override fun onModalInteraction(event: ModalInteractionEvent) =
+        CommandHandler(event)
+
+    override fun onMessageContextInteraction(event: MessageContextInteractionEvent) =
+        CommandHandler(event)
+
+    override fun onUserContextInteraction(event: UserContextInteractionEvent) =
         CommandHandler(event)
 
     @OptIn(ExperimentalCoroutinesApi::class)
