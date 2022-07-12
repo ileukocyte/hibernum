@@ -8,6 +8,7 @@ import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
 import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.emoji.CustomEmoji
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -36,7 +37,7 @@ class EmoteCommand : Command {
         val emote = event.message.mentions.customEmojis.firstOrNull()
             ?: throw CommandException("No **custom** emoji has been provided!")
 
-        event.channel.sendMessageEmbeds(emoteEmbed(emote, event.jda)).queue()
+        event.channel.sendMessageEmbeds(emoteEmbed(emote, event.jda, event.guild)).queue()
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
@@ -48,13 +49,13 @@ class EmoteCommand : Command {
             ?: throw CommandException("No **custom** emoji has been provided!")
 
         try {
-            event.replyEmbeds(emoteEmbed(emote, event.jda)).queue()
+            event.replyEmbeds(emoteEmbed(emote, event.jda, event.guild ?: return)).queue()
         } catch (_: Exception) {
             throw CommandException("No **custom** emoji has been provided!")
         }
     }
 
-    private suspend fun emoteEmbed(emote: CustomEmoji, jda: JDA) = buildEmbed {
+    private suspend fun emoteEmbed(emote: CustomEmoji, jda: JDA, currentGuild: Guild) = buildEmbed {
         val richEmoji = jda.emojiCache.getElementById(emote.idLong)
         val img = emote.imageUrl
 
@@ -81,7 +82,7 @@ class EmoteCommand : Command {
         field {
             title = "Uploader"
             description = richEmoji?.retrieveOwner()?.await()?.let {
-                if (richEmoji.guild.isMember(it)) {
+                if (currentGuild.isMember(it)) {
                     it.asMention
                 } else {
                     MarkdownSanitizer.escape(it.asTag)
