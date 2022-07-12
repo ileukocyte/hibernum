@@ -215,10 +215,8 @@ class ServerCommand : Command {
         }
 
         field {
-            val timestamp = guild.timeCreated.toEpochSecond()
-
-            title = "Creation Date"
-            description = "<t:$timestamp:F> (<t:$timestamp:R>)"
+            title = "Stickers"
+            description = "${guild.stickerCache.size()}"
             isInline = true
         }
 
@@ -270,6 +268,14 @@ class ServerCommand : Command {
         field {
             title = "MFA Requirement"
             description = (guild.requiredMFALevel == Guild.MFALevel.TWO_FACTOR_AUTH).asWord
+            isInline = true
+        }
+
+        field {
+            val timestamp = guild.timeCreated.toEpochSecond()
+
+            title = "Creation Date"
+            description = "<t:$timestamp:F> (<t:$timestamp:R>)"
             isInline = true
         }
     }
