@@ -3,7 +3,6 @@ package io.ileukocyte.hibernum.commands.general
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.*
-import io.ileukocyte.hibernum.extensions.surroundWith
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asText
 
@@ -122,8 +121,10 @@ class HelpCommand : Command {
 
         val inviteLink = Immutable.INVITE_LINK_FORMAT.format(jda.selfUser.id)
 
-        appendLine("Commands in italics can only be used either as text commands or slash commands " +
-                "(the ones prefixed with \"/\")!")
+        appendLine("Commands in italics can only be used either as text commands " +
+                "(the ones prefixed with \"${Immutable.DEFAULT_PREFIX}\") " +
+                "or slash commands (the ones prefixed with \"/\")!")
+        appendLine("The rest of commands can be used either way!")
         appendLine()
         appendLine("**[Invite Link]($inviteLink)** \u2022 **[GitHub Repository](${Immutable.GITHUB_REPOSITORY})**")
 
@@ -132,18 +133,19 @@ class HelpCommand : Command {
             iconUrl = jda.selfUser.effectiveAvatarUrl
         }
 
-        if (!isInDm && !isFromSlashCommand)
+        if (!isInDm && !isFromSlashCommand) {
             footer {
                 text = "Requested by ${author.asTag}"
                 iconUrl = author.effectiveAvatarUrl
             }
+        }
 
         for ((category, cmd) in CommandHandler.groupBy { it.category }.toSortedMap())
             field {
                 title = "$category Commands"
                 description = cmd.sortedBy { it.name }.joinToString { cmd ->
                     when (cmd) {
-                        is TextOnlyCommand -> cmd.name.surroundWith('*')
+                        is TextOnlyCommand -> "*${Immutable.DEFAULT_PREFIX}${cmd.name}*"
                         is SlashOnlyCommand -> "*/${cmd.name}*"
                         else -> cmd.name
                     }
