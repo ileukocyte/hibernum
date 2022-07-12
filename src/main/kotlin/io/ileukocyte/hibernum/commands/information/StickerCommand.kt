@@ -3,6 +3,7 @@ package io.ileukocyte.hibernum.commands.information
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.MessageContextCommand
 import io.ileukocyte.hibernum.commands.TextOnlyCommand
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
@@ -11,11 +12,14 @@ import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.sticker.Sticker.StickerFormat
 import net.dv8tion.jda.api.entities.sticker.StickerItem
+import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
-class StickerCommand : TextOnlyCommand {
+class StickerCommand : TextOnlyCommand, MessageContextCommand {
     override val name = "sticker"
+    override val contextName = "Sticker Information"
     override val description = "Sends the available information about the provided sticker"
     override val aliases = setOf("stickerinfo", "sticker-info")
     override val usages = setOf(setOf("sticker"))
@@ -33,6 +37,35 @@ class StickerCommand : TextOnlyCommand {
         }
 
         event.channel.sendMessageEmbeds(response).queue()
+    }
+
+    override suspend fun invoke(event: MessageContextInteractionEvent) {
+        val sticker = event.target.stickers.firstOrNull()
+            ?: throw CommandException("No sticker is present in the message!")
+
+        try {
+            val deferred = event.deferReply().await()
+
+            val response = stickerEmbed(sticker, event.jda).let {
+                if (it.color === null) {
+                    EmbedBuilder(it).setColor(Immutable.SUCCESS).build()
+                } else {
+                    it
+                }
+            }
+
+            deferred.editOriginalEmbeds(response).await()
+        } catch (_: ErrorResponseException) {
+            val response = stickerEmbed(sticker, event.jda).let {
+                if (it.color === null) {
+                    EmbedBuilder(it).setColor(Immutable.SUCCESS).build()
+                } else {
+                    it
+                }
+            }
+
+            event.messageChannel.sendMessageEmbeds(response).queue()
+        }
     }
 
     private suspend fun stickerEmbed(sticker: StickerItem, jda: JDA) = buildEmbed {

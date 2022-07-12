@@ -60,7 +60,7 @@ class QRCommand : Command, MessageContextCommand {
                 .to(ImageType.PNG)
                 .stream()
 
-            qr.use { deferred.sendFile(it.toByteArray(), "qr.png").queue() }
+            qr.use { deferred.sendFile(it.toByteArray(), "qr.png").await() }
         } catch (_: ErrorResponseException) {
             val qr = QRCode.from(input)
                 .withSize(768, 768)
