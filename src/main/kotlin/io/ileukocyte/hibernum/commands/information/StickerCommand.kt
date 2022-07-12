@@ -4,7 +4,6 @@ import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.TextOnlyCommand
-import io.ileukocyte.hibernum.extensions.asWord
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
@@ -78,12 +77,6 @@ class StickerCommand : TextOnlyCommand {
             field {
                 title = "Server"
                 description = gs.guild?.name?.let { MarkdownSanitizer.escape(it) } ?: "Unknown"
-                isInline = true
-            }
-
-            field {
-                title = "Available"
-                description = gs.isAvailable.asWord
                 isInline = true
             }
 
