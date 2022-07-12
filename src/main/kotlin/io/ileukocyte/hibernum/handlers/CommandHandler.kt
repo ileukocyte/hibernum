@@ -68,7 +68,7 @@ object CommandHandler : MutableSet<GenericCommand> {
         .firstOrNull { it.id == id }
 
     fun getContextCommand(name: String, type: JDACommand.Type) = registeredCommands.firstOrNull {
-        it is ContextCommand && it.contextName == name && it.contextType == type
+        it is ContextCommand && it.contextName == name && type in it.contextTypes
     } as? ContextCommand
 
     // Command cooldown extensions

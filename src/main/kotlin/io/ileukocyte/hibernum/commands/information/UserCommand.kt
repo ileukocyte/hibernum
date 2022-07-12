@@ -4,6 +4,8 @@ import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.MessageContextCommand
+import io.ileukocyte.hibernum.commands.UserContextCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
@@ -13,10 +15,15 @@ import net.dv8tion.jda.api.entities.Activity.ActivityType
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji
 import net.dv8tion.jda.api.events.GenericEvent
+import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.exceptions.ErrorResponseException
+import net.dv8tion.jda.api.interactions.commands.Command.Type
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.buttons.Button
@@ -24,8 +31,9 @@ import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
-class UserCommand : Command {
+class UserCommand : Command, MessageContextCommand, UserContextCommand {
     override val name = "user"
+    override val contextName = "User Information"
     override val description = "Sends either detailed information about the specified user's account or their profile picture"
     override val aliases = setOf("member", "memberinfo", "member-info", "userinfo", "user-info")
     override val usages = setOf(
@@ -36,6 +44,7 @@ class UserCommand : Command {
     override val options = setOf(
         OptionData(OptionType.USER, "user", "The user to check information about"))
     override val cooldown = 3L
+    override val contextTypes = setOf(Type.MESSAGE, Type.USER)
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         event.guild.takeUnless { it.isLoaded }?.loadMembers()?.await()
@@ -75,16 +84,22 @@ class UserCommand : Command {
                     }.setActionRow(menu).queue()
                 }
             }
-        } else chooseUserInfoOrPfp(event.author, event.author, event)
+        } else {
+            chooseUserInfoOrPfp(event.author, event.author, event)
+        }
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
-        event.guild?.takeUnless { it.isLoaded }?.loadMembers()?.await()
-
         val user = event.getOption("user")?.asUser ?: event.user
 
-        chooseUserInfoOrPfp(user, event.user, event)
+        chooseUserInfoOrPfp(user, event.user, event, event.guild)
     }
+
+    override suspend fun invoke(event: MessageContextInteractionEvent) =
+        chooseUserInfoOrPfp(event.target.author, event.user, event, event.guild)
+
+    override suspend fun invoke(event: UserContextInteractionEvent) =
+        chooseUserInfoOrPfp(event.target, event.user, event, event.guild)
 
     override suspend fun invoke(event: SelectMenuInteractionEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
@@ -97,7 +112,9 @@ class UserCommand : Command {
                 ?: return
 
             chooseUserInfoOrPfp(event.guild?.getMemberById(value)?.user ?: return, event.user, event)
-        } else throw CommandException("You did not invoke the initial command!")
+        } else {
+            throw CommandException("You did not invoke the initial command!")
+        }
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
@@ -112,23 +129,50 @@ class UserCommand : Command {
                 return
             }
 
-            val member = event.guild?.getMemberById(id[1]) ?: return
+            try {
+                val deferred = event.deferEdit().await()
 
-            val embed = when (type) {
-                "info" -> infoEmbed(member)
-                "pfp" -> pfpEmbed(member.user)
-                else -> return
+                val member = event.guild?.getMemberById(id[1]) ?: return
+
+                val embed = when (type) {
+                    "info" -> infoEmbed(member)
+                    "pfp" -> pfpEmbed(member.user)
+                    else -> return
+                }
+
+                deferred.editOriginalEmbeds(embed).setActionRows().await()
+            } catch (_: ErrorResponseException) {
+                val member = event.guild?.getMemberById(id[1]) ?: return
+
+                val embed = when (type) {
+                    "info" -> infoEmbed(member)
+                    "pfp" -> pfpEmbed(member.user)
+                    else -> return
+                }
+
+                event.channel.sendMessageEmbeds(embed).queue()
             }
-
-            event.editMessageEmbeds(embed).setActionRows().queue()
-        } else throw CommandException("You did not invoke the initial command!")
+        } else {
+            throw CommandException("You did not invoke the initial command!")
+        }
     }
 
-    private suspend fun <E: GenericEvent> chooseUserInfoOrPfp(user: User, author: User, event: E) {
+    private suspend fun <E: GenericEvent> chooseUserInfoOrPfp(
+        user: User,
+        author: User,
+        event: E,
+        guild: Guild? = null,
+    ) {
+        guild?.takeUnless { it.isLoaded }?.loadMembers()?.await()
+
         if (user.isBot) {
             when (event) {
                 is MessageReceivedEvent -> event.channel.sendMessageEmbeds(pfpEmbed(user)).queue()
-                is SlashCommandInteractionEvent -> event.replyEmbeds(pfpEmbed(user)).queue()
+                is GenericCommandInteractionEvent -> try {
+                    event.replyEmbeds(pfpEmbed(user)).await()
+                } catch (_: ErrorResponseException) {
+                    event.messageChannel.sendMessageEmbeds(pfpEmbed(user)).queue()
+                }
             }
 
             return
@@ -147,7 +191,7 @@ class UserCommand : Command {
                 event.channel.sendConfirmation("Choose the type of information that you want to check!")
                     .setActionRow(info, pfp, exit)
                     .queue()
-            is SlashCommandInteractionEvent ->
+            is GenericCommandInteractionEvent ->
                 event.replyConfirmation("Choose the type of information that you want to check!")
                     .addActionRow(info, pfp, exit)
                     .queue()

@@ -170,15 +170,16 @@ interface SlashOnlyCommand : Command {
  */
 interface ContextCommand : GenericCommand {
     val contextName: String
-    val contextType: JDACommand.Type
+    val contextTypes: Set<JDACommand.Type>
 
     /**
-     * A [CommandData] instance of the context menu command
+     * All the [CommandData] instances of the context menu command
      */
-    val asContextCommand: CommandData get() =
-        Commands.context(contextType, contextName)
+    val asContextCommands: Set<CommandData> get() = contextTypes.map {
+        Commands.context(it, contextName)
             .setGuildOnly(true)
             .setDefaultPermissions(DefaultMemberPermissions.enabledFor(memberPermissions))
+    }.toSet()
 }
 
 /**
@@ -191,7 +192,8 @@ interface ContextCommand : GenericCommand {
  * @see UserContextCommand
  */
 interface MessageContextCommand : ContextCommand {
-    override val contextType get() = JDACommand.Type.MESSAGE
+    override val contextTypes: Set<JDACommand.Type> get() =
+        setOf(JDACommand.Type.MESSAGE)
 
     /**
      * A function that is executed when the command is invoked as a command of a message context menu
@@ -212,7 +214,8 @@ interface MessageContextCommand : ContextCommand {
  * @see MessageContextCommand
  */
 interface UserContextCommand : ContextCommand {
-    override val contextType get() = JDACommand.Type.USER
+    override val contextTypes: Set<JDACommand.Type> get() =
+        setOf(JDACommand.Type.USER)
 
     /**
      * A function that is executed when the command is invoked as a command of a user profile context menu

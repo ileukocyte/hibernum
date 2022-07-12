@@ -129,10 +129,18 @@ suspend fun main() = coroutineScope {
                 }
 
             CommandHandler
-                .filterIsInstanceAnd<ContextCommand> { cmd -> cmd.contextName !in discordCommands.map { it.name } }
-                .forEach {
-                    discord.upsertCommand(it.asContextCommand).queue { cmd ->
-                        LOGGER.info("UPDATE: Discord has updated the following ${cmd.type.name.lowercase()} context command: ${cmd.name}!")
+                .filterIsInstanceAnd<ContextCommand> { cmd ->
+                    cmd.contextName !in discordCommands.map { it.name }
+                            || cmd.contextTypes.size != discordCommands.count { it.name == cmd.contextName }
+                }.forEach {
+                    for (cc in it.asContextCommands.filter { c ->
+                        val map = discordCommands.associate { cmd -> cmd.name to cmd.type }
+
+                        map[c.name] != c.type
+                    }) {
+                        discord.upsertCommand(cc).queue { cmd ->
+                            LOGGER.info("UPDATE: Discord has updated the following ${cmd.type.name.lowercase()} context command: ${cmd.name}!")
+                        }
                     }
                 }
         }.join()
