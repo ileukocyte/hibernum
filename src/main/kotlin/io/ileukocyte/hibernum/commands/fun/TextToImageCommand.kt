@@ -1,7 +1,10 @@
 package io.ileukocyte.hibernum.commands.`fun`
 
 import io.ileukocyte.hibernum.commands.Command
+import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.MessageContextCommand
 import io.ileukocyte.hibernum.commands.NoArgumentsException
+import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.limitTo
 
 import java.awt.Color
@@ -13,13 +16,15 @@ import java.io.File
 
 import javax.imageio.ImageIO
 
+import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
-class TextToImageCommand : Command {
+class TextToImageCommand : Command, MessageContextCommand {
     override val name = "tti"
+    override val contextName = "Text to Image"
     override val description = "Creates an image containing the provided text"
     override val aliases = setOf("texttoimage", "text-to-image")
     override val usages = setOf(setOf("input"))
@@ -34,11 +39,25 @@ class TextToImageCommand : Command {
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
+        val deferred = event.deferReply().await()
+
         val lines = event.getOption("input")?.asString?.split("\n")?.map { it.limitTo(100) }
             ?: return
         val bytes = textToImage(lines.take(25), lines.maxByOrNull { it.length } ?: return)
 
-        event.deferReply().addFile(bytes, "tti.png").queue()
+        deferred.sendFile(bytes, "tti.png").queue()
+    }
+
+    override suspend fun invoke(event: MessageContextInteractionEvent) {
+        val content = event.target.contentRaw.takeUnless { it.isEmpty() }
+            ?: throw CommandException("The message has no text provided!")
+
+        val deferred = event.deferReply().await()
+
+        val lines = content.split("\n").map { it.limitTo(100) }
+        val bytes = textToImage(lines.take(25), lines.maxByOrNull { it.length } ?: return)
+
+        deferred.sendFile(bytes, "tti.png").queue()
     }
 
     private fun textToImage(lines: List<String>, longest: String): ByteArray {

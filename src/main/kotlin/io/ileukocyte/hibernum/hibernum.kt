@@ -92,22 +92,23 @@ suspend fun main() = coroutineScope {
             CommandHandler
                 .filterIsInstanceAnd<Command> { it !is TextOnlyCommand && slashPredicate(it) }
                 .forEach {
-                    discord.upsertCommand(it.asDiscordCommand!!).queue { cmd ->
+                    discord.upsertCommand(it.asSlashCommand!!).queue { cmd ->
                         LOGGER.info("UPDATE: Discord has updated the following slash command: ${cmd.name}!")
                     }
                 }
 
             CommandHandler
-                .filterIsInstance<ContextCommand>()
+                .filterIsInstanceAnd<ContextCommand> { cmd -> cmd.contextName !in discordCommands.map { it.name } }
                 .forEach {
-                    discord.upsertCommand(it.asDiscordCommand).queue { cmd ->
-                        //LOGGER.info
-                        println("UPDATE: Discord has updated the following ${cmd.type.name.lowercase()} context command: ${cmd.name}!")
+                    discord.upsertCommand(it.asContextCommand).queue { cmd ->
+                        LOGGER.info("UPDATE: Discord has updated the following ${cmd.type.name.lowercase()} context command: ${cmd.name}!")
                     }
                 }
 
             discordCommands.filter {
-                CommandHandler[it.name] is TextOnlyCommand || it.name !in CommandHandler.map(GenericCommand::name)
+                val condition = CommandHandler[it.name] is TextOnlyCommand || it.name !in CommandHandler.map(GenericCommand::name)
+
+                it.type == Type.SLASH && condition
             }.takeUnless { it.isEmpty() }?.forEach {
                 discord.deleteCommandById(it.id).queue { _ ->
                     LOGGER.info("${it.name} is no longer a slash command!")
@@ -115,12 +116,12 @@ suspend fun main() = coroutineScope {
             }
 
             discordCommands.filter {
-                it.type in setOf(Type.MESSAGE, Type.USER)
-                        && it.name !in CommandHandler.filterIsInstance<ContextCommand>().map(ContextCommand::contextName)
+                it.type != Type.SLASH && it.name !in CommandHandler
+                    .filterIsInstance<ContextCommand>()
+                    .map { cmd -> cmd.contextName }
             }.takeUnless { it.isEmpty() }?.forEach {
                 discord.deleteCommandById(it.id).queue { _ ->
-                    //LOGGER.info
-                    println("${it.name} is no longer a context command!")
+                    LOGGER.info("${it.name} is no longer a context command!")
                 }
             }
         }

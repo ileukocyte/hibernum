@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.interactions.commands.Command as JDACommand
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 
 /**
  * A generic type that is to be implemented by classes of all the bot's commands
@@ -42,8 +43,6 @@ interface GenericCommand : Comparable<GenericCommand> {
 
     val botPermissions: Set<Permission> get() = emptySet()
     val memberPermissions: Set<Permission> get() = emptySet()
-
-    val asDiscordCommand: CommandData?
 
     /** **DO NOT OVERRIDE!** */
     val id: Int get() = name.hashCode()
@@ -78,9 +77,9 @@ interface Command : GenericCommand {
     val options: Set<OptionData> get() = emptySet()
 
     /**
-     * A [CommandData] instance of the slash command
+     * A [SlashCommandData] instance of the slash command
      */
-    override val asDiscordCommand: CommandData? get() =
+    val asSlashCommand: SlashCommandData? get() =
         Commands.slash(name, "(Developer-only) ".takeIf { isDeveloper }.orEmpty() + description)
             .addOptions(options)
 
@@ -136,7 +135,7 @@ interface Command : GenericCommand {
  * @see SlashOnlyCommand
  */
 interface TextOnlyCommand : Command {
-    override val asDiscordCommand: CommandData? get() = null
+    override val asSlashCommand: SlashCommandData? get() = null
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
         // must be left empty
@@ -173,8 +172,8 @@ interface ContextCommand : GenericCommand {
     /**
      * A [CommandData] instance of the context menu command
      */
-    override val asDiscordCommand: CommandData get() =
-        Commands.context(contextType, name)
+    val asContextCommand: CommandData get() =
+        Commands.context(contextType, contextName)
 }
 
 /**
