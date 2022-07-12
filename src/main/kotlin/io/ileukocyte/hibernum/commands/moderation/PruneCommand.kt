@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit
 
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.IMentionable
+import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
@@ -51,12 +52,17 @@ class PruneCommand : SlashOnlyCommand {
             throw CommandException("The \"filter\" option must be set to \"mentions\" in case of the \"mention\" option being provided!")
 
         val count = event.getOption("count")?.asLong?.toInt() ?: return
-        val amount = count.takeUnless { event.options.filterNotNull().size > 1 } ?: 1000
-        val history = event.channel.iterableHistory
 
         val deferred = event.deferReply().setEphemeral(true).await()
 
-        val filtered = history.takeAsync(amount + 1).await().filter { message ->
+        var counter = 0
+        val filtered = mutableListOf<Message>()
+
+        event.channel.iterableHistory.forEachAsync { message ->
+            if (counter == count) {
+                return@forEachAsync false
+            }
+
             val filter = event.getOption("filter")?.let {
                 val mention = event.getOption("mention")?.asMentionable
 
@@ -82,7 +88,7 @@ class PruneCommand : SlashOnlyCommand {
             } ?: true
 
             val textFilter = event.getOption("text-filter")?.let {
-                val text = event.getOption("text")?.asString ?: return
+                val text = event.getOption("text")!!.asString
 
                 when (it.asString) {
                     "contains" -> text in message.contentRaw
@@ -93,8 +99,20 @@ class PruneCommand : SlashOnlyCommand {
                 }
             } ?: true
 
-            message.author == (event.getOption("user")?.asUser ?: message.author) && filter && textFilter
-        }.take(count).takeUnless { it.isEmpty() } ?: run {
+            val predicate = message.author == (event.getOption("user")?.asUser ?: message.author)
+                    && filter
+                    && textFilter
+
+            if (predicate) {
+                counter++
+
+                filtered += message
+            }
+
+            true
+        }.await()
+
+        filtered.takeUnless { it.isEmpty() } ?: run {
             deferred.editOriginalEmbeds(defaultEmbed("No messages to delete have been found!", EmbedType.FAILURE)).queue()
 
             return
