@@ -4,6 +4,7 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.asWord
+import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
 import net.dv8tion.jda.api.JDA
@@ -54,6 +55,7 @@ class EmoteCommand : Command {
     }
 
     private suspend fun emoteEmbed(emote: CustomEmoji, jda: JDA) = buildEmbed {
+        val richEmoji = jda.emojiCache.getElementById(emote.idLong)
         val img = emote.imageUrl
 
         color = getDominantColorByImageUrl(img)
@@ -72,12 +74,19 @@ class EmoteCommand : Command {
 
         field {
             title = "Server"
-            description = jda.emojiCache
-                .getElementById(emote.idLong)
-                ?.guild
-                ?.name
-                ?.let { MarkdownSanitizer.escape(it) }
-                ?: "Unknown"
+            description = richEmoji?.guild?.name?.let { MarkdownSanitizer.escape(it) } ?: "Unknown"
+            isInline = true
+        }
+
+        field {
+            title = "Uploader"
+            description = richEmoji?.retrieveOwner()?.await()?.let {
+                if (richEmoji.guild.isMember(it)) {
+                    it.asMention
+                } else {
+                    MarkdownSanitizer.escape(it.asTag)
+                }
+            } ?: "Unknown"
             isInline = true
         }
 
