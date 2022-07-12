@@ -28,7 +28,7 @@ class PruneCommand : SlashOnlyCommand {
         OptionData(OptionType.USER, "user", "The user whose messages are to delete"),
         OptionData(OptionType.STRING, "filter", "Type of messages to delete")
             .let { o ->
-                val options = setOf("attachments", "bots", "embeds", "invites", "links", "mentions")
+                val options = setOf("attachments", "bots", "embeds", "invites", "links", "mentions", "unpinned")
 
                 o.addChoices(options.map { Choice(it.capitalizeAll(), it) })
             },
@@ -83,6 +83,7 @@ class PruneCommand : SlashOnlyCommand {
                             users.isNotEmpty() || roles.isNotEmpty()
                         }
                     }
+                    "unpinned" -> !message.isPinned
                     else -> true
                 }
             } ?: true
@@ -155,6 +156,7 @@ class PruneCommand : SlashOnlyCommand {
                 "embeds" -> ""
                 "invites" -> " containing invite links"
                 "links" -> " containing any links"
+                "unpinned" -> " that ${if (deletedMessages == 1) "is" else "are"} not pinned"
                 else -> " mentioning ${mention?.asMention ?: "any users or any roles"}"
             })
         }
