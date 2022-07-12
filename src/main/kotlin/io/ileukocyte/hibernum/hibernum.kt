@@ -29,6 +29,7 @@ import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Activity.ActivityType
 import net.dv8tion.jda.api.interactions.commands.Command.Type
 import net.dv8tion.jda.api.interactions.commands.Command.Option
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 
 import org.jetbrains.kotlin.util.collectionUtils.filterIsInstanceAnd
 
@@ -80,7 +81,37 @@ suspend fun main() = coroutineScope {
 
     // updating global slash commands
     launch {
-        discord.retrieveCommands().queue { discordCommands ->
+        val discordCommands = discord.retrieveCommands().await()
+
+        launch {
+            discordCommands.filter {
+                val condition = CommandHandler[it.name] is TextOnlyCommand
+                        || it.name !in CommandHandler.map(GenericCommand::name)
+                        || it.defaultPermissions != CommandHandler[it.name]?.memberPermissions
+                            ?.let(DefaultMemberPermissions::enabledFor)
+
+                it.type == Type.SLASH && condition
+            }.takeUnless { it.isEmpty() }?.forEach {
+                discord.deleteCommandById(it.id).queue { _ ->
+                    LOGGER.info("${it.name} is no longer a slash command!")
+                }
+            }
+
+            discordCommands.filter {
+                it.type != Type.SLASH && (it.name !in CommandHandler
+                    .filterIsInstance<ContextCommand>()
+                    .map { cmd -> cmd.contextName }
+                        || it.defaultPermissions != CommandHandler.getContextCommand(it.name, it.type)
+                            ?.memberPermissions
+                            ?.let(DefaultMemberPermissions::enabledFor))
+            }.takeUnless { it.isEmpty() }?.forEach {
+                discord.deleteCommandById(it.id).queue { _ ->
+                    LOGGER.info("${it.name} is no longer a context command!")
+                }
+            }
+        }.join()
+
+        launch {
             val slashPredicate = { cmd: Command ->
                 cmd.name !in discordCommands.map { it.name }
                         || cmd.description !in discordCommands.map { it.description.removePrefix("(Developer-only) ") }
@@ -104,27 +135,7 @@ suspend fun main() = coroutineScope {
                         LOGGER.info("UPDATE: Discord has updated the following ${cmd.type.name.lowercase()} context command: ${cmd.name}!")
                     }
                 }
-
-            discordCommands.filter {
-                val condition = CommandHandler[it.name] is TextOnlyCommand || it.name !in CommandHandler.map(GenericCommand::name)
-
-                it.type == Type.SLASH && condition
-            }.takeUnless { it.isEmpty() }?.forEach {
-                discord.deleteCommandById(it.id).queue { _ ->
-                    LOGGER.info("${it.name} is no longer a slash command!")
-                }
-            }
-
-            discordCommands.filter {
-                it.type != Type.SLASH && it.name !in CommandHandler
-                    .filterIsInstance<ContextCommand>()
-                    .map { cmd -> cmd.contextName }
-            }.takeUnless { it.isEmpty() }?.forEach {
-                discord.deleteCommandById(it.id).queue { _ ->
-                    LOGGER.info("${it.name} is no longer a context command!")
-                }
-            }
-        }
+        }.join()
     }.join()
 
     // adding the event listener

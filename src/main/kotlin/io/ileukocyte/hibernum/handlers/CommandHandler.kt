@@ -200,10 +200,6 @@ object CommandHandler : MutableSet<GenericCommand> {
                                 )
                             }
 
-                            if (event.member?.hasPermission(command.memberPermissions) == false) {
-                                throw CommandException("You do not have the required permission to manage messages!")
-                            }
-
                             if (command.cooldown > 0) {
                                 command.getCooldownError(event.user.idLong)
                                     ?.let { event.replyFailure(it).setEphemeral(true).queue() }
@@ -450,10 +446,6 @@ object CommandHandler : MutableSet<GenericCommand> {
                                 )
                             }
 
-                            if (event.member?.hasPermission(command.memberPermissions) == false) {
-                                throw CommandException("You do not have the required permission to manage messages!")
-                            }
-
                             if (command.cooldown > 0) {
                                 cc.getCooldownError(event.user.idLong)
                                     ?.let { event.replyFailure(it).setEphemeral(true).queue() }
@@ -525,10 +517,6 @@ object CommandHandler : MutableSet<GenericCommand> {
                                             "since no required permissions (${command.botPermissions.joinToString { it.getName() }}) were granted!",
                                     footer = "Try contacting the server's staff!",
                                 )
-                            }
-
-                            if (event.member?.hasPermission(command.memberPermissions) == false) {
-                                throw CommandException("You do not have the required permission to manage messages!")
                             }
 
                             if (command.cooldown > 0) {

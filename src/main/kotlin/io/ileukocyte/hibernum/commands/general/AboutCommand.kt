@@ -61,9 +61,9 @@ class AboutCommand : Command {
             appendLine("**Total Commands**: ${CommandHandler.size}" +
                     commandCount.filterNotNull().takeUnless { it.isEmpty() }
                         ?.let { " (${it.joinToString(", ")})" }.orEmpty())
-            appendLine("**Available Slash Commands**: ${discordCommands.count { it.type == Type.SLASH }}")
-            appendLine("**Available Message Context Commands**: ${discordCommands.count { it.type == Type.MESSAGE }}")
-            appendLine("**Available User Context Commands**: ${discordCommands.count { it.type == Type.USER }}")
+            appendLine("**Slash Commands**: ${discordCommands.count { it.type == Type.SLASH }}")
+            appendLine("**Message Context Commands**: ${discordCommands.count { it.type == Type.MESSAGE }}")
+            appendLine("**User Context Commands**: ${discordCommands.count { it.type == Type.USER }}")
             append("**Servers**: ${jda.guildCache.size()}")
 
             if (jda.unavailableGuilds.isNotEmpty())

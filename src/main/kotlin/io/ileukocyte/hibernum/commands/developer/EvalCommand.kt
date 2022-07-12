@@ -3,6 +3,7 @@ package io.ileukocyte.hibernum.commands.developer
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.MessageContextCommand
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.extensions.remove
 import io.ileukocyte.hibernum.extensions.replySuccess
@@ -14,6 +15,7 @@ import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
+import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.components.Modal
@@ -23,8 +25,9 @@ import net.dv8tion.jda.api.requests.RestAction
 
 import org.json.JSONObject
 
-class EvalCommand : Command {
+class EvalCommand : Command, MessageContextCommand {
     override val name = "eval"
+    override val contextName = "Execute Kotlin"
     override val description = "Executes the attached Kotlin code"
     override val aliases = setOf("exec")
     override val usages = setOf(setOf("Kotlin code"))
@@ -33,6 +36,7 @@ class EvalCommand : Command {
         val code = args?.run {
             takeIf { it.startsWith("```") }
                 ?.removeSurrounding("```")
+                ?.removePrefix("kts\n")
                 ?.removePrefix("kt\n")
                 ?.removePrefix("kotlin\n")
                 ?: this
@@ -98,6 +102,68 @@ class EvalCommand : Command {
 
     override suspend fun invoke(event: ModalInteractionEvent) {
         val code = event.getValue("$name-code")?.asString ?: return
+
+        val packages = buildString {
+            for ((key, value) in IMPORTS) {
+                if (value.isNotEmpty()) {
+                    for (`package` in value) {
+                        appendLine("import $key.$`package`.*")
+                    }
+                } else {
+                    appendLine("import $key.*")
+                }
+            }
+        }
+
+        try {
+            val engine = Immutable.EVAL_KOTLIN_ENGINE
+
+            with(engine.state.history) { if (isNotEmpty()) reset() }
+
+            engine.put("event", event)
+
+            val result: Any? = engine.eval("""
+                        |$packages
+                        |
+                        |$code
+                    """.trimMargin())
+
+            if (result !== null) {
+                when (result) {
+                    is EmbedBuilder -> event.replyEmbeds(result.build()).queue()
+                    is Message -> event.reply(result).queue()
+                    is MessageEmbed -> event.replyEmbeds(result).queue()
+                    is RestAction<*> -> {
+                        event.replySuccess("Successful execution!").setEphemeral(true).queue()
+
+                        result.queue()
+                    }
+                    is Array<*> -> event.reply(result.contentDeepToString()).queue()
+                    is JSONObject -> event.reply(result.toString(2)).queue()
+                    is Forecast -> event.reply(result.toString().remove(result.api.key)).queue()
+                    is OpenWeatherApi -> event.reply(result.toString().remove(result.key)).queue()
+                    else -> event.reply("$result").queue()
+                }
+            } else {
+                event.replySuccess("Successful execution!").setEphemeral(true).queue()
+            }
+        } catch (e: Exception) {
+            throw CommandException("""
+                    |${e::class.simpleName ?: "An unknown exception"} has occurred:
+                    |${e.message ?: "No message provided"}
+                    |""".trimMargin())
+        }
+    }
+
+    override suspend fun invoke(event: MessageContextInteractionEvent) {
+        val code = event.target.contentRaw.takeUnless { it.isEmpty() }?.let { code ->
+            code.takeIf { it.startsWith("```") }
+                ?.removeSurrounding("```")
+                ?.removePrefix("kts\n")
+                ?.removePrefix("kt\n")
+                ?.removePrefix("kotlin\n")
+                ?: code
+        } ?: throw CommandException("No Kotlin code has been provided in the message!")
 
         val packages = buildString {
             for ((key, value) in IMPORTS) {

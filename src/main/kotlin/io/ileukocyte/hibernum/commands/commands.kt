@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEven
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.interactions.commands.Command as JDACommand
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
@@ -82,6 +83,8 @@ interface Command : GenericCommand {
     val asSlashCommand: SlashCommandData? get() =
         Commands.slash(name, "(Developer-only) ".takeIf { isDeveloper }.orEmpty() + description)
             .addOptions(options)
+            .setGuildOnly(true)
+            .setDefaultPermissions(DefaultMemberPermissions.enabledFor(memberPermissions))
 
     /**
      * A function that is executed when the command is invoked as a classic text command
@@ -174,6 +177,8 @@ interface ContextCommand : GenericCommand {
      */
     val asContextCommand: CommandData get() =
         Commands.context(contextType, contextName)
+            .setGuildOnly(true)
+            .setDefaultPermissions(DefaultMemberPermissions.enabledFor(memberPermissions))
 }
 
 /**

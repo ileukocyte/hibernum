@@ -1,7 +1,7 @@
 package io.ileukocyte.hibernum
 
-import com.markozajc.akiwrapper.AkiwrapperBuilder
-import com.markozajc.akiwrapper.core.entities.Server
+import com.github.markozajc.akiwrapper.AkiwrapperBuilder
+import com.github.markozajc.akiwrapper.core.entities.Server
 
 import org.junit.jupiter.api.Test
 
