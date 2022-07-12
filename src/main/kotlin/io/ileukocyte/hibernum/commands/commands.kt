@@ -4,10 +4,14 @@ package io.ileukocyte.hibernum.commands
 
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
+import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.interactions.commands.Command as JDACommand
+import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
@@ -130,4 +134,65 @@ interface SlashOnlyCommand : Command {
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         // must be left empty
     }
+}
+
+/**
+ * A type of command that can be used as a command of a Discord context menu
+ *
+ * @author Alexander Oksanich
+ *
+ * @see Command
+ * @see MessageContextCommand
+ * @see UserContextCommand
+ */
+interface ContextCommand {
+    val contextName: String
+    val contextType: JDACommand.Type
+
+    /**
+     * A [CommandData] instance of the context menu command
+     */
+    val asContextCommand: CommandData get() = Commands.context(contextType, contextName)
+}
+
+/**
+ * A type of command that can be used as a command of a message context menu
+ *
+ * @author Alexander Oksanich
+ *
+ * @see Command
+ * @see ContextCommand
+ * @see UserContextCommand
+ */
+interface MessageContextCommand : ContextCommand {
+    override val contextType get() = JDACommand.Type.MESSAGE
+
+    /**
+     * A function that is executed when the command is invoked as a command of a message context menu
+     *
+     * @param event
+     * The [MessageContextInteractionEvent] occurring once the command is invoked
+     */
+    suspend operator fun invoke(event: MessageContextInteractionEvent)
+}
+
+/**
+ * A type of command that can be used as a command of a user profile context menu
+ *
+ * @author Alexander Oksanich
+ *
+ * @see Command
+ * @see ContextCommand
+ * @see MessageContextCommand
+ */
+interface UserContextCommand : ContextCommand {
+    override val contextType get() = JDACommand.Type.USER
+
+    /**
+     * A function that is executed when the command is invoked as a command of a user profile context menu
+     *
+     * @param event
+     * The [UserContextInteractionEvent] occurring once the command is invoked
+     */
+    suspend operator fun invoke(event: UserContextInteractionEvent)
 }
