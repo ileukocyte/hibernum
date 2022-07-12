@@ -42,7 +42,7 @@ dependencies {
     implementation(group = "io.github.microutils", name = "kotlin-logging-jvm", version = "2.1.23")
 
     // APIs and libraries
-    implementation(group = "com.github.markozajc", name = "akiwrapper", version = "1.5.1.2")
+    implementation(group = "com.github.markozajc", name = "akiwrapper", version = "1.5.2")
     implementation(group = "com.github.ileukocyte", name = "openweather-kt", version = "1.1.1")
     implementation(group = "org.reflections", name = "reflections", version = "0.10.2")
     implementation(group = "org.json", name = "json", version = "20220320")

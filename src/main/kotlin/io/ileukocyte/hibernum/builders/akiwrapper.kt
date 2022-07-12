@@ -1,9 +1,9 @@
 package io.ileukocyte.hibernum.builders
 
-import com.markozajc.akiwrapper.AkiwrapperBuilder
-import com.markozajc.akiwrapper.core.entities.Server
-import com.markozajc.akiwrapper.core.entities.Server.GuessType
-import com.markozajc.akiwrapper.core.entities.Server.Language
+import com.github.markozajc.akiwrapper.AkiwrapperBuilder
+import com.github.markozajc.akiwrapper.core.entities.Server
+import com.github.markozajc.akiwrapper.core.entities.Server.GuessType
+import com.github.markozajc.akiwrapper.core.entities.Server.Language
 
 class KAkiwrapperBuilder {
     var guessType = GuessType.CHARACTER

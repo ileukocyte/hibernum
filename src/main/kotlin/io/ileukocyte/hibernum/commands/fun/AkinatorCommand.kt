@@ -1,10 +1,10 @@
 package io.ileukocyte.hibernum.commands.`fun`
 
-import com.markozajc.akiwrapper.Akiwrapper
-import com.markozajc.akiwrapper.Akiwrapper.Answer
-import com.markozajc.akiwrapper.core.entities.Guess
-import com.markozajc.akiwrapper.core.entities.Server.GuessType
-import com.markozajc.akiwrapper.core.entities.Server.Language
+import com.github.markozajc.akiwrapper.Akiwrapper
+import com.github.markozajc.akiwrapper.Akiwrapper.Answer
+import com.github.markozajc.akiwrapper.core.entities.Guess
+import com.github.markozajc.akiwrapper.core.entities.Server.GuessType
+import com.github.markozajc.akiwrapper.core.entities.Server.Language
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildAkiwrapper
@@ -189,9 +189,9 @@ class AkinatorCommand : Command {
 
                         val embed = buildEmbed {
                             color = Immutable.SUCCESS
-                            description = akiwrapper.currentQuestion?.question ?: "N/A"
+                            description = akiwrapper.question?.question ?: "N/A"
 
-                            author { name = "Question #${akiwrapper.currentQuestion?.step?.inc() ?: -1}" }
+                            author { name = "Question #${akiwrapper.question?.step?.inc() ?: -1}" }
 
                             footer {
                                 text = buildString {
@@ -282,7 +282,7 @@ class AkinatorCommand : Command {
                         }
 
                         val previousAnswer = POSSIBLE_ANSWERS.keys.first { id[1] in POSSIBLE_ANSWERS[it]!! }
-                        val nextQuestion = akiwrapper.answerCurrentQuestion(previousAnswer)
+                        val nextQuestion = akiwrapper.answer(previousAnswer)
 
                         if (nextQuestion !== null) {
                             event.replySuccess("Let's go on!")
@@ -413,10 +413,10 @@ class AkinatorCommand : Command {
                 }
                 "b", "back" -> {
                     val invoker = message.replyEmbed {
-                        val (question, embedColor) = if (akiwrapper.currentQuestion?.step != 0) {
+                        val (question, embedColor) = if (akiwrapper.question?.step != 0) {
                             akiwrapper.undoAnswer() to Immutable.SUCCESS
                         } else {
-                            akiwrapper.currentQuestion to Immutable.FAILURE
+                            akiwrapper.question to Immutable.FAILURE
                         }
 
                         color = embedColor
@@ -426,7 +426,7 @@ class AkinatorCommand : Command {
 
                         footer {
                             text = "Type in \"exit\" to finish the session!"
-                                .takeUnless { akiwrapper.currentQuestion?.step == 0 }
+                                .takeUnless { akiwrapper.question?.step == 0 }
                                 ?: "Type in \"help\"/\"aliases\" for further help or \"exit\" for termination!"
                         }
                     }.await()
@@ -441,7 +441,7 @@ class AkinatorCommand : Command {
 
                         if (guess === null) {
                             val answer = POSSIBLE_ANSWERS.keys.first { content in POSSIBLE_ANSWERS[it]!! }
-                            val nextQuestion = akiwrapper.answerCurrentQuestion(answer)
+                            val nextQuestion = akiwrapper.answer(answer)
 
                             if (nextQuestion !== null) {
                                 val invoker = message.replyEmbed {
