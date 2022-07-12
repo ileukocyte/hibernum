@@ -45,31 +45,31 @@ class InvertCommand : Command {
     override val cooldown = 7L
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
-        if (event.message.attachments.any { it.isImage }) {
+        event.message.attachments.firstOrNull { it.isImage }?.let { attachment ->
             val deferred = event.channel.sendEmbed {
                 color = Immutable.SUCCESS
                 description = "Trying to invert the image\u2026"
             }.await()
 
-            val attachment = event.message.attachments.first { it.isImage }
+            attachment.proxy.download().await().use {
+                try {
+                    val image = ImageIO.read(ByteArrayInputStream(it.readAllBytes()))
+                        .apply { invert() }
 
-            attachment.proxy.download().thenAccept {
-                val image = ImageIO.read(ByteArrayInputStream(it.readAllBytes()))
-                    .apply { invert() }
+                    val bytesToSend = ByteArrayOutputStream()
+                        .apply { ImageIO.write(image, "png", this) }
+                        .use { s -> s.toByteArray() }
 
-                val bytesToSend = ByteArrayOutputStream()
-                    .apply { ImageIO.write(image, "png", this) }
-                    .use { s -> s.toByteArray() }
+                    deferred.editMessageEmbeds().addFile(bytesToSend, "inverted.png").queue({}) {
+                        event.channel.sendFile(bytesToSend, "inverted.png").queue()
+                    }
+                } catch (e: Exception) {
+                    deferred.delete().queue({}) {}
 
-                deferred.editMessageEmbeds().addFile(bytesToSend, "inverted.png").queue({}) {
-                    event.channel.sendFile(bytesToSend, "inverted.png").queue()
+                    throw CommandException("${it::class.qualifiedName ?: "An unknown exception"}: ${e.message ?: "something went wrong!"}")
                 }
-            }.exceptionally {
-                deferred.delete().queue({}) {}
-
-                throw CommandException("${it::class.qualifiedName ?: "An unknown exception"}: ${it.message ?: "something went wrong!"}")
             }
-        } else {
+        } ?: run {
             val input = event.message.mentions.usersBag.firstOrNull()?.effectiveAvatarUrl
                 ?.let { "$it?size=2048".replace("gif", "png") }
                 ?: args?.apply { if (!UrlValidator().isValid(this)) throw CommandException("The provided input is invalid!") }
@@ -107,7 +107,11 @@ class InvertCommand : Command {
                 ?.let { "$it?size=2048".replace("gif", "png") }
             ?: event.getOption("link")
                 ?.asString
-                ?.apply { if (!UrlValidator().isValid(this)) throw CommandException("The provided input is invalid!") }
+                ?.apply {
+                    if (!UrlValidator().isValid(this)) {
+                        throw CommandException("The provided input is invalid!")
+                    }
+                }
             ?: "${event.user.effectiveAvatarUrl}?size=2048".replace("gif", "png")
 
         val deferred = event.replyEmbed {
