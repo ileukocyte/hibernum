@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.JDAInfo
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.interactions.commands.Command.Type
 
 class AboutCommand : Command {
     override val name = "about"
@@ -41,6 +42,7 @@ class AboutCommand : Command {
                 CommandHandler.count { it is TextOnlyCommand }.takeIf { it > 0 }?.let { "text-only: $it" },
                 CommandHandler.count { it is SlashOnlyCommand }.takeIf { it > 0 }?.let { "slash-only: $it" },
             )
+            val discordCommands = jda.retrieveCommands().await()
 
             appendLine("${jda.selfUser.name} is a modern Discord multi-purpose 100% [Kotlin](https://kotlinlang.org/)-coded bot that currently relies mostly on its musical functionality")
             appendLine()
@@ -59,7 +61,9 @@ class AboutCommand : Command {
             appendLine("**Total Commands**: ${CommandHandler.size}" +
                     commandCount.filterNotNull().takeUnless { it.isEmpty() }
                         ?.let { " (${it.joinToString(", ")})" }.orEmpty())
-            appendLine("**Available Slash Commands**: ${jda.retrieveCommands().await().size}")
+            appendLine("**Available Slash Commands**: ${discordCommands.count { it.type == Type.SLASH }}")
+            appendLine("**Available Message Context Commands**: ${discordCommands.count { it.type == Type.MESSAGE }}")
+            appendLine("**Available User Context Commands**: ${discordCommands.count { it.type == Type.USER }}")
             append("**Servers**: ${jda.guildCache.size()}")
 
             if (jda.unavailableGuilds.isNotEmpty())
