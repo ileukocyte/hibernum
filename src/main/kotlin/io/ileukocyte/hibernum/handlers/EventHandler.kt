@@ -1,8 +1,6 @@
 package io.ileukocyte.hibernum.handlers
 
-import io.ileukocyte.hibernum.audio.TrackUserData
-import io.ileukocyte.hibernum.audio.audioPlayer
-import io.ileukocyte.hibernum.audio.stop
+import io.ileukocyte.hibernum.audio.*
 import io.ileukocyte.hibernum.commands.`fun`.AkinatorCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.WaiterContext
@@ -16,6 +14,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.selects.select
 
 import net.dv8tion.jda.api.entities.GuildMessageChannel
+import net.dv8tion.jda.api.events.guild.GuildJoinEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent
@@ -202,5 +201,9 @@ object EventHandler : ListenerAdapter() {
                         ?.let { content += it }
                 }?.queue({ it.delete().queueAfter(5, TimeUnit.SECONDS, {}) {} }, {})
         }
+    }
+
+    override fun onGuildJoin(event: GuildJoinEvent) {
+        MUSIC_MANAGERS[event.guild.idLong] = GuildMusicManager(PLAYER_MANAGER)
     }
 }
