@@ -24,14 +24,16 @@ class PlayCommand : Command {
     override val description = "Plays the specified media in a voice channel"
     override val aliases = setOf("p")
     override val options = setOf(
-        OptionData(OptionType.STRING, "query", "A link or a search term", true))
+        OptionData(OptionType.STRING, "query", "A link or a search term"),
+        OptionData(OptionType.ATTACHMENT, "attachment", "The media file to play"),
+    )
     override val usages = setOf(setOf("query"), setOf("file"))
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         event.member?.voiceState?.channel?.let {
             val channel = it.takeUnless { vc -> event.guild.selfMember.voiceState?.channel == vc }
             val urls = setOf(args).filterNotNull().takeUnless { s -> s.isEmpty() }
-                ?: event.message.attachments.map { a -> a.url }.takeUnless { l -> l.isEmpty() }
+                ?: event.message.attachments.map { a -> a.proxyUrl }.takeUnless { l -> l.isEmpty() }
                 ?: throw NoArgumentsException
 
             event.guild.audioPlayer?.let { musicManager ->
@@ -92,10 +94,12 @@ class PlayCommand : Command {
         val guild = event.guild ?: return
 
         event.member?.voiceState?.channel?.let {
-            val deferred = event.deferReply().await()
-
             val channel = it.takeUnless { vc -> guild.selfMember.voiceState?.channel == vc }
-            val url = event.getOption("query")?.asString ?: return@invoke
+            val url = event.getOption("attachment")?.asAttachment?.proxyUrl
+                ?: event.getOption("query")?.asString
+                ?: throw NoArgumentsException
+
+            val deferred = event.deferReply().await()
 
             guild.audioPlayer?.let { musicManager ->
                 channel?.let { guild.audioManager.openAudioConnection(channel) }

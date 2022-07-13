@@ -8,6 +8,7 @@ import io.ileukocyte.hibernum.extensions.*
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.interactions.InteractionType
 
 import org.jetbrains.kotlin.utils.addToStdlib.cast
 
@@ -20,7 +21,13 @@ class SkipCommand : Command {
 
         if (audioPlayer.player.playingTrack !== null) {
             if (event.member?.voiceState?.channel == event.guild.selfMember.voiceState?.channel) {
-                audioPlayer.player.playingTrack.userData.cast<TrackUserData>().announcement?.delete()?.queue({}) {}
+                val announcement = audioPlayer.player.playingTrack.userData.cast<TrackUserData>().announcement
+
+                announcement?.takeUnless {
+                    val interaction = it.interaction?.takeIf { i -> i.type == InteractionType.COMMAND }
+
+                    interaction !== null && interaction.name != "skip"
+                }?.delete()?.queue(null) {}
 
                 audioPlayer.scheduler.nextTrack(newAnnouncementChannel = event.channel)
 
@@ -28,8 +35,12 @@ class SkipCommand : Command {
                     .takeIf { audioPlayer.player.playingTrack === null }
 
                 description?.let { event.channel.sendSuccess(it).queue() }
-            } else throw CommandException("You are not connected to the required voice channel!")
-        } else throw CommandException("No track is currently playing!")
+            } else {
+                throw CommandException("You are not connected to the required voice channel!")
+            }
+        } else {
+            throw CommandException("No track is currently playing!")
+        }
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
@@ -40,7 +51,13 @@ class SkipCommand : Command {
             if (event.member?.voiceState?.channel == guild.selfMember.voiceState?.channel) {
                 val deferred = event.deferReply().await()
 
-                audioPlayer.player.playingTrack.userData.cast<TrackUserData>().announcement?.delete()?.queue({}) {}
+                val announcement = audioPlayer.player.playingTrack.userData.cast<TrackUserData>().announcement
+
+                announcement?.takeUnless {
+                    val interaction = it.interaction?.takeIf { i -> i.type == InteractionType.COMMAND }
+
+                    interaction !== null && interaction.name != "skip"
+                }?.delete()?.queue(null) {}
 
                 audioPlayer.scheduler.nextTrack(deferred, event.channel)
 
@@ -52,7 +69,11 @@ class SkipCommand : Command {
                         event.channel.sendSuccess(it).queue()
                     }
                 }
-            } else throw CommandException("You are not connected to the required voice channel!")
-        } else throw CommandException("No track is currently playing!")
+            } else {
+                throw CommandException("You are not connected to the required voice channel!")
+            }
+        } else {
+            throw CommandException("No track is currently playing!")
+        }
     }
 }

@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.interactions.InteractionHook
+import net.dv8tion.jda.api.interactions.InteractionType
 
 import org.jetbrains.kotlin.utils.addToStdlib.cast
 
@@ -56,7 +57,9 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
             )
 
             player.startTrack(next, false)
-        } else player.destroy()
+        } else {
+            player.destroy()
+        }
     }
 
     fun shuffle() {
@@ -99,14 +102,18 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
 
                     val userData = track.userData as TrackUserData
 
-                    userData.announcement?.delete()?.queue({}) {}
+                    userData.announcement?.takeIf {
+                        it.interaction?.takeIf { i -> i.type == InteractionType.COMMAND } === null
+                    }?.delete()?.queue(null) {}
 
                     nextTrack()
                 }
                 else -> {
                     val userData = track.userData as TrackUserData
 
-                    userData.announcement?.delete()?.queue({}) {}
+                    userData.announcement?.takeIf {
+                        it.interaction?.takeIf { i -> i.type == InteractionType.COMMAND } === null
+                    }?.delete()?.queue(null) {}
 
                     nextTrack()
                 }
