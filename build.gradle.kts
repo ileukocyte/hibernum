@@ -16,7 +16,7 @@ plugins {
 }
 
 group = "io.ileukocyte"
-version = Version(major = 3, minor = 0, unstable = 2, stability = Version.Stability.Alpha)
+version = Version(major = 3, minor = 0, unstable = 3, stability = Version.Stability.Alpha)
 
 repositories {
     mavenCentral()
