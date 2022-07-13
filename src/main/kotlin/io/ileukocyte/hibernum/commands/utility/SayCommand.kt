@@ -58,7 +58,7 @@ class SayCommand : TextCommand {
             throw NoArgumentsException
         }
 
-        event.deferReply().queue { it.deleteOriginal().queue({}) {} }
+        event.deferReply().queue { it.deleteOriginal().queue(null) {} }
 
         val restAction = event.channel.sendEmbed {
             color = Immutable.SUCCESS

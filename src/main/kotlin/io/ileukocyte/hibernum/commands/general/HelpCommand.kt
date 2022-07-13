@@ -105,7 +105,7 @@ class HelpCommand : TextCommand {
 
         field {
             title = "Input Types"
-            description = inputTypes.joinToString()
+            description = inputTypes.joinToString("\n")
         }
 
         author {
