@@ -16,11 +16,14 @@ import java.io.File
 
 import javax.imageio.ImageIO
 
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
-import net.dv8tion.jda.api.interactions.commands.OptionType
-import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.exceptions.ErrorResponseException
+import net.dv8tion.jda.api.interactions.components.Modal
+import net.dv8tion.jda.api.interactions.components.text.TextInput
+import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 
 class TextToImageCommand : Command, MessageContextCommand {
     override val name = "tti"
@@ -28,7 +31,6 @@ class TextToImageCommand : Command, MessageContextCommand {
     override val description = "Creates an image containing the provided text"
     override val aliases = setOf("texttoimage", "text-to-image")
     override val usages = setOf(setOf("input"))
-    override val options = setOf(OptionData(OptionType.STRING, "input", "The provided text", true))
     override val cooldown = 5L
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
@@ -39,13 +41,33 @@ class TextToImageCommand : Command, MessageContextCommand {
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
-        val deferred = event.deferReply().await()
+        val input = TextInput
+            .create("input", "Enter Your Text:", TextInputStyle.PARAGRAPH)
+            .build()
+        val modal = Modal
+            .create("$name-modal", "Text to Image")
+            .addActionRow(input)
+            .build()
 
-        val lines = event.getOption("input")?.asString?.split("\n")?.map { it.limitTo(100) }
-            ?: return
-        val bytes = textToImage(lines.take(25), lines.maxByOrNull { it.length } ?: return)
+        event.replyModal(modal).queue()
+    }
 
-        deferred.sendFile(bytes, "tti.png").queue()
+    override suspend fun invoke(event: ModalInteractionEvent) {
+        try {
+            val deferred = event.deferReply().await()
+
+            val lines = event.getValue("input")?.asString?.split("\n")?.map { it.limitTo(100) }
+                ?: return
+            val bytes = textToImage(lines.take(25), lines.maxByOrNull { it.length } ?: return)
+
+            deferred.sendFile(bytes, "tti.png").await()
+        } catch (_: ErrorResponseException) {
+            val lines = event.getValue("input")?.asString?.split("\n")?.map { it.limitTo(100) }
+                ?: return
+            val bytes = textToImage(lines.take(25), lines.maxByOrNull { it.length } ?: return)
+
+            event.messageChannel.sendFile(bytes, "tti.png").await()
+        }
     }
 
     override suspend fun invoke(event: MessageContextInteractionEvent) {
