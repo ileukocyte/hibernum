@@ -16,7 +16,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
-class HelpCommand : Command {
+class HelpCommand : TextCommand {
     override val name = "help"
     override val description = "Sends a list of all Hibernum's commands and provides the user with the documentation"
     override val usages = setOf(setOf("command name (optional)"))
@@ -58,7 +58,7 @@ class HelpCommand : Command {
         }
     }
 
-    private fun Command.getHelp(jda: JDA) = buildEmbed {
+    private fun TextCommand.getHelp(jda: JDA) = buildEmbed {
         val nameWithPrefix = "${Immutable.DEFAULT_PREFIX.takeUnless { this@getHelp is SlashOnlyCommand } ?: "/"}$name"
 
         color = Immutable.SUCCESS
@@ -110,7 +110,7 @@ class HelpCommand : Command {
 
         author {
             name = nameWithPrefix +
-                    " (text-only)".takeIf { this@getHelp is TextOnlyCommand }.orEmpty() +
+                    " (text-only)".takeIf { this@getHelp is ClassicTextOnlyCommand }.orEmpty() +
                     " (slash-only)".takeIf { this@getHelp is SlashOnlyCommand }.orEmpty()
             iconUrl = jda.selfUser.effectiveAvatarUrl
         }
@@ -150,7 +150,7 @@ class HelpCommand : Command {
                 title = "$category Commands"
                 description = cmd.sortedBy { it.name }.joinToString { cmd ->
                     when (cmd) {
-                        is TextOnlyCommand -> "*${Immutable.DEFAULT_PREFIX}${cmd.name}*"
+                        is ClassicTextOnlyCommand -> "*${Immutable.DEFAULT_PREFIX}${cmd.name}*"
                         is SlashOnlyCommand -> "*/${cmd.name}*"
                         else -> cmd.name
                     }

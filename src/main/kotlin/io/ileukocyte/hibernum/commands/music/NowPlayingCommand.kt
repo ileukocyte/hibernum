@@ -8,8 +8,8 @@ import io.ileukocyte.hibernum.audio.TrackUserData
 import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.audio.getEmbedProgressBar
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.utils.asDuration
 
 import net.dv8tion.jda.api.JDA
@@ -18,7 +18,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
 import org.jetbrains.kotlin.utils.addToStdlib.cast
 
-class NowPlayingCommand : Command {
+class NowPlayingCommand : TextCommand {
     override val name = "nowplaying"
     override val description = "Shows information about the track that is currently playing"
     override val aliases = setOf("np", "now", "playing", "playingnow", "playing-now")

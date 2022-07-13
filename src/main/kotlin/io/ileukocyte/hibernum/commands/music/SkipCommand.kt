@@ -2,8 +2,8 @@ package io.ileukocyte.hibernum.commands.music
 
 import io.ileukocyte.hibernum.audio.TrackUserData
 import io.ileukocyte.hibernum.audio.audioPlayer
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.*
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -12,7 +12,7 @@ import net.dv8tion.jda.api.interactions.InteractionType
 
 import org.jetbrains.kotlin.utils.addToStdlib.cast
 
-class SkipCommand : Command {
+class SkipCommand : TextCommand {
     override val name = "skip"
     override val description = "Skips to the next song in the queue"
 

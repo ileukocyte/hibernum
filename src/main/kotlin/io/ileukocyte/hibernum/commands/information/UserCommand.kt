@@ -2,8 +2,8 @@ package io.ileukocyte.hibernum.commands.information
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.commands.UserContextCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
@@ -28,7 +28,7 @@ import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
-class UserCommand : Command, UserContextCommand {
+class UserCommand : TextCommand, UserContextCommand {
     override val name = "user"
     override val contextName = "User Information"
     override val description = "Sends either detailed information about the specified user's account or their profile picture"

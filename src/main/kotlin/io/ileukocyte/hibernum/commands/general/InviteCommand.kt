@@ -1,7 +1,7 @@
 package io.ileukocyte.hibernum.commands.general
 
 import io.ileukocyte.hibernum.Immutable
-import io.ileukocyte.hibernum.commands.Command
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.replyWarning
 import io.ileukocyte.hibernum.extensions.sendWarning
 
@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 
-class InviteCommand : Command {
+class InviteCommand : TextCommand {
     override val name = "invite"
     override val description = "Sends the link for inviting the bot to your server"
 

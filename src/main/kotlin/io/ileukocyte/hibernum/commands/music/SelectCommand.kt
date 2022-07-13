@@ -3,8 +3,8 @@ package io.ileukocyte.hibernum.commands.music
 import io.ileukocyte.hibernum.audio.GuildMusicManager
 import io.ileukocyte.hibernum.audio.TrackUserData
 import io.ileukocyte.hibernum.audio.audioPlayer
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.EmbedType
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.defaultEmbed
@@ -22,7 +22,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
 import org.jetbrains.kotlin.utils.addToStdlib.cast
 
-class SelectCommand : Command {
+class SelectCommand : TextCommand {
     override val name = "select"
     override val description = "Selects another track from the queue and plays it"
     override val usages = setOf(setOf("song"))

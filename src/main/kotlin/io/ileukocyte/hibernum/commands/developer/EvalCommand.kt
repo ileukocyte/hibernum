@@ -1,10 +1,10 @@
 package io.ileukocyte.hibernum.commands.developer
 
 import io.ileukocyte.hibernum.Immutable
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.MessageContextCommand
 import io.ileukocyte.hibernum.commands.NoArgumentsException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.remove
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendSuccess
@@ -25,7 +25,7 @@ import net.dv8tion.jda.api.requests.RestAction
 
 import org.json.JSONObject
 
-class EvalCommand : Command, MessageContextCommand {
+class EvalCommand : TextCommand, MessageContextCommand {
     override val name = "eval"
     override val contextName = "Execute Kotlin"
     override val description = "Executes the attached Kotlin code"

@@ -2,9 +2,9 @@ package io.ileukocyte.hibernum.commands.utility
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.EmbedType
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.defaultEmbed
@@ -25,7 +25,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
-class WeatherCommand : Command {
+class WeatherCommand : TextCommand {
     override val name = "weather"
     override val description = "Sends the weather in the specified location"
     override val cooldown = 3L

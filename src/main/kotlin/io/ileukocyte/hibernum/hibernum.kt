@@ -10,10 +10,10 @@ import io.ileukocyte.hibernum.Immutable.VERSION
 import io.ileukocyte.hibernum.audio.loadGuildMusicManagers
 import io.ileukocyte.hibernum.builders.buildActivity
 import io.ileukocyte.hibernum.builders.buildJDA
-import io.ileukocyte.hibernum.commands.Command
+import io.ileukocyte.hibernum.commands.ClassicTextOnlyCommand
 import io.ileukocyte.hibernum.commands.ContextCommand
 import io.ileukocyte.hibernum.commands.GenericCommand
-import io.ileukocyte.hibernum.commands.TextOnlyCommand
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.handlers.EventHandler
@@ -85,7 +85,7 @@ suspend fun main() = coroutineScope {
 
         launch {
             discordCommands.filter {
-                val condition = CommandHandler[it.name] is TextOnlyCommand
+                val condition = CommandHandler[it.name] is ClassicTextOnlyCommand
                         || it.name !in CommandHandler.map(GenericCommand::name)
                         || it.defaultPermissions.permissionsRaw !=
                         CommandHandler[it.name]?.memberPermissions
@@ -107,7 +107,7 @@ suspend fun main() = coroutineScope {
                             ?.contextTypes
                             ?.contains(it.type) == false
                         || it.defaultPermissions.permissionsRaw !=
-                            CommandHandler.getContextCommand(it.name, it.type)
+                            CommandHandler[it.name, it.type]
                                 ?.memberPermissions
                                 ?.let(DefaultMemberPermissions::enabledFor)
                                 ?.permissionsRaw
@@ -120,7 +120,7 @@ suspend fun main() = coroutineScope {
         }.join()
 
         launch {
-            val slashPredicate = { cmd: Command ->
+            val slashPredicate = { cmd: TextCommand ->
                 cmd.name !in discordCommands.map { it.name }
                         || cmd.description !in discordCommands.map { it.description.removePrefix("(Developer-only) ") }
                         || discordCommands.any {
@@ -129,7 +129,7 @@ suspend fun main() = coroutineScope {
             }
 
             CommandHandler
-                .filterIsInstanceAnd<Command> { it !is TextOnlyCommand && slashPredicate(it) }
+                .filterIsInstanceAnd<TextCommand> { it !is ClassicTextOnlyCommand && slashPredicate(it) }
                 .forEach {
                     discord.upsertCommand(it.asSlashCommand!!).queue({ cmd ->
                         LOGGER.info("UPDATE: Discord has updated the following slash command: ${cmd.name}!")

@@ -5,7 +5,7 @@ import io.ileukocyte.hibernum.builders.KEmbedBuilder
 import io.ileukocyte.hibernum.builders.KMessageBuilder
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.builders.buildMessage
-import io.ileukocyte.hibernum.commands.Command
+import io.ileukocyte.hibernum.commands.GenericCommand
 import io.ileukocyte.hibernum.utils.awaitEvent
 import io.ileukocyte.hibernum.utils.waiterProcess
 
@@ -67,7 +67,7 @@ fun MessageChannel.sendActionRow(vararg components: ActionComponent) =
 @Throws(TimeoutCancellationException::class)
 suspend inline fun MessageChannel.awaitMessage(
     authors: Set<User>,
-    processCommand: Command? = null,
+    processCommand: GenericCommand? = null,
     invokingMessage: Message? = null,
     delay: Long = 1,
     unit: TimeUnit = TimeUnit.MINUTES,
@@ -110,7 +110,7 @@ suspend inline fun MessageChannel.awaitMessage(
 @Throws(TimeoutCancellationException::class)
 suspend inline fun MessageChannel.awaitMessage(
     author: User,
-    processCommand: Command? = null,
+    processCommand: GenericCommand? = null,
     invokingMessage: Message? = null,
     delay: Long = 1,
     unit: TimeUnit = TimeUnit.MINUTES,

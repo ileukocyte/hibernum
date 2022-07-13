@@ -1,15 +1,15 @@
 package io.ileukocyte.hibernum.commands.music
 
 import io.ileukocyte.hibernum.audio.audioPlayer
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendSuccess
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
-class ResumeCommand : Command {
+class ResumeCommand : TextCommand {
     override val name = "resume"
     override val description = "Resume the music after a pause"
 
@@ -22,9 +22,15 @@ class ResumeCommand : Command {
                     audioPlayer.player.isPaused = false
 
                     event.channel.sendSuccess("The track has been resumed!").queue()
-                } else throw CommandException("The track is already playing!")
-            } else throw CommandException("You are not connected to the required voice channel!")
-        } else throw CommandException("No track is currently playing!")
+                } else {
+                    throw CommandException("The track is already playing!")
+                }
+            } else {
+                throw CommandException("You are not connected to the required voice channel!")
+            }
+        } else {
+            throw CommandException("No track is currently playing!")
+        }
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
@@ -37,8 +43,14 @@ class ResumeCommand : Command {
                     audioPlayer.player.isPaused = false
 
                     event.replySuccess("The track has been resumed!").queue()
-                } else throw CommandException("The track is already playing!")
-            } else throw CommandException("You are not connected to the required voice channel!")
-        } else throw CommandException("No track is currently playing!")
+                } else {
+                    throw CommandException("The track is already playing!")
+                }
+            } else {
+                throw CommandException("You are not connected to the required voice channel!")
+            }
+        } else {
+            throw CommandException("No track is currently playing!")
+        }
     }
 }

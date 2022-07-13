@@ -13,7 +13,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
-import net.dv8tion.jda.api.interactions.commands.Command as JDACommand
+import net.dv8tion.jda.api.interactions.commands.Command
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
@@ -24,17 +24,19 @@ import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
  *
  * @author Alexander Oksanich
  *
- * @see Command
- * @see TextOnlyCommand
+ * @see TextCommand
+ * @see ClassicTextOnlyCommand
  * @see SlashOnlyCommand
  * @see ContextCommand
  * @see MessageContextCommand
  * @see UserContextCommand
+ * @see UniversalContextCommand
  */
 interface GenericCommand : Comparable<GenericCommand> {
     val name: String
-    val category: CommandCategory get() =
-        javaClass.`package`.name?.let { CommandCategory[it.split(".").last()] } ?: CommandCategory.UNKNOWN
+    val category: CommandCategory
+        get() = javaClass.`package`.name?.let { CommandCategory[it.split(".").last()] }
+            ?: CommandCategory.UNKNOWN
 
     /**
      * A property that shows whether or not the command can only be used by a developer of the bot
@@ -44,13 +46,13 @@ interface GenericCommand : Comparable<GenericCommand> {
     val inputTypes: Set<InputType> get() {
         val inputTypes = mutableSetOf<InputType>()
 
-        if (this is Command) {
+        if (this is TextCommand) {
             if (this !is SlashOnlyCommand) {
-                inputTypes += InputType.TEXT
+                inputTypes += InputType.CLASSIC_TEXT_INPUT
             }
 
-            if (this !is TextOnlyCommand) {
-                inputTypes += InputType.SLASH
+            if (this !is ClassicTextOnlyCommand) {
+                inputTypes += InputType.SLASH_COMMAND_MENU
             }
         }
 
@@ -65,20 +67,25 @@ interface GenericCommand : Comparable<GenericCommand> {
         return inputTypes
     }
 
-    val cooldown: Long get() = 0
-    val eliminateStaleInteractions: Boolean get() = true
+    val cooldown: Long
+        get() = 0
+    val eliminateStaleInteractions: Boolean
+        get() = true
 
-    val botPermissions: Set<Permission> get() = emptySet()
-    val memberPermissions: Set<Permission> get() = emptySet()
+    val botPermissions: Set<Permission>
+        get() = emptySet()
+    val memberPermissions: Set<Permission>
+        get() = emptySet()
 
     /** **DO NOT OVERRIDE!** */
-    val id: Int get() = name.hashCode()
+    val id: Int
+        get() = name.hashCode()
 
     override fun compareTo(other: GenericCommand) = name.compareTo(other.name)
 
     enum class InputType {
-        TEXT,
-        SLASH,
+        CLASSIC_TEXT_INPUT,
+        SLASH_COMMAND_MENU,
         MESSAGE_CONTEXT_MENU,
         USER_CONTEXT_MENU;
 
@@ -98,30 +105,34 @@ interface GenericCommand : Comparable<GenericCommand> {
  * @author Alexander Oksanich
  *
  * @see GenericCommand
- * @see TextOnlyCommand
+ * @see ClassicTextOnlyCommand
  * @see SlashOnlyCommand
  */
-interface Command : GenericCommand {
+interface TextCommand : GenericCommand {
     val description: String
-    val aliases: Set<String> get() = emptySet()
+    val aliases: Set<String>
+        get() = emptySet()
 
     /**
      * Used for the help command if the main description is too long for slash command limits
      */
-    val fullDescription: String get() = description
+    val fullDescription: String
+        get() = description
 
-    val usages: Set<Set<String>> get() = emptySet()
+    val usages: Set<Set<String>>
+        get() = emptySet()
 
     /**
      * A property containing a set of data that is used for option-requiring slash commands
      */
-    val options: Set<OptionData> get() = emptySet()
+    val options: Set<OptionData>
+        get() = emptySet()
 
     /**
      * A [SlashCommandData] instance of the slash command
      */
-    val asSlashCommand: SlashCommandData? get() =
-        Commands.slash(name, "(Developer-only) ".takeIf { isDeveloper }.orEmpty() + description)
+    val asSlashCommand: SlashCommandData?
+        get() = Commands.slash(name, "(Developer-only) ".takeIf { isDeveloper }.orEmpty() + description)
             .addOptions(options)
             .setGuildOnly(true)
             .setDefaultPermissions(DefaultMemberPermissions.enabledFor(memberPermissions))
@@ -174,11 +185,13 @@ interface Command : GenericCommand {
  *
  * @author Alexander Oksanich
  *
- * @see Command
+ * @see GenericCommand
+ * @see TextCommand
  * @see SlashOnlyCommand
  */
-interface TextOnlyCommand : Command {
-    override val asSlashCommand: SlashCommandData? get() = null
+interface ClassicTextOnlyCommand : TextCommand {
+    override val asSlashCommand: SlashCommandData?
+        get() = null
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
         // must be left empty
@@ -190,10 +203,11 @@ interface TextOnlyCommand : Command {
  *
  * @author Alexander Oksanich
  *
- * @see Command
- * @see TextOnlyCommand
+ * @see GenericCommand
+ * @see TextCommand
+ * @see ClassicTextOnlyCommand
  */
-interface SlashOnlyCommand : Command {
+interface SlashOnlyCommand : TextCommand {
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         // must be left empty
     }
@@ -204,22 +218,25 @@ interface SlashOnlyCommand : Command {
  *
  * @author Alexander Oksanich
  *
- * @see Command
+ * @see GenericCommand
+ * @see TextCommand
  * @see MessageContextCommand
  * @see UserContextCommand
+ * @see UniversalContextCommand
  */
 interface ContextCommand : GenericCommand {
     val contextName: String
-    val contextTypes: Set<JDACommand.Type>
+    val contextTypes: Set<Command.Type>
 
     /**
      * All the [CommandData] instances of the context menu command
      */
-    val asContextCommands: Set<CommandData> get() = contextTypes.map {
-        Commands.context(it, contextName)
-            .setGuildOnly(true)
-            .setDefaultPermissions(DefaultMemberPermissions.enabledFor(memberPermissions))
-    }.toSet()
+    val asContextCommands: Set<CommandData>
+        get() = contextTypes.map {
+            Commands.context(it, contextName)
+                .setGuildOnly(true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(memberPermissions))
+        }.toSet()
 }
 
 /**
@@ -227,13 +244,15 @@ interface ContextCommand : GenericCommand {
  *
  * @author Alexander Oksanich
  *
- * @see Command
+ * @see GenericCommand
+ * @see TextCommand
  * @see ContextCommand
  * @see UserContextCommand
+ * @see UniversalContextCommand
  */
 interface MessageContextCommand : ContextCommand {
-    override val contextTypes: Set<JDACommand.Type> get() =
-        setOf(JDACommand.Type.MESSAGE)
+    override val contextTypes: Set<Command.Type>
+        get() = setOf(Command.Type.MESSAGE)
 
     /**
      * A function that is executed when the command is invoked as a command of a message context menu
@@ -249,13 +268,15 @@ interface MessageContextCommand : ContextCommand {
  *
  * @author Alexander Oksanich
  *
- * @see Command
+ * @see GenericCommand
+ * @see TextCommand
  * @see ContextCommand
  * @see MessageContextCommand
+ * @see UniversalContextCommand
  */
 interface UserContextCommand : ContextCommand {
-    override val contextTypes: Set<JDACommand.Type> get() =
-        setOf(JDACommand.Type.USER)
+    override val contextTypes: Set<Command.Type>
+        get() = setOf(Command.Type.USER)
 
     /**
      * A function that is executed when the command is invoked as a command of a user profile context menu
@@ -264,4 +285,20 @@ interface UserContextCommand : ContextCommand {
      * The [UserContextInteractionEvent] occurring once the command is invoked
      */
     suspend operator fun invoke(event: UserContextInteractionEvent)
+}
+
+/**
+ * A type of command that can be used as a command of both user profile and message context menus
+ *
+ * @author Alexander Oksanich
+ *
+ * @see GenericCommand
+ * @see TextCommand
+ * @see ContextCommand
+ * @see MessageContextCommand
+ * @see UserContextCommand
+ */
+interface UniversalContextCommand : MessageContextCommand, UserContextCommand {
+    override val contextTypes: Set<Command.Type>
+        get() = setOf(Command.Type.MESSAGE, Command.Type.USER)
 }

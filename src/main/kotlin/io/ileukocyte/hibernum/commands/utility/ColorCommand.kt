@@ -1,9 +1,9 @@
 package io.ileukocyte.hibernum.commands.utility
 
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.utils.getImageBytes
 
 import io.ktor.client.HttpClient
@@ -25,7 +25,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
-class ColorCommand : Command {
+class ColorCommand : TextCommand {
     override val name = "color"
     override val description = "Sends brief information about the color provided by its hexadecimal representation"
     override val aliases = setOf("colorinfo", "color-info")

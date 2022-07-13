@@ -23,7 +23,7 @@ import se.michaelthelin.spotify.SpotifyApi
 import se.michaelthelin.spotify.exceptions.detailed.BadRequestException
 import se.michaelthelin.spotify.model_objects.specification.Track
 
-class SpotifyCommand : Command {
+class SpotifyCommand : TextCommand {
     override val name = "spotify"
     override val description = "Searches a Spotify track by the provided query and sends some information about one"
     override val usages = setOf(setOf("query"))
@@ -194,7 +194,9 @@ class SpotifyCommand : Command {
                     event.channel.sendMessageEmbeds(trackEmbed(track, api)).queue()
                 }
             }
-        } else throw CommandException("You did not invoke the initial command!")
+        } else {
+            throw CommandException("You did not invoke the initial command!")
+        }
     }
 
     private suspend fun trackEmbed(track: Track, api: SpotifyApi) = buildEmbed {

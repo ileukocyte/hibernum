@@ -1,8 +1,8 @@
 package io.ileukocyte.hibernum.commands.music
 
 import io.ileukocyte.hibernum.audio.audioPlayer
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendSuccess
 
@@ -11,7 +11,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
-class RemoveCommand : Command {
+class RemoveCommand : TextCommand {
     override val name = "remove"
     override val description = "Removes the selected track from the queue"
     override val usages = setOf(setOf("song"))
@@ -33,8 +33,12 @@ class RemoveCommand : Command {
                 audioPlayer.scheduler.queue -= track
 
                 event.channel.sendSuccess(description).queue()
-            } else throw CommandException("You are not connected to the required voice channel!")
-        } else throw CommandException("The current queue is empty!")
+            } else {
+                throw CommandException("You are not connected to the required voice channel!")
+            }
+        } else {
+            throw CommandException("The current queue is empty!")
+        }
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
@@ -53,7 +57,11 @@ class RemoveCommand : Command {
                 audioPlayer.scheduler.queue -= track
 
                 event.replySuccess(description).queue()
-            } else throw CommandException("You are not connected to the required voice channel!")
-        } else throw CommandException("The current queue is empty!")
+            } else {
+                throw CommandException("You are not connected to the required voice channel!")
+            }
+        } else {
+            throw CommandException("The current queue is empty!")
+        }
     }
 }

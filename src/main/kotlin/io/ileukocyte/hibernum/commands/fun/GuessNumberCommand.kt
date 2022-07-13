@@ -1,9 +1,9 @@
 package io.ileukocyte.hibernum.commands.`fun`
 
 import io.ileukocyte.hibernum.Immutable
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.*
 
@@ -20,7 +20,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 
-class GuessNumberCommand : Command {
+class GuessNumberCommand : TextCommand {
     override val name = "guess"
     override val description = "Launches a game where the user is supposed to guess some number within the specified range"
     override val aliases = setOf("guessnum", "guessnumber", "guess-number")

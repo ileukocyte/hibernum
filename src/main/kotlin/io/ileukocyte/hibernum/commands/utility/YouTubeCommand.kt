@@ -4,9 +4,9 @@ import com.google.api.services.youtube.model.Video
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.EmbedType
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.defaultEmbed
@@ -30,7 +30,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 
-class YouTubeCommand : Command {
+class YouTubeCommand : TextCommand {
     override val name = "youtube"
     override val description = "Searches a YouTube video by the provided query and sends some information about one"
     override val aliases = setOf("yt", "yts", "ytsearch")
@@ -124,7 +124,9 @@ class YouTubeCommand : Command {
                         .queue()
                 }
             }
-        } else throw CommandException("You did not invoke the initial command!")
+        } else {
+            throw CommandException("You did not invoke the initial command!")
+        }
     }
 
     private suspend fun videoEmbed(video: Video, author: User? = null) = buildEmbed {

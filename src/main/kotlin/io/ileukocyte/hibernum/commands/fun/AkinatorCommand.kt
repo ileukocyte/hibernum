@@ -9,9 +9,9 @@ import com.github.markozajc.akiwrapper.core.entities.Server.Language
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildAkiwrapper
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.SelfDeletion
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.handlers.CommandContext
 import io.ileukocyte.hibernum.utils.*
@@ -41,7 +41,7 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 
-class AkinatorCommand : Command {
+class AkinatorCommand : TextCommand {
     override val name = "akinator"
     override val description = "Launches a new Akinator game session"
     override val aliases = setOf("aki")

@@ -2,7 +2,7 @@
 package io.ileukocyte.hibernum.extensions
 
 import io.ileukocyte.hibernum.builders.KEmbedBuilder
-import io.ileukocyte.hibernum.commands.Command
+import io.ileukocyte.hibernum.commands.GenericCommand
 import io.ileukocyte.hibernum.utils.awaitEvent
 import io.ileukocyte.hibernum.utils.waiterProcess
 
@@ -42,7 +42,7 @@ const val CROSS_MARK = "\u274E"
 @Throws(TimeoutCancellationException::class)
 suspend fun Message.awaitConfirmationWithReactions(
     user: User,
-    processCommand: Command? = null,
+    processCommand: GenericCommand? = null,
     delay: Long = 1,
     unit: TimeUnit = TimeUnit.MINUTES,
 ): Boolean? {

@@ -2,7 +2,7 @@ package io.ileukocyte.hibernum.commands.music
 
 import io.ileukocyte.hibernum.audio.LoopMode
 import io.ileukocyte.hibernum.audio.audioPlayer
-import io.ileukocyte.hibernum.commands.Command
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.*
 
@@ -11,7 +11,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 
-class LoopCommand : Command {
+class LoopCommand : TextCommand {
     override val name = "loop"
     override val description = "Sets a repeating mode for the music player"
     override val aliases = setOf("repeat")
@@ -28,8 +28,12 @@ class LoopCommand : Command {
                         *buttons.toTypedArray(),
                         Button.danger("$name-${event.author.idLong}-exit", "Exit"),
                     ).queue()
-            } else throw CommandException("You are not connected to the required voice channel!")
-        } else throw CommandException("${event.jda.selfUser.name} is not connected to a voice channel!")
+            } else {
+                throw CommandException("You are not connected to the required voice channel!")
+            }
+        } else {
+            throw CommandException("${event.jda.selfUser.name} is not connected to a voice channel!")
+        }
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
@@ -44,8 +48,12 @@ class LoopCommand : Command {
                         *buttons.toTypedArray(),
                         Button.danger("$name-${event.user.idLong}-exit", "Exit"),
                     ).queue()
-            } else throw CommandException("You are not connected to the required voice channel!")
-        } else throw CommandException("${event.jda.selfUser.name} is not connected to a voice channel!")
+            } else {
+                throw CommandException("You are not connected to the required voice channel!")
+            }
+        } else {
+            throw CommandException("${event.jda.selfUser.name} is not connected to a voice channel!")
+        }
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
@@ -68,7 +76,7 @@ class LoopCommand : Command {
 
             event.message.editMessageEmbeds(defaultEmbed(description, EmbedType.SUCCESS))
                 .setActionRows()
-                .queue({}) {
+                .queue(null) {
                     event.replySuccess(description)
                         .flatMap { event.message.delete() }
                         .queue()

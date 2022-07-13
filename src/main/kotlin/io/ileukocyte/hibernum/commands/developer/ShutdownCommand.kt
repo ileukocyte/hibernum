@@ -1,7 +1,7 @@
 package io.ileukocyte.hibernum.commands.developer
 
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.replyConfirmation
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendConfirmation
@@ -14,7 +14,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 
-class ShutdownCommand : Command {
+class ShutdownCommand : TextCommand {
     override val name = "shutdown"
     override val description = "Shuts the bot down"
 

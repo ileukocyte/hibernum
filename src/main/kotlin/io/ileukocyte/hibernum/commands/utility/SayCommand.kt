@@ -1,8 +1,8 @@
 package io.ileukocyte.hibernum.commands.utility
 
 import io.ileukocyte.hibernum.Immutable
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.NoArgumentsException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.limitTo
 import io.ileukocyte.hibernum.extensions.sendEmbed
@@ -13,7 +13,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
-class SayCommand : Command {
+class SayCommand : TextCommand {
     override val name = "say"
     override val description = "Sends your message on behalf of the bot as an embed message"
     override val aliases = setOf("announce")

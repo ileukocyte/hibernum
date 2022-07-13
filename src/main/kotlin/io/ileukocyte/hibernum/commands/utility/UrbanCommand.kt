@@ -2,9 +2,9 @@ package io.ileukocyte.hibernum.commands.utility
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.RequiredAttributes
 import io.ileukocyte.hibernum.utils.getPerspectiveApiProbability
@@ -30,7 +30,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
-class UrbanCommand : Command {
+class UrbanCommand : TextCommand {
     override val name = "urban"
     override val description = "Sends an Urban Dictionary definition of the specified term (executes faster in a NSFW channel)"
     override val aliases = setOf("ud", "urbandictionary")

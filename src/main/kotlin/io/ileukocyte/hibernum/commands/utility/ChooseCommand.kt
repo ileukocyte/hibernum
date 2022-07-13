@@ -1,8 +1,8 @@
 package io.ileukocyte.hibernum.commands.utility
 
 import io.ileukocyte.hibernum.Immutable
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.NoArgumentsException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.replyEmbed
 import io.ileukocyte.hibernum.extensions.sendEmbed
 
@@ -11,7 +11,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
-class ChooseCommand : Command {
+class ChooseCommand : TextCommand {
     override val name = "choose"
     override val description = "Chooses a random option among the provided ones split with the \"|\" character"
     override val fullDescription =

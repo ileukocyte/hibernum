@@ -2,9 +2,9 @@ package io.ileukocyte.hibernum.commands.utility
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.EmbedType
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.defaultEmbed
@@ -39,7 +39,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 
-class DictionaryCommand : Command {
+class DictionaryCommand : TextCommand {
     override val name = "dictionary"
     override val description = "Sends the provided term's definition from Merriam-Webster Dictionary"
     override val aliases = setOf("define", "definition", "dict", "merriam-webster", "mw")

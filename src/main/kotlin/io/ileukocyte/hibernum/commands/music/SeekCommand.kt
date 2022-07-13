@@ -1,9 +1,9 @@
 package io.ileukocyte.hibernum.commands.music
 
 import io.ileukocyte.hibernum.audio.audioPlayer
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendSuccess
 import io.ileukocyte.hibernum.utils.TIME_CODE_REGEX
@@ -17,10 +17,10 @@ import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
-class JumpCommand : Command {
-    override val name = "jump"
+class SeekCommand : TextCommand {
+    override val name = "seek"
     override val description = "Jumps to the specified time while playing the track"
-    override val aliases = setOf("seek")
+    override val aliases = setOf("jump")
     override val usages = setOf(setOf("[r(ewind):/f(ast-forward):]time code"))
     override val options = setOf(
         OptionData(OptionType.STRING, "time", "The time to jump to (e.g. 0:30 sets the exact time)", true),
@@ -44,11 +44,13 @@ class JumpCommand : Command {
                     .matches(TIME_CODE_REGEX)
             } ?: throw CommandException("You have provided an argument of a wrong format!")
 
-            if (event.member?.voiceState?.channel != event.guild.selfMember.voiceState?.channel)
+            if (event.member?.voiceState?.channel != event.guild.selfMember.voiceState?.channel) {
                 throw CommandException("You are not connected to the required voice channel!")
+            }
 
-            if (audioPlayer.player.playingTrack.info.isStream)
+            if (audioPlayer.player.playingTrack.info.isStream) {
                 throw CommandException("The track cannot be sought since it is recognized as a stream!")
+            }
 
             val millis = time
                 .removePrefix("rewind:")
@@ -59,11 +61,13 @@ class JumpCommand : Command {
 
             if (!time.startsWith("rewind:") && !time.startsWith("r:")) {
                 if (time.startsWith("fast-forward:") || time.startsWith("f:")) {
-                    if (audioPlayer.player.playingTrack.position + millis > audioPlayer.player.playingTrack.duration)
+                    if (audioPlayer.player.playingTrack.position + millis > audioPlayer.player.playingTrack.duration) {
                         throw CommandException("You have exceeded the track duration!")
+                    }
                 } else {
-                    if (millis !in 0..audioPlayer.player.playingTrack.duration)
+                    if (millis !in 0..audioPlayer.player.playingTrack.duration) {
                         throw CommandException("You have provided a wrong time code for the track!")
+                    }
                 }
             }
 
@@ -78,7 +82,9 @@ class JumpCommand : Command {
             }
 
             event.channel.sendSuccess("Successfully jumped to the specified time!").queue()
-        } else throw CommandException("No track is currently playing!")
+        } else {
+            throw CommandException("No track is currently playing!")
+        }
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
@@ -91,21 +97,25 @@ class JumpCommand : Command {
                 ?: throw CommandException("You have provided an argument of a wrong format!")
             val mode = event.getOption("mode")?.asString.orEmpty()
 
-            if (event.member?.voiceState?.channel != event.guild?.selfMember?.voiceState?.channel)
+            if (event.member?.voiceState?.channel != event.guild?.selfMember?.voiceState?.channel) {
                 throw CommandException("You are not connected to the required voice channel!")
+            }
 
-            if (audioPlayer.player.playingTrack.info.isStream)
+            if (audioPlayer.player.playingTrack.info.isStream) {
                 throw CommandException("The track cannot be sought since it is recognized as a stream!")
+            }
 
             val millis = timeCodeToMillis(time)
 
             if (mode != "r") {
                 if (mode == "f") {
-                    if (audioPlayer.player.playingTrack.position + millis > audioPlayer.player.playingTrack.duration)
+                    if (audioPlayer.player.playingTrack.position + millis > audioPlayer.player.playingTrack.duration) {
                         throw CommandException("You have exceeded the track duration!")
+                    }
                 } else {
-                    if (millis !in 0..audioPlayer.player.playingTrack.duration)
+                    if (millis !in 0..audioPlayer.player.playingTrack.duration) {
                         throw CommandException("You have provided a wrong time code for the track!")
+                    }
                 }
             }
 
@@ -117,7 +127,9 @@ class JumpCommand : Command {
             }
 
             event.replySuccess("Successfully jumped to the specified time!").queue()
-        } else throw CommandException("No track is currently playing!")
+        } else {
+            throw CommandException("No track is currently playing!")
+        }
     }
 }
 

@@ -1,10 +1,7 @@
 package io.ileukocyte.hibernum.commands.`fun`
 
 import io.ileukocyte.hibernum.Immutable
-import io.ileukocyte.hibernum.commands.Command
-import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.commands.MessageContextCommand
-import io.ileukocyte.hibernum.commands.UserContextCommand
+import io.ileukocyte.hibernum.commands.*
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.invert
 
@@ -25,13 +22,12 @@ import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionE
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
-import net.dv8tion.jda.api.interactions.commands.Command.Type
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
 import org.apache.commons.validator.routines.UrlValidator
 
-class InvertCommand : Command, MessageContextCommand, UserContextCommand {
+class InvertCommand : TextCommand, UniversalContextCommand {
     override val name = "invert"
     override val contextName = "Image Negation"
     override val description = "Inverts the provided image (see the command's help menu)"
@@ -49,7 +45,6 @@ class InvertCommand : Command, MessageContextCommand, UserContextCommand {
         OptionData(OptionType.ATTACHMENT, "attachment", "The provided image file (has the highest priority)"),
     )
     override val cooldown = 7L
-    override val contextTypes = setOf(Type.MESSAGE, Type.USER)
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         event.message.attachments.firstOrNull { it.isImage }?.let { attachment ->

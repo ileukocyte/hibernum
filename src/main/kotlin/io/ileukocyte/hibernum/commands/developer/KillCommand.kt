@@ -4,8 +4,8 @@ import com.google.common.collect.Lists
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.commands.`fun`.AkinatorCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.WaiterProcess
@@ -32,7 +32,7 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.text.TextInput
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 
-class KillCommand : Command {
+class KillCommand : TextCommand {
     override val name = "kill"
     override val description = "Sends a list of running processes or terminates the one provided by its ID"
     override val aliases = setOf("kill-process", "terminate")

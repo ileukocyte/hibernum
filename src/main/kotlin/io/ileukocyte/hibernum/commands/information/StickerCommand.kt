@@ -2,9 +2,9 @@ package io.ileukocyte.hibernum.commands.information
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
+import io.ileukocyte.hibernum.commands.ClassicTextOnlyCommand
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.MessageContextCommand
-import io.ileukocyte.hibernum.commands.TextOnlyCommand
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
@@ -17,7 +17,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
-class StickerCommand : TextOnlyCommand, MessageContextCommand {
+class StickerCommand : ClassicTextOnlyCommand, MessageContextCommand {
     override val name = "sticker"
     override val contextName = "Sticker Information"
     override val description = "Sends the available information about the provided sticker"

@@ -1,15 +1,15 @@
 package io.ileukocyte.hibernum.commands.music
 
 import io.ileukocyte.hibernum.audio.audioPlayer
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendSuccess
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
-class ShuffleCommand : Command {
+class ShuffleCommand : TextCommand {
     override val name = "shuffle"
     override val description = "Shuffles the queue"
 
@@ -21,8 +21,12 @@ class ShuffleCommand : Command {
                 audioPlayer.scheduler.shuffle()
 
                 event.channel.sendSuccess("The queue has been shuffled!").queue()
-            } else throw CommandException("The queue is empty at the moment!")
-        } else throw CommandException("You are not connected to the required voice channel!")
+            } else {
+                throw CommandException("The queue is empty at the moment!")
+            }
+        } else {
+            throw CommandException("You are not connected to the required voice channel!")
+        }
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
@@ -34,7 +38,11 @@ class ShuffleCommand : Command {
                 audioPlayer.scheduler.shuffle()
 
                 event.replySuccess("The queue has been shuffled!").queue()
-            } else throw CommandException("The queue is empty at the moment!")
-        } else throw CommandException("You are not connected to the required voice channel!")
+            } else {
+                throw CommandException("The queue is empty at the moment!")
+            }
+        } else {
+            throw CommandException("You are not connected to the required voice channel!")
+        }
     }
 }

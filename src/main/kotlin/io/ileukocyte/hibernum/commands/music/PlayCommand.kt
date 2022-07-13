@@ -8,9 +8,9 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import io.ileukocyte.hibernum.audio.PLAYER_MANAGER
 import io.ileukocyte.hibernum.audio.TrackUserData
 import io.ileukocyte.hibernum.audio.audioPlayer
-import io.ileukocyte.hibernum.commands.NoArgumentsException
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.NoArgumentsException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.YOUTUBE_LINK_REGEX
 
@@ -19,7 +19,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
-class PlayCommand : Command {
+class PlayCommand : TextCommand {
     override val name = "play"
     override val description = "Plays the specified media in a voice channel"
     override val aliases = setOf("p")

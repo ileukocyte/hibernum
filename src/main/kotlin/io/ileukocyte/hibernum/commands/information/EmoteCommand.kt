@@ -1,8 +1,8 @@
 package io.ileukocyte.hibernum.commands.information
 
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.asWord
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
@@ -17,7 +17,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
-class EmoteCommand : Command {
+class EmoteCommand : TextCommand {
     override val name = "emote"
     override val description = "Sends the available information about the provided **custom** emoji"
     override val aliases = setOf(

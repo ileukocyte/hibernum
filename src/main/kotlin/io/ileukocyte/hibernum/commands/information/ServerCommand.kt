@@ -1,8 +1,8 @@
 package io.ileukocyte.hibernum.commands.information
 
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.asText
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
@@ -17,7 +17,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
-class ServerCommand : Command {
+class ServerCommand : TextCommand {
     override val name = "server"
     override val description = "Sends the server's icon, its list of custom emojis, or detailed information about it"
     override val aliases = setOf("guild", "guildinfo", "guild-info", "serverinfo", "server-info")

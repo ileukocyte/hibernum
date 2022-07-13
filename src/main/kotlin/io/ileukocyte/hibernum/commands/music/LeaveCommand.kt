@@ -2,8 +2,8 @@ package io.ileukocyte.hibernum.commands.music
 
 import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.audio.stop
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.replyConfirmation
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendConfirmation
@@ -15,7 +15,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 
-class LeaveCommand : Command {
+class LeaveCommand : TextCommand {
     override val name = "leave"
     override val description = "Makes the bot leave your voice channel"
 
@@ -31,7 +31,9 @@ class LeaveCommand : Command {
 
                         event.channel.sendSuccess("Left the voice channel!").queue()
                     }
-                } else throw CommandException("You are not connected to the required voice channel!")
+                } else {
+                    throw CommandException("You are not connected to the required voice channel!")
+                }
             } ?: throw CommandException("You are not connected to a voice channel!")
         } ?: throw CommandException("${event.jda.selfUser.name} is not connected to a voice channel!")
     }
@@ -50,7 +52,9 @@ class LeaveCommand : Command {
                             .setEphemeral(true)
                             .queue()
                     }
-                } else throw CommandException("You are not connected to the required voice channel!")
+                } else {
+                    throw CommandException("You are not connected to the required voice channel!")
+                }
             } ?: throw CommandException("You are not connected to a voice channel!")
         } ?: throw CommandException("${event.jda.selfUser.name} is not connected to a voice channel!")
     }
@@ -73,7 +77,9 @@ class LeaveCommand : Command {
                     event.replySuccess("Successfully canceled!").setEphemeral(true).queue()
                 }
             }
-        } else throw CommandException("You did not invoke the initial command!")
+        } else {
+            throw CommandException("You did not invoke the initial command!")
+        }
     }
 
     private fun <E : Event> sendLeaveConfirmation(userId: Long, event: E) {

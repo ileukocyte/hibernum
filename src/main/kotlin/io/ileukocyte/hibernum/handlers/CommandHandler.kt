@@ -28,7 +28,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException
-import net.dv8tion.jda.api.interactions.commands.Command as JDACommand
+import net.dv8tion.jda.api.interactions.commands.Command
 
 private val commandContextDispatcher = newFixedThreadPool(3).asCoroutineDispatcher()
 
@@ -51,25 +51,51 @@ object CommandHandler : MutableSet<GenericCommand> {
     override fun retainAll(elements: Collection<GenericCommand>) = registeredCommands.retainAll(elements.toSet())
     override fun clear() = registeredCommands.clear()
 
-    operator fun get(name: String): Command? {
-        fun checkPriority(actual: String, expected: Command) = when (actual) {
+    /**
+     * A function that specifically looks for a [TextCommand] by its name or alias provided
+     *
+     * @param name
+     * The name of the command to search
+     *
+     * @return A [TextCommand] having the same name as the provided query
+     */
+    operator fun get(name: String): TextCommand? {
+        fun checkPriority(actual: String, expected: TextCommand) = when (actual) {
             expected.name -> 2
             in expected.aliases -> 1
             else -> 0
         }
 
         return registeredCommands
-            .filterIsInstance<Command>()
+            .filterIsInstance<TextCommand>()
             .filter { checkPriority(name, it) > 0 }
             .maxByOrNull { checkPriority(name, it) }
     }
 
-    operator fun get(id: Int) = registeredCommands
-        .firstOrNull { it.id == id }
-
-    fun getContextCommand(name: String, type: JDACommand.Type) = registeredCommands.firstOrNull {
+    /**
+     * A function that specifically looks for a [ContextCommand] by its name and context type provided
+     *
+     * @param name
+     * The name of the command to search
+     * @param type
+     * The JDA context type of the command to search
+     *
+     * @return A [ContextCommand] having the same name and type as provided
+     */
+    operator fun get(name: String, type: Command.Type) = registeredCommands.firstOrNull {
         it is ContextCommand && it.contextName == name && type in it.contextTypes
     } as? ContextCommand
+
+    /**
+     * A function that looks for a [GenericCommand] by its ID
+     *
+     * @param id
+     * The ID of the command to search
+     *
+     * @return A [GenericCommand] having the same ID as the provided query
+     */
+    operator fun get(id: Int) = registeredCommands
+        .firstOrNull { it.id == id }
 
     // Command cooldown extensions
     private fun GenericCommand.getRemainingCooldown(userId: Long) =
@@ -180,7 +206,7 @@ object CommandHandler : MutableSet<GenericCommand> {
      */
     internal operator fun invoke(event: SlashCommandInteractionEvent) {
         if (event.isFromGuild) {
-            this[event.name]?.takeIf { it !is TextOnlyCommand }?.let { command ->
+            this[event.name]?.takeIf { it !is ClassicTextOnlyCommand }?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     val isSpecial = command is ShutdownCommand || command is KillCommand
 
@@ -426,7 +452,7 @@ object CommandHandler : MutableSet<GenericCommand> {
      */
     internal operator fun invoke(event: MessageContextInteractionEvent) {
         if (event.isFromGuild) {
-            getContextCommand(event.name, JDACommand.Type.MESSAGE)?.let { cc ->
+            this[event.name, Command.Type.MESSAGE]?.let { cc ->
                 val command = cc as MessageContextCommand
 
                 CoroutineScope(CommandContext).launch {
@@ -499,7 +525,7 @@ object CommandHandler : MutableSet<GenericCommand> {
      */
     internal operator fun invoke(event: UserContextInteractionEvent) {
         if (event.isFromGuild) {
-            getContextCommand(event.name, JDACommand.Type.USER)?.let { cc ->
+            this[event.name, Command.Type.USER]?.let { cc ->
                 val command = cc as UserContextCommand
 
                 CoroutineScope(CommandContext).launch {

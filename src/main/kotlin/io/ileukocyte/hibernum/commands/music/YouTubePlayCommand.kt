@@ -10,9 +10,9 @@ import io.ileukocyte.hibernum.audio.PLAYER_MANAGER
 import io.ileukocyte.hibernum.audio.TrackUserData
 import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.extensions.EmbedType
 import io.ileukocyte.hibernum.utils.*
@@ -31,7 +31,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 
-class YouTubePlayCommand : Command {
+class YouTubePlayCommand : TextCommand {
     override val name = "ytplay"
     override val description = "Plays the specified YouTube video in a voice channel"
     override val aliases = setOf("yp", "ytp", "youtubeplay", "youtube-play")
@@ -76,7 +76,9 @@ class YouTubePlayCommand : Command {
 
                 play(videoUrl, event.channel as GuildMessageChannel, event.user, true, deferred)
             }
-        } else throw CommandException("You did not invoke the initial command!")
+        } else {
+            throw CommandException("You did not invoke the initial command!")
+        }
     }
 
     private suspend fun sendMenu(

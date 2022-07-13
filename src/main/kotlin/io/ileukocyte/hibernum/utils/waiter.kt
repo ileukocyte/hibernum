@@ -4,7 +4,7 @@ package io.ileukocyte.hibernum.utils
 
 import arrow.fx.coroutines.onCancel
 
-import io.ileukocyte.hibernum.commands.Command
+import io.ileukocyte.hibernum.commands.GenericCommand
 
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -12,6 +12,7 @@ import java.util.concurrent.Executors.newFixedThreadPool
 import java.util.concurrent.TimeUnit
 
 import kotlin.coroutines.CoroutineContext
+
 import kotlin.reflect.KClass
 import kotlinx.coroutines.*
 
@@ -77,7 +78,7 @@ fun WaiterProcess.kill(jda: JDA) = WaiterProcess.CURRENTLY_RUNNING[this]?.kill(j
 data class WaiterProcess internal constructor(
     val users: MutableSet<Long>,
     val channel: Long,
-    val command: Command?,
+    val command: GenericCommand?,
     val invoker: Long?,
     val id: String = "%04d".format((1..9999).filter {
         it !in CURRENTLY_RUNNING.keys.map { p -> p.id.toInt() }
@@ -92,7 +93,7 @@ data class WaiterProcess internal constructor(
     class Builder {
         val users = mutableSetOf<Long>()
         var channel = 0L
-        var command: Command? = null
+        var command: GenericCommand? = null
         var invoker: Long? = null
         var id: Int? = null
 

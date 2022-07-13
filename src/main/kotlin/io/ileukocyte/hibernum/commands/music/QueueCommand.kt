@@ -10,8 +10,8 @@ import io.ileukocyte.hibernum.audio.TrackUserData
 import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.audio.getEmbedProgressBar
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.limitTo
 import io.ileukocyte.hibernum.utils.asDuration
 
@@ -27,7 +27,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 
-class QueueCommand : Command {
+class QueueCommand : TextCommand {
     override val name = "queue"
     override val description = "Shows the current playlist"
     override val aliases = setOf("q", "playlist")
@@ -87,7 +87,9 @@ class QueueCommand : Command {
                     event.message.delete().queue()
 
                     return
-                } else it
+                } else {
+                    it
+                }
             }
 
             val pageNumber = id[1].toInt()
@@ -173,7 +175,9 @@ class QueueCommand : Command {
                         }
                 }
             }
-        } else throw CommandException("You did not invoke the initial command!")
+        } else {
+            throw CommandException("You did not invoke the initial command!")
+        }
     }
 
     private fun pageButtons(userId: String, page: Int, size: Int) = setOf(

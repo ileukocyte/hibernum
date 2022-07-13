@@ -2,41 +2,34 @@ package io.ileukocyte.hibernum.commands.general
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.Command
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.startDate
 import io.ileukocyte.hibernum.extensions.uptime
 import io.ileukocyte.hibernum.utils.asText
 
-import net.dv8tion.jda.api.events.Event
+import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
-class UptimeCommand : Command {
+class UptimeCommand : TextCommand {
     override val name = "uptime"
-    override val description = "Sends Hibernum's uptime separately from the statistics"
-
-    override suspend fun invoke(event: SlashCommandInteractionEvent) =
-        sendUptime(event)
+    override val description = "Sends the bot's uptime separately from the statistics"
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) =
-        sendUptime(event)
+        event.channel.sendMessageEmbeds(uptimeEmbed(event.jda)).queue()
 
-    private fun <E : Event> sendUptime(event: E) {
-        val embed = buildEmbed {
-            color = Immutable.SUCCESS
-            timestamp = event.jda.startDate
+    override suspend fun invoke(event: SlashCommandInteractionEvent) =
+        event.replyEmbeds(uptimeEmbed(event.jda)).queue()
 
-            field {
-                title = "Uptime"
-                description = asText(event.jda.uptime)
-            }
+    private fun uptimeEmbed(jda: JDA) = buildEmbed {
+        color = Immutable.SUCCESS
+        timestamp = jda.startDate
 
-            footer { text = "Last Reboot" }
+        field {
+            title = "Uptime"
+            description = asText(jda.uptime)
         }
 
-        when (event) {
-            is MessageReceivedEvent -> event.channel.sendMessageEmbeds(embed).queue()
-            is SlashCommandInteractionEvent -> event.replyEmbeds(embed).queue()
-        }
+        footer { text = "Last Reboot" }
     }
 }

@@ -2,9 +2,9 @@ package io.ileukocyte.hibernum.commands.information
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.commands.information.UserCommand.Companion.KEY_PERMISSIONS
 import io.ileukocyte.hibernum.extensions.asWord
 import io.ileukocyte.hibernum.extensions.await
@@ -23,7 +23,7 @@ import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
-class RoleCommand : Command {
+class RoleCommand : TextCommand {
     override val name = "role"
     override val description = "Sends the available information about the specified role"
     override val aliases = setOf("roleinfo", "role-info")

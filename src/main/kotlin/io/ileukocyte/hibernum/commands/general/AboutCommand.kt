@@ -2,9 +2,9 @@ package io.ileukocyte.hibernum.commands.general
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.Command
+import io.ileukocyte.hibernum.commands.ClassicTextOnlyCommand
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
-import io.ileukocyte.hibernum.commands.TextOnlyCommand
+import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asText
@@ -16,7 +16,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Type
 
-class AboutCommand : Command {
+class AboutCommand : TextCommand {
     override val name = "about"
     override val description = "Sends the bot's detailed technical statistics"
     override val aliases = setOf("info", "stats")
@@ -39,7 +39,7 @@ class AboutCommand : Command {
                 .count { it.selfMember.voiceState?.inAudioChannel() == true }
             val owner = jda.retrieveApplicationInfo().await().owner
             val commandCount = setOf(
-                CommandHandler.count { it is TextOnlyCommand }.takeIf { it > 0 }?.let { "text-only: $it" },
+                CommandHandler.count { it is ClassicTextOnlyCommand }.takeIf { it > 0 }?.let { "text-only: $it" },
                 CommandHandler.count { it is SlashOnlyCommand }.takeIf { it > 0 }?.let { "slash-only: $it" },
             )
             val discordCommands = jda.retrieveCommands().await()
