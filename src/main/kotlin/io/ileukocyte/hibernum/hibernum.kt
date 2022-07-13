@@ -114,7 +114,7 @@ suspend fun main() = coroutineScope {
                 )
             }.takeUnless { it.isEmpty() }?.forEach {
                 discord.deleteCommandById(it.id).queue { _ ->
-                    LOGGER.info("${it.name} is no longer a context command!")
+                    LOGGER.info("${it.name} is no longer a ${it.type.name.lowercase()} context command!")
                 }
             }
         }.join()

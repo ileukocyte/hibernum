@@ -147,6 +147,7 @@ class KickCommand : SlashOnlyCommand, UserContextCommand {
         val input = TextInput
             .create("reason", "Specify the Reason if You Want to:", TextInputStyle.SHORT)
             .setRequired(false)
+            .setMaxLength(512)
             .build()
         val modal = Modal
             .create("$name-${event.target.idLong}", "Kick Reason")
