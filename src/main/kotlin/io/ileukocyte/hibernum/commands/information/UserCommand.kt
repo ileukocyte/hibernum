@@ -4,7 +4,6 @@ import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.Command
 import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.commands.MessageContextCommand
 import io.ileukocyte.hibernum.commands.UserContextCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
@@ -16,14 +15,12 @@ import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent
-import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
-import net.dv8tion.jda.api.interactions.commands.Command.Type
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.buttons.Button
@@ -31,7 +28,7 @@ import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
-class UserCommand : Command, MessageContextCommand, UserContextCommand {
+class UserCommand : Command, UserContextCommand {
     override val name = "user"
     override val contextName = "User Information"
     override val description = "Sends either detailed information about the specified user's account or their profile picture"
@@ -44,7 +41,6 @@ class UserCommand : Command, MessageContextCommand, UserContextCommand {
     override val options = setOf(
         OptionData(OptionType.USER, "user", "The user to check information about"))
     override val cooldown = 3L
-    override val contextTypes = setOf(Type.MESSAGE, Type.USER)
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         event.guild.takeUnless { it.isLoaded }?.loadMembers()?.await()
@@ -94,9 +90,6 @@ class UserCommand : Command, MessageContextCommand, UserContextCommand {
 
         chooseUserInfoOrPfp(user, event.user, event, event.guild)
     }
-
-    override suspend fun invoke(event: MessageContextInteractionEvent) =
-        chooseUserInfoOrPfp(event.target.author, event.user, event, event.guild)
 
     override suspend fun invoke(event: UserContextInteractionEvent) =
         chooseUserInfoOrPfp(event.target, event.user, event, event.guild)

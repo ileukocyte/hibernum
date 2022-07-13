@@ -87,8 +87,10 @@ suspend fun main() = coroutineScope {
             discordCommands.filter {
                 val condition = CommandHandler[it.name] is TextOnlyCommand
                         || it.name !in CommandHandler.map(GenericCommand::name)
-                        || it.defaultPermissions != CommandHandler[it.name]?.memberPermissions
+                        || it.defaultPermissions.permissionsRaw !=
+                        CommandHandler[it.name]?.memberPermissions
                             ?.let(DefaultMemberPermissions::enabledFor)
+                            ?.permissionsRaw
 
                 it.type == Type.SLASH && condition
             }.takeUnless { it.isEmpty() }?.forEach {
@@ -98,12 +100,18 @@ suspend fun main() = coroutineScope {
             }
 
             discordCommands.filter {
-                it.type != Type.SLASH && (it.name !in CommandHandler
-                    .filterIsInstance<ContextCommand>()
-                    .map { cmd -> cmd.contextName }
-                        || it.defaultPermissions != CommandHandler.getContextCommand(it.name, it.type)
-                            ?.memberPermissions
-                            ?.let(DefaultMemberPermissions::enabledFor))
+                val contextCommands = CommandHandler.filterIsInstance<ContextCommand>()
+
+                it.type != Type.SLASH && (it.name !in contextCommands.map { cmd -> cmd.contextName }
+                        || contextCommands.firstOrNull { c -> c.contextName == it.name }
+                            ?.contextTypes
+                            ?.contains(it.type) == false
+                        || it.defaultPermissions.permissionsRaw !=
+                            CommandHandler.getContextCommand(it.name, it.type)
+                                ?.memberPermissions
+                                ?.let(DefaultMemberPermissions::enabledFor)
+                                ?.permissionsRaw
+                )
             }.takeUnless { it.isEmpty() }?.forEach {
                 discord.deleteCommandById(it.id).queue { _ ->
                     LOGGER.info("${it.name} is no longer a context command!")
@@ -123,9 +131,9 @@ suspend fun main() = coroutineScope {
             CommandHandler
                 .filterIsInstanceAnd<Command> { it !is TextOnlyCommand && slashPredicate(it) }
                 .forEach {
-                    discord.upsertCommand(it.asSlashCommand!!).queue { cmd ->
+                    discord.upsertCommand(it.asSlashCommand!!).queue({ cmd ->
                         LOGGER.info("UPDATE: Discord has updated the following slash command: ${cmd.name}!")
-                    }
+                    }) { t -> t.printStackTrace() }
                 }
 
             CommandHandler
@@ -138,9 +146,9 @@ suspend fun main() = coroutineScope {
 
                         map[c.name] != c.type
                     }) {
-                        discord.upsertCommand(cc).queue { cmd ->
+                        discord.upsertCommand(cc).queue({ cmd ->
                             LOGGER.info("UPDATE: Discord has updated the following ${cmd.type.name.lowercase()} context command: ${cmd.name}!")
-                        }
+                        }) { t -> t.printStackTrace() }
                     }
                 }
         }.join()
