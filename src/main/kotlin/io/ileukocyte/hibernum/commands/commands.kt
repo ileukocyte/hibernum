@@ -2,6 +2,8 @@
 
 package io.ileukocyte.hibernum.commands
 
+import io.ileukocyte.hibernum.extensions.capitalizeAll
+
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
@@ -39,6 +41,30 @@ interface GenericCommand : Comparable<GenericCommand> {
      */
     val isDeveloper: Boolean get() = category == CommandCategory.DEVELOPER
 
+    val inputTypes: Set<InputType> get() {
+        val inputTypes = mutableSetOf<InputType>()
+
+        if (this is Command) {
+            if (this !is SlashOnlyCommand) {
+                inputTypes += InputType.TEXT
+            }
+
+            if (this !is TextOnlyCommand) {
+                inputTypes += InputType.SLASH
+            }
+        }
+
+        if (this is MessageContextCommand) {
+            inputTypes += InputType.MESSAGE_CONTEXT_MENU
+        }
+
+        if (this is UserContextCommand) {
+            inputTypes += InputType.USER_CONTEXT_MENU
+        }
+
+        return inputTypes
+    }
+
     val cooldown: Long get() = 0
     val eliminateStaleInteractions: Boolean get() = true
 
@@ -49,6 +75,20 @@ interface GenericCommand : Comparable<GenericCommand> {
     val id: Int get() = name.hashCode()
 
     override fun compareTo(other: GenericCommand) = name.compareTo(other.name)
+
+    enum class InputType {
+        TEXT,
+        SLASH,
+        MESSAGE_CONTEXT_MENU,
+        USER_CONTEXT_MENU;
+
+        override fun toString() = name.replace('_', ' ').capitalizeAll()
+
+        companion object {
+            operator fun get(key: String) =
+                InputType.values().firstOrNull { it.name.equals(key, ignoreCase = true) }
+        }
+    }
 }
 
 /**

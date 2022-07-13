@@ -103,6 +103,11 @@ class HelpCommand : Command {
             }
         }
 
+        field {
+            title = "Input Types"
+            description = inputTypes.joinToString()
+        }
+
         author {
             name = nameWithPrefix +
                     " (text-only)".takeIf { this@getHelp is TextOnlyCommand }.orEmpty() +
