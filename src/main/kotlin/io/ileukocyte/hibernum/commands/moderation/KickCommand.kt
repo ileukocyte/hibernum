@@ -39,6 +39,8 @@ class KickCommand : SlashOnlyCommand, UserContextCommand {
         val member = event.getOption("member")?.asMember ?: return
         val reason = event.getOption("reason")?.asString?.let { ": $it" }.orEmpty()
 
+        val selfMember = event.guild?.selfMember ?: return
+
         if (event.member?.idLong == member.idLong) {
             throw CommandException(
                 "You cannot kick yourself via the command!",
@@ -50,7 +52,7 @@ class KickCommand : SlashOnlyCommand, UserContextCommand {
             throw CommandException("You have no permissions required to kick ${member.user.asMention}!")
         }
 
-        if (event.guild?.selfMember?.canInteract(member) == false) {
+        if (member.idLong != selfMember.idLong && !selfMember.canInteract(member)) {
             throw CommandException("${event.jda.selfUser.name} has no permissions required to kick ${member.user.asMention}!")
         }
 
@@ -59,8 +61,20 @@ class KickCommand : SlashOnlyCommand, UserContextCommand {
             Button.secondary("$name-exit", "No"),
         )
 
+        val confirmationContent = buildString {
+            append("Are you sure you want ")
+
+            if (member.idLong == selfMember.idLong) {
+                append("${member.user.asMention} to leave ")
+            } else {
+                append("to kick ${member.user.asMention} from the ")
+            }
+
+            append("the server?")
+        }
+
         val hook = event
-            .replyConfirmation("Are you sure you want to kick ${member.user.asMention} from the server?")
+            .replyConfirmation(confirmationContent)
             .addActionRow(buttons)
             .await()
             .retrieveOriginal()
@@ -87,23 +101,40 @@ class KickCommand : SlashOnlyCommand, UserContextCommand {
 
             when (args.last()) {
                 "kick" -> {
-                    member.kick("Kicked by ${event.user.asTag}" + reason).queue({
-                        val embed = defaultEmbed(
-                            "${member.user.asTag} has been successfully kicked from the server!",
-                            EmbedType.SUCCESS,
-                        )
+                    if (member.idLong != selfMember.idLong) {
+                        member.kick("Kicked by ${event.user.asTag}" + reason).queue({
+                            val embed = defaultEmbed(
+                                "${member.user.asTag} has been successfully kicked from the server!",
+                                EmbedType.SUCCESS,
+                            )
 
-                        deferred.editOriginalComponents().setEmbeds(embed).queue(null) {
-                            event.channel.sendMessageEmbeds(embed).queue()
+                            deferred.editOriginalComponents().setEmbeds(embed).queue(null) {
+                                event.channel.sendMessageEmbeds(embed).queue()
+                            }
+                        }) {
+                            val embed = defaultEmbed(
+                                "Something went wrong: ${it.message}".limitTo(MessageEmbed.DESCRIPTION_MAX_LENGTH),
+                                EmbedType.FAILURE,
+                            )
+
+                            deferred.editOriginalComponents().setEmbeds(embed).queue(null) {
+                                event.channel.sendMessageEmbeds(embed).queue()
+                            }
                         }
-                    }) {
+                    } else {
                         val embed = defaultEmbed(
-                            "Something went wrong: ${it.message}".limitTo(MessageEmbed.DESCRIPTION_MAX_LENGTH),
-                            EmbedType.FAILURE,
+                            "${selfMember.user.name} has successfully left the server!",
+                            EmbedType.WARNING,
                         )
 
-                        deferred.editOriginalComponents().setEmbeds(embed).queue(null) {
-                            event.channel.sendMessageEmbeds(embed).queue()
+                        deferred.editOriginalComponents().setEmbeds(embed).queue({
+                            event.guild?.leave()?.queue()
+                        }) {
+                            event.channel.sendMessageEmbeds(embed).queue({
+                                event.guild?.leave()?.queue()
+                            }) {
+                                event.guild?.leave()?.queue()
+                            }
                         }
                     }
                 }
@@ -126,6 +157,7 @@ class KickCommand : SlashOnlyCommand, UserContextCommand {
 
     override suspend fun invoke(event: UserContextInteractionEvent) {
         val member = event.targetMember ?: return
+        val selfMember = event.guild?.selfMember ?: return
 
         if (event.member?.idLong == member.idLong) {
             throw CommandException(
@@ -138,26 +170,92 @@ class KickCommand : SlashOnlyCommand, UserContextCommand {
             throw CommandException("You have no permissions required to kick ${member.user.asMention}!")
         }
 
-        if (event.guild?.selfMember?.canInteract(member) == false) {
+        if (member.idLong != selfMember.idLong && !selfMember.canInteract(member)) {
             throw CommandException("${event.jda.selfUser.name} has no permissions required to kick ${member.user.asMention}!")
         }
 
-        val input = TextInput
-            .create("reason", "Specify the Reason if You Want to:", TextInputStyle.SHORT)
-            .setRequired(false)
-            .setMaxLength(512)
-            .build()
-        val modal = Modal
-            .create("$name-${event.target.idLong}", "Kick Reason")
-            .addActionRow(input)
-            .build()
+        if (member.idLong != selfMember.idLong) {
+            val input = TextInput
+                .create("reason", "Specify the Reason if You Want to:", TextInputStyle.SHORT)
+                .setRequired(false)
+                .setMaxLength(512)
+                .build()
+            val modal = Modal
+                .create("$name-${event.target.idLong}", "Kick Reason")
+                .addActionRow(input)
+                .build()
 
-        try {
-            event.replyModal(modal).await()
-        } catch (e: Exception) {
-            event.messageChannel.sendFailure("Something unknown went wrong!").queue()
+            try {
+                event.replyModal(modal).await()
+            } catch (e: Exception) {
+                event.messageChannel.sendFailure("Something unknown went wrong!").queue()
 
-            e.printStackTrace()
+                e.printStackTrace()
+            }
+        } else {
+            val buttons = setOf(
+                Button.danger("$name-leave", "Yes"),
+                Button.secondary("$name-exit", "No"),
+            )
+
+            val hook = event
+                .replyConfirmation("Are you sure you want ${member.user.asMention} to leave the server?")
+                .addActionRow(buttons)
+                .await()
+                .retrieveOriginal()
+                .await()
+
+            try {
+                val buttonEvent = event.jda.awaitEvent<ButtonInteractionEvent>(
+                    15,
+                    TimeUnit.MINUTES,
+                    waiterProcess {
+                        users += event.user.idLong
+                        channel = event.messageChannel.idLong
+                        command = this@KickCommand
+                        invoker = hook.idLong
+                    },
+                ) {
+                    val cmdName = it.componentId.split("-").first()
+
+                    it.message.idLong == hook.idLong && it.user.idLong == event.user.idLong && cmdName == name
+                } ?: return
+
+                val deferred = buttonEvent.deferEdit().await()
+                val args = buttonEvent.componentId.split("-")
+
+                when (args.last()) {
+                    "leave" -> {
+                        val embed = defaultEmbed(
+                            "${selfMember.user.name} has successfully left the server!",
+                            EmbedType.WARNING,
+                        )
+
+                        deferred.editOriginalComponents().setEmbeds(embed).queue({
+                            event.guild?.leave()?.queue()
+                        }) {
+                            event.messageChannel.sendMessageEmbeds(embed).queue({
+                                event.guild?.leave()?.queue()
+                            }) {
+                                event.guild?.leave()?.queue()
+                            }
+                        }
+                    }
+                    "exit" -> deferred.deleteOriginal().queue(null) {}
+                }
+            } catch (_: TimeoutCancellationException) {
+                val embed = defaultEmbed("Time is out!", EmbedType.FAILURE) {
+                    text = "This message will self-delete in 5 seconds"
+                }
+
+                hook.editMessageComponents().setEmbeds(embed).queue({
+                    it.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
+                }) {
+                    event.messageChannel.sendMessageEmbeds(embed).queue { m ->
+                        m.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
+                    }
+                }
+            }
         }
     }
 
