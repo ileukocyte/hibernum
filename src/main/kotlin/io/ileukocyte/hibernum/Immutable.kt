@@ -26,7 +26,7 @@ object Immutable {
             as KotlinJsr223ScriptEngineImpl
 
     @JvmField
-    val VERSION = Version(major = 3, minor = 0, patch = 1)
+    val VERSION = Version(major = 3, minor = 0, patch = 2)
 
     @JvmField
     val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0" //"User-Agent: DiscordBot ($GITHUB_REPOSITORY, $VERSION)"

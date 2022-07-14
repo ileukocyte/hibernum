@@ -67,7 +67,9 @@ class DictionaryCommand : TextCommand {
             .let {
                 if (total > 1) {
                     it.setActionRow(pageButtons(0, total))
-                } else it
+                } else {
+                    it
+                }
             }.await()
 
         if (total > 1) {
@@ -101,7 +103,9 @@ class DictionaryCommand : TextCommand {
             .let {
                 if (total > 1) {
                     it.setActionRow(pageButtons(0, total))
-                } else it
+                } else {
+                    it
+                }
             }.await()
 
         if (total > 1) {
