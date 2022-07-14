@@ -45,7 +45,9 @@ class ShutdownCommand : TextCommand {
                     event.replySuccess("Successfully canceled!").setEphemeral(true).queue()
                 }
             }
-        } else throw CommandException("You did not invoke the initial command!")
+        } else {
+            throw CommandException("You did not invoke the initial command!")
+        }
     }
 
     private fun <E : Event> sendShutdownConfirmation(userId: Long, event: E) {

@@ -107,9 +107,7 @@ class KickCommand : SlashOnlyCommand, UserContextCommand {
                         }
                     }
                 }
-                "exit" -> deferred.deleteOriginal().queue({
-                    event.replySuccess("Successfully canceled!").setEphemeral(true).queue()
-                }) {}
+                "exit" -> deferred.deleteOriginal().queue(null) {}
             }
         } catch (_: TimeoutCancellationException) {
             val embed = defaultEmbed("Time is out!", EmbedType.FAILURE) {
@@ -220,9 +218,7 @@ class KickCommand : SlashOnlyCommand, UserContextCommand {
                         }
                     }
                 }
-                "exit" -> deferred.deleteOriginal().queue({
-                    event.replySuccess("Successfully canceled!").setEphemeral(true).queue()
-                }) {}
+                "exit" -> deferred.deleteOriginal().queue(null) {}
             }
         } catch (_: TimeoutCancellationException) {
             val embed = defaultEmbed("Time is out!", EmbedType.FAILURE) {
