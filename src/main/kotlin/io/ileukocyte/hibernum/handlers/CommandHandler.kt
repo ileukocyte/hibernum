@@ -252,10 +252,21 @@ object CommandHandler : MutableSet<GenericCommand> {
                                         }
                                 is InsufficientPermissionException -> {} // ignored
                                 else -> {
-                                    event.replyFailure("""
+                                    val errorMessage = """
                                         |${e::class.simpleName ?: "An unknown exception"} has occurred:
                                         |${e.message ?: "No message provided"}
-                                        |""".trimMargin()).queue()
+                                        |""".trimMargin()
+
+                                    event.hook
+                                        .editOriginalComponents()
+                                        .retainFiles(emptyList())
+                                        .setContent("")
+                                        .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
+                                        .queue(null) {
+                                            event.replyFailure(errorMessage).queue(null) {
+                                                event.channel.sendFailure(errorMessage).queue()
+                                            }
+                                        }
 
                                     e.printStackTrace()
                                 }
@@ -320,10 +331,21 @@ object CommandHandler : MutableSet<GenericCommand> {
                                 }
                             is InsufficientPermissionException -> {} // ignored
                             else -> {
-                                event.replyFailure("""
-                                    |${e::class.simpleName ?: "An unknown exception"} has occurred:
-                                    |${e.message ?: "No message provided"}
-                                    |""".trimMargin()).queue()
+                                val errorMessage = """
+                                        |${e::class.simpleName ?: "An unknown exception"} has occurred:
+                                        |${e.message ?: "No message provided"}
+                                        |""".trimMargin()
+
+                                event.hook
+                                    .editOriginalComponents()
+                                    .retainFiles(emptyList())
+                                    .setContent("")
+                                    .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
+                                    .queue(null) {
+                                        event.replyFailure(errorMessage).queue(null) {
+                                            event.messageChannel.sendFailure(errorMessage).queue()
+                                        }
+                                    }
 
                                 e.printStackTrace()
                             }
@@ -384,10 +406,21 @@ object CommandHandler : MutableSet<GenericCommand> {
                                 }
                             is InsufficientPermissionException -> {} // ignored
                             else -> {
-                                event.replyFailure("""
-                                    |${e::class.simpleName ?: "An unknown exception"} has occurred:
-                                    |${e.message ?: "No message provided"}
-                                    |""".trimMargin()).queue()
+                                val errorMessage = """
+                                        |${e::class.simpleName ?: "An unknown exception"} has occurred:
+                                        |${e.message ?: "No message provided"}
+                                        |""".trimMargin()
+
+                                event.hook
+                                    .editOriginalComponents()
+                                    .retainFiles(emptyList())
+                                    .setContent("")
+                                    .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
+                                    .queue(null) {
+                                        event.replyFailure(errorMessage).queue(null) {
+                                            event.messageChannel.sendFailure(errorMessage).queue()
+                                        }
+                                    }
 
                                 e.printStackTrace()
                             }
@@ -428,10 +461,21 @@ object CommandHandler : MutableSet<GenericCommand> {
                                 }
                             is InsufficientPermissionException -> {} // ignored
                             else -> {
-                                event.replyFailure("""
-                                    |${e::class.simpleName ?: "An unknown exception"} has occurred:
-                                    |${e.message ?: "No message provided"}
-                                    |""".trimMargin()).queue()
+                                val errorMessage = """
+                                        |${e::class.simpleName ?: "An unknown exception"} has occurred:
+                                        |${e.message ?: "No message provided"}
+                                        |""".trimMargin()
+
+                                event.hook
+                                    .editOriginalComponents()
+                                    .retainFiles(emptyList())
+                                    .setContent("")
+                                    .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
+                                    .queue(null) {
+                                        event.replyFailure(errorMessage).queue(null) {
+                                            event.messageChannel.sendFailure(errorMessage).queue()
+                                        }
+                                    }
 
                                 e.printStackTrace()
                             }
@@ -496,10 +540,21 @@ object CommandHandler : MutableSet<GenericCommand> {
                                         }
                                 is InsufficientPermissionException -> {} // ignored
                                 else -> {
-                                    event.replyFailure("""
+                                    val errorMessage = """
                                         |${e::class.simpleName ?: "An unknown exception"} has occurred:
                                         |${e.message ?: "No message provided"}
-                                        |""".trimMargin()).queue()
+                                        |""".trimMargin()
+
+                                    event.hook
+                                        .editOriginalComponents()
+                                        .retainFiles(emptyList())
+                                        .setContent("")
+                                        .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
+                                        .queue(null) {
+                                            event.replyFailure(errorMessage).queue(null) {
+                                                event.messageChannel.sendFailure(errorMessage).queue()
+                                            }
+                                        }
 
                                     e.printStackTrace()
                                 }
@@ -569,10 +624,21 @@ object CommandHandler : MutableSet<GenericCommand> {
                                         }
                                 is InsufficientPermissionException -> {} // ignored
                                 else -> {
-                                    event.replyFailure("""
+                                    val errorMessage = """
                                         |${e::class.simpleName ?: "An unknown exception"} has occurred:
                                         |${e.message ?: "No message provided"}
-                                        |""".trimMargin()).queue()
+                                        |""".trimMargin()
+
+                                    event.hook
+                                        .editOriginalComponents()
+                                        .retainFiles(emptyList())
+                                        .setContent("")
+                                        .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
+                                        .queue(null) {
+                                            event.replyFailure(errorMessage).queue(null) {
+                                                event.messageChannel.sendFailure(errorMessage).queue()
+                                            }
+                                        }
 
                                     e.printStackTrace()
                                 }
