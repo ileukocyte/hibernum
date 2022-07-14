@@ -13,6 +13,7 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.SelfDeletion
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.*
+import io.ileukocyte.hibernum.extensions.EmbedType
 import io.ileukocyte.hibernum.handlers.CommandContext
 import io.ileukocyte.hibernum.utils.*
 
@@ -23,9 +24,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
 
-import net.dv8tion.jda.api.entities.Message
-import net.dv8tion.jda.api.entities.MessageChannel
-import net.dv8tion.jda.api.entities.User
+import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.Event
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -66,7 +65,7 @@ class AkinatorCommand : TextCommand {
         setOf(option)
     }
 
-    /*private*/ companion object {
+    companion object {
         const val PROBABILITY_THRESHOLD = 0.8125
 
         @JvmField
@@ -170,10 +169,17 @@ class AkinatorCommand : TextCommand {
                             }) { false } // used to block other commands
                         }
 
-                        val enableNsfwMode = try {
-                            !event.textChannel.isNSFW
-                        } catch (_: IllegalStateException) {
-                            true
+                        val enableNsfwMode = when (event.channelType) {
+                            ChannelType.TEXT -> !event.textChannel.isNSFW
+                            ChannelType.NEWS -> !event.newsChannel.isNSFW
+                            ChannelType.GUILD_NEWS_THREAD, ChannelType.GUILD_PUBLIC_THREAD, ChannelType.GUILD_PRIVATE_THREAD -> {
+                                when (val parentChannel = event.threadChannel.parentChannel) {
+                                    is TextChannel -> !parentChannel.isNSFW
+                                    is NewsChannel -> !parentChannel.isNSFW
+                                    else -> true
+                                }
+                            }
+                            else -> true
                         }
 
                         val akiwrapper = buildAkiwrapper {
@@ -220,7 +226,9 @@ class AkinatorCommand : TextCommand {
                     }
                 }
             }
-        } else throw CommandException("You did not invoke the initial command!")
+        } else {
+            throw CommandException("You did not invoke the initial command!")
+        }
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
@@ -331,7 +339,9 @@ class AkinatorCommand : TextCommand {
                     }
                 }
             }
-        } else throw CommandException("You did not invoke the initial command!")
+        } else {
+            throw CommandException("You did not invoke the initial command!")
+        }
     }
 
     private suspend fun awaitAnswer(
@@ -529,11 +539,17 @@ class AkinatorCommand : TextCommand {
         }
     }
 
-    private suspend fun <E : Event> sendGuessTypeMenu(channelId: Long, playerId: Long, event: E, processId: Int) {
+    private suspend fun <E : Event> sendGuessTypeMenu(
+        channelId: Long,
+        playerId: Long,
+        event: E,
+        processId: Int,
+    ) {
         event.jda.getProcessByEntitiesIds(playerId, channelId)?.kill(event.jda) // just in case
 
-        if (event.jda.getUserProcesses(playerId).any { it.command is AkinatorCommand && it.channel != channelId })
+        if (event.jda.getUserProcesses(playerId).any { it.command is AkinatorCommand && it.channel != channelId }) {
             throw CommandException("You have another Akinator command running somewhere else! Finish the process first!")
+        }
 
         val menu = SelectMenu
             .create("$name-$playerId-$processId-type")
@@ -587,8 +603,9 @@ class AkinatorCommand : TextCommand {
         processId: Int,
     ) {
         if (callback is SlashCommandInteractionEvent) {
-            if (callback.user.processes.any { it.command is AkinatorCommand && it.channel != callback.messageChannel.idLong })
+            if (callback.user.processes.any { it.command is AkinatorCommand && it.channel != callback.messageChannel.idLong }) {
                 throw CommandException("You have another Akinator command running somewhere else! Finish the process first!")
+            }
         }
 
         val type = optionValue?.let { GuessType.valueOf(it) } ?: GuessType.CHARACTER
