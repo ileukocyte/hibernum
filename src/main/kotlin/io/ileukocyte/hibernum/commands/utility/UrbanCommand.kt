@@ -25,6 +25,9 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 
 import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.entities.ChannelType
+import net.dv8tion.jda.api.entities.NewsChannel
+import net.dv8tion.jda.api.entities.TextChannel
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
@@ -47,10 +50,17 @@ class UrbanCommand : TextCommand {
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val query = args ?: throw NoArgumentsException
 
-        val isNSFW = try {
-            event.textChannel.isNSFW
-        } catch (_: IllegalStateException) {
-            false
+        val isNSFW = when (event.channelType) {
+            ChannelType.TEXT -> event.textChannel.isNSFW
+            ChannelType.NEWS -> event.newsChannel.isNSFW
+            ChannelType.GUILD_NEWS_THREAD, ChannelType.GUILD_PUBLIC_THREAD, ChannelType.GUILD_PRIVATE_THREAD -> {
+                when (val parentChannel = event.threadChannel.parentChannel) {
+                    is TextChannel -> parentChannel.isNSFW
+                    is NewsChannel -> parentChannel.isNSFW
+                    else -> false
+                }
+            }
+            else -> false
         }
 
         val deferred = event.channel.sendEmbed {
@@ -74,10 +84,17 @@ class UrbanCommand : TextCommand {
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val query = event.getOption("term")?.asString ?: return
 
-        val isNSFW = try {
-            event.textChannel.isNSFW
-        } catch (_: IllegalStateException) {
-            false
+        val isNSFW = when (event.channelType) {
+            ChannelType.TEXT -> event.textChannel.isNSFW
+            ChannelType.NEWS -> event.newsChannel.isNSFW
+            ChannelType.GUILD_NEWS_THREAD, ChannelType.GUILD_PUBLIC_THREAD, ChannelType.GUILD_PRIVATE_THREAD -> {
+                when (val parentChannel = event.threadChannel.parentChannel) {
+                    is TextChannel -> parentChannel.isNSFW
+                    is NewsChannel -> parentChannel.isNSFW
+                    else -> false
+                }
+            }
+            else -> false
         }
 
         val deferred = event.deferReply().takeIf { isNSFW }?.await()
