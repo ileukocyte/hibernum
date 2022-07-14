@@ -15,6 +15,7 @@ import kotlinx.coroutines.selects.select
 
 import net.dv8tion.jda.api.entities.GuildMessageChannel
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent
+import net.dv8tion.jda.api.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent
@@ -205,5 +206,9 @@ object EventHandler : ListenerAdapter() {
 
     override fun onGuildJoin(event: GuildJoinEvent) {
         MUSIC_MANAGERS[event.guild.idLong] = GuildMusicManager(PLAYER_MANAGER)
+    }
+
+    override fun onGuildLeave(event: GuildLeaveEvent) {
+        MUSIC_MANAGERS -= event.guild.idLong
     }
 }
