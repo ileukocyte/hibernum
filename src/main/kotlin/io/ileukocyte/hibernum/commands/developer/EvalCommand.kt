@@ -156,14 +156,17 @@ class EvalCommand : TextCommand, MessageContextCommand {
     }
 
     override suspend fun invoke(event: MessageContextInteractionEvent) {
-        val code = event.target.contentRaw.takeUnless { it.isEmpty() }?.let { code ->
-            code.takeIf { it.startsWith("```") }
-                ?.removeSurrounding("```")
-                ?.removePrefix("kts\n")
-                ?.removePrefix("kt\n")
-                ?.removePrefix("kotlin\n")
-                ?: code
-        } ?: throw CommandException("No Kotlin code has been provided in the message!")
+        val commandName = "${Immutable.DEFAULT_PREFIX}$name"
+
+        val code = event.target.contentRaw.takeUnless { it.isEmpty() }?.removePrefix("$commandName ")
+            ?.let { code ->
+                code.takeIf { it.startsWith("```") }
+                    ?.removeSurrounding("```")
+                    ?.removePrefix("kts\n")
+                    ?.removePrefix("kt\n")
+                    ?.removePrefix("kotlin\n")
+                    ?: code
+            } ?: throw CommandException("No Kotlin code has been provided in the message!")
 
         val packages = buildString {
             for ((key, value) in IMPORTS) {
