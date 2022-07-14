@@ -68,7 +68,8 @@ class InvertCommand : TextCommand, UniversalContextCommand {
                 } catch (e: Exception) {
                     deferred.delete().queue({}) {}
 
-                    throw CommandException("${it::class.qualifiedName ?: "An unknown exception"}: ${e.message ?: "something went wrong!"}")
+                    throw CommandException("${it::class.qualifiedName ?: "An unknown exception"}: " +
+                            (e.message ?: "something went wrong!"))
                 }
             }
         } ?: run {
@@ -85,13 +86,22 @@ class InvertCommand : TextCommand, UniversalContextCommand {
             val response = try {
                 HttpClient(CIO).get(input).readBytes()
             } catch (_: Exception) {
-                deferred.delete().queue({}) {}
+                deferred.editMessageEmbeds(
+                    defaultEmbed("The provided link is invalid!", EmbedType.FAILURE)
+                ).queue(null) { throw CommandException("The provided link is invalid!") }
 
-                throw CommandException("The provided link is invalid!")
+                return
             }
 
-            val image = withContext(Dispatchers.IO) { ImageIO.read(ByteArrayInputStream(response)) }
-                .apply { invert() }
+            val image = try {
+                withContext(Dispatchers.IO) { ImageIO.read(ByteArrayInputStream(response)) }.apply { invert() }
+            } catch (_: Exception) {
+                deferred.editMessageEmbeds(
+                    defaultEmbed("The provided link is invalid!", EmbedType.FAILURE)
+                ).queue(null) { throw CommandException("The provided link is invalid!") }
+
+                return
+            }
 
             val bytesToSend = ByteArrayOutputStream()
                 .apply { withContext(Dispatchers.IO) { ImageIO.write(image, "png", this@apply) } }
@@ -109,6 +119,7 @@ class InvertCommand : TextCommand, UniversalContextCommand {
                 ?.let { "$it?size=2048".replace("gif", "png") }
             ?: event.getOption("link")
                 ?.asString
+                ?.trim()
                 ?.apply {
                     if (!UrlValidator().isValid(this)) {
                         throw CommandException("The provided input is invalid!")
@@ -131,8 +142,15 @@ class InvertCommand : TextCommand, UniversalContextCommand {
             return
         }
 
-        val image = withContext(Dispatchers.IO) { ImageIO.read(ByteArrayInputStream(response)) }
-            .apply { invert() }
+        val image = try {
+            withContext(Dispatchers.IO) { ImageIO.read(ByteArrayInputStream(response)) }.apply { invert() }
+        } catch (_: Exception) {
+            deferred.editOriginalEmbeds(
+                defaultEmbed("The provided link is invalid!", EmbedType.FAILURE)
+            ).queue(null) { throw CommandException("The provided link is invalid!") }
+
+            return
+        }
 
         val bytesToSend = ByteArrayOutputStream()
             .apply { withContext(Dispatchers.IO) { ImageIO.write(image, "png", this@apply) } }
@@ -165,7 +183,8 @@ class InvertCommand : TextCommand, UniversalContextCommand {
                 } catch (e: Exception) {
                     deferred.deleteOriginal().queue({}) {}
 
-                    throw CommandException("${it::class.qualifiedName ?: "An unknown exception"}: ${e.message ?: "something went wrong!"}")
+                    throw CommandException("${it::class.qualifiedName ?: "An unknown exception"}: " +
+                            (e.message ?: "something went wrong!"))
                 }
             }
         } ?: run {
@@ -182,13 +201,22 @@ class InvertCommand : TextCommand, UniversalContextCommand {
             val response = try {
                 HttpClient(CIO).get(input).readBytes()
             } catch (_: Exception) {
-                deferred.deleteOriginal().queue({}) {}
+                deferred.editOriginalEmbeds(
+                    defaultEmbed("The provided link is invalid!", EmbedType.FAILURE)
+                ).queue(null) { throw CommandException("The provided link is invalid!") }
 
-                throw CommandException("The provided link is invalid!")
+                return
             }
 
-            val image = withContext(Dispatchers.IO) { ImageIO.read(ByteArrayInputStream(response)) }
-                .apply { invert() }
+            val image = try {
+                withContext(Dispatchers.IO) { ImageIO.read(ByteArrayInputStream(response)) }.apply { invert() }
+            } catch (_: Exception) {
+                deferred.editOriginalEmbeds(
+                    defaultEmbed("The provided link is invalid!", EmbedType.FAILURE)
+                ).queue(null) { throw CommandException("The provided link is invalid!") }
+
+                return
+            }
 
             val bytesToSend = ByteArrayOutputStream()
                 .apply { withContext(Dispatchers.IO) { ImageIO.write(image, "png", this@apply) } }
