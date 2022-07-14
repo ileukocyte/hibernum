@@ -16,7 +16,8 @@ suspend fun <T> CompletableFuture<T>.await() = suspendCoroutine<T> { c ->
 val Boolean.asWord get() = if (this) "Yes" else "No"
 
 // kotlin.Int
-val Int.charName: String? get() = Character.getName(this)
+val Int.charName: String?
+    get() = Character.getName(this)
 
 fun Int.toChars(): CharArray = Character.toChars(this)
 
@@ -49,7 +50,8 @@ fun String.containsAll(vararg args: Char) = toCharArray().toList().containsAll(a
 fun String.limitTo(limit: Int, trim: Boolean = true) = take(limit)
     .let {
         if (length > limit) {
-            (it.removeLastChar().takeIf { trim }?.trim() ?: it.removeLastChar()) + '\u2026'
+            (it.removeLastChar().takeIf { trim }?.trim()
+                ?: it.removeLastChar()) + '\u2026'
         } else {
             this
         }
@@ -63,7 +65,8 @@ fun String.removeLastChar() = substring(0, length - 1)
 fun String.replaceLastChar(charSequence: CharSequence) = removeLastChar() + charSequence
 fun String.replaceLastChar(char: Char) = removeLastChar() + char
 
-fun <N : Number> String.singularOrPlural(number: N) = this + "s".takeUnless { number.toLong() == 1L }.orEmpty()
+fun <N : Number> String.singularOrPlural(number: N) =
+    this + "s".takeUnless { number.toLong() == 1L }.orEmpty()
 
 fun String.surroundWith(charSequence: CharSequence) = "$charSequence$this$charSequence"
 fun String.surroundWith(char: Char) = "$char$this$char"

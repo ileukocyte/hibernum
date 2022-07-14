@@ -198,7 +198,9 @@ suspend inline fun <reified E : GenericEvent> JDA.awaitEvent(
 
                 throw e
             }
-        } else deferred.await()
+        } else {
+            deferred.await()
+        }
     }) {
         waiterProcess?.let { WaiterProcess.CURRENTLY_RUNNING -= it }
         removeEventListener(listener)

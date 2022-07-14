@@ -1,4 +1,4 @@
-@file:JvmName("EventExtensions")
+@file:JvmName("ReplyCallbackExtensions")
 package io.ileukocyte.hibernum.extensions
 
 import io.ileukocyte.hibernum.builders.KEmbedBuilder

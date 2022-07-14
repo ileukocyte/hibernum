@@ -38,7 +38,7 @@ dependencies {
     implementation(group = "com.sedmelluq", name = "lavaplayer", version = "1.3.78")
 
     // Logging
-    implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.3.0-alpha16")
+    implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.2.11")
     implementation(group = "io.github.microutils", name = "kotlin-logging-jvm", version = "2.1.23")
 
     // APIs and libraries

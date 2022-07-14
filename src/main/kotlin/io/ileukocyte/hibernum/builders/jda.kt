@@ -22,7 +22,9 @@ class KJDABuilder {
         @PublishedApi
         internal operator fun invoke() = if (::type.isInitialized) {
             Activity.of(type, name, url)
-        } else throw BuilderNotInitializedException("`type`")
+        } else {
+            throw BuilderNotInitializedException("`type`")
+        }
     }
 
     lateinit var token: String
@@ -54,7 +56,9 @@ class KJDABuilder {
             .setBulkDeleteSplittingEnabled(bulkDeleteSplitting)
             .setStatus(onlineStatus)
             .build()
-    } else throw BuilderNotInitializedException("`token`")
+    } else {
+        throw BuilderNotInitializedException("`token`")
+    }
 }
 
 inline fun buildJDA(block: KJDABuilder.() -> Unit) = KJDABuilder().apply(block)()
