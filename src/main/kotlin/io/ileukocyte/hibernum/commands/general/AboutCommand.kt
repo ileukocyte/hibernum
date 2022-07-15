@@ -15,17 +15,23 @@ import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Type
+import net.dv8tion.jda.api.interactions.commands.OptionType
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
 class AboutCommand : TextCommand {
     override val name = "about"
     override val description = "Sends the bot's detailed technical statistics"
+    override val options = setOf(
+        OptionData(OptionType.BOOLEAN, "ephemeral", "Whether this message should be visible to other users"))
     override val aliases = setOf("info", "stats")
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) =
         event.channel.sendMessageEmbeds(statsEmbed(event.jda, event.guild)).queue()
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) =
-        event.replyEmbeds(statsEmbed(event.jda, event.guild!!)).queue()
+        event.replyEmbeds(statsEmbed(event.jda, event.guild!!))
+            .setEphemeral(event.getOption("ephemeral")?.asBoolean ?: false)
+            .queue()
 
     private suspend fun statsEmbed(jda: JDA, guild: Guild) = buildEmbed {
         color = Immutable.SUCCESS
