@@ -192,8 +192,6 @@ class EvalCommand : TextCommand, MessageContextCommand {
     }
 
     override suspend fun invoke(event: MessageContextInteractionEvent) {
-        val deferred = event.deferReply().await()
-
         val code = event.target.contentRaw.takeUnless { it.isEmpty() }
             ?.removePrefix("${Immutable.DEFAULT_PREFIX}$name ")
             ?.let { code ->
@@ -204,6 +202,8 @@ class EvalCommand : TextCommand, MessageContextCommand {
                     ?.removePrefix("kotlin\n")
                     ?: code
             } ?: throw CommandException("No Kotlin code has been provided in the message!")
+
+        val deferred = event.deferReply().await()
 
         val packages = buildString {
             for ((key, value) in IMPORTS) {
