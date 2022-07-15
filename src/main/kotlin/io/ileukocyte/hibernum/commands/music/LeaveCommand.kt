@@ -4,12 +4,10 @@ import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.audio.stop
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.TextCommand
-import io.ileukocyte.hibernum.extensions.replyConfirmation
-import io.ileukocyte.hibernum.extensions.replySuccess
-import io.ileukocyte.hibernum.extensions.sendConfirmation
-import io.ileukocyte.hibernum.extensions.sendSuccess
+import io.ileukocyte.hibernum.extensions.*
 
-import net.dv8tion.jda.api.events.Event
+import java.util.concurrent.TimeUnit
+
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
@@ -24,12 +22,22 @@ class LeaveCommand : TextCommand {
             event.member?.voiceState?.channel?.let {
                 if (it == botVc) {
                     if (event.guild.audioPlayer?.player?.playingTrack !== null) {
-                        sendLeaveConfirmation(event.author.idLong, event)
+                        val description = "Are you sure you want the bot to stop playing music and leave the channel?"
+                        val buttons = setOf(
+                            Button.danger("$name-${event.author.idLong}-leave", "Yes"),
+                            Button.secondary("$name-${event.author.idLong}-exit", "No"),
+                        )
+
+                        event.channel.sendConfirmation(description).setActionRow(buttons).queue()
                     } else {
                         event.guild.audioPlayer?.stop()
                         event.guild.audioManager.closeAudioConnection()
 
-                        event.channel.sendSuccess("Left the voice channel!").queue()
+                        event.channel.sendSuccess("Left the voice channel!") {
+                            text = "This message will self-delete in 5 seconds"
+                        }.queue {
+                            it.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
+                        }
                     }
                 } else {
                     throw CommandException("You are not connected to the required voice channel!")
@@ -43,7 +51,13 @@ class LeaveCommand : TextCommand {
             event.member?.voiceState?.channel?.let {
                 if (it == botVc) {
                     if (event.guild?.audioPlayer?.player?.playingTrack !== null) {
-                        sendLeaveConfirmation(event.user.idLong, event)
+                        val description = "Are you sure you want the bot to stop playing music and leave the channel?"
+                        val buttons = setOf(
+                            Button.danger("$name-${event.user.idLong}-leave", "Yes"),
+                            Button.secondary("$name-${event.user.idLong}-exit", "No"),
+                        )
+
+                        event.replyConfirmation(description).addActionRow(buttons).queue()
                     } else {
                         event.guild?.audioPlayer?.stop()
                         event.guild?.audioManager?.closeAudioConnection()
@@ -65,35 +79,25 @@ class LeaveCommand : TextCommand {
         if (event.user.id == id.first()) {
             when (id.last()) {
                 "leave" -> {
+                    val embed = defaultEmbed("Left the voice channel!", EmbedType.SUCCESS) {
+                        text = "This message will self-delete in 5 seconds"
+                    }
+
                     event.guild?.audioPlayer?.stop()
                     event.guild?.audioManager?.closeAudioConnection()
 
-                    event.replySuccess("Left the voice channel!")
-                        .setEphemeral(true)
-                        .flatMap { event.message.delete() }
-                        .queue()
+                    event.editComponents().setEmbeds(embed).queue({
+                        it.deleteOriginal().queueAfter(5, TimeUnit.SECONDS, null) {}
+                    }) { _ ->
+                        event.channel.sendMessageEmbeds(embed).queue {
+                            it.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
+                        }
+                    }
                 }
-                "exit" -> event.message.delete().queue {
-                    event.replySuccess("Successfully canceled!").setEphemeral(true).queue()
-                }
+                "exit" -> event.message.delete().queue(null) {}
             }
         } else {
             throw CommandException("You did not invoke the initial command!")
-        }
-    }
-
-    private fun <E : Event> sendLeaveConfirmation(userId: Long, event: E) {
-        val description = "Are you sure you want the bot to stop playing music and leave the channel?"
-        val buttons = setOf(
-            Button.danger("$name-$userId-leave", "Yes"),
-            Button.secondary("$name-$userId-exit", "No"),
-        )
-
-        when (event) {
-            is MessageReceivedEvent ->
-                event.channel.sendConfirmation(description).setActionRow(buttons).queue()
-            is SlashCommandInteractionEvent ->
-                event.replyConfirmation(description).addActionRow(buttons).queue()
         }
     }
 }
