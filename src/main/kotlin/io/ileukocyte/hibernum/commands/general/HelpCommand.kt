@@ -100,9 +100,20 @@ class HelpCommand : TextCommand {
                 title = "Slash Options"
                 description = "$nameWithPrefix ${options.joinToString(" ") { "<${it.name}>" }}\n\n" +
                         options.joinToString("\n") { o ->
+                            val description by lazy {
+                                if (o.description.split("\\s+".toRegex(), 2)
+                                        .first()
+                                        .substring(1)
+                                        .any { !it.isLowerCase() }) {
+                                    o.description
+                                } else {
+                                    o.description.replaceFirstChar { it.lowercase() }
+                                }
+                            }
+
                             "<${o.name}>${
                                 " (optional)".takeUnless { o.isRequired }.orEmpty()
-                            } — ${o.description.replaceFirstChar { it.lowercase() }}"
+                            } — $description"
                         }
             }
         }
