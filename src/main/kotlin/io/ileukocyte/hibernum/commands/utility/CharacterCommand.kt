@@ -26,16 +26,23 @@ class CharacterCommand : TextCommand {
     override val usages = setOf(setOf("input"))
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
-        val input = args?.remove(" ")
-            ?.run { takeIf { it.length <= 25 } ?: throw CommandException("The amount of characters must not exceed 25!") }
-            ?: throw NoArgumentsException
+        val input = args
+            ?.remove(" ")
+            ?.let {
+                it.takeIf { it.toCharArray().distinct().size <= 25 }
+                    ?: throw CommandException("The amount of unique characters must not exceed 25!")
+            } ?: throw NoArgumentsException
 
         event.channel.sendMessageEmbeds(charEmbed(input)).queue()
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
-        val input = event.getOption("input")?.asString?.remove(" ")
-            ?.run { takeIf { it.length <= 25 } ?: throw CommandException("The amount of characters must not exceed 25!") }
+        val input = event.getOption("input")?.asString
+            ?.remove(" ")
+            ?.let {
+                it.takeIf { it.toCharArray().distinct().size <= 25 }
+                    ?: throw CommandException("The amount of unique characters must not exceed 25!")
+            }
 
         if (input !== null) {
             try {
@@ -47,8 +54,7 @@ class CharacterCommand : TextCommand {
             }
         } else {
             val modalInput = TextInput
-                .create("input", "Enter Your Text:", TextInputStyle.PARAGRAPH)
-                .setMaxLength(25)
+                .create("input", "Enter Your Text (up to 25 unique characters):", TextInputStyle.PARAGRAPH)
                 .build()
             val modal = Modal
                 .create("$name-modal", "Character Information")
@@ -60,7 +66,9 @@ class CharacterCommand : TextCommand {
     }
 
     override suspend fun invoke(event: ModalInteractionEvent) {
-        val input = event.getValue("input")?.asString ?: return
+        val input = event.getValue("input")?.asString
+            ?.takeIf { it.toCharArray().distinct().size <= 25 }
+            ?: throw CommandException("The amount of unique characters must not exceed 25!")
 
         try {
             event.deferReply().await()
