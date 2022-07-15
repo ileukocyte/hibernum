@@ -110,7 +110,7 @@ class KillCommand : TextCommand {
                         .setMaxLength(4)
                         .build()
                     val modal = Modal
-                        .create("$name-modal", "Process Killing")
+                        .create("$name-modal", "Process Termination")
                         .addActionRow(input)
                         .build()
 
