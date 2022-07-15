@@ -2,6 +2,7 @@ package io.ileukocyte.hibernum.commands.general
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.replyWarning
 import io.ileukocyte.hibernum.extensions.sendWarning
 
@@ -17,16 +18,18 @@ class InviteCommand : TextCommand {
         event.channel.sendWarning("In order to invite the bot, go to its profile " +
                 "since the command is deprecated and will be removed " +
                 "once the profile invitation button is supported on Discord on mobile!")
-            .setActionRow(linkButtonButton(event.jda.selfUser.id))
-            .queue()
+            .setActionRow(
+                event.jda.run { linkButtonButton(selfUser.id, retrieveApplicationInfo().await().permissionsRaw) }
+            ).queue()
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) =
         event.replyWarning("In order to invite the bot, go to its profile " +
                 "since the command is deprecated and will be removed " +
                 "once the profile invitation button is supported on Discord on mobile!")
-            .addActionRow(linkButtonButton(event.jda.selfUser.id))
-            .queue()
+            .addActionRow(
+                event.jda.run { linkButtonButton(selfUser.id, retrieveApplicationInfo().await().permissionsRaw) }
+            ).queue()
 
-    private fun linkButtonButton(botId: String) =
-        Button.link(Immutable.INVITE_LINK_FORMAT.format(botId), "Invite Link")
+    private fun linkButtonButton(botId: String, permissions: Long) =
+        Button.link(Immutable.INVITE_LINK_FORMAT.format(botId, permissions), "Invite Link")
 }

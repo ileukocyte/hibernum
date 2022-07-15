@@ -34,10 +34,11 @@ class AboutCommand : TextCommand {
 
         description = buildString {
             val restPing = jda.restPing.await()
-            val inviteLink = Immutable.INVITE_LINK_FORMAT.format(jda.selfUser.id)
+            val appInfo = jda.retrieveApplicationInfo().await()
+            val inviteLink = Immutable.INVITE_LINK_FORMAT.format(jda.selfUser.id, appInfo.permissionsRaw)
             val musicStreamingServersCount = jda.guildCache
                 .count { it.selfMember.voiceState?.inAudioChannel() == true }
-            val owner = jda.retrieveApplicationInfo().await().owner
+            val owner = appInfo.owner
             val commandCount = setOf(
                 CommandHandler.count { it is ClassicTextOnlyCommand }.takeIf { it > 0 }?.let { "text-only: $it" },
                 CommandHandler.count { it is SlashOnlyCommand }.takeIf { it > 0 }?.let { "slash-only: $it" },
@@ -66,8 +67,9 @@ class AboutCommand : TextCommand {
             appendLine("**User Context Commands**: ${discordCommands.count { it.type == Type.USER }}")
             append("**Servers**: ${jda.guildCache.size()}")
 
-            if (jda.unavailableGuilds.isNotEmpty())
+            if (jda.unavailableGuilds.isNotEmpty()) {
                 append(" (${jda.unavailableGuilds.size} servers are unavailable)")
+            }
 
             appendLine()
             appendLine("**Active Threads**: ${Thread.activeCount()}")

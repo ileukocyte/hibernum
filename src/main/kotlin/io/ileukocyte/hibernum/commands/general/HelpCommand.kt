@@ -3,6 +3,7 @@ package io.ileukocyte.hibernum.commands.general
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.*
+import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asText
 
@@ -13,6 +14,7 @@ import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
@@ -31,15 +33,17 @@ class HelpCommand : TextCommand {
 
             action.queue()
         } else {
-            event.author.openPrivateChannel().queue {
-                it.sendMessageEmbeds(getCommandList(event.jda, event.author, false)).queue({
-                    event.message.addReaction(Emoji.fromUnicode("\u2705")).queue(null) {}
-                }) {
-                    event.channel.sendMessageEmbeds(getCommandList(event.jda, event.author,
-                        isFromSlashCommand = false,
-                        isInDm = false,
-                    )).queue()
-                }
+            try {
+                val dm = event.author.openPrivateChannel().await()
+
+                dm.sendMessageEmbeds(getCommandList(event.jda, event.author, false)).await()
+
+                event.message.addReaction(Emoji.fromUnicode("\u2705")).queue(null) {}
+            } catch (_: ErrorResponseException) {
+                event.channel.sendMessageEmbeds(getCommandList(event.jda, event.author,
+                    isFromSlashCommand = false,
+                    isInDm = false,
+                )).queue()
             }
         }
     }
@@ -116,7 +120,7 @@ class HelpCommand : TextCommand {
         }
     }
 
-    private fun getCommandList(
+    private suspend fun getCommandList(
         jda: JDA,
         author: User,
         isFromSlashCommand: Boolean,
@@ -124,7 +128,10 @@ class HelpCommand : TextCommand {
     ) = buildEmbed {
         color = Immutable.SUCCESS
 
-        val inviteLink = Immutable.INVITE_LINK_FORMAT.format(jda.selfUser.id)
+        val inviteLink = Immutable.INVITE_LINK_FORMAT.format(
+            jda.selfUser.id,
+            jda.retrieveApplicationInfo().await().permissionsRaw,
+        )
 
         appendLine("Commands in italics can only be used either as text commands " +
                 "(the ones prefixed with \"${Immutable.DEFAULT_PREFIX}\") " +
