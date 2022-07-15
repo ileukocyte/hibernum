@@ -15,6 +15,7 @@ import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.interactions.InteractionHook
+import net.dv8tion.jda.api.interactions.InteractionType
 
 import org.jetbrains.kotlin.utils.addToStdlib.cast
 
@@ -38,10 +39,15 @@ val Guild.audioPlayer: GuildMusicManager?
         return manager
     }
 
-fun JDA.loadGuildMusicManagers() = guildCache.forEach { MUSIC_MANAGERS[it.idLong] = GuildMusicManager(PLAYER_MANAGER) }
+fun JDA.loadGuildMusicManagers() =
+    guildCache.forEach { MUSIC_MANAGERS[it.idLong] = GuildMusicManager(PLAYER_MANAGER) }
 
 fun GuildMusicManager.stop() {
-    player.playingTrack?.userData?.cast<TrackUserData>()?.announcement?.delete()?.queue({}) {}
+    val announcement = player.playingTrack?.userData?.cast<TrackUserData>()?.announcement
+
+    announcement?.takeIf {
+        it.interaction?.takeIf { i -> i.type == InteractionType.COMMAND } === null
+    }?.delete()?.queue(null) {}
 
     player.destroy()
     player.isPaused = false
