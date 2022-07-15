@@ -1,46 +1,126 @@
 package io.ileukocyte.hibernum.commands.`fun`
 
 import io.ileukocyte.hibernum.Immutable
-import io.ileukocyte.hibernum.commands.ClassicTextOnlyCommand
+import io.ileukocyte.hibernum.builders.buildEmbed
+import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.SlashOnlyCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.awaitEvent
 import io.ileukocyte.hibernum.utils.processes
 import io.ileukocyte.hibernum.utils.waiterProcess
+
 import java.util.concurrent.TimeUnit
+
 import kotlinx.coroutines.TimeoutCancellationException
+
+import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.entities.User
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.exceptions.ErrorResponseException
+import net.dv8tion.jda.api.interactions.commands.OptionType
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 
-class TicTacToeCommand : ClassicTextOnlyCommand {
-    override val name = "ttt"
-    override val description = "n/a"
+class TicTacToeCommand : SlashOnlyCommand {
+    override val name = "tictactoe"
+    override val description = "Starts the tic-tac-toe game against the specified user"
+    override val options = setOf(
+        OptionData(OptionType.USER, "opponent", "The user to play tic-tac-toe against", true))
 
-    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
-        val opponent = event.message.mentions.usersBag.firstOrNull()
-            ?.takeUnless { it.isBot || it.idLong == event.author.idLong }
-            ?: return
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
+        val opponent = event.getOption("opponent")?.asUser
+            ?.takeUnless { it.isBot || it.idLong == event.user.idLong }
+            ?: throw CommandException("You cannot play against the specified user!")
 
-        val ttt = TicTacToe(event.author, opponent)
+        event.replyConfirmation("Do you want to play tic-tac-toe against ${event.user.asMention}?")
+            .setContent(opponent.asMention)
+            .addActionRow(
+                Button.secondary("$name-${opponent.idLong}-${event.user.idLong}-play", "Yes"),
+                Button.danger("$name-${opponent.idLong}-${event.user.idLong}-exit", "No"),
+            ).queue()
+    }
 
-        val staticProcessId = (1..9999).filter {
-            it !in event.jda.processes.map { p -> p.id.toInt() }
-        }.random()
+    override suspend fun invoke(event: ButtonInteractionEvent) {
+        val id = event.componentId.removePrefix("$name-").split("-")
 
-        val board = event.channel.sendEmbed {
-            description = "It is ${event.author.asMention}'s turn!"
-        }.content(ttt.printableBoard).await()
+        if (event.user.id == id.first()) {
+            when (id.last()) {
+                "play" -> {
+                    val deferred = event.editComponents().await()
 
-        awaitTurn(ttt, event.channel, board, staticProcessId)
+                    try {
+                        val opponent = event.user
+                        val starter = event.guild?.retrieveMemberById(id[1])?.await()?.user
+                            ?: return
+
+                        val ttt = TicTacToe(starter, opponent)
+
+                        val staticProcessId = (1..9999).filter {
+                            it !in event.jda.processes.map { p -> p.id.toInt() }
+                        }.random()
+
+                        val embed = buildEmbed {
+                            description = "It is ${starter.asMention}'s turn!"
+                            color = Immutable.SUCCESS
+                        }
+
+                        val board = try {
+                            deferred.editOriginalEmbeds(embed)
+                                .setContent(ttt.printableBoard)
+                                .await()
+                        } catch (_: ErrorResponseException) {
+                            event.channel.sendMessageEmbeds(embed)
+                                .content(ttt.printableBoard)
+                                .await()
+                        }
+
+                        awaitTurn(ttt, event.channel, board, staticProcessId)
+                    } catch (_: ErrorResponseException) {
+                        deferred.editOriginalEmbeds(
+                            defaultEmbed(
+                                "The user who initiated the game is no longer available for the bot!",
+                                EmbedType.FAILURE,
+                            )
+                        ).queue(null) {
+                            event.messageChannel
+                                .sendFailure("The user who initiated the game is no longer available for the bot!")
+                                .queue()
+                        }
+                    }
+                }
+                "exit" -> {
+                    val starter = try {
+                        event.guild?.retrieveMemberById(id[1])?.await()?.user
+                    } catch (_: ErrorResponseException) {
+                        null
+                    }
+
+                    val embed = defaultEmbed(
+                        "${event.user.asMention} has denied your tic-tac-toe invitation!",
+                        EmbedType.FAILURE,
+                    )
+
+                    event.editComponents()
+                        .setEmbeds(embed)
+                        .setContent(starter?.asMention.orEmpty())
+                        .queue(null) {
+                            event.messageChannel.sendMessageEmbeds(embed)
+                                .content(starter?.asMention.orEmpty()).queue()
+                        }
+                }
+            }
+        } else {
+            throw CommandException("You did not invoke the initial command!")
+        }
     }
 
     private suspend fun awaitTurn(
         ttt: TicTacToe,
         channel: MessageChannel,
-        message: Message?,
+        message: Message,
         processId: Int,
     ) {
         try {
@@ -142,7 +222,7 @@ class TicTacToeCommand : ClassicTextOnlyCommand {
                     } catch (_: TimeoutCancellationException) {
                         confirmation.editMessageComponents().setEmbeds(
                             defaultEmbed("Time is out!", EmbedType.FAILURE)
-                        ).queue(null) {
+                        ).content(EmbedBuilder.ZERO_WIDTH_SPACE).queue(null) {
                             channel.sendFailure("Time is out!").queue()
                         }
                     }
@@ -153,11 +233,15 @@ class TicTacToeCommand : ClassicTextOnlyCommand {
                 }
             }
         } catch (_: TimeoutCancellationException) {
-
+            message.editMessageEmbeds(defaultEmbed("Time is out!", EmbedType.FAILURE))
+                .content(EmbedBuilder.ZERO_WIDTH_SPACE)
+                .queue(null) {
+                    channel.sendFailure("Time is out!").queue()
+                }
         }
     }
 
-    class TicTacToe(
+    private class TicTacToe(
         val starter: User,
         val opponent: User,
     ) {
