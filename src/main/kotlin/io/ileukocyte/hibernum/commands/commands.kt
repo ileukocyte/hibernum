@@ -44,6 +44,13 @@ interface GenericCommand : Comparable<GenericCommand> {
     val isDeveloper: Boolean
         get() = category == CommandCategory.DEVELOPER
 
+    /**
+     * Used for a few developer commands that can be used in spite of some other
+     * command processes running in the background
+     */
+    val neglectProcessBlock: Boolean
+        get() = false
+
     val inputTypes: Set<InputType>
         get() {
             val inputTypes = mutableSetOf<InputType>()

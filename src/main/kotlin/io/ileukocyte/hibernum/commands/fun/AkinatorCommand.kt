@@ -377,7 +377,7 @@ class AkinatorCommand : TextCommand {
                     }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
                 }
                 "debug" -> {
-                    val reply = if (player.isDeveloper) {
+                    val reply = if (player.isBotDeveloper) {
                         message.reply(akiwrapper.guesses
                             .filter { DECLINED_GUESSES[player.idLong]?.contains(it.idLong) == false }
                             .joinToString("\n") { "${it.name} (${it.id}): ${it.probability}" }

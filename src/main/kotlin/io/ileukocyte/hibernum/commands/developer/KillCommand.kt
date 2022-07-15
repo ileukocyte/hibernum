@@ -39,6 +39,7 @@ class KillCommand : TextCommand {
     override val usages = setOf(setOf("process ID (optional)"))
     override val options = setOf(OptionData(OptionType.STRING, "pid", "The ID of the process to kill"))
     override val eliminateStaleInteractions = false
+    override val neglectProcessBlock = true
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val processes = event.jda.processes.takeUnless { it.isEmpty() }

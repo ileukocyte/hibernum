@@ -2,8 +2,6 @@ package io.ileukocyte.hibernum.handlers
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.commands.*
-import io.ileukocyte.hibernum.commands.developer.KillCommand
-import io.ileukocyte.hibernum.commands.developer.ShutdownCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.asText
 import io.ileukocyte.hibernum.utils.getProcessByEntities
@@ -136,10 +134,9 @@ object CommandHandler : MutableSet<GenericCommand> {
                     ?.takeIf { it !is SlashOnlyCommand }
                     ?.let { command ->
                         CoroutineScope(CommandContext).launch {
-                            val isSpecial = command is ShutdownCommand || command is KillCommand
-
-                            if (event.jda.getProcessByEntities(event.author, event.channel) === null || isSpecial) {
-                                if (command.isDeveloper && !event.author.isDeveloper) {
+                            if (event.jda.getProcessByEntities(event.author, event.channel) === null
+                                    || command.neglectProcessBlock) {
+                                if (command.isDeveloper && !event.author.isBotDeveloper) {
                                     event.channel
                                         .sendFailure("You cannot execute the command " +
                                                 "since you are not a developer of the bot!")
@@ -179,7 +176,9 @@ object CommandHandler : MutableSet<GenericCommand> {
                                                     "This message will self-delete in ${asText(sd.delay, sd.unit)}"
                                                 }
                                             }.queue({
-                                                e.selfDeletion?.let { sd -> it.delete().queueAfter(sd.delay, sd.unit, {}) {} }
+                                                e.selfDeletion?.let { sd ->
+                                                    it.delete().queueAfter(sd.delay, sd.unit, null) {}
+                                                }
                                             }) { e.printStackTrace() }
                                         is InsufficientPermissionException -> {} // ignored
                                         else -> {
@@ -211,10 +210,9 @@ object CommandHandler : MutableSet<GenericCommand> {
         if (event.isFromGuild) {
             this[event.name]?.takeIf { it !is ClassicTextOnlyCommand }?.let { command ->
                 CoroutineScope(CommandContext).launch {
-                    val isSpecial = command is ShutdownCommand || command is KillCommand
-
-                    if (event.jda.getProcessByEntities(event.user, event.channel) === null || isSpecial) {
-                        if (command.isDeveloper && !event.user.isDeveloper) {
+                    if (event.jda.getProcessByEntities(event.user, event.channel) === null
+                            || command.neglectProcessBlock) {
+                        if (command.isDeveloper && !event.user.isBotDeveloper) {
                             event.replyFailure("You cannot execute the command " +
                                     "since you are not a developer of the bot!").queue()
 
@@ -251,7 +249,9 @@ object CommandHandler : MutableSet<GenericCommand> {
                                                     "This message will self-delete in ${asText(sd.delay, sd.unit)}"
                                                 }
                                             }.queue({
-                                                e.selfDeletion?.let { sd -> it.delete().queueAfter(sd.delay, sd.unit, {}) {} }
+                                                e.selfDeletion?.let { sd ->
+                                                    it.delete().queueAfter(sd.delay, sd.unit, null) {}
+                                                }
                                             }) { e.printStackTrace() }
                                         }
                                 is InsufficientPermissionException -> {} // ignored
@@ -330,7 +330,9 @@ object CommandHandler : MutableSet<GenericCommand> {
                                             "This message will self-delete in ${asText(sd.delay, sd.unit)}"
                                         }
                                     }.queue({
-                                        e.selfDeletion?.let { sd -> it.delete().queueAfter(sd.delay, sd.unit, {}) {} }
+                                        e.selfDeletion?.let { sd ->
+                                            it.delete().queueAfter(sd.delay, sd.unit, null) {}
+                                        }
                                     }) { e.printStackTrace() }
                                 }
                             is InsufficientPermissionException -> {} // ignored
@@ -404,7 +406,9 @@ object CommandHandler : MutableSet<GenericCommand> {
                                             "This message will self-delete in ${asText(sd.delay, sd.unit)}"
                                         }
                                     }.queue({
-                                        e.selfDeletion?.let { sd -> it.delete().queueAfter(sd.delay, sd.unit, {}) {} }
+                                        e.selfDeletion?.let { sd ->
+                                            it.delete().queueAfter(sd.delay, sd.unit, null) {}
+                                        }
                                     }) { e.printStackTrace() }
                                 }
                             is InsufficientPermissionException -> {} // ignored
@@ -459,7 +463,9 @@ object CommandHandler : MutableSet<GenericCommand> {
                                             "This message will self-delete in ${asText(sd.delay, sd.unit)}"
                                         }
                                     }.queue({
-                                        e.selfDeletion?.let { sd -> it.delete().queueAfter(sd.delay, sd.unit, {}) {} }
+                                        e.selfDeletion?.let { sd ->
+                                            it.delete().queueAfter(sd.delay, sd.unit, null) {}
+                                        }
                                     }) { e.printStackTrace() }
                                 }
                             is InsufficientPermissionException -> {} // ignored
@@ -503,8 +509,9 @@ object CommandHandler : MutableSet<GenericCommand> {
                 val command = cc as MessageContextCommand
 
                 CoroutineScope(CommandContext).launch {
-                    if (event.jda.getProcessByEntities(event.user, event.messageChannel) === null) {
-                        if (command.isDeveloper && !event.user.isDeveloper) {
+                    if (event.jda.getProcessByEntities(event.user, event.messageChannel) === null
+                            || command.neglectProcessBlock) {
+                        if (command.isDeveloper && !event.user.isBotDeveloper) {
                             event.replyFailure("You cannot execute the command since you are not a developer of the bot!").queue()
 
                             return@launch
@@ -540,7 +547,9 @@ object CommandHandler : MutableSet<GenericCommand> {
                                                     "This message will self-delete in ${asText(sd.delay, sd.unit)}"
                                                 }
                                             }.queue({
-                                                e.selfDeletion?.let { sd -> it.delete().queueAfter(sd.delay, sd.unit, {}) {} }
+                                                e.selfDeletion?.let { sd ->
+                                                    it.delete().queueAfter(sd.delay, sd.unit, null) {}
+                                                }
                                             }) { e.printStackTrace() }
                                         }
                                 is InsufficientPermissionException -> {} // ignored
@@ -589,8 +598,9 @@ object CommandHandler : MutableSet<GenericCommand> {
                 val command = cc as UserContextCommand
 
                 CoroutineScope(CommandContext).launch {
-                    if (event.jda.getProcessByEntities(event.user, event.messageChannel) === null) {
-                        if (command.isDeveloper && !event.user.isDeveloper) {
+                    if (event.jda.getProcessByEntities(event.user, event.messageChannel) === null
+                            || command.neglectProcessBlock) {
+                        if (command.isDeveloper && !event.user.isBotDeveloper) {
                             event.replyFailure("You cannot execute the command since you are not a developer of the bot!").queue()
 
                             return@launch
@@ -626,7 +636,9 @@ object CommandHandler : MutableSet<GenericCommand> {
                                                     "This message will self-delete in ${asText(sd.delay, sd.unit)}"
                                                 }
                                             }.queue({
-                                                e.selfDeletion?.let { sd -> it.delete().queueAfter(sd.delay, sd.unit, {}) {} }
+                                                e.selfDeletion?.let { sd ->
+                                                    it.delete().queueAfter(sd.delay, sd.unit, null) {}
+                                                }
                                             }) { e.printStackTrace() }
                                         }
                                 is InsufficientPermissionException -> {} // ignored
