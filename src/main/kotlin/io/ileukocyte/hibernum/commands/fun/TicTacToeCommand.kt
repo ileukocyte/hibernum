@@ -65,6 +65,8 @@ class TicTacToeCommand : SlashOnlyCommand {
                         val embed = buildEmbed {
                             description = "It is ${starter.asMention}'s turn!"
                             color = Immutable.SUCCESS
+
+                            footer { text = "Type in \"exit\" to finish the session!" }
                         }
 
                         val board = try {
@@ -130,7 +132,9 @@ class TicTacToeCommand : SlashOnlyCommand {
 
             if (content.isInt && content.toInt() in 1..9) {
                 if (response.author.idLong != ttt.currentTurn.idLong) {
-                    response.replyFailure("It is currently not your turn!").queue()
+                    response.replyFailure("It is currently not your turn!") {
+                        text = "Type in \"exit\" to finish the session!"
+                    }.queue()
 
                     awaitTurn(ttt, channel, message, processId)
                 } else {
@@ -157,11 +161,13 @@ class TicTacToeCommand : SlashOnlyCommand {
                                     color = Immutable.SUCCESS
                                 }.content(ttt.printableBoard).queue()
                             } else {
-                                ttt.inverseTurn()
+                                ttt.switchTurns()
 
                                 val board = response.replyEmbed {
-                                    description = "It is ${ttt.currentTurn.asMention}'s turn now!"
+                                    description = "It is ${ttt.currentTurn.asMention}'s turn!"
                                     color = Immutable.SUCCESS
+
+                                    footer { text = "Type in \"exit\" to finish the session!" }
                                 }.content(ttt.printableBoard).await()
 
                                 awaitTurn(ttt, channel, board, processId)
@@ -227,7 +233,9 @@ class TicTacToeCommand : SlashOnlyCommand {
                         }
                     }
                 } else {
-                    response.replyFailure("You have tried an invalid turn!").queue()
+                    response.replyFailure("The message is not of the expected turn format!") {
+                        text = "Type in \"exit\" to finish the session!"
+                    }.queue()
 
                     awaitTurn(ttt, channel, message, processId)
                 }
@@ -307,7 +315,7 @@ class TicTacToeCommand : SlashOnlyCommand {
             }
         }
 
-        fun inverseTurn() {
+        fun switchTurns() {
             currentTurn = if (currentTurn == starter) {
                 opponent
             } else {
