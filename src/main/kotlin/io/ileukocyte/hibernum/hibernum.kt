@@ -28,7 +28,6 @@ import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Activity.ActivityType
 import net.dv8tion.jda.api.interactions.commands.Command.Type
-import net.dv8tion.jda.api.interactions.commands.Command.Option
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 
 import org.jetbrains.kotlin.util.collectionUtils.filterIsInstanceAnd
@@ -46,7 +45,7 @@ suspend fun main() = coroutineScope {
         onlineStatus = OnlineStatus.DO_NOT_DISTURB
 
         activity {
-            name = "loading..."
+            name = "loading\u2026"
             type = ActivityType.WATCHING
         }
     }
@@ -79,14 +78,14 @@ suspend fun main() = coroutineScope {
         LOGGER.info("CommandHandler has successfully loaded ${CommandHandler.size} commands!")
     }
 
-    // updating global slash commands
+    // updating global slash and context commands
     launch {
         val discordCommands = discord.retrieveCommands().await()
 
         launch {
             discordCommands.filter {
                 val condition = CommandHandler[it.name] is ClassicTextOnlyCommand
-                        || it.name !in CommandHandler.map(GenericCommand::name)
+                        || it.name !in CommandHandler.map { cmd -> cmd.name }
                         || it.defaultPermissions.permissionsRaw !=
                         CommandHandler[it.name]?.memberPermissions
                             ?.let(DefaultMemberPermissions::enabledFor)
@@ -103,7 +102,7 @@ suspend fun main() = coroutineScope {
                 val contextCommands = CommandHandler.filterIsInstance<ContextCommand>()
 
                 it.type != Type.SLASH && (it.name !in contextCommands.map { cmd -> cmd.contextName }
-                        || contextCommands.firstOrNull { c -> c.contextName == it.name }
+                        || contextCommands.firstOrNull { cmd -> cmd.contextName == it.name }
                             ?.contextTypes
                             ?.contains(it.type) == false
                         || it.defaultPermissions.permissionsRaw !=
@@ -124,16 +123,16 @@ suspend fun main() = coroutineScope {
                 cmd.name !in discordCommands.map { it.name }
                         || cmd.description !in discordCommands.map { it.description.removePrefix("(Developer-only) ") }
                         || discordCommands.any {
-                    cmd.name == it.name && !cmd.options.toList().isEqualTo(it.options.map(Option::toOptionData))
+                    cmd.name == it.name && !cmd.options.toList().isEqualTo(it.options.map { o -> o.toOptionData() })
                 }
             }
 
             CommandHandler
                 .filterIsInstanceAnd<TextCommand> { it !is ClassicTextOnlyCommand && slashPredicate(it) }
                 .forEach {
-                    discord.upsertCommand(it.asSlashCommand!!).queue({ cmd ->
+                    discord.upsertCommand(it.asJDASlashCommand() ?: return@forEach).queue({ cmd ->
                         LOGGER.info("UPDATE: Discord has updated the following slash command: ${cmd.name}!")
-                    }) { t -> t.printStackTrace() }
+                    }, Throwable::printStackTrace)
                 }
 
             CommandHandler
@@ -141,14 +140,14 @@ suspend fun main() = coroutineScope {
                     cmd.contextName !in discordCommands.map { it.name }
                             || cmd.contextTypes.size != discordCommands.count { it.name == cmd.contextName }
                 }.forEach {
-                    for (cc in it.asContextCommands.filter { c ->
-                        val map = discordCommands.associate { cmd -> cmd.name to cmd.type }
+                    for (contextCommand in it.asJDAContextCommands().filter { cmd ->
+                        val map = discordCommands.associate { c -> c.name to c.type }
 
-                        map[c.name] != c.type
+                        map[cmd.name] != cmd.type
                     }) {
-                        discord.upsertCommand(cc).queue({ cmd ->
+                        discord.upsertCommand(contextCommand).queue({ cmd ->
                             LOGGER.info("UPDATE: Discord has updated the following ${cmd.type.name.lowercase()} context command: ${cmd.name}!")
-                        }) { t -> t.printStackTrace() }
+                        }, Throwable::printStackTrace)
                     }
                 }
         }.join()
@@ -166,7 +165,7 @@ suspend fun main() = coroutineScope {
         LOGGER.info("Retrieved $DEVELOPERS as the bot's developers")
     }
 
-    // setting activity
+    // setting final activity
     with(discord.presence) {
         activity = buildActivity {
             name = "${DEFAULT_PREFIX}help | $VERSION"

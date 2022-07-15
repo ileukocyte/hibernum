@@ -79,6 +79,30 @@ interface GenericCommand : Comparable<GenericCommand> {
     val memberPermissions: Set<Permission>
         get() = emptySet()
 
+    /**
+     * A function that is executed when the command's button menu is utilized by a user
+     *
+     * @param event
+     * The [ButtonInteractionEvent] occurring once the command is invoked
+     */
+    suspend operator fun invoke(event: ButtonInteractionEvent) {}
+
+    /**
+     * A function that is executed when the command's selection menu is utilized by a user
+     *
+     * @param event
+     * The [SelectMenuInteractionEvent] occurring once the command is invoked
+     */
+    suspend operator fun invoke(event: SelectMenuInteractionEvent) {}
+
+    /**
+     * A function that is executed when a user responds to the command's modal
+     *
+     * @param event
+     * The [ModalInteractionEvent] occurring once the command is invoked
+     */
+    suspend operator fun invoke(event: ModalInteractionEvent) {}
+
     override fun compareTo(other: GenericCommand) = name.compareTo(other.name)
 
     enum class InputType {
@@ -127,10 +151,10 @@ interface TextCommand : GenericCommand {
         get() = emptySet()
 
     /**
-     * A [SlashCommandData] instance of the slash command
+     * @return A [SlashCommandData] instance of the slash command
      */
-    val asSlashCommand: SlashCommandData?
-        get() = Commands.slash(name, "(Developer-only) ".takeIf { isDeveloper }.orEmpty() + description)
+    fun asJDASlashCommand(): SlashCommandData? =
+        Commands.slash(name, "(Developer-only) ".takeIf { isDeveloper }.orEmpty() + description)
             .addOptions(options)
             .setGuildOnly(true)
             .setDefaultPermissions(DefaultMemberPermissions.enabledFor(memberPermissions))
@@ -152,30 +176,6 @@ interface TextCommand : GenericCommand {
      * The [SlashCommandInteractionEvent] occurring once the command is invoked
      */
     suspend operator fun invoke(event: SlashCommandInteractionEvent)
-
-    /**
-     * A function that is executed when the command's button menu is utilized by a user
-     *
-     * @param event
-     * The [ButtonInteractionEvent] occurring once the command is invoked
-     */
-    suspend operator fun invoke(event: ButtonInteractionEvent) {}
-
-    /**
-     * A function that is executed when the command's selection menu is utilized by a user
-     *
-     * @param event
-     * The [SelectMenuInteractionEvent] occurring once the command is invoked
-     */
-    suspend operator fun invoke(event: SelectMenuInteractionEvent) {}
-
-    /**
-     * A function that is executed when a user responds to the command's modal
-     *
-     * @param event
-     * The [ModalInteractionEvent] occurring once the command is invoked
-     */
-    suspend operator fun invoke(event: ModalInteractionEvent) {}
 }
 
 /**
@@ -188,12 +188,10 @@ interface TextCommand : GenericCommand {
  * @see SlashOnlyCommand
  */
 interface ClassicTextOnlyCommand : TextCommand {
-    override val asSlashCommand: SlashCommandData?
-        get() = null
+    override fun asJDASlashCommand(): SlashCommandData? = null
 
-    override suspend fun invoke(event: SlashCommandInteractionEvent) {
-        // must be left empty
-    }
+    override suspend fun invoke(event: SlashCommandInteractionEvent) =
+        throw UnsupportedOperationException("The command cannot be invoked as a slash command!")
 }
 
 /**
@@ -206,9 +204,8 @@ interface ClassicTextOnlyCommand : TextCommand {
  * @see ClassicTextOnlyCommand
  */
 interface SlashOnlyCommand : TextCommand {
-    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
-        // must be left empty
-    }
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) =
+        throw UnsupportedOperationException("The command cannot be invoked as a classic text command!")
 }
 
 /**
@@ -227,14 +224,13 @@ interface ContextCommand : GenericCommand {
     val contextTypes: Set<Command.Type>
 
     /**
-     * All the [CommandData] instances of the context menu command
+     * @return All the [CommandData] instances of the context menu command
      */
-    val asContextCommands: Set<CommandData>
-        get() = contextTypes.map {
-            Commands.context(it, contextName)
-                .setGuildOnly(true)
-                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(memberPermissions))
-        }.toSet()
+    fun asJDAContextCommands(): Set<CommandData> = contextTypes.map {
+        Commands.context(it, contextName)
+            .setGuildOnly(true)
+            .setDefaultPermissions(DefaultMemberPermissions.enabledFor(memberPermissions))
+    }.toSet()
 }
 
 /**

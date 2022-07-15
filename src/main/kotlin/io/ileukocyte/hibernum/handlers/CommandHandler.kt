@@ -30,6 +30,8 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException
 import net.dv8tion.jda.api.interactions.commands.Command
 
+import org.jetbrains.kotlin.util.collectionUtils.filterIsInstanceAnd
+
 private val commandContextDispatcher = newFixedThreadPool(3).asCoroutineDispatcher()
 
 object CommandContext : CoroutineContext by commandContextDispatcher, AutoCloseable by commandContextDispatcher
@@ -52,6 +54,16 @@ object CommandHandler : MutableSet<GenericCommand> {
     override fun clear() = registeredCommands.clear()
 
     /**
+     * A function that looks for a [GenericCommand] by its name provided
+     *
+     * @param name
+     * The name of the command to search
+     *
+     * @return A [GenericCommand] having the same name as the provided query
+     */
+    fun getGenericCommand(name: String) = firstOrNull { it.name == name }
+
+    /**
      * A function that specifically looks for a [TextCommand] by its name or alias provided
      *
      * @param name
@@ -66,8 +78,7 @@ object CommandHandler : MutableSet<GenericCommand> {
             else -> 0
         }
 
-        return registeredCommands
-            .filterIsInstance<TextCommand>()
+        return filterIsInstance<TextCommand>()
             .filter { checkPriority(name, it) > 0 }
             .maxByOrNull { checkPriority(name, it) }
     }
@@ -82,9 +93,9 @@ object CommandHandler : MutableSet<GenericCommand> {
      *
      * @return A [ContextCommand] having the same name and type as provided
      */
-    operator fun get(name: String, type: Command.Type) = registeredCommands.firstOrNull {
-        it is ContextCommand && it.contextName == name && type in it.contextTypes
-    } as? ContextCommand
+    operator fun get(name: String, type: Command.Type) = filterIsInstanceAnd<ContextCommand> {
+        it.contextName == name && type in it.contextTypes
+    }.firstOrNull()
 
     // Command cooldown extensions
     private fun GenericCommand.getRemainingCooldown(userId: Long) =
@@ -130,7 +141,8 @@ object CommandHandler : MutableSet<GenericCommand> {
                             if (event.jda.getProcessByEntities(event.author, event.channel) === null || isSpecial) {
                                 if (command.isDeveloper && !event.author.isDeveloper) {
                                     event.channel
-                                        .sendFailure("You cannot execute the command since you are not a developer of the bot!")
+                                        .sendFailure("You cannot execute the command " +
+                                                "since you are not a developer of the bot!")
                                         .queue()
 
                                     return@launch
@@ -203,7 +215,8 @@ object CommandHandler : MutableSet<GenericCommand> {
 
                     if (event.jda.getProcessByEntities(event.user, event.channel) === null || isSpecial) {
                         if (command.isDeveloper && !event.user.isDeveloper) {
-                            event.replyFailure("You cannot execute the command since you are not a developer of the bot!").queue()
+                            event.replyFailure("You cannot execute the command " +
+                                    "since you are not a developer of the bot!").queue()
 
                             return@launch
                         }
@@ -232,7 +245,7 @@ object CommandHandler : MutableSet<GenericCommand> {
                                 is CommandException ->
                                     event.replyFailure(e.message ?: "CommandException has occurred!") { text = e.footer }
                                         .setEphemeral(true)
-                                        .queue({}) {
+                                        .queue(null) {
                                             event.channel.sendFailure(e.message ?: "CommandException has occurred!") {
                                                 text = e.footer ?: e.selfDeletion?.let { sd ->
                                                     "This message will self-delete in ${asText(sd.delay, sd.unit)}"
@@ -284,7 +297,7 @@ object CommandHandler : MutableSet<GenericCommand> {
      */
     internal operator fun invoke(event: ButtonInteractionEvent) {
         if (event.isFromGuild && event.message.author == event.jda.selfUser) {
-            this[event.componentId.split("-").first()]?.let { command ->
+            getGenericCommand(event.componentId.split("-").first())?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     if (event.message.timeCreated.isBefore(event.jda.startDate)) {
                         if (command.eliminateStaleInteractions) {
@@ -311,7 +324,7 @@ object CommandHandler : MutableSet<GenericCommand> {
                         when (e) {
                             is CommandException -> event.replyFailure(e.message ?: "CommandException has occurred!")
                                 .setEphemeral(true)
-                                .queue({}) {
+                                .queue(null) {
                                     event.channel.sendFailure(e.message ?: "CommandException has occurred!") {
                                         text = e.footer ?: e.selfDeletion?.let { sd ->
                                             "This message will self-delete in ${asText(sd.delay, sd.unit)}"
@@ -358,8 +371,7 @@ object CommandHandler : MutableSet<GenericCommand> {
      */
     internal operator fun invoke(event: SelectMenuInteractionEvent) {
         if (event.isFromGuild && event.message.author == event.jda.selfUser) {
-            this[event.componentId.split("-").first()]?.let {
-                    command ->
+            getGenericCommand(event.componentId.split("-").first())?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     if (event.message.timeCreated.isBefore(event.jda.startDate)) {
                         if (command.eliminateStaleInteractions) {
@@ -386,7 +398,7 @@ object CommandHandler : MutableSet<GenericCommand> {
                         when (e) {
                             is CommandException -> event.replyFailure(e.message ?: "CommandException has occurred!")
                                 .setEphemeral(true)
-                                .queue({}) {
+                                .queue(null) {
                                     event.channel.sendFailure(e.message ?: "CommandException has occurred!") {
                                         text = e.footer ?: e.selfDeletion?.let { sd ->
                                             "This message will self-delete in ${asText(sd.delay, sd.unit)}"
@@ -433,7 +445,7 @@ object CommandHandler : MutableSet<GenericCommand> {
      */
     internal operator fun invoke(event: ModalInteractionEvent) {
         if (event.isFromGuild) {
-            this[event.modalId.split("-").first()]?.let { command ->
+            getGenericCommand(event.modalId.split("-").first())?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     try {
                         command(event)
@@ -441,7 +453,7 @@ object CommandHandler : MutableSet<GenericCommand> {
                         when (e) {
                             is CommandException -> event.replyFailure(e.message ?: "CommandException has occurred!")
                                 .setEphemeral(true)
-                                .queue({}) {
+                                .queue(null) {
                                     event.messageChannel.sendFailure(e.message ?: "CommandException has occurred!") {
                                         text = e.footer ?: e.selfDeletion?.let { sd ->
                                             "This message will self-delete in ${asText(sd.delay, sd.unit)}"
@@ -514,13 +526,15 @@ object CommandHandler : MutableSet<GenericCommand> {
                                         it.applyCooldown(event.user.idLong)
                                         it(event)
                                     }
-                            } else cc(event)
+                            } else {
+                                cc(event)
+                            }
                         } catch (e: Exception) {
                             when (e) {
                                 is CommandException ->
                                     event.replyFailure(e.message ?: "CommandException has occurred!") { text = e.footer }
                                         .setEphemeral(true)
-                                        .queue({}) {
+                                        .queue(null) {
                                             event.messageChannel.sendFailure(e.message ?: "CommandException has occurred!") {
                                                 text = e.footer ?: e.selfDeletion?.let { sd ->
                                                     "This message will self-delete in ${asText(sd.delay, sd.unit)}"
@@ -598,13 +612,15 @@ object CommandHandler : MutableSet<GenericCommand> {
                                         it.applyCooldown(event.user.idLong)
                                         it(event)
                                     }
-                            } else cc(event)
+                            } else {
+                                cc(event)
+                            }
                         } catch (e: Exception) {
                             when (e) {
                                 is CommandException ->
                                     event.replyFailure(e.message ?: "CommandException has occurred!") { text = e.footer }
                                         .setEphemeral(true)
-                                        .queue({}) {
+                                        .queue(null) {
                                             event.messageChannel.sendFailure(e.message ?: "CommandException has occurred!") {
                                                 text = e.footer ?: e.selfDeletion?.let { sd ->
                                                     "This message will self-delete in ${asText(sd.delay, sd.unit)}"
