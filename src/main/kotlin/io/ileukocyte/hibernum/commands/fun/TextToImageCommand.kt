@@ -24,6 +24,7 @@ import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.components.Modal
 import net.dv8tion.jda.api.interactions.components.text.TextInput
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
+import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
 class TextToImageCommand : TextCommand, MessageContextCommand {
     override val name = "tti"
@@ -34,7 +35,13 @@ class TextToImageCommand : TextCommand, MessageContextCommand {
     override val cooldown = 5L
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
-        val lines = args?.split("\n")?.map { it.limitTo(100) } ?: throw NoArgumentsException
+        val lines = MarkdownSanitizer.sanitize(event.message.contentDisplay)
+            .split("\\s+".toRegex(), 2)
+            .getOrNull(1)
+            ?.split("\n")
+            ?.map { it.limitTo(100) }
+            ?: throw NoArgumentsException
+
         val bytes = textToImage(lines.take(25), lines.maxByOrNull { it.length } ?: return)
 
         event.channel.sendFile(bytes, "tti.png").queue()
@@ -71,7 +78,8 @@ class TextToImageCommand : TextCommand, MessageContextCommand {
     }
 
     override suspend fun invoke(event: MessageContextInteractionEvent) {
-        val content = event.target.contentRaw.takeUnless { it.isEmpty() }
+        val content = event.target.contentDisplay.takeUnless { it.isEmpty() }
+            ?.let { MarkdownSanitizer.sanitize(it) }
             ?: throw CommandException("The message has no text provided!")
 
         val deferred = event.deferReply().await()
@@ -126,7 +134,7 @@ class TextToImageCommand : TextCommand, MessageContextCommand {
 
     companion object {
         @JvmField
-        val TTI_FONT =
+        val TTI_FONT: Font =
             Font.createFont(Font.TRUETYPE_FONT, File("src/main/resources/tti-font.ttf"))
                 .deriveFont(32f)
     }
