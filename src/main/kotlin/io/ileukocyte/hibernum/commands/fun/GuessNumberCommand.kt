@@ -23,7 +23,7 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button
 class GuessNumberCommand : TextCommand {
     override val name = "guess"
     override val description = "Launches a game where the user is supposed to guess some number within the specified range"
-    override val aliases = setOf("guessnum", "guessnumber", "guess-number")
+    override val aliases = setOf("guess-number")
     override val options = setOf(
         OptionData(OptionType.INTEGER, "min", "The beginning of the range (minimum: 1)", true)
             .setMinValue(1)

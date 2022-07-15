@@ -29,7 +29,7 @@ class TextToImageCommand : TextCommand, MessageContextCommand {
     override val name = "tti"
     override val contextName = "Text to Image"
     override val description = "Creates an image containing the provided text"
-    override val aliases = setOf("texttoimage", "text-to-image")
+    override val aliases = setOf("text-to-image")
     override val usages = setOf(setOf("input"))
     override val cooldown = 5L
 

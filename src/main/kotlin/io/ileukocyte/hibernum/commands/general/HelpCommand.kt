@@ -20,7 +20,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
 class HelpCommand : TextCommand {
     override val name = "help"
-    override val description = "Sends a list of all Hibernum's commands and provides the user with the documentation"
+    override val description = "Sends a list of all the bot's commands and provides the user with the documentation"
     override val usages = setOf(setOf("command name (optional)"))
     override val options =
         setOf(OptionData(OptionType.STRING, "command", "The command to provide help for"))

@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 class PingCommand : TextCommand {
     override val name = "ping"
     override val description = "Sends the bot's current response latency separately from the statistics"
+    override val aliases = setOf("latency")
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) =
         event.channel.sendMessageEmbeds(pingEmbed(event.jda)).queue()
