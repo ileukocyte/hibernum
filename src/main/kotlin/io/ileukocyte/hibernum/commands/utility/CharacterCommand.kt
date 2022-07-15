@@ -7,21 +7,27 @@ import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.*
 
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.components.Modal
+import net.dv8tion.jda.api.interactions.components.text.TextInput
+import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 
 class CharacterCommand : TextCommand {
     override val name = "char"
     override val description = "Sends some information about the provided character(s) (including built-in emojis)"
     override val aliases = setOf("character")
-    override val options = setOf(OptionData(OptionType.STRING, "input", "The characters provided", true))
+    override val options = setOf(
+        OptionData(OptionType.STRING, "input", "The characters provided"))
     override val usages = setOf(setOf("input"))
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val input = args?.remove(" ")
-            ?.run { takeIf { it.length <= 20 } ?: throw CommandException("The amount of characters must not exceed 20!") }
+            ?.run { takeIf { it.length <= 25 } ?: throw CommandException("The amount of characters must not exceed 25!") }
             ?: throw NoArgumentsException
 
         event.channel.sendMessageEmbeds(charEmbed(input)).queue()
@@ -29,10 +35,40 @@ class CharacterCommand : TextCommand {
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val input = event.getOption("input")?.asString?.remove(" ")
-            ?.run { takeIf { it.length <= 20 } ?: throw CommandException("The amount of characters must not exceed 20!") }
-            ?: return
+            ?.run { takeIf { it.length <= 25 } ?: throw CommandException("The amount of characters must not exceed 25!") }
 
-        event.replyEmbeds(charEmbed(input)).queue()
+        if (input !== null) {
+            try {
+                event.deferReply().await()
+                    .editOriginalEmbeds(charEmbed(input))
+                    .queue()
+            } catch (_: ErrorResponseException) {
+                event.channel.sendMessageEmbeds(charEmbed(input)).queue()
+            }
+        } else {
+            val modalInput = TextInput
+                .create("input", "Enter Your Text:", TextInputStyle.PARAGRAPH)
+                .setMaxLength(25)
+                .build()
+            val modal = Modal
+                .create("$name-modal", "Character Information")
+                .addActionRow(modalInput)
+                .build()
+
+            event.replyModal(modal).queue()
+        }
+    }
+
+    override suspend fun invoke(event: ModalInteractionEvent) {
+        val input = event.getValue("input")?.asString ?: return
+
+        try {
+            event.deferReply().await()
+                .editOriginalEmbeds(charEmbed(input))
+                .queue()
+        } catch (_: ErrorResponseException) {
+            event.messageChannel.sendMessageEmbeds(charEmbed(input)).queue()
+        }
     }
 
     private fun charEmbed(input: String) = buildEmbed {
@@ -48,7 +84,9 @@ class CharacterCommand : TextCommand {
 
                     "\\u$hex"
                 } + "`)"
-            } else "`\\u$mainHex`"
+            } else {
+                "`\\u$mainHex`"
+            }
 
             field {
                 title = codePoint.charName?.capitalizeAll() ?: "Unknown Character"
