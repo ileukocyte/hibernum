@@ -12,8 +12,8 @@ import java.util.concurrent.Executors.newFixedThreadPool
 import java.util.concurrent.TimeUnit
 
 import kotlin.coroutines.CoroutineContext
-
 import kotlin.reflect.KClass
+
 import kotlinx.coroutines.*
 
 import net.dv8tion.jda.api.JDA
@@ -36,15 +36,27 @@ inline fun waiterProcess(block: WaiterProcess.Builder.() -> Unit) = WaiterProces
 
 fun JDA.getProcessById(id: String) = processes.firstOrNull { it.id == id }
 
-fun JDA.getProcessByEntitiesIds(usersIds: Set<Long>, channelId: Long) = processes.firstOrNull {
+fun JDA.getProcessByEntitiesIds(
+    usersIds: Set<Long>,
+    channelId: Long,
+) = processes.firstOrNull {
     it.users.containsAll(usersIds) && it.channel == channelId
 }
 
-fun JDA.getProcessByEntities(users: Set<User>, channel: MessageChannel) =
-    getProcessByEntitiesIds(users.map { it.idLong }.toSet(), channel.idLong)
+fun JDA.getProcessByEntities(
+    users: Set<User>,
+    channel: MessageChannel,
+) = getProcessByEntitiesIds(users.map { it.idLong }.toSet(), channel.idLong)
 
-fun JDA.getProcessByEntitiesIds(userId: Long, channelId: Long) = getProcessByEntitiesIds(setOf(userId), channelId)
-fun JDA.getProcessByEntities(user: User, channel: MessageChannel) = getProcessByEntities(setOf(user), channel)
+fun JDA.getProcessByEntitiesIds(
+    userId: Long,
+    channelId: Long,
+) = getProcessByEntitiesIds(setOf(userId), channelId)
+
+fun JDA.getProcessByEntities(
+    user: User,
+    channel: MessageChannel,
+) = getProcessByEntities(setOf(user), channel)
 
 fun JDA.getUserProcesses(user: User) = processes.filter { user.idLong in it.users }
 fun JDA.getUserProcesses(userId: Long) = processes.filter { userId in it.users }

@@ -10,6 +10,8 @@ import io.ileukocyte.hibernum.utils.*
 import java.text.DecimalFormat
 import java.util.concurrent.TimeUnit
 
+import kotlinx.coroutines.TimeoutCancellationException
+
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.entities.User
@@ -40,14 +42,17 @@ class GuessNumberCommand : TextCommand {
             ?.map { it.toInt() }
             ?: throw NoArgumentsException
 
-        if (min >= max)
+        if (min >= max) {
             throw CommandException("The minimal value cannot be greater than the maximum value!")
+        }
 
-        if (min < 1 || max > 500_000)
+        if (min < 1 || max > 500_000) {
             throw CommandException("The specified values are out of the possible range of 1 through 500,000!")
+        }
 
-        if ((max - min) < 5)
+        if ((max - min) < 5) {
             throw CommandException("The difference between the maximal value and the minimal one must equal to or be greater than 5!")
+        }
 
         val range = min..max
         val random = range.random()
@@ -81,11 +86,13 @@ class GuessNumberCommand : TextCommand {
             .takeUnless { it.size != 2 }
             ?: throw CommandException("You have provided invalid arguments!")
 
-        if (min >= max)
+        if (min >= max) {
             throw CommandException("The minimal value cannot be greater than the maximum value!")
+        }
 
-        if ((max - min) < 5)
+        if ((max - min) < 5) {
             throw CommandException("The difference between the maximal value and the minimal one must equal to or be greater than 5!")
+        }
 
         val range = min..max
         val random = range.random()
@@ -155,8 +162,20 @@ class GuessNumberCommand : TextCommand {
     ) {
         var attempt = _attempt
 
-        val received = channel.awaitMessage(user, this, message, delay = 5, processId = processId)
-            ?: return
+        val received = try {
+            channel.awaitMessage(user, this, message, 5, processId = processId)
+                ?: return
+        } catch (_: TimeoutCancellationException) {
+            channel.jda.getProcessByEntities(user, channel)?.kill(channel.jda)
+
+            message?.editMessageEmbeds(
+                defaultEmbed("Time is out!", EmbedType.FAILURE)
+            )?.queue(null) {
+                channel.sendFailure("Time is out!").queue()
+            } ?: channel.sendFailure("Time is out!").queue()
+
+            return
+        }
 
         when (val content = received.contentRaw.lowercase()) {
             "exit" -> {
@@ -166,13 +185,15 @@ class GuessNumberCommand : TextCommand {
                         Button.secondary("$name-${user.idLong}-$attempt-$number-$processId-stay", "No"),
                     ).await()
 
-                channel.jda.awaitEvent<ButtonInteractionEvent>(15, TimeUnit.MINUTES, waiterProcess = waiterProcess {
-                    this.channel = channel.idLong
-                    users += user.idLong
-                    command = this@GuessNumberCommand
-                    invoker = m.idLong
-                    id = processId
-                }) { it.user.idLong == user.idLong && it.message == m } // used to block other commands
+                try {
+                    channel.jda.awaitEvent<ButtonInteractionEvent>(15, TimeUnit.MINUTES, waiterProcess = waiterProcess {
+                        this.channel = channel.idLong
+                        users += user.idLong
+                        command = this@GuessNumberCommand
+                        invoker = m.idLong
+                        id = processId
+                    }) { it.user.idLong == user.idLong && it.message == m } // used to block other commands
+                } catch (_: TimeoutCancellationException) {}
             }
             else -> {
                 val asInt = content.toIntOrNull()
