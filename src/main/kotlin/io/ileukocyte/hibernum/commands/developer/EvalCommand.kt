@@ -375,7 +375,12 @@ class EvalCommand : TextCommand, MessageContextCommand {
                 "http",
                 "serialization.kotlinx.json",
             ),
-            "org" to setOf("json", "jsoup", "reflections"),
+            "org" to setOf(
+                "jetbrains.kotlin.utils.addToStdlib",
+                "json",
+                "jsoup",
+                "reflections",
+            ),
             "mu" to emptySet(),
         )
     }

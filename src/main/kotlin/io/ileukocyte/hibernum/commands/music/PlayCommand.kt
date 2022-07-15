@@ -72,7 +72,7 @@ class PlayCommand : TextCommand {
                             }
 
                             event.channel.sendSuccess(
-                                "${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else "\"${playlist.name}\""} playlist " +
+                                "The ${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else "\"${playlist.name}\""} playlist " +
                                         "has been added to the queue!"
                             ).queue()
                         }
@@ -123,7 +123,7 @@ class PlayCommand : TextCommand {
 
                     override fun playlistLoaded(playlist: AudioPlaylist) {
                         val embed = defaultEmbed(
-                            desc = "${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else "\"${playlist.name}\""} playlist " +
+                            desc = "The ${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else "\"${playlist.name}\""} playlist " +
                                 "has been added to the queue!",
                             type = EmbedType.SUCCESS,
                         )

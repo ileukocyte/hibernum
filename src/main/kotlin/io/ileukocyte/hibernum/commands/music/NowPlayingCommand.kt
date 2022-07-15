@@ -25,19 +25,25 @@ class NowPlayingCommand : TextCommand {
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val audioPlayer = event.guild.audioPlayer ?: return
-        val track = audioPlayer.player.playingTrack ?: throw CommandException("No track is currently playing!")
+        val track = audioPlayer.player.playingTrack
+            ?: throw CommandException("No track is currently playing!")
 
         event.channel.sendMessageEmbeds(playingEmbed(event.jda, audioPlayer, track)).queue()
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val audioPlayer = event.guild?.audioPlayer ?: return
-        val track = audioPlayer.player.playingTrack ?: throw CommandException("No track is currently playing!")
+        val track = audioPlayer.player.playingTrack
+            ?: throw CommandException("No track is currently playing!")
 
         event.replyEmbeds(playingEmbed(event.jda, audioPlayer, track)).queue()
     }
 
-    private fun playingEmbed(jda: JDA, musicManager: GuildMusicManager, track: AudioTrack) = buildEmbed {
+    private fun playingEmbed(
+        jda: JDA,
+        musicManager: GuildMusicManager,
+        track: AudioTrack,
+    ) = buildEmbed {
         val trackData = track.userData.cast<TrackUserData>()
 
         color = Immutable.SUCCESS
@@ -45,7 +51,9 @@ class NowPlayingCommand : TextCommand {
 
         field {
             title = "Playing Now"
-            description = "**[${track.info.title}](${track.info.uri})**"
+            description = "**[${track.info.title
+                .replace('[', '(')
+                .replace(']', ')')}](${track.info.uri})**"
         }
 
         field {
@@ -68,7 +76,7 @@ class NowPlayingCommand : TextCommand {
         field {
             val timeline = getEmbedProgressBar(
                 track.position.takeUnless { track.info.isStream } ?: Long.MAX_VALUE,
-                track.duration
+                track.duration,
             )
 
             title = "Duration"

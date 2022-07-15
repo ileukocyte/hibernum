@@ -185,7 +185,7 @@ class YouTubePlayCommand : TextCommand {
 
                 override fun playlistLoaded(playlist: AudioPlaylist) {
                     val embed = defaultEmbed(
-                        desc = "[${playlist.name}]($query) playlist has been added to the queue!",
+                        desc = "The [${playlist.name}]($query) playlist has been added to the queue!",
                         type = EmbedType.SUCCESS,
                     )
 

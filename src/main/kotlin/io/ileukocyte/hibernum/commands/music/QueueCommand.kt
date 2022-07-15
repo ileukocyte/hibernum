@@ -40,14 +40,14 @@ class QueueCommand : TextCommand {
         val audioPlayer = event.guild.audioPlayer ?: return
         val track = audioPlayer.player.playingTrack ?: throw CommandException("No track is currently playing!")
 
-        val partitionSize = Lists.partition(audioPlayer.scheduler.queue.toList(), 7).size
+        val partitionSize = Lists.partition(audioPlayer.scheduler.queue.toList(), 10).size
         val initialPage = args?.toIntOrNull()
             ?.takeIf { it in 1..partitionSize }
-            ?.let { it - 1 }
+            ?.dec()
             ?: 0
 
         event.channel.sendMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, initialPage))
-            .let { it.takeIf { audioPlayer.scheduler.queue.size > 7 }
+            .let { it.takeIf { audioPlayer.scheduler.queue.size > 10 }
                 ?.setActionRow(pageButtons(event.author.id, initialPage, partitionSize))
                 ?: it
             }.queue()
@@ -57,15 +57,15 @@ class QueueCommand : TextCommand {
         val audioPlayer = event.guild?.audioPlayer ?: return
         val track = audioPlayer.player.playingTrack ?: throw CommandException("No track is currently playing!")
 
-        val partitionSize = Lists.partition(audioPlayer.scheduler.queue.toList(), 7).size
+        val partitionSize = Lists.partition(audioPlayer.scheduler.queue.toList(), 10).size
 
         val initialPage = event.getOption("page")?.asString?.toIntOrNull()
             ?.takeIf { it in 1..partitionSize }
-            ?.let { it - 1 }
+            ?.dec()
             ?: 0
 
         event.replyEmbeds(queueEmbed(event.jda, audioPlayer, track, initialPage))
-            .let { it.takeIf { audioPlayer.scheduler.queue.size > 7 }
+            .let { it.takeIf { audioPlayer.scheduler.queue.size > 10 }
                 ?.addActionRow(pageButtons(event.user.id, initialPage, partitionSize))
                 ?: it
             }.queue()
@@ -93,41 +93,41 @@ class QueueCommand : TextCommand {
             }
 
             val pageNumber = id[1].toInt()
-            val pagesCount = ceil(audioPlayer.scheduler.queue.size / 7.0).toInt()
+            val pagesCount = ceil(audioPlayer.scheduler.queue.size / 10.0).toInt()
 
             when (id.last()) {
                 "first" -> {
                     event.editMessageEmbeds(
                         queueEmbed(event.jda, audioPlayer, track, 0)
                     ).setActionRows().let {
-                        it.takeIf { audioPlayer.scheduler.queue.size > 7 }
+                        it.takeIf { audioPlayer.scheduler.queue.size > 10 }
                             ?.setActionRow(pageButtons(id.first(), 0, pagesCount))
                             ?: it
                     }.queue(null) { _ ->
                         event.message.editMessageEmbeds(
                             queueEmbed(event.jda, audioPlayer, track, 0)
                         ).setActionRows().let {
-                            it.takeIf { audioPlayer.scheduler.queue.size > 7 }
+                            it.takeIf { audioPlayer.scheduler.queue.size > 10 }
                                 ?.setActionRow(pageButtons(id.first(), 0, pagesCount))
                                 ?: it
                         }.queue()
                     }
                 }
                 "last" -> {
-                    val partition = Lists.partition(audioPlayer.scheduler.queue.toList(), 7)
+                    val partition = Lists.partition(audioPlayer.scheduler.queue.toList(), 10)
                     val lastPage = partition.lastIndex
 
                     event.editMessageEmbeds(
                         queueEmbed(event.jda, audioPlayer, track, lastPage)
                     ).setActionRows().let {
-                        it.takeIf { audioPlayer.scheduler.queue.size > 7 }
+                        it.takeIf { audioPlayer.scheduler.queue.size > 10 }
                             ?.setActionRow(pageButtons(id.first(), lastPage, pagesCount))
                             ?: it
                     }.queue(null) { _ ->
                         event.message.editMessageEmbeds(
                             queueEmbed(event.jda, audioPlayer, track, lastPage)
                         ).setActionRows().let {
-                            it.takeIf { audioPlayer.scheduler.queue.size > 7 }
+                            it.takeIf { audioPlayer.scheduler.queue.size > 10 }
                                 ?.setActionRow(pageButtons(id.first(), lastPage, pagesCount))
                                 ?: it
                         }.queue()
@@ -139,28 +139,28 @@ class QueueCommand : TextCommand {
                     event.editMessageEmbeds(
                         queueEmbed(event.jda, audioPlayer, track, newPage)
                     ).setActionRows().let {
-                        it.takeIf { audioPlayer.scheduler.queue.size > 7 }
+                        it.takeIf { audioPlayer.scheduler.queue.size > 10 }
                             ?.setActionRow(pageButtons(id.first(), newPage, pagesCount))
                             ?: it
                     }.queue(null) { _ ->
                         event.message.editMessageEmbeds(
                             queueEmbed(event.jda, audioPlayer, track, newPage)
                         ).setActionRows().let {
-                            it.takeIf { audioPlayer.scheduler.queue.size > 7 }
+                            it.takeIf { audioPlayer.scheduler.queue.size > 10 }
                                 ?.setActionRow(pageButtons(id.first(), newPage, pagesCount))
                                 ?: it
                         }.queue()
                     }
                 }
                 "next" -> {
-                    val partition = Lists.partition(audioPlayer.scheduler.queue.toList(), 7)
+                    val partition = Lists.partition(audioPlayer.scheduler.queue.toList(), 10)
                     val lastPage = partition.lastIndex
-                    val newPage = min(pageNumber + 1, lastPage)
+                    val newPage = min(pageNumber.inc(), lastPage)
 
                     event.editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, newPage))
                         .setActionRows()
                         .let {
-                            it.takeIf { audioPlayer.scheduler.queue.size > 7 }
+                            it.takeIf { audioPlayer.scheduler.queue.size > 10 }
                                 ?.setActionRow(pageButtons(id.first(), newPage, pagesCount))
                                 ?: it
                         }.queue(null) { _ ->
@@ -168,7 +168,7 @@ class QueueCommand : TextCommand {
                                 .editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, newPage))
                                 .setActionRows()
                                 .let {
-                                    it.takeIf { audioPlayer.scheduler.queue.size > 7 }
+                                    it.takeIf { audioPlayer.scheduler.queue.size > 10 }
                                         ?.setActionRow(pageButtons(id.first(), newPage, pagesCount))
                                         ?: it
                                 }.queue()
@@ -208,26 +208,28 @@ class QueueCommand : TextCommand {
         }
 
         if (queueIsNotEmpty) {
-            val partition = Lists.partition(musicManager.scheduler.queue.toList(), 7)
+            val partition = Lists.partition(musicManager.scheduler.queue.toList(), 10)
 
-            field {
-                title = "Queue"
-                description = buildString {
-                    partition[page].forEachIndexed { i, t ->
-                        val userData = t.userData as TrackUserData
+            description = buildString {
+                partition[page].forEachIndexed { i, t ->
+                    val userData = t.userData as TrackUserData
 
-                        val trackTitle = "[${t.info.title.limitTo(35)}]" +
-                                "(${t.info.uri})"
-                        val trackDuration = if (t.info.isStream) "(LIVE)" else asDuration(t.duration)
-
-                        appendLine("${i + 1 + page * 7}. $trackTitle ($trackDuration, ${userData.user.asMention})")
+                    val trackTitle = "[${t.info.title.limitTo(32)
+                        .replace('[', '(')
+                        .replace(']', ')')}](${t.info.uri})"
+                    val trackDuration = if (t.info.isStream) {
+                        "(LIVE)"
+                    } else {
+                        asDuration(t.duration)
                     }
+
+                    appendLine("${i.inc() + page * 10}. $trackTitle ($trackDuration, ${userData.user.asMention})")
                 }
             }
 
             footer {
-                text = "Total Songs: ${musicManager.scheduler.queue.size + 1}" +
-                        " \u2022 Page: ${page + 1}/${partition.size}".takeIf { partition.size > 1 }.orEmpty()
+                text = "Total Songs: ${musicManager.scheduler.queue.size.inc()}" +
+                        " \u2022 Page: ${page.inc()}/${partition.size}".takeIf { partition.size > 1 }.orEmpty()
             }
         }
 
@@ -240,7 +242,9 @@ class QueueCommand : TextCommand {
             )
 
             title = "Playing Now"
-            description = "**[${track.info.title}](${track.info.uri})** (${userData.user.asMention})\n" +
+            description = "**[${track.info.title
+                .replace('[', '(')
+                .replace(']', ')')}](${track.info.uri})** (${userData.user.asMention})\n" +
                     "$timeline " + ("(${asDuration(track.position)}/${asDuration(track.duration)})"
                 .takeUnless { track.info.isStream } ?: "(LIVE)")
         }
