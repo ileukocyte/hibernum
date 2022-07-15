@@ -76,8 +76,7 @@ object CommandHandler : MutableSet<GenericCommand> {
             else -> 0
         }
 
-        return filterIsInstance<TextCommand>()
-            .filter { checkPriority(name, it) > 0 }
+        return filterIsInstanceAnd<TextCommand> { checkPriority(name, it) > 0 }
             .maxByOrNull { checkPriority(name, it) }
     }
 

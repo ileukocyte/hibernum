@@ -1,4 +1,4 @@
-@file:[JvmName("Commands") Suppress("UNNECESSARY_SAFE_CALL")]
+@file:JvmName("Commands")
 
 package io.ileukocyte.hibernum.commands
 
@@ -35,7 +35,7 @@ import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 interface GenericCommand : Comparable<GenericCommand> {
     val name: String
     val category: CommandCategory
-        get() = javaClass.`package`.name?.let { CommandCategory[it.split(".").last()] }
+        get() = javaClass.`package`.name.let { CommandCategory[it.split(".").last()] }
             ?: CommandCategory.UNKNOWN
 
     /**
@@ -45,11 +45,11 @@ interface GenericCommand : Comparable<GenericCommand> {
         get() = category == CommandCategory.DEVELOPER
 
     /**
-     * Used for a few developer commands that can be used in spite of some other
-     * command processes running in the background
+     * Used for a few commands that can be used in spite of some other command processes
+     * running in the background
      */
     val neglectProcessBlock: Boolean
-        get() = false
+        get() = isDeveloper
 
     val inputTypes: Set<InputType>
         get() {
@@ -78,6 +78,12 @@ interface GenericCommand : Comparable<GenericCommand> {
 
     val cooldown: Long
         get() = 0
+
+    /**
+     * A property that shows whether the command's expired interactions should
+     * trigger an explicit failure response or just silent deletion of the command's
+     * components (i.e. buttons and selection menus)
+     */
     val eliminateStaleInteractions: Boolean
         get() = true
 

@@ -16,7 +16,6 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button
 class ShutdownCommand : TextCommand {
     override val name = "shutdown"
     override val description = "Shuts the bot down"
-    override val neglectProcessBlock = true
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val description = "Are you sure you want to shut the bot down?"
