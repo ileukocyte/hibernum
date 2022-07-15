@@ -39,33 +39,35 @@ interface GenericCommand : Comparable<GenericCommand> {
             ?: CommandCategory.UNKNOWN
 
     /**
-     * A property that shows whether or not the command can only be used by a developer of the bot
+     * A property that shows whether the command can only be used by a developer of the bot
      */
-    val isDeveloper: Boolean get() = category == CommandCategory.DEVELOPER
+    val isDeveloper: Boolean
+        get() = category == CommandCategory.DEVELOPER
 
-    val inputTypes: Set<InputType> get() {
-        val inputTypes = mutableSetOf<InputType>()
+    val inputTypes: Set<InputType>
+        get() {
+            val inputTypes = mutableSetOf<InputType>()
 
-        if (this is TextCommand) {
-            if (this !is SlashOnlyCommand) {
-                inputTypes += InputType.CLASSIC_TEXT_INPUT
+            if (this is TextCommand) {
+                if (this !is SlashOnlyCommand) {
+                    inputTypes += InputType.CLASSIC_TEXT_INPUT
+                }
+
+                if (this !is ClassicTextOnlyCommand) {
+                    inputTypes += InputType.SLASH_COMMAND_MENU
+                }
             }
 
-            if (this !is ClassicTextOnlyCommand) {
-                inputTypes += InputType.SLASH_COMMAND_MENU
+            if (this is MessageContextCommand) {
+                inputTypes += InputType.MESSAGE_CONTEXT_MENU
             }
-        }
 
-        if (this is MessageContextCommand) {
-            inputTypes += InputType.MESSAGE_CONTEXT_MENU
-        }
+            if (this is UserContextCommand) {
+                inputTypes += InputType.USER_CONTEXT_MENU
+            }
 
-        if (this is UserContextCommand) {
-            inputTypes += InputType.USER_CONTEXT_MENU
+            return inputTypes
         }
-
-        return inputTypes
-    }
 
     val cooldown: Long
         get() = 0
@@ -76,10 +78,6 @@ interface GenericCommand : Comparable<GenericCommand> {
         get() = emptySet()
     val memberPermissions: Set<Permission>
         get() = emptySet()
-
-    /** **DO NOT OVERRIDE!** */
-    val id: Int
-        get() = name.hashCode()
 
     override fun compareTo(other: GenericCommand) = name.compareTo(other.name)
 

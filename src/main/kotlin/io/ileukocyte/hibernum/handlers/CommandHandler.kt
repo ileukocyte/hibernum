@@ -86,17 +86,6 @@ object CommandHandler : MutableSet<GenericCommand> {
         it is ContextCommand && it.contextName == name && type in it.contextTypes
     } as? ContextCommand
 
-    /**
-     * A function that looks for a [GenericCommand] by its ID
-     *
-     * @param id
-     * The ID of the command to search
-     *
-     * @return A [GenericCommand] having the same ID as the provided query
-     */
-    operator fun get(id: Int) = registeredCommands
-        .firstOrNull { it.id == id }
-
     // Command cooldown extensions
     private fun GenericCommand.getRemainingCooldown(userId: Long) =
         cooldowns["$name|$userId"]?.let { cooldown ->
@@ -106,7 +95,9 @@ object CommandHandler : MutableSet<GenericCommand> {
                 cooldowns -= "$name|$userId"
 
                 0
-            } else time
+            } else {
+                time
+            }
         } ?: 0
 
     private fun GenericCommand.getCooldownError(userId: Long) = getRemainingCooldown(userId)
