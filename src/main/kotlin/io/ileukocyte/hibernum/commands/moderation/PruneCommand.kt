@@ -75,15 +75,18 @@ class PruneCommand : SlashOnlyCommand {
         val filterOption = event.getOption("filter")?.asString
 
         if (filterOption == "users-aside-from" && event.getOption("user")?.asUser === null) {
-            throw CommandException("The \"user\" option must be initialized in case of the \"filter\" option set to \"Users Aside From\"!")
+            throw CommandException("The \"user\" option must be initialized " +
+                    "in case of the \"filter\" option set to \"Users Aside From\"!")
         }
 
         if (event.getOption("text-filter") !== null && event.getOption("text") === null) {
-            throw CommandException("The \"text\" option must be initialized in case of the \"text-filter\" option being provided!")
+            throw CommandException("The \"text\" option must be initialized " +
+                    "in case of the \"text-filter\" option being provided!")
         }
 
         if (event.getOption("mention") !== null && filterOption != "mentions") {
-            throw CommandException("The \"filter\" option must be set to \"mentions\" in case of the \"mention\" option being provided!")
+            throw CommandException("The \"filter\" option must be set to \"mentions\" " +
+                    "in case of the \"mention\" option being provided!")
         }
 
         if (filterOption == "bot-embeds" && event.getOption("user")?.asUser?.isBot == false) {
@@ -187,7 +190,8 @@ class PruneCommand : SlashOnlyCommand {
         }.await()
 
         filtered.takeUnless { it.isEmpty() } ?: run {
-            deferred.editOriginalEmbeds(defaultEmbed("No messages to delete have been found!", EmbedType.FAILURE)).queue()
+            deferred.editOriginalEmbeds(defaultEmbed("No messages to delete have been found!", EmbedType.FAILURE))
+                .queue()
 
             return
         }
@@ -231,7 +235,7 @@ class PruneCommand : SlashOnlyCommand {
                         user?.takeIf { u -> u.isBot }?.asMention?.let { u -> " ($u)" }.orEmpty()
                 "gifs" -> " containing any GIFs"
                 "images" -> " containing any images"
-                "invites" -> " containing invite links"
+                "invites" -> " containing any invite links"
                 "links" -> " containing any links"
                 "mentions" -> " mentioning ${mention?.asMention ?: "any users or any roles"}"
                 "no-attachments" -> " containing no attachments"
@@ -244,7 +248,7 @@ class PruneCommand : SlashOnlyCommand {
 
         textFilter?.let {
             if (filter?.takeUnless { f -> f == "users-aside-from" || f == "all-embeds" } !== null) {
-                append(if (user !== null && filter != "bot-embeds") "," else " and")
+                append(",".takeIf { user !== null && filter != "bot-embeds" } ?: " and")
             }
 
             append(when (it) {

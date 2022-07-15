@@ -5,9 +5,7 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.MessageContextCommand
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
-import io.ileukocyte.hibernum.extensions.remove
-import io.ileukocyte.hibernum.extensions.replySuccess
-import io.ileukocyte.hibernum.extensions.sendSuccess
+import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.openweather.Forecast
 import io.ileukocyte.openweather.OpenWeatherApi
 
@@ -106,6 +104,7 @@ class EvalCommand : TextCommand, MessageContextCommand {
 
     override suspend fun invoke(event: ModalInteractionEvent) {
         val code = event.getValue("$name-code")?.asString ?: return
+        val deferred = event.deferReply().await()
 
         val packages = buildString {
             for ((key, value) in IMPORTS) {
@@ -117,6 +116,14 @@ class EvalCommand : TextCommand, MessageContextCommand {
                     appendLine("import $key.*")
                 }
             }
+        }
+
+        val success = defaultEmbed("Successful execution!", EmbedType.SUCCESS)
+        val failure = { t: Throwable ->
+            defaultEmbed("""
+                    |${t::class.simpleName ?: "An unknown exception"} has occurred:
+                    |${t.message ?: "No message provided"}
+                    |""".trimMargin(), EmbedType.FAILURE)
         }
 
         try {
@@ -138,35 +145,57 @@ class EvalCommand : TextCommand, MessageContextCommand {
 
             if (result !== null) {
                 when (result) {
-                    is EmbedBuilder -> event.replyEmbeds(result.build()).queue()
-                    is Message -> event.reply(result).queue()
-                    is MessageEmbed -> event.replyEmbeds(result).queue()
-                    is RestAction<*> -> {
-                        event.replySuccess("Successful execution!").setEphemeral(true).queue()
-
-                        result.queue()
+                    is EmbedBuilder -> deferred.editOriginalEmbeds(result.build()).queue(null) {
+                        event.messageChannel.sendMessageEmbeds(result.build()).queue()
                     }
-                    is Array<*> -> event.reply(result.contentDeepToString()).queue()
-                    is JSONObject -> event.reply(result.toString(2)).queue()
-                    is Forecast -> event.reply(result.toString().remove(result.api.key)).queue()
-                    is OpenWeatherApi -> event.reply(result.toString().remove(result.key)).queue()
-                    else -> event.reply("$result").queue()
+                    is Message -> deferred.editOriginal(result).queue(null) {
+                        event.messageChannel.sendMessage(result).queue()
+                    }
+                    is MessageEmbed -> deferred.editOriginalEmbeds(result).queue(null) {
+                        event.messageChannel.sendMessageEmbeds(result).queue()
+                    }
+                    is RestAction<*> -> result.queue({
+                        deferred.editOriginalEmbeds(success).queue(null) {
+                            event.messageChannel.sendMessageEmbeds(success).queue()
+                        }
+                    }) { t ->
+                        deferred.editOriginalEmbeds(failure(t)).queue(null) {
+                            event.messageChannel.sendMessageEmbeds(failure(t)).queue()
+                        }
+                    }
+                    is Array<*> -> deferred.editOriginal(result.contentDeepToString()).queue(null) {
+                        event.messageChannel.sendMessage(result.contentDeepToString()).queue()
+                    }
+                    is JSONObject -> deferred.editOriginal(result.toString(2)).queue(null) {
+                        event.messageChannel.sendMessage(result.toString(2)).queue()
+                    }
+                    is Forecast -> deferred.editOriginal(result.toString().remove(result.api.key)).queue(null) {
+                        event.messageChannel.sendMessage(result.toString().remove(result.api.key)).queue()
+                    }
+                    is OpenWeatherApi -> deferred.editOriginal(result.toString().remove(result.key)).queue(null) {
+                        event.messageChannel.sendMessage(result.toString().remove(result.key)).queue()
+                    }
+                    else -> deferred.editOriginal("$result").queue(null) {
+                        event.messageChannel.sendMessage("$result").queue()
+                    }
                 }
             } else {
-                event.replySuccess("Successful execution!").setEphemeral(true).queue()
+                deferred.editOriginalEmbeds(success).queue(null) {
+                    event.messageChannel.sendMessageEmbeds(success).queue()
+                }
             }
         } catch (e: Exception) {
-            throw CommandException("""
-                    |${e::class.simpleName ?: "An unknown exception"} has occurred:
-                    |${e.message ?: "No message provided"}
-                    |""".trimMargin())
+            deferred.editOriginalEmbeds(failure(e)).queue(null) {
+                event.messageChannel.sendMessageEmbeds(failure(e)).queue()
+            }
         }
     }
 
     override suspend fun invoke(event: MessageContextInteractionEvent) {
-        val commandName = "${Immutable.DEFAULT_PREFIX}$name"
+        val deferred = event.deferReply().await()
 
-        val code = event.target.contentRaw.takeUnless { it.isEmpty() }?.removePrefix("$commandName ")
+        val code = event.target.contentRaw.takeUnless { it.isEmpty() }
+            ?.removePrefix("${Immutable.DEFAULT_PREFIX}$name ")
             ?.let { code ->
                 code.takeIf { it.startsWith("```") }
                     ?.removeSurrounding("```")
@@ -188,6 +217,14 @@ class EvalCommand : TextCommand, MessageContextCommand {
             }
         }
 
+        val success = defaultEmbed("Successful execution!", EmbedType.SUCCESS)
+        val failure = { t: Throwable ->
+            defaultEmbed("""
+                    |${t::class.simpleName ?: "An unknown exception"} has occurred:
+                    |${t.message ?: "No message provided"}
+                    |""".trimMargin(), EmbedType.FAILURE)
+        }
+
         try {
             val engine = Immutable.EVAL_KOTLIN_ENGINE
 
@@ -207,28 +244,49 @@ class EvalCommand : TextCommand, MessageContextCommand {
 
             if (result !== null) {
                 when (result) {
-                    is EmbedBuilder -> event.replyEmbeds(result.build()).queue()
-                    is Message -> event.reply(result).queue()
-                    is MessageEmbed -> event.replyEmbeds(result).queue()
-                    is RestAction<*> -> {
-                        event.replySuccess("Successful execution!").setEphemeral(true).queue()
-
-                        result.queue()
+                    is EmbedBuilder -> deferred.editOriginalEmbeds(result.build()).queue(null) {
+                        event.messageChannel.sendMessageEmbeds(result.build()).queue()
                     }
-                    is Array<*> -> event.reply(result.contentDeepToString()).queue()
-                    is JSONObject -> event.reply(result.toString(2)).queue()
-                    is Forecast -> event.reply(result.toString().remove(result.api.key)).queue()
-                    is OpenWeatherApi -> event.reply(result.toString().remove(result.key)).queue()
-                    else -> event.reply("$result").queue()
+                    is Message -> deferred.editOriginal(result).queue(null) {
+                        event.messageChannel.sendMessage(result).queue()
+                    }
+                    is MessageEmbed -> deferred.editOriginalEmbeds(result).queue(null) {
+                        event.messageChannel.sendMessageEmbeds(result).queue()
+                    }
+                    is RestAction<*> -> result.queue({
+                        deferred.editOriginalEmbeds(success).queue(null) {
+                            event.messageChannel.sendMessageEmbeds(success).queue()
+                        }
+                    }) { t ->
+                        deferred.editOriginalEmbeds(failure(t)).queue(null) {
+                            event.messageChannel.sendMessageEmbeds(failure(t)).queue()
+                        }
+                    }
+                    is Array<*> -> deferred.editOriginal(result.contentDeepToString()).queue(null) {
+                        event.messageChannel.sendMessage(result.contentDeepToString()).queue()
+                    }
+                    is JSONObject -> deferred.editOriginal(result.toString(2)).queue(null) {
+                        event.messageChannel.sendMessage(result.toString(2)).queue()
+                    }
+                    is Forecast -> deferred.editOriginal(result.toString().remove(result.api.key)).queue(null) {
+                        event.messageChannel.sendMessage(result.toString().remove(result.api.key)).queue()
+                    }
+                    is OpenWeatherApi -> deferred.editOriginal(result.toString().remove(result.key)).queue(null) {
+                        event.messageChannel.sendMessage(result.toString().remove(result.key)).queue()
+                    }
+                    else -> deferred.editOriginal("$result").queue(null) {
+                        event.messageChannel.sendMessage("$result").queue()
+                    }
                 }
             } else {
-                event.replySuccess("Successful execution!").setEphemeral(true).queue()
+                deferred.editOriginalEmbeds(success).queue(null) {
+                    event.messageChannel.sendMessageEmbeds(success).queue()
+                }
             }
         } catch (e: Exception) {
-            throw CommandException("""
-                    |${e::class.simpleName ?: "An unknown exception"} has occurred:
-                    |${e.message ?: "No message provided"}
-                    |""".trimMargin())
+            deferred.editOriginalEmbeds(failure(e)).queue(null) {
+                event.messageChannel.sendMessageEmbeds(failure(e)).queue()
+            }
         }
     }
 
