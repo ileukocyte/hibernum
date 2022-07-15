@@ -13,7 +13,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 class StopCommand : TextCommand {
     override val name = "stop"
     override val description = "Stops the song that is currently playing and clears the queue"
-    override val aliases = setOf("clear")
+    override val aliases = setOf("clear-playlist", "clear-queue")
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val audioPlayer = event.guild.audioPlayer ?: return
@@ -22,7 +22,7 @@ class StopCommand : TextCommand {
             if (event.member?.voiceState?.channel == event.guild.selfMember.voiceState?.channel) {
                 audioPlayer.stop()
 
-                event.channel.sendSuccess("Playback has been stopped!").queue()
+                event.channel.sendSuccess("The playback has been stopped!").queue()
             } else {
                 throw CommandException("You are not connected to the required voice channel!")
             }
@@ -39,7 +39,7 @@ class StopCommand : TextCommand {
             if (event.member?.voiceState?.channel == guild.selfMember.voiceState?.channel) {
                 audioPlayer.stop()
 
-                event.replySuccess("Playback has been stopped!").queue()
+                event.replySuccess("The playback has been stopped!").queue()
             } else {
                 throw CommandException("You are not connected to the required voice channel!")
             }

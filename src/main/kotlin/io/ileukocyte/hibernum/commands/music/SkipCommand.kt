@@ -31,7 +31,7 @@ class SkipCommand : TextCommand {
 
                 audioPlayer.scheduler.nextTrack(newAnnouncementChannel = event.channel)
 
-                val description = "Playback has been stopped!"
+                val description = "The playback has been stopped!"
                     .takeIf { audioPlayer.player.playingTrack === null }
 
                 description?.let { event.channel.sendSuccess(it).queue() }
@@ -61,7 +61,7 @@ class SkipCommand : TextCommand {
 
                 audioPlayer.scheduler.nextTrack(deferred, event.channel)
 
-                val description = "Playback has been stopped!"
+                val description = "The playback has been stopped!"
                     .takeIf { audioPlayer.player.playingTrack === null }
 
                 description?.let {
