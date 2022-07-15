@@ -66,7 +66,7 @@ class InvertCommand : TextCommand, UniversalContextCommand {
                         event.channel.sendFile(bytesToSend, "inverted.png").queue()
                     }
                 } catch (e: Exception) {
-                    deferred.delete().queue({}) {}
+                    deferred.delete().queue(null) {}
 
                     throw CommandException("${it::class.qualifiedName ?: "An unknown exception"}: " +
                             (e.message ?: "something went wrong!"))
@@ -181,7 +181,7 @@ class InvertCommand : TextCommand, UniversalContextCommand {
                         event.messageChannel.sendFile(bytesToSend, "inverted.png").queue()
                     }
                 } catch (e: Exception) {
-                    deferred.deleteOriginal().queue({}) {}
+                    deferred.deleteOriginal().queue(null) {}
 
                     throw CommandException("${it::class.qualifiedName ?: "An unknown exception"}: " +
                             (e.message ?: "something went wrong!"))
