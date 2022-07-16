@@ -15,7 +15,7 @@ class PingCommand : TextCommand {
     override val name = "ping"
     override val description = "Sends the bot's current response latency separately from the statistics"
     override val options = setOf(
-        OptionData(OptionType.BOOLEAN, "ephemeral", "Whether this message should be visible to other users"))
+        OptionData(OptionType.BOOLEAN, "ephemeral", "Whether the response should be invisible to other users"))
     override val aliases = setOf("latency")
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) =

@@ -22,7 +22,7 @@ class AboutCommand : TextCommand {
     override val name = "about"
     override val description = "Sends the bot's detailed technical statistics"
     override val options = setOf(
-        OptionData(OptionType.BOOLEAN, "ephemeral", "Whether this message should be visible to other users"))
+        OptionData(OptionType.BOOLEAN, "ephemeral", "Whether the response should be invisible to other users"))
     override val aliases = setOf("info", "stats")
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) =

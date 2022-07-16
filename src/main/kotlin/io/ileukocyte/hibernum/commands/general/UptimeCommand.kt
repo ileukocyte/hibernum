@@ -17,7 +17,7 @@ class UptimeCommand : TextCommand {
     override val name = "uptime"
     override val description = "Sends the bot's uptime separately from the statistics"
     override val options = setOf(
-        OptionData(OptionType.BOOLEAN, "ephemeral", "Whether this message should be visible to other users"))
+        OptionData(OptionType.BOOLEAN, "ephemeral", "Whether the response should be invisible to other users"))
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) =
         event.channel.sendMessageEmbeds(uptimeEmbed(event.jda)).queue()
