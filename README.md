@@ -20,6 +20,7 @@
 * [jsoup](https://github.com/jhy/jsoup)
 * [Apache Commons Validator](https://commons.apache.org/proper/commons-validator/)
 * [QRGen](https://github.com/kenglxn/QRGen)
+* [ZXing](https://github.com/zxing/zxing)
 * [Spotify Web API Java](https://github.com/thelinmichael/spotify-web-api-java)
 * [Color Thief](https://github.com/SvenWoltmann/color-thief-java)
 * [Arrow](https://github.com/arrow-kt/arrow)
