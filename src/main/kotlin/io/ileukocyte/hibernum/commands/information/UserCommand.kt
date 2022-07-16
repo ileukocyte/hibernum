@@ -50,11 +50,11 @@ class UserCommand : TextCommand, UserContextCommand {
 
             when {
                 args matches Regex("\\d{17,20}") ->
-                    chooseUserInfoOrPfp(event.guild.getMemberById(args)?.user ?: throw exception, event.author, event)
+                    chooseUserInfoOrPfp(event.guild.getMemberById(args) ?: throw exception, event.author, event)
                 event.message.mentions.membersBag.isNotEmpty() ->
-                    chooseUserInfoOrPfp(event.message.mentions.membersBag.firstOrNull()?.user ?: return, event.author, event)
+                    chooseUserInfoOrPfp(event.message.mentions.membersBag.firstOrNull() ?: return, event.author, event)
                 args matches User.USER_TAG.toRegex() ->
-                    chooseUserInfoOrPfp(event.guild.getMemberByTag(args)?.user ?: throw exception, event.author, event)
+                    chooseUserInfoOrPfp(event.guild.getMemberByTag(args) ?: throw exception, event.author, event)
                 else -> {
                     val results = event.guild.searchMembers(args)
                         .takeUnless { it.isEmpty() }
@@ -62,7 +62,7 @@ class UserCommand : TextCommand, UserContextCommand {
                         ?: throw exception
 
                     if (results.size == 1) {
-                        chooseUserInfoOrPfp(results.first().user, event.author, event)
+                        chooseUserInfoOrPfp(results.first(), event.author, event)
 
                         return
                     }
@@ -81,18 +81,19 @@ class UserCommand : TextCommand, UserContextCommand {
                 }
             }
         } else {
-            chooseUserInfoOrPfp(event.author, event.author, event)
+            chooseUserInfoOrPfp(event.member ?: return, event.author, event)
         }
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
-        val user = event.getOption("user")?.asUser ?: event.user
+        val member = event.getOption("user")?.asMember ?: event.member
+            ?: return
 
-        chooseUserInfoOrPfp(user, event.user, event, event.guild)
+        chooseUserInfoOrPfp(member, event.user, event, event.guild)
     }
 
     override suspend fun invoke(event: UserContextInteractionEvent) =
-        chooseUserInfoOrPfp(event.target, event.user, event, event.guild)
+        chooseUserInfoOrPfp(event.targetMember!!, event.user, event, event.guild)
 
     override suspend fun invoke(event: SelectMenuInteractionEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
@@ -104,7 +105,7 @@ class UserCommand : TextCommand, UserContextCommand {
                 ?.takeUnless { it == "exit" }
                 ?: return
 
-            chooseUserInfoOrPfp(event.guild?.getMemberById(value)?.user ?: return, event.user, event)
+            chooseUserInfoOrPfp(event.guild?.getMemberById(value) ?: return, event.user, event)
         } else {
             throw CommandException("You did not invoke the initial command!")
         }
@@ -129,7 +130,7 @@ class UserCommand : TextCommand, UserContextCommand {
 
                 val embed = when (type) {
                     "info" -> infoEmbed(member)
-                    "pfp" -> pfpEmbed(member.user)
+                    "pfp" -> pfpEmbed(member)
                     else -> return
                 }
 
@@ -139,7 +140,7 @@ class UserCommand : TextCommand, UserContextCommand {
 
                 val embed = when (type) {
                     "info" -> infoEmbed(member)
-                    "pfp" -> pfpEmbed(member.user)
+                    "pfp" -> pfpEmbed(member)
                     else -> return
                 }
 
@@ -151,20 +152,22 @@ class UserCommand : TextCommand, UserContextCommand {
     }
 
     private suspend fun <E: GenericEvent> chooseUserInfoOrPfp(
-        user: User,
+        member: Member,
         author: User,
         event: E,
         guild: Guild? = null,
     ) {
         guild?.takeUnless { it.isLoaded }?.loadMembers()?.await()
 
+        val user = member.user
+
         if (user.isBot) {
             when (event) {
-                is MessageReceivedEvent -> event.channel.sendMessageEmbeds(pfpEmbed(user)).queue()
+                is MessageReceivedEvent -> event.channel.sendMessageEmbeds(pfpEmbed(member)).queue()
                 is GenericCommandInteractionEvent -> try {
-                    event.replyEmbeds(pfpEmbed(user)).await()
+                    event.replyEmbeds(pfpEmbed(member)).await()
                 } catch (_: ErrorResponseException) {
-                    event.messageChannel.sendMessageEmbeds(pfpEmbed(user)).queue()
+                    event.messageChannel.sendMessageEmbeds(pfpEmbed(member)).queue()
                 }
             }
 
@@ -347,16 +350,21 @@ class UserCommand : TextCommand, UserContextCommand {
         }
     }
 
-    private suspend fun pfpEmbed(user: User) = buildEmbed {
-        "${user.effectiveAvatarUrl}?size=2048".let { pfp ->
+    private suspend fun pfpEmbed(member: Member) = buildEmbed {
+        "${member.user.effectiveAvatarUrl}?size=2048".let { pfp ->
             author {
-                name = user.asTag
+                name = member.user.asTag
                 iconUrl = pfp
             }
 
             description = "[Profile Picture URL]($pfp)".surroundWith("**")
             image = pfp
             color = getDominantColorByImageUrl(pfp)
+
+            member.avatarUrl?.let { guildPfp ->
+                append("\u2022".surroundWith(' '))
+                append("[Local Profile Picture]($guildPfp?size=2048)".surroundWith("**"))
+            }
         }
     }
 
