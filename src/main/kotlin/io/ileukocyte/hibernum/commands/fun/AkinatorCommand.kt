@@ -46,7 +46,7 @@ class AkinatorCommand : TextCommand {
     override val aliases = setOf("aki")
     override val options by lazy {
         val choices = GuessType.values()
-            .filter { it != GuessType.PLACE }
+            .sortedBy { it.name }
             .map {
                 Choice(
                     if (it == GuessType.MOVIE_TV_SHOW) {
@@ -86,6 +86,9 @@ class AkinatorCommand : TextCommand {
 
         @JvmField
         val LANGUAGES_AVAILABLE_FOR_TYPES = mapOf(
+            GuessType.CHARACTER to Language.values().toSortedSet(),
+            GuessType.MOVIE_TV_SHOW to sortedSetOf(Language.ENGLISH, Language.FRENCH),
+            GuessType.OBJECT to sortedSetOf(Language.ENGLISH, Language.FRENCH),
             GuessType.ANIMAL to sortedSetOf(
                 Language.ENGLISH,
                 Language.FRENCH,
@@ -94,9 +97,7 @@ class AkinatorCommand : TextCommand {
                 Language.JAPANESE,
                 Language.SPANISH,
             ),
-            GuessType.MOVIE_TV_SHOW to sortedSetOf(Language.ENGLISH, Language.FRENCH),
-            GuessType.CHARACTER to Language.values().toSortedSet(),
-            GuessType.OBJECT to sortedSetOf(Language.ENGLISH, Language.FRENCH),
+            GuessType.PLACE to sortedSetOf(Language.JAPANESE),
         )
     }
 
@@ -393,23 +394,17 @@ class AkinatorCommand : TextCommand {
                     }
                 }
                 "debug" -> {
-                    val reply = if (player.isBotDeveloper) {
-                        message.reply(akiwrapper.guesses
-                            .filter { DECLINED_GUESSES[player.idLong]?.contains(it.idLong) == false }
-                            .joinToString("\n") { "${it.name} (${it.id}): ${it.probability}" }
-                            .ifEmpty { "No guesses available" }
-                            .let { "$it\n\nCurrent server: ${akiwrapper.server.url}" }
-                            .let { s ->
-                                DECLINED_GUESSES[player.idLong]?.takeUnless { it.isEmpty() }
-                                    ?.let { "$s\nDeclined guesses: $it" }
-                                    ?: s
-                            }
-                        )
-                    } else {
-                        message.replyFailure("Debugging is only available for the bot's developers!")
-                    }
-
-                    reply.queue()
+                    message.reply(akiwrapper.guesses
+                        .filter { DECLINED_GUESSES[player.idLong]?.contains(it.idLong) == false }
+                        .joinToString("\n") { "${it.name} (${it.id}): ${it.probability}" }
+                        .ifEmpty { "No guesses are available" }
+                        .let { "$it\n\nCurrent server: ${akiwrapper.server.url}" }
+                        .let { s ->
+                            DECLINED_GUESSES[player.idLong]?.takeUnless { it.isEmpty() }
+                                ?.let { "$s\nDeclined guesses: $it" }
+                                ?: s
+                        }
+                    ).queue()
 
                     awaitAnswer(channel, player, akiwrapper, invokingMessage, processId)
                 }
@@ -428,8 +423,7 @@ class AkinatorCommand : TextCommand {
                                     .replace('_', ' ')
                                     .capitalizeAll()
                                     .replace("Dont", "Don't")
-                                description = variations.joinToString()
-                                isInline = true
+                                description = variations.sortedBy { it.length }.joinToString()
                             }
                         }
                     }.await()
@@ -586,7 +580,7 @@ class AkinatorCommand : TextCommand {
             .create("$name-$playerId-$processId-type")
             .addOptions(
                 *GuessType.values()
-                    .filter { it != GuessType.PLACE }
+                    .sortedBy { it.name }
                     .map {
                         SelectOption.of(
                             if (it == GuessType.MOVIE_TV_SHOW) {

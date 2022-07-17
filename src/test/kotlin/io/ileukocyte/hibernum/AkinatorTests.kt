@@ -23,7 +23,7 @@ class AkinatorTests {
             language = Server.Language.ENGLISH
         }.build()
 
-        wrapper.currentQuestion?.apply { assertNotNull(this) }.let { println(it?.question ?: "heck.") }
+        wrapper.question?.apply { assertNotNull(this) }.let { println(it?.question ?: "heck.") }
     }
 
     @Test
@@ -42,7 +42,7 @@ class AkinatorTests {
                         language = lang
                     }.build()
 
-                    println(wrapper.currentQuestion?.question ?: "NULL QUESTION")
+                    println(wrapper.question?.question ?: "NULL QUESTION")
                 } catch (t: Throwable) {
                     println("${t::class.qualifiedName}: ${t.message}")
                 }
@@ -55,6 +55,6 @@ class AkinatorTests {
             language = Server.Language.ENGLISH
         }.build()
 
-        wrapper.currentQuestion?.apply { assertNotNull(this) }.let { println(it?.question ?: "heck.") }
+        wrapper.question?.apply { assertNotNull(this) }.let { println(it?.question ?: "heck.") }
     }
 }
