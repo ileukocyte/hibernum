@@ -1,6 +1,7 @@
 @file:JvmName("TimeUtils")
 package io.ileukocyte.hibernum.utils
 
+import io.ileukocyte.hibernum.extensions.removeLastChar
 import io.ileukocyte.hibernum.extensions.singularOrPlural
 
 import java.time.Instant
@@ -10,6 +11,8 @@ import java.util.concurrent.TimeUnit
 
 val TIME_CODE_REGEX =
     Regex("(?:(?<hours>\\d{1,2}):)?(?:(?<minutes>\\d{1,2}):)?(?<seconds>\\d{1,2})")
+
+val DURATION_REGEX = Regex("([1-9]\\d*)([smhdw])")
 
 fun Long.millisToDate(zone: ZoneId = ZoneId.of("Etc/GMT0")): OffsetDateTime =
     Instant.ofEpochMilli(this).atZone(zone).toOffsetDateTime()
@@ -166,6 +169,8 @@ fun asDuration(
  *
  * @return An amount of milliseconds that corresponds to the amount of time in the specified time code
  *
+ * @throws [IllegalArgumentException]
+ *
  * @author Alexander Oksanich
  */
 fun timeCodeToMillis(timeCode: String) = TIME_CODE_REGEX.find(timeCode)?.let {
@@ -196,5 +201,41 @@ fun timeCodeToMillis(timeCode: String) = TIME_CODE_REGEX.find(timeCode)?.let {
 
     timeData.millisSum
 } ?: throw IllegalArgumentException("You have entered an argument of a wrong format!")
+
+/**
+ * A function that gets time from the specified duration [String] and returns it as milliseconds
+ *
+ * **Example**:
+ * ```
+ * val duration = "5h34m55s"
+ * val millis = durationToMillis(duration) // 20095000
+ *
+ * val check = asText(millis) // "5 hours, 34 minutes, and 55 seconds"
+ * ```
+ *
+ * @param input
+ * The amount of time as a duration [String]
+ *
+ * @return An amount of milliseconds that corresponds to the amount of time in the provided duration input
+ *
+ * @author Alexander Oksanich
+ */
+fun durationToMillis(input: String): Long {
+    var time = 0L
+
+    for (result in DURATION_REGEX.findAll(input)) {
+        val number = result.value.removeLastChar().toLong()
+
+        time += when (result.value.last()) {
+            's' -> TimeUnit.SECONDS.toMillis(number)
+            'm' -> TimeUnit.MINUTES.toMillis(number)
+            'h' -> TimeUnit.HOURS.toMillis(number)
+            'd' -> TimeUnit.DAYS.toMillis(number)
+            else -> TimeUnit.DAYS.toMillis(number * 7)
+        }
+    }
+
+    return time
+}
 
 private typealias ParsingTimeUnit = Pair<Long?, TimeUnit>
