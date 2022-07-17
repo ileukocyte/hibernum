@@ -65,9 +65,12 @@ class TicTacToeCommand : SlashOnlyCommand {
 
                         val embed = buildEmbed {
                             description = "It is ${starter.asMention}'s turn!"
-                            color = Immutable.SUCCESS
+                            color = getDominantColorByImageUrl(starter.effectiveAvatarUrl)
 
-                            footer { text = "Type in \"exit\" to finish the session!" }
+                            footer {
+                                text = "Type in \"exit\" to finish the session!"
+                                iconUrl = ttt.currentTurn.effectiveAvatarUrl
+                            }
                         }
 
                         val board = try {
@@ -171,9 +174,12 @@ class TicTacToeCommand : SlashOnlyCommand {
 
                                 val board = response.replyEmbed {
                                     description = "It is ${ttt.currentTurn.asMention}'s turn!"
-                                    color = Immutable.SUCCESS
+                                    color = getDominantColorByImageUrl(ttt.currentTurn.effectiveAvatarUrl)
 
-                                    footer { text = "Type in \"exit\" to finish the session!" }
+                                    footer {
+                                        text = "Type in \"exit\" to finish the session!"
+                                        iconUrl = ttt.currentTurn.effectiveAvatarUrl
+                                    }
                                 }.content(ttt.printableBoard).await()
 
                                 awaitTurn(ttt, channel, board, processId)
