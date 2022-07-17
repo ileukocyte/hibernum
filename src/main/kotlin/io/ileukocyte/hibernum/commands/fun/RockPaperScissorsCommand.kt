@@ -1,6 +1,5 @@
 package io.ileukocyte.hibernum.commands.`fun`
 
-import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
@@ -56,20 +55,25 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
 
                         val embed = buildEmbed {
                             description = "It is ${starter.asMention}'s turn!"
-                            color = Immutable.SUCCESS
+                            color = getDominantColorByImageUrl(starter.effectiveAvatarUrl)
+
+                            author {
+                                name = "Round #1"
+                                iconUrl = starter.effectiveAvatarUrl
+                            }
                         }
 
                         val buttons = setOf(
                             Button.secondary(
-                                "$name-${starter.idLong}-${opponent.idLong}-rock",
+                                "$name-${starter.idLong}-${opponent.idLong}-1-rock",
                                 Emoji.fromUnicode(RPSTurn.ROCK.sign),
                             ),
                             Button.secondary(
-                                "$name-${starter.idLong}-${opponent.idLong}-paper",
+                                "$name-${starter.idLong}-${opponent.idLong}-1-paper",
                                 Emoji.fromUnicode(RPSTurn.PAPER.sign),
                             ),
                             Button.secondary(
-                                "$name-${starter.idLong}-${opponent.idLong}-scissors",
+                                "$name-${starter.idLong}-${opponent.idLong}-1-scissors",
                                 Emoji.fromUnicode(RPSTurn.SCISSORS.sign),
                             ),
                             Button.danger("$name-${starter.idLong}|${opponent.idLong}-stop", "Exit"),
@@ -105,6 +109,8 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
                         val opponent = event.guild?.retrieveMemberById(id[1])?.await()?.user
                             ?: return
 
+                        val roundNumber = id[2].toIntOrNull() ?: return
+
                         val starter = event.user
                         val starterTurn = RPSTurn.values()
                             .first { it.name.lowercase() == last }
@@ -113,20 +119,25 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
 
                         val embed = buildEmbed {
                             description = "It is ${opponent.asMention}'s turn!"
-                            color = Immutable.SUCCESS
+                            color = getDominantColorByImageUrl(opponent.effectiveAvatarUrl)
+
+                            author {
+                                name = "Round #$roundNumber"
+                                iconUrl = opponent.effectiveAvatarUrl
+                            }
                         }
 
                         val buttons = setOf(
                             Button.secondary(
-                                "$name-${opponent.idLong}-${starter.idLong}-$starterTurn-nextrock",
+                                "$name-${opponent.idLong}-${starter.idLong}-$roundNumber-$starterTurn-nextrock",
                                 Emoji.fromUnicode(RPSTurn.ROCK.sign),
                             ),
                             Button.secondary(
-                                "$name-${opponent.idLong}-${starter.idLong}-$starterTurn-nextpaper",
+                                "$name-${opponent.idLong}-${starter.idLong}-$roundNumber-$starterTurn-nextpaper",
                                 Emoji.fromUnicode(RPSTurn.PAPER.sign),
                             ),
                             Button.secondary(
-                                "$name-${opponent.idLong}-${starter.idLong}-$starterTurn-nextscissors",
+                                "$name-${opponent.idLong}-${starter.idLong}-$roundNumber-$starterTurn-nextscissors",
                                 Emoji.fromUnicode(RPSTurn.SCISSORS.sign),
                             ),
                             Button.danger("$name-${starter.idLong}|${opponent.idLong}-stop", "Exit"),
@@ -161,34 +172,38 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
                         val starter = event.guild?.retrieveMemberById(id[1])?.await()?.user
                             ?: return
                         val starterTurn = RPSTurn.values()
-                            .first { it.name.lowercase() == id[2] }
+                            .first { it.name.lowercase() == id[3] }
 
                         val opponent = event.user
                         val opponentTurn = RPSTurn.values()
                             .first { it.name.lowercase() == last.removePrefix("next") }
 
+                        var roundNumber = id[2].toIntOrNull() ?: return
+
                         val continuation = suspend {
+                            roundNumber++
+
                             val embed = buildEmbed {
                                 description = "It is ${starter.asMention}'s turn!"
-                                color = Immutable.SUCCESS
+                                color = getDominantColorByImageUrl(starter.effectiveAvatarUrl)
 
                                 author {
-                                    name = "Next Round"
-                                    iconUrl = event.jda.selfUser.effectiveAvatarUrl
+                                    name = "Round #$roundNumber"
+                                    iconUrl = starter.effectiveAvatarUrl
                                 }
                             }
 
                             val buttons = setOf(
                                 Button.secondary(
-                                    "$name-${starter.idLong}-${opponent.idLong}-rock",
+                                    "$name-${starter.idLong}-${opponent.idLong}-$roundNumber-rock",
                                     Emoji.fromUnicode(RPSTurn.ROCK.sign),
                                 ),
                                 Button.secondary(
-                                    "$name-${starter.idLong}-${opponent.idLong}-paper",
+                                    "$name-${starter.idLong}-${opponent.idLong}-$roundNumber-paper",
                                     Emoji.fromUnicode(RPSTurn.PAPER.sign),
                                 ),
                                 Button.secondary(
-                                    "$name-${starter.idLong}-${opponent.idLong}-scissors",
+                                    "$name-${starter.idLong}-${opponent.idLong}-$roundNumber-scissors",
                                     Emoji.fromUnicode(RPSTurn.SCISSORS.sign),
                                 ),
                                 Button.danger("$name-${starter.idLong}|${opponent.idLong}-stop", "Exit"),
