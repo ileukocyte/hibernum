@@ -101,7 +101,7 @@ object EventHandler : ListenerAdapter() {
                                         ?.let {
                                             it.sendWarning("${event.jda.selfUser.name} has been inactive for too long to stay in the voice channel! The bot has left!") {
                                                 text = "This message will self-delete in a minute"
-                                            }.queue({ w -> w.delete().queueAfter(1, TimeUnit.MINUTES, {}) {} }) {}
+                                            }.queue({ w -> w.delete().queueAfter(1, TimeUnit.MINUTES, null) {} }) {}
                                         }
 
                                     event.guild.audioPlayer?.stop()
@@ -112,7 +112,9 @@ object EventHandler : ListenerAdapter() {
                     }
                 }
             }
-        } else event.guild.audioPlayer?.stop() // just in case
+        } else {
+            event.guild.audioPlayer?.stop() // just in case
+        }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -147,7 +149,11 @@ object EventHandler : ListenerAdapter() {
                         select {
                             eventsAwaited.forEach { deferred ->
                                 deferred.onAwait { e ->
-                                    eventsAwaited.forEach { if (it.isActive) it.cancelAndJoin() }
+                                    eventsAwaited.forEach {
+                                        if (it.isActive) {
+                                            it.cancelAndJoin()
+                                        }
+                                    }
 
                                     delay(1000)
 
@@ -156,7 +162,11 @@ object EventHandler : ListenerAdapter() {
                             }
 
                             onTimeout(90000) {
-                                eventsAwaited.forEach { if (it.isActive) it.cancelAndJoin() }
+                                eventsAwaited.forEach {
+                                    if (it.isActive) {
+                                        it.cancelAndJoin()
+                                    }
+                                }
 
                                 event.guild.audioPlayer?.player?.playingTrack?.userData
                                     ?.cast<TrackUserData>()
@@ -164,7 +174,7 @@ object EventHandler : ListenerAdapter() {
                                     ?.let {
                                         it.sendWarning("${event.jda.selfUser.name} has been inactive for too long to stay in the voice channel! The bot has left!") {
                                             text = "This message will self-delete in a minute"
-                                        }.queue({ w -> w.delete().queueAfter(1, TimeUnit.MINUTES, {}) {} }) {}
+                                        }.queue({ w -> w.delete().queueAfter(1, TimeUnit.MINUTES, null) {} }) {}
                                     }
 
                                 event.guild.audioPlayer?.stop()
@@ -195,12 +205,14 @@ object EventHandler : ListenerAdapter() {
 
             event.jda.getChannelById(GuildMessageChannel::class.java, process.channel)
                 ?.sendMessage {
-                    embeds += defaultEmbed(description, EmbedType.WARNING) { text = "This message will self-delete in 5 seconds" }
+                    embeds += defaultEmbed(description, EmbedType.WARNING) {
+                        text = "This message will self-delete in 5 seconds"
+                    }
 
                     process.users.mapNotNull { event.jda.getUserById(it)?.asMention }.joinToString()
                         .takeUnless { it.isEmpty() }
                         ?.let { content += it }
-                }?.queue({ it.delete().queueAfter(5, TimeUnit.SECONDS, {}) {} }, {})
+                }?.queue({ it.delete().queueAfter(5, TimeUnit.SECONDS, null) {} }) {}
         }
     }
 
