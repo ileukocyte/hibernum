@@ -216,9 +216,9 @@ class TimeoutCommand : SlashOnlyCommand, UserContextCommand {
                     when (args.last()) {
                         "reason" -> {
                             val reason = TextInput
-                                .create("reason", "Specify the Reason if You Want to:", TextInputStyle.SHORT)
+                                .create("reason", "Specify the Reason if You Want to:", TextInputStyle.PARAGRAPH)
                                 .setRequired(false)
-                                .setMaxLength(512)
+                                .setMaxLength(512 - "Timed out by ${event.user.asTag}: ".length)
                                 .build()
                             val modal = Modal
                                 .create("$name-${member.idLong}-$millis-reason", "Member Timeout")
