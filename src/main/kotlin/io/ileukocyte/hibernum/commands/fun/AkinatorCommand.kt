@@ -152,12 +152,6 @@ class AkinatorCommand : TextCommand {
                     }
 
                     val lang = optionValue?.let { Language.valueOf(it) } ?: Language.ENGLISH
-                    /*val deferred = event.deferEdit().await().retrieveOriginal().await().editMessageComponents()
-                        .setEmbeds(buildEmbed {
-                            color = Immutable.SUCCESS
-                            description = "Waiting for Akinator's response\u2026"
-                        })
-                        .await()*/
 
                     val deferred = event.editComponents()
                         .setEmbeds(buildEmbed {
