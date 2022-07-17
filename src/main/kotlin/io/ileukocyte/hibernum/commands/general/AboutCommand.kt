@@ -51,12 +51,14 @@ class AboutCommand : TextCommand {
             )
             val discordCommands = jda.retrieveCommands().await()
 
-            appendLine("${jda.selfUser.name} is a modern Discord multi-purpose 100% [Kotlin](https://kotlinlang.org/)-coded bot that currently relies mostly on its musical functionality")
+            appendLine(appInfo.description
+                .replace("Kotlin", "[Kotlin](https://kotlinlang.org/)")
+                .removeSuffix(".")
+            )
             appendLine()
-            appendLine(
-                musicStreamingServersCount.takeIf { it > 0 }
-                    ?.let { "Currently streaming music on **$it ${"server".singularOrPlural(it)}**" }
-                    ?: "Currently is not streaming any music on any of all the servers"
+            appendLine(musicStreamingServersCount.takeIf { it > 0 }
+                ?.let { "Currently streaming music on **$it ${"server".singularOrPlural(it)}**" }
+                ?: "Currently is not streaming any music on any of all the servers"
             )
             appendLine()
             appendLine("**[Invite Link]($inviteLink)** • **[GitHub Repository](${Immutable.GITHUB_REPOSITORY})**")
