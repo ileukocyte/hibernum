@@ -25,9 +25,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 
 import net.dv8tion.jda.api.JDA
-import net.dv8tion.jda.api.entities.ChannelType
-import net.dv8tion.jda.api.entities.NewsChannel
-import net.dv8tion.jda.api.entities.TextChannel
+import net.dv8tion.jda.api.entities.channel.attribute.IAgeRestrictedChannel
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
@@ -37,7 +35,7 @@ class UrbanCommand : TextCommand {
     override val name = "urban"
     override val description = "Sends an Urban Dictionary definition of the specified term (executes faster in a NSFW channel)"
     override val aliases = setOf("ud", "urbandictionary")
-    override val cooldown = 4L
+    override val cooldown = 5L
     override val usages = setOf(setOf("term"))
     override val options = setOf(
         OptionData(OptionType.STRING, "term", "A word or a phrase to define", true))
@@ -50,17 +48,15 @@ class UrbanCommand : TextCommand {
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val query = args ?: throw NoArgumentsException
 
-        val isNSFW = when (event.channelType) {
-            ChannelType.TEXT -> event.textChannel.isNSFW
-            ChannelType.NEWS -> event.newsChannel.isNSFW
-            ChannelType.GUILD_NEWS_THREAD, ChannelType.GUILD_PUBLIC_THREAD, ChannelType.GUILD_PRIVATE_THREAD -> {
-                when (val parentChannel = event.threadChannel.parentChannel) {
-                    is TextChannel -> parentChannel.isNSFW
-                    is NewsChannel -> parentChannel.isNSFW
-                    else -> false
-                }
+        val isNSFW = event.channel.let { channel ->
+            when {
+                channel is IAgeRestrictedChannel -> channel.isNSFW
+                channel.type.isThread -> channel.asThreadChannel()
+                    .parentChannel
+                    .asStandardGuildMessageChannel()
+                    .isNSFW
+                else -> false
             }
-            else -> false
         }
 
         val deferred = event.channel.sendEmbed {
@@ -84,17 +80,15 @@ class UrbanCommand : TextCommand {
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val query = event.getOption("term")?.asString ?: return
 
-        val isNSFW = when (event.channelType) {
-            ChannelType.TEXT -> event.textChannel.isNSFW
-            ChannelType.NEWS -> event.newsChannel.isNSFW
-            ChannelType.GUILD_NEWS_THREAD, ChannelType.GUILD_PUBLIC_THREAD, ChannelType.GUILD_PRIVATE_THREAD -> {
-                when (val parentChannel = event.threadChannel.parentChannel) {
-                    is TextChannel -> parentChannel.isNSFW
-                    is NewsChannel -> parentChannel.isNSFW
-                    else -> false
-                }
+        val isNSFW = event.channel.let { channel ->
+            when {
+                channel is IAgeRestrictedChannel -> channel.isNSFW
+                channel.type.isThread -> channel.asThreadChannel()
+                    .parentChannel
+                    .asStandardGuildMessageChannel()
+                    .isNSFW
+                else -> false
             }
-            else -> false
         }
 
         val deferred = event.deferReply().takeIf { isNSFW }?.await()

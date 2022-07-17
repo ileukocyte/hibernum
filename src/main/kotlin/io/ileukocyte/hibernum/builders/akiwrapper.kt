@@ -16,8 +16,11 @@ class KAkiwrapperBuilder {
         .setGuessType(guessType)
         .setLanguage(language)
         .setFilterProfanity(filterProfanity)
-        .also { if (server !== null) it.server = server }
-        .build()
+        .also {
+            if (server !== null) {
+                it.server = server
+            }
+        }.build()
 }
 
 inline fun buildAkiwrapper(block: KAkiwrapperBuilder.() -> Unit) = KAkiwrapperBuilder().apply(block)()

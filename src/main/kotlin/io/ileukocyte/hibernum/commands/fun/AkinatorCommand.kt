@@ -25,6 +25,7 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
 
 import net.dv8tion.jda.api.entities.*
+import net.dv8tion.jda.api.entities.channel.attribute.IAgeRestrictedChannel
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.Event
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -151,6 +152,13 @@ class AkinatorCommand : TextCommand {
                     }
 
                     val lang = optionValue?.let { Language.valueOf(it) } ?: Language.ENGLISH
+                    /*val deferred = event.deferEdit().await().retrieveOriginal().await().editMessageComponents()
+                        .setEmbeds(buildEmbed {
+                            color = Immutable.SUCCESS
+                            description = "Waiting for Akinator's response\u2026"
+                        })
+                        .await()*/
+
                     val deferred = event.editComponents()
                         .setEmbeds(buildEmbed {
                             color = Immutable.SUCCESS
@@ -170,17 +178,15 @@ class AkinatorCommand : TextCommand {
                             }) { false } // used to block other commands
                         }
 
-                        val enableNsfwMode = when (event.channelType) {
-                            ChannelType.TEXT -> !event.textChannel.isNSFW
-                            ChannelType.NEWS -> !event.newsChannel.isNSFW
-                            ChannelType.GUILD_NEWS_THREAD, ChannelType.GUILD_PUBLIC_THREAD, ChannelType.GUILD_PRIVATE_THREAD -> {
-                                when (val parentChannel = event.threadChannel.parentChannel) {
-                                    is TextChannel -> !parentChannel.isNSFW
-                                    is NewsChannel -> !parentChannel.isNSFW
-                                    else -> true
-                                }
+                        val enableNsfwMode = event.channel.let { channel ->
+                            when {
+                                channel is IAgeRestrictedChannel -> !channel.isNSFW
+                                channel.type.isThread -> !channel.asThreadChannel()
+                                    .parentChannel
+                                    .asStandardGuildMessageChannel()
+                                    .isNSFW
+                                else -> true
                             }
-                            else -> true
                         }
 
                         val akiwrapper = buildAkiwrapper {

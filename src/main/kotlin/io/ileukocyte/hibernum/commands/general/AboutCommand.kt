@@ -65,6 +65,7 @@ class AboutCommand : TextCommand {
             appendLine("**Developer**: ${if (guild.isMember(owner)) owner.asMention else owner.asTag}")
             appendLine("**Bot Version**: ${Immutable.VERSION}")
             appendLine("**JDA Version**: ${JDAInfo.VERSION}")
+            appendLine("**Discord Rest API Version**: ${JDAInfo.DISCORD_REST_VERSION}")
             appendLine("**Kotlin Version**: ${KotlinVersion.CURRENT}")
             appendLine("**Java Version**: ${System.getProperty("java.version") ?: "Unknown"}")
             appendLine("**Total Commands**: ${CommandHandler.size}" +

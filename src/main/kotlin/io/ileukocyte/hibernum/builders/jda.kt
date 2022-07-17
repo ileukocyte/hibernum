@@ -45,7 +45,7 @@ class KJDABuilder {
             .createDefault(token)
             .let {
                 it.takeIf { includePrivilegedIntents }
-                    ?.enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_PRESENCES)
+                    ?.enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_PRESENCES, GatewayIntent.MESSAGE_CONTENT)
                     ?.setMemberCachePolicy(MemberCachePolicy.ALL)
                     ?.enableCache(CacheFlag.ACTIVITY, CacheFlag.CLIENT_STATUS)
                     ?: it
