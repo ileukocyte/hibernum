@@ -5,6 +5,7 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
 import io.ileukocyte.hibernum.extensions.*
+import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.emoji.Emoji
@@ -236,11 +237,11 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
 
                         val embed = buildEmbed {
                             description = "${winner.asMention} wins!"
-                            color = Immutable.SUCCESS
+                            color = getDominantColorByImageUrl(winner.effectiveAvatarUrl)
 
                             author {
                                 name = "Congratulations!"
-                                iconUrl = event.jda.selfUser.effectiveAvatarUrl
+                                iconUrl = winner.effectiveAvatarUrl
                             }
 
                             field {

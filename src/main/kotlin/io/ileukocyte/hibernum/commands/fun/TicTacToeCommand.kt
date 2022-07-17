@@ -6,6 +6,7 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.awaitEvent
+import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 import io.ileukocyte.hibernum.utils.processes
 import io.ileukocyte.hibernum.utils.waiterProcess
 
@@ -151,8 +152,13 @@ class TicTacToeCommand : SlashOnlyCommand {
 
                         if (ttt.isOver) {
                             response.replyEmbed {
-                                description = "${ttt.currentTurn.asMention} wins! Well done!"
-                                color = Immutable.SUCCESS
+                                description = "${ttt.currentTurn.asMention} wins!"
+                                color = getDominantColorByImageUrl(ttt.currentTurn.effectiveAvatarUrl)
+
+                                author {
+                                    name = "Congratulations!"
+                                    iconUrl = ttt.currentTurn.effectiveAvatarUrl
+                                }
                             }.content(ttt.printableBoard).queue()
                         } else {
                             if (ttt.board.flatten().none { it matches TicTacToe.GAP_REGEX }) {
