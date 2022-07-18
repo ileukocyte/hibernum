@@ -36,9 +36,16 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
  */
 interface GenericCommand : Comparable<GenericCommand> {
     val name: String
+    val description: String
     val category: CommandCategory
         get() = javaClass.`package`.name.let { CommandCategory[it.split(".").last()] }
             ?: CommandCategory.UNKNOWN
+
+    /**
+     * Used for the help command if the main description is too long for slash command limits
+     */
+    val fullDescription: String
+        get() = description
 
     /**
      * A property that shows whether the command can only be used by a developer of the bot
@@ -146,16 +153,8 @@ interface GenericCommand : Comparable<GenericCommand> {
  * @see SlashOnlyCommand
  */
 interface TextCommand : GenericCommand {
-    val description: String
     val aliases: Set<String>
         get() = emptySet()
-
-    /**
-     * Used for the help command if the main description is too long for slash command limits
-     */
-    val fullDescription: String
-        get() = description
-
     val usages: Set<Set<String>>
         get() = emptySet()
 

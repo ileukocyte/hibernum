@@ -53,7 +53,7 @@ class HelpCommand : TextCommand {
         val option = event.getOption("command")
 
         if (option !== null) {
-            CommandHandler[option.asString]
+            CommandHandler.getGenericCommand(option.asString)
                 ?.let { event.replyEmbeds(it.getHelp(event.jda)).setEphemeral(true).queue() }
                 ?: throw CommandException("The provided command name is invalid!")
         } else {
@@ -63,42 +63,76 @@ class HelpCommand : TextCommand {
         }
     }
 
-    private fun TextCommand.getHelp(jda: JDA) = buildEmbed {
+    private fun GenericCommand.getHelp(jda: JDA) = buildEmbed {
         val nameWithPrefix = "${Immutable.DEFAULT_PREFIX.takeUnless { this@getHelp is SlashOnlyCommand } ?: "/"}$name"
 
         color = Immutable.SUCCESS
         description = this@getHelp.fullDescription
 
-        if (aliases.isNotEmpty()) {
-            field {
-                title = "Aliases"
-                description = aliases.sorted().joinToString()
-            }
-        }
-
-        if (this@getHelp is SubcommandHolder) {
-            for (subcommand in subcommands.keys) {
+        if (this@getHelp is TextCommand) {
+            if (aliases.isNotEmpty()) {
                 field {
-                    title = "${subcommand.name.capitalizeAll()} Subcommand"
-                    description = "${subcommand.description}\n\n/$name ${subcommand.name} ${
-                        subcommand.options.joinToString(" ") { "<${it.name}>" }
-                    }\n\n" + subcommand.options.joinToString("\n") { o ->
-                        val description by lazy {
-                            if (o.description.split("\\s+".toRegex(), 2)
-                                    .first()
-                                    .substring(1)
-                                    .any { !it.isLowerCase() }
-                            ) {
-                                o.description
-                            } else {
-                                o.description.replaceFirstChar { it.lowercase() }
-                            }
-                        }
+                    title = "Aliases"
+                    description = aliases.sorted().joinToString()
+                }
+            }
 
-                        "<${o.name}>${
-                            " (optional)".takeUnless { o.isRequired }.orEmpty()
-                        } — $description"
+            if (this@getHelp is SubcommandHolder) {
+                for (subcommand in subcommands.keys) {
+                    field {
+                        title = "${subcommand.name.capitalizeAll()} Subcommand"
+                        description = "${subcommand.description}\n\n/$name ${subcommand.name} ${
+                            subcommand.options.joinToString(" ") { "<${it.name}>" }
+                        }\n\n" + subcommand.options.joinToString("\n") { o ->
+                            val description by lazy {
+                                if (o.description.split("\\s+".toRegex(), 2)
+                                        .first()
+                                        .substring(1)
+                                        .any { !it.isLowerCase() }
+                                ) {
+                                    o.description
+                                } else {
+                                    o.description.replaceFirstChar { it.lowercase() }
+                                }
+                            }
+
+                            "<${o.name}>${
+                                " (optional)".takeUnless { o.isRequired }.orEmpty()
+                            } — $description"
+                        }
                     }
+                }
+            }
+
+            if (usages.isNotEmpty()) {
+                field {
+                    title = "Text Usages"
+                    description =
+                        usages.joinToString("\n") { "$nameWithPrefix ${it.joinToString(" ") { u -> "<$u>" }}" }
+                }
+            }
+
+            if (options.isNotEmpty()) {
+                field {
+                    title = "Slash Options"
+                    description = "$nameWithPrefix ${options.joinToString(" ") { "<${it.name}>" }}\n\n" +
+                            options.joinToString("\n") { o ->
+                                val description by lazy {
+                                    if (o.description.split("\\s+".toRegex(), 2)
+                                            .first()
+                                            .substring(1)
+                                            .any { !it.isLowerCase() }
+                                    ) {
+                                        o.description
+                                    } else {
+                                        o.description.replaceFirstChar { it.lowercase() }
+                                    }
+                                }
+
+                                "<${o.name}>${
+                                    " (optional)".takeUnless { o.isRequired }.orEmpty()
+                                } — $description"
+                            }
                 }
             }
         }
@@ -115,40 +149,20 @@ class HelpCommand : TextCommand {
             }
         }
 
-        if (usages.isNotEmpty()) {
-            field {
-                title = "Text Usages"
-                description =
-                    usages.joinToString("\n") { "$nameWithPrefix ${it.joinToString(" ") { u -> "<$u>" }}" }
-            }
-        }
-
-        if (options.isNotEmpty()) {
-            field {
-                title = "Slash Options"
-                description = "$nameWithPrefix ${options.joinToString(" ") { "<${it.name}>" }}\n\n" +
-                        options.joinToString("\n") { o ->
-                            val description by lazy {
-                                if (o.description.split("\\s+".toRegex(), 2)
-                                        .first()
-                                        .substring(1)
-                                        .any { !it.isLowerCase() }) {
-                                    o.description
-                                } else {
-                                    o.description.replaceFirstChar { it.lowercase() }
-                                }
-                            }
-
-                            "<${o.name}>${
-                                " (optional)".takeUnless { o.isRequired }.orEmpty()
-                            } — $description"
-                        }
-            }
-        }
-
         field {
             title = "Input Types"
-            description = inputTypes.joinToString("\n")
+            description = inputTypes.joinToString("\n") {
+                val contextInputTypes = setOf(
+                    GenericCommand.InputType.MESSAGE_CONTEXT_MENU,
+                    GenericCommand.InputType.USER_CONTEXT_MENU,
+                )
+
+                if (this@getHelp is ContextCommand && it in contextInputTypes) {
+                    "$it (\"$contextName\")"
+                } else {
+                    "$it"
+                }
+            }
         }
 
         author {
