@@ -69,7 +69,7 @@ suspend inline fun MessageChannel.awaitMessage(
     authors: Set<User>,
     processCommand: GenericCommand? = null,
     invokingMessage: Message? = null,
-    delay: Long = 1,
+    delay: Long = 5,
     unit: TimeUnit = TimeUnit.MINUTES,
     processId: Int? = null,
 ) = jda.awaitEvent<MessageReceivedEvent>(
@@ -112,7 +112,7 @@ suspend inline fun MessageChannel.awaitMessage(
     author: User,
     processCommand: GenericCommand? = null,
     invokingMessage: Message? = null,
-    delay: Long = 1,
+    delay: Long = 5,
     unit: TimeUnit = TimeUnit.MINUTES,
     processId: Int? = null,
 ) = awaitMessage(setOf(author), processCommand, invokingMessage, delay, unit, processId)

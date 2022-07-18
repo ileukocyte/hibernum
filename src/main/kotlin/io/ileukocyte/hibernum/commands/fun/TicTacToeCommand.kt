@@ -130,7 +130,7 @@ class TicTacToeCommand : SlashOnlyCommand {
         processId: Int,
     ) {
         try {
-            val response = channel.awaitMessage(ttt.players, this, message, 5, processId = processId)
+            val response = channel.awaitMessage(ttt.players, this, message, processId = processId)
                 ?: return
             val content = response.contentRaw
 

@@ -28,19 +28,11 @@ class EightBallCommand : TextCommand {
 
         event.message.replyEmbed {
             color = embedColor
-            description = text + when (embedColor) {
-                Immutable.SUCCESS -> "!"
-                Immutable.WARNING, Immutable.FAILURE -> "\u2026"
-                else -> ""
-            }
+            description = text
         }.queue(null) {
             event.channel.sendEmbed {
                 color = embedColor
-                description = text + when (embedColor) {
-                    Immutable.SUCCESS -> "!"
-                    Immutable.WARNING, Immutable.FAILURE -> "\u2026"
-                    else -> ""
-                }
+                description = text
             }.queue()
         }
     }
@@ -50,11 +42,7 @@ class EightBallCommand : TextCommand {
 
         event.replyEmbed {
             color = embedColor
-            description = text + when (embedColor) {
-                Immutable.SUCCESS -> "!"
-                Immutable.WARNING, Immutable.FAILURE -> "\u2026"
-                else -> ""
-            }
+            description = text
         }.queue()
     }
 
@@ -66,7 +54,7 @@ class EightBallCommand : TextCommand {
             "Without a doubt",
             "Yes, definitely",
             "You may rely on it",
-        ).associateWith { Immutable.SUCCESS }
+        ).associate { "$it!" to Immutable.SUCCESS }
 
         @JvmField
         val POSITIVE_ANSWERS = setOf(
@@ -78,13 +66,13 @@ class EightBallCommand : TextCommand {
         ).associateWith { Immutable.CONFIRMATION }
 
         @JvmField
-        val NON_COMMITAL_ANSWERS = setOf(
+        val NON_COMMITTAL_ANSWERS = setOf(
             "Reply hazy, try again",
             "Ask again later",
             "Better not tell you now",
             "Cannot predict now",
             "Concentrate and ask again",
-        ).associateWith { Immutable.WARNING }
+        ).associate { "$it\u2026" to Immutable.WARNING }
 
         @JvmField
         val NEGATIVE_ANSWERS = setOf(
@@ -93,12 +81,12 @@ class EightBallCommand : TextCommand {
             "My sources say no",
             "Outlook not so good",
             "Very doubtful",
-        ).associateWith { Immutable.FAILURE }
+        ).associate { "$it\u2026" to Immutable.FAILURE }
 
         @JvmField
         val POSSIBLE_ANSWERS = CERTAIN_POSITIVE_ANSWERS +
                 POSITIVE_ANSWERS +
-                NON_COMMITAL_ANSWERS +
+                NON_COMMITTAL_ANSWERS +
                 NEGATIVE_ANSWERS
     }
 }

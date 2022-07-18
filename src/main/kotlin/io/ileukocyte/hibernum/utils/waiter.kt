@@ -1,5 +1,4 @@
 @file:[JvmName("EventWaiter") Suppress("UNCHECKED_CAST", "UNUSED")]
-
 package io.ileukocyte.hibernum.utils
 
 import arrow.fx.coroutines.onCancel

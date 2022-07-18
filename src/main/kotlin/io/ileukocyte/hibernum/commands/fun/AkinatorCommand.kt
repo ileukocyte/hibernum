@@ -365,7 +365,6 @@ class AkinatorCommand : TextCommand {
                 player,
                 this,
                 invokingMessage,
-                delay = 5,
                 processId = processId,
             ) ?: return
 

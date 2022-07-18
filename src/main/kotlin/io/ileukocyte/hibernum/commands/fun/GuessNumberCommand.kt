@@ -163,7 +163,7 @@ class GuessNumberCommand : TextCommand {
         var attempt = _attempt
 
         val received = try {
-            channel.awaitMessage(user, this, message, 5, processId = processId)
+            channel.awaitMessage(user, this, message, processId = processId)
                 ?: return
         } catch (_: TimeoutCancellationException) {
             channel.jda.getProcessByEntities(user, channel)?.kill(channel.jda)

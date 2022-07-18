@@ -39,7 +39,7 @@ const val CROSS_MARK = "\u274E"
  *
  * @author Alexander Oksanich
  */
-@Throws(TimeoutCancellationException::class)
+@[Deprecated("Deprecated in favor of Discord button interactions") Throws(TimeoutCancellationException::class)]
 suspend fun Message.awaitConfirmationWithReactions(
     user: User,
     processCommand: GenericCommand? = null,
