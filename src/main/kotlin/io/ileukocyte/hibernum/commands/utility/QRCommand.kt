@@ -10,7 +10,7 @@ import com.google.zxing.common.HybridBinarizer
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.commands.MessageContextCommand
+import io.ileukocyte.hibernum.commands.MessageContextOnlyCommand
 import io.ileukocyte.hibernum.commands.SubcommandHolder
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.*
@@ -41,7 +41,7 @@ import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 import net.glxn.qrgen.core.image.ImageType
 import net.glxn.qrgen.javase.QRCode
 
-class QRCommand : TextCommand, SubcommandHolder, MessageContextCommand {
+class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
     override val name = "qr"
     override val contextName = "QR Code"
     override val description = "Generates or reads a QR code from the provided input"

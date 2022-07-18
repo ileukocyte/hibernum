@@ -3,7 +3,7 @@ package io.ileukocyte.hibernum.commands.moderation
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.SubcommandHolder
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
-import io.ileukocyte.hibernum.commands.UserContextCommand
+import io.ileukocyte.hibernum.commands.UserContextOnlyCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.*
 
@@ -26,7 +26,7 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.text.TextInput
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 
-class TimeoutCommand : SlashOnlyCommand, SubcommandHolder, UserContextCommand {
+class TimeoutCommand : SlashOnlyCommand, SubcommandHolder, UserContextOnlyCommand {
     override val name = "timeout"
     override val contextName = "Timeout Member"
     override val description = "Times the specified member out or removes a timeout from them"

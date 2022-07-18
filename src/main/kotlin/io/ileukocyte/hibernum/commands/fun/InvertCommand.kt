@@ -27,7 +27,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
 import org.apache.commons.validator.routines.UrlValidator
 
-class InvertCommand : TextCommand, UniversalContextCommand {
+class InvertCommand : TextCommand, ContextCommand {
     override val name = "invert"
     override val contextName = "Image Negation"
     override val description = "Inverts the provided image (see the command's help menu)"

@@ -515,9 +515,7 @@ object CommandHandler : MutableSet<GenericCommand> {
      */
     internal operator fun invoke(event: MessageContextInteractionEvent) {
         if (event.isFromGuild) {
-            this[event.name, Command.Type.MESSAGE]?.let { cc ->
-                val command = cc as MessageContextCommand
-
+            this[event.name, Command.Type.MESSAGE]?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     if (event.jda.getProcessByEntities(event.user, event.messageChannel) === null
                             || command.neglectProcessBlock) {
@@ -537,14 +535,14 @@ object CommandHandler : MutableSet<GenericCommand> {
                             }
 
                             if (command.cooldown > 0) {
-                                cc.getCooldownError(event.user.idLong)
+                                command.getCooldownError(event.user.idLong)
                                     ?.let { event.replyFailure(it).setEphemeral(true).queue() }
-                                    ?: cc.let {
+                                    ?: command.let {
                                         it.applyCooldown(event.user.idLong)
-                                        it(event)
+                                        command(event)
                                     }
                             } else {
-                                cc(event)
+                                command(event)
                             }
                         } catch (e: Exception) {
                             when (e) {
@@ -604,9 +602,7 @@ object CommandHandler : MutableSet<GenericCommand> {
      */
     internal operator fun invoke(event: UserContextInteractionEvent) {
         if (event.isFromGuild) {
-            this[event.name, Command.Type.USER]?.let { cc ->
-                val command = cc as UserContextCommand
-
+            this[event.name, Command.Type.USER]?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     if (event.jda.getProcessByEntities(event.user, event.messageChannel) === null
                             || command.neglectProcessBlock) {
@@ -626,14 +622,14 @@ object CommandHandler : MutableSet<GenericCommand> {
                             }
 
                             if (command.cooldown > 0) {
-                                cc.getCooldownError(event.user.idLong)
+                                command.getCooldownError(event.user.idLong)
                                     ?.let { event.replyFailure(it).setEphemeral(true).queue() }
-                                    ?: cc.let {
+                                    ?: command.let {
                                         it.applyCooldown(event.user.idLong)
                                         it(event)
                                     }
                             } else {
-                                cc(event)
+                                command(event)
                             }
                         } catch (e: Exception) {
                             when (e) {

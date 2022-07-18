@@ -29,9 +29,8 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
  * @see SlashOnlyCommand
  * @see SubcommandHolder
  * @see ContextCommand
- * @see MessageContextCommand
- * @see UserContextCommand
- * @see UniversalContextCommand
+ * @see MessageContextOnlyCommand
+ * @see UserContextOnlyCommand
  */
 interface GenericCommand : Comparable<GenericCommand> {
     val name: String
@@ -73,12 +72,14 @@ interface GenericCommand : Comparable<GenericCommand> {
                 }
             }
 
-            if (this is MessageContextCommand) {
-                inputTypes += InputType.MESSAGE_CONTEXT_MENU
-            }
+            if (this is ContextCommand) {
+                if (this !is UserContextOnlyCommand) {
+                    inputTypes += InputType.MESSAGE_CONTEXT_MENU
+                }
 
-            if (this is UserContextCommand) {
-                inputTypes += InputType.USER_CONTEXT_MENU
+                if (this !is MessageContextOnlyCommand) {
+                    inputTypes += InputType.USER_CONTEXT_MENU
+                }
             }
 
             return inputTypes
@@ -143,7 +144,7 @@ interface GenericCommand : Comparable<GenericCommand> {
 
 /**
  * A generic type that is to be implemented by classes of all the bot's commands
- * that are invoked via Discord text input
+ * that are invoked via Discord text input (either message content or slash command menu)
  *
  * @author Alexander Oksanich
  *
@@ -263,18 +264,19 @@ interface SubcommandHolder : TextCommand {
 
 /**
  * A type of command that can be used as a command of a Discord context menu
+ * (either a message or user profile context menu)
  *
  * @author Alexander Oksanich
  *
  * @see GenericCommand
  * @see TextCommand
- * @see MessageContextCommand
- * @see UserContextCommand
- * @see UniversalContextCommand
+ * @see MessageContextOnlyCommand
+ * @see UserContextOnlyCommand
  */
 interface ContextCommand : GenericCommand {
     val contextName: String
     val contextTypes: Set<Command.Type>
+        get() = setOf(Command.Type.MESSAGE, Command.Type.USER)
 
     /**
      * @return All the [CommandData] instances of the context menu command
@@ -284,22 +286,6 @@ interface ContextCommand : GenericCommand {
             .setGuildOnly(true)
             .setDefaultPermissions(DefaultMemberPermissions.enabledFor(memberPermissions))
     }.toSet()
-}
-
-/**
- * A type of command that can be used as a command of a message context menu
- *
- * @author Alexander Oksanich
- *
- * @see GenericCommand
- * @see TextCommand
- * @see ContextCommand
- * @see UserContextCommand
- * @see UniversalContextCommand
- */
-interface MessageContextCommand : ContextCommand {
-    override val contextTypes: Set<Command.Type>
-        get() = setOf(Command.Type.MESSAGE)
 
     /**
      * A function that is executed when the command is invoked as a command of a message context menu
@@ -308,22 +294,6 @@ interface MessageContextCommand : ContextCommand {
      * The [MessageContextInteractionEvent] occurring once the command is invoked
      */
     suspend operator fun invoke(event: MessageContextInteractionEvent)
-}
-
-/**
- * A type of command that can be used as a command of a user profile context menu
- *
- * @author Alexander Oksanich
- *
- * @see GenericCommand
- * @see TextCommand
- * @see ContextCommand
- * @see MessageContextCommand
- * @see UniversalContextCommand
- */
-interface UserContextCommand : ContextCommand {
-    override val contextTypes: Set<Command.Type>
-        get() = setOf(Command.Type.USER)
 
     /**
      * A function that is executed when the command is invoked as a command of a user profile context menu
@@ -335,17 +305,37 @@ interface UserContextCommand : ContextCommand {
 }
 
 /**
- * A type of command that can be used as a command of both user profile and message context menus
+ * A type of command that can be used as a command of a message context menu
  *
  * @author Alexander Oksanich
  *
  * @see GenericCommand
  * @see TextCommand
  * @see ContextCommand
- * @see MessageContextCommand
- * @see UserContextCommand
+ * @see UserContextOnlyCommand
  */
-interface UniversalContextCommand : MessageContextCommand, UserContextCommand {
+interface MessageContextOnlyCommand : ContextCommand {
     override val contextTypes: Set<Command.Type>
-        get() = setOf(Command.Type.MESSAGE, Command.Type.USER)
+        get() = setOf(Command.Type.MESSAGE)
+
+    override suspend fun invoke(event: UserContextInteractionEvent) =
+        throw UnsupportedOperationException("The command cannot be invoked as a user profile context menu command!")
+}
+
+/**
+ * A type of command that can be used as a command of a user profile context menu
+ *
+ * @author Alexander Oksanich
+ *
+ * @see GenericCommand
+ * @see TextCommand
+ * @see ContextCommand
+ * @see MessageContextOnlyCommand
+ */
+interface UserContextOnlyCommand : ContextCommand {
+    override val contextTypes: Set<Command.Type>
+        get() = setOf(Command.Type.USER)
+
+    override suspend fun invoke(event: MessageContextInteractionEvent) =
+        throw UnsupportedOperationException("The command cannot be invoked as a message context menu command!")
 }

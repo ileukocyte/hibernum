@@ -1,7 +1,7 @@
 package io.ileukocyte.hibernum.commands.`fun`
 
 import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.commands.MessageContextCommand
+import io.ileukocyte.hibernum.commands.MessageContextOnlyCommand
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.await
@@ -26,7 +26,7 @@ import net.dv8tion.jda.api.interactions.components.text.TextInput
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
-class TextToImageCommand : TextCommand, MessageContextCommand {
+class TextToImageCommand : TextCommand, MessageContextOnlyCommand {
     override val name = "tti"
     override val contextName = "Text to Image"
     override val description = "Creates an image containing the provided text"

@@ -2,7 +2,7 @@ package io.ileukocyte.hibernum.commands.developer
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.commands.MessageContextCommand
+import io.ileukocyte.hibernum.commands.MessageContextOnlyCommand
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.*
@@ -23,7 +23,7 @@ import net.dv8tion.jda.api.requests.RestAction
 
 import org.json.JSONObject
 
-class EvalCommand : TextCommand, MessageContextCommand {
+class EvalCommand : TextCommand, MessageContextOnlyCommand {
     override val name = "eval"
     override val contextName = "Execute Kotlin"
     override val description = "Executes the attached Kotlin code"
