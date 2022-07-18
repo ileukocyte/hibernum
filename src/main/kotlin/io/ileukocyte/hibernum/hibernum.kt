@@ -119,14 +119,20 @@ suspend fun main() = coroutineScope {
                 cmd.name !in discordCommands.map { it.name }
                         || cmd.description !in discordCommands.map { it.description.removePrefix("(Developer-only) ") }
                         || discordCommands.any {
-                    val unequalSubcommands = if (cmd is SubcommandHolder) {
-                        !cmd.subcommands.keys.toList().subcommandsEqual(it.subcommands.map { s -> s.toSubcommandData() })
+                    val unequalOptions = if (cmd !is SubcommandHolder) {
+                        !cmd.options.toList().optionsEqual(it.options.map { o -> o.toOptionData() })
                     } else {
                         false
                     }
 
-                    cmd.name == it.name && (!cmd.options.toList().optionsEqual(it.options.map { o -> o.toOptionData() })
-                            || unequalSubcommands)
+                    val unequalSubcommands = if (cmd is SubcommandHolder) {
+                        !cmd.subcommands.keys.toList()
+                            .subcommandsEqual(it.subcommands.map { s -> s.toSubcommandData() })
+                    } else {
+                        false
+                    }
+
+                    cmd.name == it.name && (unequalOptions || unequalSubcommands)
                 }
             }
 

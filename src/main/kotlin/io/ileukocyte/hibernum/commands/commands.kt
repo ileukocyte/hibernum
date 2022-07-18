@@ -1,5 +1,4 @@
 @file:JvmName("Commands")
-
 package io.ileukocyte.hibernum.commands
 
 import io.ileukocyte.hibernum.extensions.capitalizeAll
@@ -163,6 +162,8 @@ interface TextCommand : GenericCommand {
      * A property containing a set of data that is used for option-requiring slash commands
      *
      * **Note**: the [options] property cannot be used alongside the [SubcommandHolder.subcommands] property!
+     *
+     * @throws UnsupportedOperationException if the command class also implements [SubcommandHolder]
      */
     val options: Set<OptionData>
         get() = emptySet()
@@ -174,7 +175,13 @@ interface TextCommand : GenericCommand {
         Commands.slash(name, "(Developer-only) ".takeIf { isDeveloper }.orEmpty() + description)
             .setGuildOnly(true)
             .setDefaultPermissions(DefaultMemberPermissions.enabledFor(memberPermissions))
-            .addOptions(options)
+            .let {
+                if (this !is SubcommandHolder) {
+                    it.addOptions(options)
+                } else {
+                    it
+                }
+            }
 
     /**
      * A function that is executed when the command is invoked as a classic text command
@@ -243,6 +250,9 @@ interface SubcommandHolder : TextCommand {
      */
     val subcommands: Map<SubcommandData, suspend (SlashCommandInteractionEvent) -> Unit>
         get() = emptyMap()
+
+    override val options: Set<OptionData>
+        get() = throw UnsupportedOperationException("This type of slash command cannot have any options!")
 
     override fun asJDASlashCommandData(): SlashCommandData? =
         super.asJDASlashCommandData()?.addSubcommands(subcommands.keys)

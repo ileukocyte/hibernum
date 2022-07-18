@@ -112,7 +112,7 @@ class HelpCommand : TextCommand {
                 }
             }
 
-            if (options.isNotEmpty()) {
+            if (this@getHelp !is SubcommandHolder && options.isNotEmpty()) {
                 field {
                     title = "Slash Options"
                     description = "$nameWithPrefix ${options.joinToString(" ") { "<${it.name}>" }}\n\n" +
