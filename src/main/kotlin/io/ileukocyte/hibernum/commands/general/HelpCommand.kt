@@ -79,8 +79,8 @@ class HelpCommand : TextCommand {
         if (this@getHelp is SubcommandHolder) {
             for (subcommand in subcommands.keys) {
                 field {
-                    title = "\"${subcommand.name.capitalizeAll()}\" Subcommand"
-                    description = "${subcommand.description}\n\n$nameWithPrefix ${subcommand.name} ${
+                    title = "${subcommand.name.capitalizeAll()} Subcommand"
+                    description = "${subcommand.description}\n\n/$name ${subcommand.name} ${
                         subcommand.options.joinToString(" ") { "<${it.name}>" }
                     }\n\n" + subcommand.options.joinToString("\n") { o ->
                         val description by lazy {
@@ -123,7 +123,7 @@ class HelpCommand : TextCommand {
             }
         }
 
-        if (this@getHelp !is SubcommandHolder && options.isNotEmpty()) {
+        if (options.isNotEmpty()) {
             field {
                 title = "Slash Options"
                 description = "$nameWithPrefix ${options.joinToString(" ") { "<${it.name}>" }}\n\n" +

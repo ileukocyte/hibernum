@@ -11,6 +11,7 @@ import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.MessageContextCommand
+import io.ileukocyte.hibernum.commands.SubcommandHolder
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.awaitEvent
@@ -31,7 +32,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.commands.OptionType
-import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
 import net.dv8tion.jda.api.interactions.components.Modal
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.text.TextInput
@@ -40,15 +41,14 @@ import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 import net.glxn.qrgen.core.image.ImageType
 import net.glxn.qrgen.javase.QRCode
 
-class QRCommand : TextCommand, MessageContextCommand {
+class QRCommand : TextCommand, SubcommandHolder, MessageContextCommand {
     override val name = "qr"
     override val contextName = "QR Code"
     override val description = "Generates or reads a QR code from the provided input"
-    override val options = setOf(
-        OptionData(OptionType.STRING, "mode", "QR code generation/decoding", true)
-            .addChoice("Generate", "gen")
-            .addChoice("Read", "read"),
-        OptionData(OptionType.ATTACHMENT, "image", "The image to read a QR code from"),
+    override val subcommands = mapOf(
+        SubcommandData("generate", "Generates a QR code from the provided input") to ::generate,
+        SubcommandData("read", "Reads a QR code from the provided image")
+            .addOption(OptionType.ATTACHMENT, "image", "The image to read a QR code from", true) to ::read,
     )
     override val usages = setOf(setOf("input"), setOf("image"))
     override val cooldown = 5L
@@ -123,66 +123,66 @@ class QRCommand : TextCommand, MessageContextCommand {
         }
     }
 
-    override suspend fun invoke(event: SlashCommandInteractionEvent) {
-        val mode = event.getOption("mode")?.asString ?: return
+    private suspend fun generate(event: SlashCommandInteractionEvent) {
+        val input = TextInput
+            .create("input", "Enter Your Text:", TextInputStyle.PARAGRAPH)
+            .build()
+        val modal = Modal
+            .create("$name-modal", "Generate QR Code")
+            .addActionRow(input)
+            .build()
 
-        if (mode == "gen") {
-            val input = TextInput
-                .create("input", "Enter Your Text:", TextInputStyle.PARAGRAPH)
-                .build()
-            val modal = Modal
-                .create("$name-modal", "Generate QR Code")
-                .addActionRow(input)
-                .build()
+        event.replyModal(modal).await()
+    }
 
-            event.replyModal(modal).queue()
-        } else {
-            val attachment = event.getOption("image")?.asAttachment?.takeIf { it.isImage }
-                ?: throw CommandException("No image to read a QR code from is provided!")
+    private suspend fun read(event: SlashCommandInteractionEvent) {
+        val attachment = event.getOption("image")?.asAttachment?.takeIf { it.isImage }
+            ?: throw CommandException("No image to read a QR code from is provided!")
 
-            val deferred = event.replyEmbed {
-                color = Immutable.SUCCESS
-                description = "Trying to read the QR code\u2026"
-            }.await()
+        val deferred = event.replyEmbed {
+            color = Immutable.SUCCESS
+            description = "Trying to read the QR code\u2026"
+        }.await()
 
-            attachment.proxy.download().await().use {
+        attachment.proxy.download().await().use {
+            try {
+                val image = ImageIO.read(ByteArrayInputStream(it.readAllBytes()))
+                val source = BufferedImageLuminanceSource(image)
+                val bitmap = BinaryBitmap(HybridBinarizer(source))
+
                 try {
-                    val image = ImageIO.read(ByteArrayInputStream(it.readAllBytes()))
-                    val source = BufferedImageLuminanceSource(image)
-                    val bitmap = BinaryBitmap(HybridBinarizer(source))
+                    val result = MultiFormatReader().decode(bitmap)
+                        ?.takeIf { r -> r.barcodeFormat == BarcodeFormat.QR_CODE }
+                        ?: throw NotFoundException.getNotFoundInstance()
+                    val resultEmbed = buildEmbed {
+                        color = Immutable.SUCCESS
+                        description = result.text.limitTo(MessageEmbed.DESCRIPTION_MAX_LENGTH)
 
-                    try {
-                        val result = MultiFormatReader().decode(bitmap)
-                            ?.takeIf { r -> r.barcodeFormat == BarcodeFormat.QR_CODE }
-                            ?: throw NotFoundException.getNotFoundInstance()
-                        val resultEmbed = buildEmbed {
-                            color = Immutable.SUCCESS
-                            description = result.text.limitTo(MessageEmbed.DESCRIPTION_MAX_LENGTH)
-
-                            author {
-                                name = "QR Reader"
-                                iconUrl = event.jda.selfUser.effectiveAvatarUrl
-                            }
+                        author {
+                            name = "QR Reader"
+                            iconUrl = event.jda.selfUser.effectiveAvatarUrl
                         }
-
-                        deferred.editOriginalEmbeds(resultEmbed).queue(null) {
-                            event.channel.sendMessageEmbeds(resultEmbed).queue()
-                        }
-                    } catch (_: NotFoundException) {
-                        deferred.editOriginalEmbeds(
-                            defaultEmbed("No QR code has been found in the image!", EmbedType.FAILURE)
-                        ).queue(null) {
-                            throw CommandException("No QR code has been found in the image!")
-                        }
-
-                        return
                     }
-                } catch (e: Exception) {
-                    deferred.deleteOriginal().queue(null) {}
 
-                    throw CommandException("${it::class.qualifiedName ?: "An unknown exception"}: " +
-                            (e.message ?: "something went wrong!"))
+                    deferred.editOriginalEmbeds(resultEmbed).queue(null) {
+                        event.channel.sendMessageEmbeds(resultEmbed).queue()
+                    }
+                } catch (_: NotFoundException) {
+                    deferred.editOriginalEmbeds(
+                        defaultEmbed("No QR code has been found in the image!", EmbedType.FAILURE)
+                    ).queue(null) {
+                        throw CommandException("No QR code has been found in the image!")
+                    }
+
+                    return
                 }
+            } catch (e: Exception) {
+                deferred.deleteOriginal().queue(null) {}
+
+                throw CommandException(
+                    "${it::class.qualifiedName ?: "An unknown exception"}: " +
+                            (e.message ?: "something went wrong!")
+                )
             }
         }
     }

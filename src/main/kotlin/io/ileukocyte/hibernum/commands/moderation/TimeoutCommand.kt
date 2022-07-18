@@ -26,7 +26,7 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.text.TextInput
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 
-class TimeoutCommand : SubcommandHolder, SlashOnlyCommand, UserContextCommand {
+class TimeoutCommand : SlashOnlyCommand, SubcommandHolder, UserContextCommand {
     override val name = "timeout"
     override val contextName = "Timeout Member"
     override val description = "Times the specified member out or removes a timeout from them"
