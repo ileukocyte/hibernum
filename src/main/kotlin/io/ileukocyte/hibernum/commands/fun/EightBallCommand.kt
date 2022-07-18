@@ -12,9 +12,9 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
 class EightBallCommand : TextCommand {
-    override val name = "eightball"
+    override val name = "8ball"
     override val description = "Asks your question of the Magic 8 Ball"
-    override val aliases = setOf("8ball", "eight-ball")
+    override val aliases = setOf("eightball", "eight-ball")
     override val usages = setOf(setOf("question"))
     override val options = setOf(
         OptionData(OptionType.STRING, "question", "The question to ask of the Magic 8 Ball", true))
