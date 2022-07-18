@@ -151,6 +151,7 @@ interface GenericCommand : Comparable<GenericCommand> {
  * @see GenericCommand
  * @see ClassicTextOnlyCommand
  * @see SlashOnlyCommand
+ * @see SubcommandHolder
  */
 interface TextCommand : GenericCommand {
     val aliases: Set<String>
