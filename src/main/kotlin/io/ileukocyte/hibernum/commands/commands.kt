@@ -161,7 +161,7 @@ interface TextCommand : GenericCommand {
     /**
      * A property containing a set of data that is used for option-requiring slash commands
      *
-     * **Note**: the [options] property cannot be used alongside the [SubcommandHolder.subcommands] property!
+     * **Note**: the [options] property cannot be used alongside the [subcommands][SubcommandHolder.subcommands] property!
      *
      * @throws UnsupportedOperationException if the command class also implements [SubcommandHolder]
      */
@@ -244,7 +244,7 @@ interface SlashOnlyCommand : TextCommand {
  */
 interface SubcommandHolder : TextCommand {
     /**
-     * A property containing a set of data that is used for complex slash commands
+     * A property containing a map of slash subcommands' data and the functions the triggered subcommands invoke
      *
      * **Note**: the [subcommands] property cannot be used alongside the [options] property!
      */

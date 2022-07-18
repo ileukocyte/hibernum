@@ -56,6 +56,9 @@ fun MessageChannel.sendActionRow(vararg components: ActionComponent) =
  * A period throughout which the message must be received
  * @param unit
  * A time unit for the aforementioned parameter
+ * @param processId
+ * A custom process ID in case it is necessary to preserve the same ID throughout
+ * repetitive message awaiting sessions
  *
  * @return a nullable (in case of the process being manually terminated) [Message][net.dv8tion.jda.api.entities.Message] entity
  * received via event awaiting

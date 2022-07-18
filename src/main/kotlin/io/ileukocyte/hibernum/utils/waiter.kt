@@ -78,7 +78,7 @@ fun WaiterProcess.kill(jda: JDA) = WaiterProcess.CURRENTLY_RUNNING[this]?.kill(j
  * An ID of the message the process might have been launched from
  * @param id
  * The unique 4-digit identification key of the process used in several contexts.
- * **Strongly unrecommended to change!**
+ * **Strongly unrecommended to change unless absolutely necessary!**
  * @param timeCreated
  * The date and time when the process was launched. **Strongly unrecommended to change!**
  *
@@ -118,7 +118,13 @@ data class WaiterProcess internal constructor(
                 channel = channel,
                 command = command,
                 invoker = invoker,
-            ).let { if (id !== null) it.copy(id = "%04d".format(id)) else it }
+            ).let {
+                if (id !== null) {
+                    it.copy(id = "%04d".format(id))
+                } else {
+                    it
+                }
+            }
         }
     }
 
@@ -182,7 +188,6 @@ class AwaitableEventListener<E : GenericEvent>(
  *
  * @author Alexander Oksanich
  *
- * @see io.ileukocyte.hibernum.extensions.awaitConfirmationWithReactions
  * @see io.ileukocyte.hibernum.extensions.awaitMessage
  */
 @Throws(TimeoutCancellationException::class)
