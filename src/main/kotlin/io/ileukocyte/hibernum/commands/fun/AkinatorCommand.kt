@@ -376,21 +376,13 @@ class AkinatorCommand : TextCommand {
                             Button.secondary("$name-${player.idLong}-$processId-stay", "No"),
                         ).await()
 
-                    try {
-                        channel.jda.awaitEvent<ButtonInteractionEvent>(waiterProcess = waiterProcess {
-                            this.channel = channel.idLong
-                            users += player.idLong
-                            command = this@AkinatorCommand
-                            invoker = m.idLong
-                            id = processId
-                        }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
-                    } catch (_: TimeoutCancellationException) {
-                        AKIWRAPPERS -= player.idLong
-                        DECLINED_GUESSES -= player.idLong
-                        GUESS_TYPES -= player.idLong
-
-                        channel.jda.getProcessByEntities(player, channel)?.kill(channel.jda) // just in case
-                    }
+                    channel.jda.awaitEvent<ButtonInteractionEvent>(waiterProcess = waiterProcess {
+                        this.channel = channel.idLong
+                        users += player.idLong
+                        command = this@AkinatorCommand
+                        invoker = m.idLong
+                        id = processId
+                    }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
                 }
                 "debug" -> {
                     message.reply(akiwrapper.guesses
@@ -484,21 +476,13 @@ class AkinatorCommand : TextCommand {
                                             processId = processId,
                                         )
 
-                                        try {
-                                            channel.jda.awaitEvent<ButtonInteractionEvent>(waiterProcess = waiterProcess {
-                                                this.channel = channel.idLong
-                                                users += player.idLong
-                                                command = this@AkinatorCommand
-                                                invoker = m.idLong
-                                                id = processId
-                                            }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
-                                        } catch (_: TimeoutCancellationException) {
-                                            AKIWRAPPERS -= player.idLong
-                                            DECLINED_GUESSES -= player.idLong
-                                            GUESS_TYPES -= player.idLong
-
-                                            channel.jda.getProcessByEntities(player, channel)?.kill(channel.jda) // just in case
-                                        }
+                                        channel.jda.awaitEvent<ButtonInteractionEvent>(waiterProcess = waiterProcess {
+                                            this.channel = channel.idLong
+                                            users += player.idLong
+                                            command = this@AkinatorCommand
+                                            invoker = m.idLong
+                                            id = processId
+                                        }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
                                     } ?: channel.let {
                                         AKIWRAPPERS -= player.idLong
                                         DECLINED_GUESSES -= player.idLong
@@ -517,21 +501,13 @@ class AkinatorCommand : TextCommand {
                                 processId = processId,
                             )
 
-                            try {
-                                channel.jda.awaitEvent<ButtonInteractionEvent>(waiterProcess = waiterProcess {
-                                    this.channel = channel.idLong
-                                    users += player.idLong
-                                    command = this@AkinatorCommand
-                                    invoker = m.idLong
-                                    id = processId
-                                }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
-                            } catch (_: TimeoutCancellationException) {
-                                AKIWRAPPERS -= player.idLong
-                                DECLINED_GUESSES -= player.idLong
-                                GUESS_TYPES -= player.idLong
-
-                                channel.jda.getProcessByEntities(player, channel)?.kill(channel.jda) // just in case
-                            }
+                            channel.jda.awaitEvent<ButtonInteractionEvent>(waiterProcess = waiterProcess {
+                                this.channel = channel.idLong
+                                users += player.idLong
+                                command = this@AkinatorCommand
+                                invoker = m.idLong
+                                id = processId
+                            }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
                         }
                     } else {
                         val incorrect =
@@ -612,21 +588,13 @@ class AkinatorCommand : TextCommand {
             else -> null // must never occur
         } as Message
 
-        try {
-            event.jda.awaitEvent<SelectMenuInteractionEvent>(waiterProcess = waiterProcess {
-                channel = channelId
-                users += playerId
-                command = this@AkinatorCommand
-                invoker = message.idLong
-                id = processId
-            }) { it.user.idLong == playerId && it.message == message } // used to block other commands
-        } catch (_: TimeoutCancellationException) {
-            AKIWRAPPERS -= playerId
-            DECLINED_GUESSES -= playerId
-            GUESS_TYPES -= playerId
-
-            event.jda.getProcessByEntitiesIds(playerId, channelId)?.kill(event.jda) // just in case
-        }
+        event.jda.awaitEvent<SelectMenuInteractionEvent>(waiterProcess = waiterProcess {
+            channel = channelId
+            users += playerId
+            command = this@AkinatorCommand
+            invoker = message.idLong
+            id = processId
+        }) { it.user.idLong == playerId && it.message == message } // used to block other commands
     }
 
     private suspend fun sendLanguagesMenu(
@@ -666,15 +634,13 @@ class AkinatorCommand : TextCommand {
             }.await().retrieveOriginal().await()
         }
 
-        try {
-            callback.jda.awaitEvent<SelectMenuInteractionEvent>(waiterProcess = waiterProcess {
-                channel = callback.messageChannel.idLong
-                users += callback.user.idLong
-                command = this@AkinatorCommand
-                invoker = message.idLong
-                id = processId
-            }) { it.user.idLong == callback.user.idLong && it.message == message } // used to block other commands
-        } catch (_: TimeoutCancellationException) {}
+        callback.jda.awaitEvent<SelectMenuInteractionEvent>(waiterProcess = waiterProcess {
+            channel = callback.messageChannel.idLong
+            users += callback.user.idLong
+            command = this@AkinatorCommand
+            invoker = message.idLong
+            id = processId
+        }) { it.user.idLong == callback.user.idLong && it.message == message } // used to block other commands
     }
 
     private suspend fun guessMessage(

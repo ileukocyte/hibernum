@@ -185,15 +185,13 @@ class GuessNumberCommand : TextCommand {
                         Button.secondary("$name-${user.idLong}-$attempt-$number-$processId-stay", "No"),
                     ).await()
 
-                try {
-                    channel.jda.awaitEvent<ButtonInteractionEvent>(15, TimeUnit.MINUTES, waiterProcess = waiterProcess {
-                        this.channel = channel.idLong
-                        users += user.idLong
-                        command = this@GuessNumberCommand
-                        invoker = m.idLong
-                        id = processId
-                    }) { it.user.idLong == user.idLong && it.message == m } // used to block other commands
-                } catch (_: TimeoutCancellationException) {}
+                channel.jda.awaitEvent<ButtonInteractionEvent>(15, TimeUnit.MINUTES, waiterProcess = waiterProcess {
+                    this.channel = channel.idLong
+                    users += user.idLong
+                    command = this@GuessNumberCommand
+                    invoker = m.idLong
+                    id = processId
+                }) { it.user.idLong == user.idLong && it.message == m } // used to block other commands
             }
             else -> {
                 val asInt = content.toIntOrNull()

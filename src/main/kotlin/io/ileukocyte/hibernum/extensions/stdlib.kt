@@ -13,7 +13,11 @@ suspend fun <T> CompletableFuture<T>.await() = suspendCoroutine<T> { c ->
 }
 
 // kotlin.Boolean
-val Boolean.asWord get() = if (this) "Yes" else "No"
+val Boolean.asWord get() = if (this) {
+    "Yes"
+} else {
+    "No"
+}
 
 // kotlin.Int
 val Int.charName: String?
@@ -32,7 +36,9 @@ val String.isLong get() = toLongOrNull() !== null
 val String.isULong get() = toULongOrNull() != null
 
 fun String.capitalizeAll() =
-    lowercase().split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
+    lowercase().split(" ").joinToString(" ") {
+        it.replaceFirstChar { c -> c.uppercase() }
+    }
 
 fun String.containsAll(vararg args: CharSequence): Boolean {
     for (element in args) {

@@ -66,6 +66,8 @@ fun MessageChannel.sendActionRow(vararg components: ActionComponent) =
  * @throws [TimeoutCancellationException] in case of no event being obtained
  *
  * @author Alexander Oksanich
+ *
+ * @see io.ileukocyte.hibernum.utils.awaitEvent
  */
 @Throws(TimeoutCancellationException::class)
 suspend inline fun MessageChannel.awaitMessage(
@@ -109,6 +111,8 @@ suspend inline fun MessageChannel.awaitMessage(
  * @throws [TimeoutCancellationException] in case of no event being obtained
  *
  * @author Alexander Oksanich
+ *
+ * @see io.ileukocyte.hibernum.utils.awaitEvent
  */
 @Throws(TimeoutCancellationException::class)
 suspend inline fun MessageChannel.awaitMessage(

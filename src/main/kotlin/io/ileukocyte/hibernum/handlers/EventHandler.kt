@@ -84,7 +84,11 @@ object EventHandler : ListenerAdapter() {
                             select {
                                 eventsAwaited.forEach { deferred ->
                                     deferred.onAwait { e ->
-                                        eventsAwaited.forEach { if (it.isActive) it.cancelAndJoin() }
+                                        eventsAwaited.forEach {
+                                            if (it.isActive) {
+                                                it.cancelAndJoin()
+                                            }
+                                        }
 
                                         delay(1000)
 
@@ -93,7 +97,11 @@ object EventHandler : ListenerAdapter() {
                                 }
 
                                 onTimeout(90000) {
-                                    eventsAwaited.forEach { if (it.isActive) it.cancelAndJoin() }
+                                    eventsAwaited.forEach {
+                                        if (it.isActive) {
+                                            it.cancelAndJoin()
+                                        }
+                                    }
 
                                     event.guild.audioPlayer?.player?.playingTrack?.userData
                                         ?.cast<TrackUserData>()
