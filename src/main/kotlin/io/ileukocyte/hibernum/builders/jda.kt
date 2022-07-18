@@ -49,7 +49,7 @@ class KJDABuilder {
                     ?.setMemberCachePolicy(MemberCachePolicy.ALL)
                     ?.enableCache(CacheFlag.ACTIVITY, CacheFlag.CLIENT_STATUS)
                     ?: it
-            }.disableIntents(GatewayIntent.DIRECT_MESSAGES, GatewayIntent.DIRECT_MESSAGE_REACTIONS)
+            }
             .setEventManager(eventManager)
             .addEventListeners(*eventListeners.toTypedArray())
             .setActivity(_activity)
