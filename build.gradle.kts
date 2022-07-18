@@ -34,7 +34,7 @@ repositories {
 
 dependencies {
     // Discord
-    //implementation(group = "net.dv8tion", name = "JDA", version = "62ec3b0") { exclude(module = "opus-java") }
+    //implementation(group = "net.dv8tion", name = "JDA", version = "alpha.15") { exclude(module = "opus-java") }
     implementation(group = "com.github.DV8FromtheWorld", name = "JDA", version = "62ec3b0d37") {
         exclude(module = "opus-java")
     }
