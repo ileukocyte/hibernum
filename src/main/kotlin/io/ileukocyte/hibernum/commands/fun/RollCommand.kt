@@ -15,8 +15,8 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 class RollCommand : TextCommand {
     override val name = "roll"
     override val description = "Rolls the dice of the provided parameters"
-    override val fullDescription = "$description\n\nAn example of classic text use is " +
-            "${Immutable.DEFAULT_PREFIX}$name 7d27".surroundWith('`')
+    override val fullDescription = "$description\n\n_An example of classic text use is " +
+            "${Immutable.DEFAULT_PREFIX}$name 7d27".surroundWith('`') + "_"
     override val aliases = setOf("dice")
     override val options = setOf(
         OptionData(OptionType.INTEGER, "sides", "A number of sides per die", true)
@@ -26,8 +26,7 @@ class RollCommand : TextCommand {
             .setMinValue(1)
             .setMaxValue(25),
     )
-    override val usages = setOf(
-        setOf("number of dice (optional, 1–25)>d<number of sides (2–250)"))
+    override val usages = setOf(setOf("number of dice (optional, 1–25)>d<number of sides (2–250)"))
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val input = args?.let { "(?:\\d+)?d(\\d+)".toRegex().find(it)?.value }

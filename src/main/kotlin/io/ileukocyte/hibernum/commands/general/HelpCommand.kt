@@ -72,7 +72,7 @@ class HelpCommand : TextCommand {
         if (this@getHelp is TextCommand) {
             if (aliases.isNotEmpty()) {
                 field {
-                    title = "Aliases"
+                    title = "Classic Text Aliases"
                     description = aliases.sorted().joinToString()
                 }
             }
@@ -106,7 +106,7 @@ class HelpCommand : TextCommand {
 
             if (usages.isNotEmpty()) {
                 field {
-                    title = "Text Usages"
+                    title = "Classic Text Usages"
                     description =
                         usages.joinToString("\n") { "$nameWithPrefix ${it.joinToString(" ") { u -> "<$u>" }}" }
                 }
@@ -115,7 +115,7 @@ class HelpCommand : TextCommand {
             if (this@getHelp !is SubcommandHolder && options.isNotEmpty()) {
                 field {
                     title = "Slash Options"
-                    description = "$nameWithPrefix ${options.joinToString(" ") { "<${it.name}>" }}\n\n" +
+                    description = "/$name ${options.joinToString(" ") { "<${it.name}>" }}\n\n" +
                             options.joinToString("\n") { o ->
                                 val description by lazy {
                                     if (o.description.split("\\s+".toRegex(), 2)
