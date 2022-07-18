@@ -275,14 +275,14 @@ interface SubcommandHolder : TextCommand {
  */
 interface ContextCommand : GenericCommand {
     val contextName: String
-    val contextTypes: Set<Command.Type>
-        get() = setOf(Command.Type.MESSAGE, Command.Type.USER)
+    val contextTypes: Set<ContextType>
+        get() = setOf(ContextType.MESSAGE, ContextType.USER)
 
     /**
      * @return All the [CommandData] instances of the context menu command
      */
     fun asJDAContextCommandDataInstances(): Set<CommandData> = contextTypes.map {
-        Commands.context(it, contextName)
+        Commands.context(it.jdaContextType, contextName)
             .setGuildOnly(true)
             .setDefaultPermissions(DefaultMemberPermissions.enabledFor(memberPermissions))
     }.toSet()
@@ -302,6 +302,16 @@ interface ContextCommand : GenericCommand {
      * The [UserContextInteractionEvent] occurring once the command is invoked
      */
     suspend operator fun invoke(event: UserContextInteractionEvent)
+
+    enum class ContextType(val jdaContextType: Command.Type) {
+        MESSAGE(Command.Type.MESSAGE),
+        USER(Command.Type.USER);
+
+        companion object {
+            operator fun get(jdaContextType: Command.Type) = values()
+                .first { it.jdaContextType == jdaContextType }
+        }
+    }
 }
 
 /**
@@ -315,8 +325,8 @@ interface ContextCommand : GenericCommand {
  * @see UserContextOnlyCommand
  */
 interface MessageContextOnlyCommand : ContextCommand {
-    override val contextTypes: Set<Command.Type>
-        get() = setOf(Command.Type.MESSAGE)
+    override val contextTypes: Set<ContextCommand.ContextType>
+        get() = setOf(ContextCommand.ContextType.MESSAGE)
 
     override suspend fun invoke(event: UserContextInteractionEvent) =
         throw UnsupportedOperationException("The command cannot be invoked as a user profile context menu command!")
@@ -333,8 +343,8 @@ interface MessageContextOnlyCommand : ContextCommand {
  * @see MessageContextOnlyCommand
  */
 interface UserContextOnlyCommand : ContextCommand {
-    override val contextTypes: Set<Command.Type>
-        get() = setOf(Command.Type.USER)
+    override val contextTypes: Set<ContextCommand.ContextType>
+        get() = setOf(ContextCommand.ContextType.USER)
 
     override suspend fun invoke(event: MessageContextInteractionEvent) =
         throw UnsupportedOperationException("The command cannot be invoked as a message context menu command!")

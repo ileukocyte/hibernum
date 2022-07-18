@@ -26,7 +26,6 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException
-import net.dv8tion.jda.api.interactions.commands.Command
 
 import org.jetbrains.kotlin.util.collectionUtils.filterIsInstanceAnd
 
@@ -90,7 +89,7 @@ object CommandHandler : MutableSet<GenericCommand> {
      *
      * @return A [ContextCommand] having the same name and type as provided
      */
-    operator fun get(name: String, type: Command.Type) = filterIsInstanceAnd<ContextCommand> {
+    operator fun get(name: String, type: ContextCommand.ContextType) = filterIsInstanceAnd<ContextCommand> {
         it.contextName == name && type in it.contextTypes
     }.firstOrNull()
 
@@ -515,7 +514,7 @@ object CommandHandler : MutableSet<GenericCommand> {
      */
     internal operator fun invoke(event: MessageContextInteractionEvent) {
         if (event.isFromGuild) {
-            this[event.name, Command.Type.MESSAGE]?.let { command ->
+            this[event.name, ContextCommand.ContextType.MESSAGE]?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     if (event.jda.getProcessByEntities(event.user, event.messageChannel) === null
                             || command.neglectProcessBlock) {
@@ -602,7 +601,7 @@ object CommandHandler : MutableSet<GenericCommand> {
      */
     internal operator fun invoke(event: UserContextInteractionEvent) {
         if (event.isFromGuild) {
-            this[event.name, Command.Type.USER]?.let { command ->
+            this[event.name, ContextCommand.ContextType.USER]?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     if (event.jda.getProcessByEntities(event.user, event.messageChannel) === null
                             || command.neglectProcessBlock) {

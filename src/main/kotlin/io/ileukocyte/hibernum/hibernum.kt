@@ -97,12 +97,12 @@ suspend fun main() = coroutineScope {
             discordCommands.filter {
                 val contextCommands = CommandHandler.filterIsInstance<ContextCommand>()
 
-                it.type != Type.SLASH && (it.name !in contextCommands.map { cmd -> cmd.contextName }
+                it.type in setOf(Type.MESSAGE, Type.USER) && (it.name !in contextCommands.map { cmd -> cmd.contextName }
                         || contextCommands.firstOrNull { cmd -> cmd.contextName == it.name }
                             ?.contextTypes
-                            ?.contains(it.type) == false
+                            ?.contains(ContextCommand.ContextType[it.type]) == false
                         || it.defaultPermissions.permissionsRaw !=
-                            CommandHandler[it.name, it.type]
+                            CommandHandler[it.name, ContextCommand.ContextType[it.type]]
                                 ?.memberPermissions
                                 ?.let(DefaultMemberPermissions::enabledFor)
                                 ?.permissionsRaw
