@@ -1,6 +1,7 @@
 package io.ileukocyte.hibernum.commands.moderation
 
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.SubcommandHolder
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
 import io.ileukocyte.hibernum.commands.UserContextCommand
 import io.ileukocyte.hibernum.extensions.*
@@ -17,27 +18,32 @@ import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.commands.OptionType
-import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
 import net.dv8tion.jda.api.interactions.components.Modal
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.text.TextInput
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 
-class TimeoutCommand : SlashOnlyCommand, UserContextCommand {
+class TimeoutCommand : SubcommandHolder, SlashOnlyCommand, UserContextCommand {
     override val name = "timeout"
     override val contextName = "Timeout Member"
-    override val description = "Times the specified member out for the specified period"
-    override val options = setOf(
-        OptionData(OptionType.USER, "member", "The server member to timeout", true),
-        OptionData(OptionType.STRING, "period", "The time to time the member out for " +
-                "(up to ${Member.MAX_TIME_OUT_LENGTH} days) (e.g. 5h34m55s)", true),
-        OptionData(OptionType.STRING, "reason", "The reason for timing the member out"),
+    override val description = "Times the specified member out or removes a timeout from them"
+    override val subcommands = mapOf(
+        SubcommandData("add", "Times the specified member out for the specified period")
+            .addOption(OptionType.USER, "member", "The server member to timeout", true)
+            .addOption(OptionType.STRING, "period", "The time to time the member out for " +
+                    "(up to ${Member.MAX_TIME_OUT_LENGTH} days) (e.g. 5h34m55s)", true)
+            .addOption(OptionType.STRING, "reason", "The reason for timing the member out") to ::add,
+        SubcommandData("remove", "Removes a timeout from the specified member")
+            .addOption(OptionType.USER, "member", "The server member to remove a timeout from", true)
+            .addOption(OptionType.STRING, "reason", "The reason for removing a timeout from the member") to ::remove,
     )
     override val memberPermissions = setOf(Permission.MODERATE_MEMBERS)
     override val botPermissions = setOf(Permission.MODERATE_MEMBERS)
 
-    override suspend fun invoke(event: SlashCommandInteractionEvent) {
+    private suspend fun add(event: SlashCommandInteractionEvent) {
         val member = event.getOption("member")?.asMember ?: return
         val time = event.getOption("period")?.asString ?: return
         val reason = event.getOption("reason")?.asString?.let { ": $it" }.orEmpty()
@@ -131,6 +137,29 @@ class TimeoutCommand : SlashOnlyCommand, UserContextCommand {
                     m.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
                 }
             }
+        }
+    }
+
+    private suspend fun remove(event: SlashCommandInteractionEvent) {
+        val member = event.getOption("member")?.asMember?.takeIf { it.isTimedOut }
+            ?: throw CommandException("The member is not timed out at the moment!")
+        val reason = event.getOption("reason")?.asString?.let { ": $it" }.orEmpty()
+
+        if (event.guild?.selfMember?.canInteract(member) == false) {
+            throw CommandException("${event.jda.selfUser.name} is not able " +
+                    "to remove the timeout from ${member.user.asMention}!")
+        }
+
+        try {
+            member.removeTimeout().reason("Timeout removed by ${event.user.asTag}" + reason).await()
+
+            try {
+                event.replySuccess("The timeout has been successfully removed from ${member.user.asMention}!").await()
+            } catch (_: ErrorResponseException) {
+                event.channel.sendSuccess("The timeout has been successfully removed from ${member.user.asMention}!").queue()
+            }
+        } catch (e: ErrorResponseException) {
+            throw CommandException("Something went wrong: ${e.message}".limitTo(MessageEmbed.DESCRIPTION_MAX_LENGTH))
         }
     }
 

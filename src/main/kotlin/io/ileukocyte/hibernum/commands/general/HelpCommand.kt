@@ -4,6 +4,7 @@ import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.*
 import io.ileukocyte.hibernum.extensions.await
+import io.ileukocyte.hibernum.extensions.capitalizeAll
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asText
 
@@ -75,6 +76,33 @@ class HelpCommand : TextCommand {
             }
         }
 
+        if (this@getHelp is SubcommandHolder) {
+            for (subcommand in subcommands.keys) {
+                field {
+                    title = "\"${subcommand.name.capitalizeAll()}\" Subcommand"
+                    description = "${subcommand.description}\n\n$nameWithPrefix ${subcommand.name} ${
+                        subcommand.options.joinToString(" ") { "<${it.name}>" }
+                    }\n\n" + subcommand.options.joinToString("\n") { o ->
+                        val description by lazy {
+                            if (o.description.split("\\s+".toRegex(), 2)
+                                    .first()
+                                    .substring(1)
+                                    .any { !it.isLowerCase() }
+                            ) {
+                                o.description
+                            } else {
+                                o.description.replaceFirstChar { it.lowercase() }
+                            }
+                        }
+
+                        "<${o.name}>${
+                            " (optional)".takeUnless { o.isRequired }.orEmpty()
+                        } — $description"
+                    }
+                }
+            }
+        }
+
         field {
             title = "Category"
             description = category.toString()
@@ -95,7 +123,7 @@ class HelpCommand : TextCommand {
             }
         }
 
-        if (options.isNotEmpty()) {
+        if (this@getHelp !is SubcommandHolder && options.isNotEmpty()) {
             field {
                 title = "Slash Options"
                 description = "$nameWithPrefix ${options.joinToString(" ") { "<${it.name}>" }}\n\n" +

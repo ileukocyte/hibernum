@@ -10,15 +10,11 @@ import io.ileukocyte.hibernum.Immutable.VERSION
 import io.ileukocyte.hibernum.audio.loadGuildMusicManagers
 import io.ileukocyte.hibernum.builders.buildActivity
 import io.ileukocyte.hibernum.builders.buildJDA
-import io.ileukocyte.hibernum.commands.ClassicTextOnlyCommand
-import io.ileukocyte.hibernum.commands.ContextCommand
-import io.ileukocyte.hibernum.commands.GenericCommand
-import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.commands.*
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.handlers.EventHandler
-import io.ileukocyte.hibernum.utils.isEqualTo
-import io.ileukocyte.hibernum.utils.toOptionData
+import io.ileukocyte.hibernum.utils.*
 
 import kotlin.reflect.full.createInstance
 
@@ -123,14 +119,21 @@ suspend fun main() = coroutineScope {
                 cmd.name !in discordCommands.map { it.name }
                         || cmd.description !in discordCommands.map { it.description.removePrefix("(Developer-only) ") }
                         || discordCommands.any {
-                    cmd.name == it.name && !cmd.options.toList().isEqualTo(it.options.map { o -> o.toOptionData() })
+                    val unequalSubcommands = if (cmd is SubcommandHolder) {
+                        !cmd.subcommands.keys.toList().subcommandsEqual(it.subcommands.map { s -> s.toSubcommandData() })
+                    } else {
+                        false
+                    }
+
+                    cmd.name == it.name && (!cmd.options.toList().optionsEqual(it.options.map { o -> o.toOptionData() })
+                            || unequalSubcommands)
                 }
             }
 
             CommandHandler
                 .filterIsInstanceAnd<TextCommand> { it !is ClassicTextOnlyCommand && slashPredicate(it) }
                 .forEach {
-                    discord.upsertCommand(it.asJDASlashCommand() ?: return@forEach).queue({ cmd ->
+                    discord.upsertCommand(it.asJDASlashCommandData() ?: return@forEach).queue({ cmd ->
                         LOGGER.info("UPDATE: Discord has updated the following slash command: ${cmd.name}!")
                     }, Throwable::printStackTrace)
                 }
@@ -140,7 +143,7 @@ suspend fun main() = coroutineScope {
                     cmd.contextName !in discordCommands.map { it.name }
                             || cmd.contextTypes.size != discordCommands.count { it.name == cmd.contextName }
                 }.forEach {
-                    for (contextCommand in it.asJDAContextCommands().filter { cmd ->
+                    for (contextCommand in it.asJDAContextCommandDataInstances().filter { cmd ->
                         val map = discordCommands.associate { c -> c.name to c.type }
 
                         map[cmd.name] != cmd.type

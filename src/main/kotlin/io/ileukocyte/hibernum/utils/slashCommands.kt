@@ -1,8 +1,10 @@
 package io.ileukocyte.hibernum.utils
 
 import net.dv8tion.jda.api.interactions.commands.Command.Option
+import net.dv8tion.jda.api.interactions.commands.Command.Subcommand
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
 
 fun Option.toOptionData() = OptionData(type, name, description, isRequired)
     .let {
@@ -33,7 +35,28 @@ fun Option.toOptionData() = OptionData(type, name, description, isRequired)
         it
     }
 
-fun List<OptionData>.isEqualTo(another: List<OptionData>): Boolean {
+fun Subcommand.toSubcommandData() = SubcommandData(name, description)
+    .addOptions(options.map { it.toOptionData() })
+
+fun List<SubcommandData>.subcommandsEqual(another: List<SubcommandData>): Boolean {
+    fun SubcommandData.isEqualTo(another: SubcommandData) = name == another.name
+            && description == another.description
+            && options.optionsEqual(another.options)
+
+    if (size != another.size) {
+        return false
+    }
+
+    for (i in indices) {
+        if (!this[i].isEqualTo(another[i])) {
+            return false
+        }
+    }
+
+    return true
+}
+
+fun List<OptionData>.optionsEqual(another: List<OptionData>): Boolean {
     fun OptionData.isEqualTo(anotherData: OptionData) =
         name == anotherData.name
                 && description == anotherData.description
@@ -44,8 +67,6 @@ fun List<OptionData>.isEqualTo(another: List<OptionData>): Boolean {
                 && maxValue == anotherData.maxValue
                 && channelTypes == anotherData.channelTypes
                 && isAutoComplete == anotherData.isAutoComplete
-                && nameLocalizations == anotherData.nameLocalizations
-                && descriptionLocalizations == anotherData.nameLocalizations
 
     if (size != another.size) {
         return false

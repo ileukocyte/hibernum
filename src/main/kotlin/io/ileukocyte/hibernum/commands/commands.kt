@@ -18,6 +18,7 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
 
 /**
  * A generic type that is to be implemented by classes of all the bot's commands
@@ -27,6 +28,7 @@ import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
  * @see TextCommand
  * @see ClassicTextOnlyCommand
  * @see SlashOnlyCommand
+ * @see SubcommandHolder
  * @see ContextCommand
  * @see MessageContextCommand
  * @see UserContextCommand
@@ -159,6 +161,8 @@ interface TextCommand : GenericCommand {
 
     /**
      * A property containing a set of data that is used for option-requiring slash commands
+     *
+     * **Note**: the [options] property cannot be used alongside the [SubcommandHolder.subcommands] property!
      */
     val options: Set<OptionData>
         get() = emptySet()
@@ -166,11 +170,11 @@ interface TextCommand : GenericCommand {
     /**
      * @return A [SlashCommandData] instance of the slash command
      */
-    fun asJDASlashCommand(): SlashCommandData? =
+    fun asJDASlashCommandData(): SlashCommandData? =
         Commands.slash(name, "(Developer-only) ".takeIf { isDeveloper }.orEmpty() + description)
-            .addOptions(options)
             .setGuildOnly(true)
             .setDefaultPermissions(DefaultMemberPermissions.enabledFor(memberPermissions))
+            .addOptions(options)
 
     /**
      * A function that is executed when the command is invoked as a classic text command
@@ -201,7 +205,7 @@ interface TextCommand : GenericCommand {
  * @see SlashOnlyCommand
  */
 interface ClassicTextOnlyCommand : TextCommand {
-    override fun asJDASlashCommand(): SlashCommandData? = null
+    override fun asJDASlashCommandData(): SlashCommandData? = null
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) =
         throw UnsupportedOperationException("The command cannot be invoked as a slash command!")
@@ -215,10 +219,36 @@ interface ClassicTextOnlyCommand : TextCommand {
  * @see GenericCommand
  * @see TextCommand
  * @see ClassicTextOnlyCommand
+ * @see SubcommandHolder
  */
 interface SlashOnlyCommand : TextCommand {
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) =
         throw UnsupportedOperationException("The command cannot be invoked as a classic text command!")
+}
+
+/**
+ * A type of slash command that has its subcommands
+ *
+ * @author Alexander Oksanich
+ *
+ * @see GenericCommand
+ * @see TextCommand
+ * @see SlashOnlyCommand
+ */
+interface SubcommandHolder : TextCommand {
+    /**
+     * A property containing a set of data that is used for complex slash commands
+     *
+     * **Note**: the [subcommands] property cannot be used alongside the [options] property!
+     */
+    val subcommands: Map<SubcommandData, suspend (SlashCommandInteractionEvent) -> Unit>
+        get() = emptyMap()
+
+    override fun asJDASlashCommandData(): SlashCommandData? =
+        super.asJDASlashCommandData()?.addSubcommands(subcommands.keys)
+
+    override suspend fun invoke(event: SlashCommandInteractionEvent) =
+        throw UnsupportedOperationException("The slash command can only be invoked via its subcommands!")
 }
 
 /**
@@ -239,7 +269,7 @@ interface ContextCommand : GenericCommand {
     /**
      * @return All the [CommandData] instances of the context menu command
      */
-    fun asJDAContextCommands(): Set<CommandData> = contextTypes.map {
+    fun asJDAContextCommandDataInstances(): Set<CommandData> = contextTypes.map {
         Commands.context(it, contextName)
             .setGuildOnly(true)
             .setDefaultPermissions(DefaultMemberPermissions.enabledFor(memberPermissions))

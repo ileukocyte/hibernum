@@ -230,12 +230,23 @@ object CommandHandler : MutableSet<GenericCommand> {
                             if (command.cooldown > 0) {
                                 command.getCooldownError(event.user.idLong)
                                     ?.let { event.replyFailure(it).setEphemeral(true).queue() }
-                                    ?: command.let {
-                                        it.applyCooldown(event.user.idLong)
-                                        it(event)
+                                    ?: command.let { cmd ->
+                                        cmd.applyCooldown(event.user.idLong)
+
+                                        if (event.subcommandName !== null && cmd is SubcommandHolder) {
+                                            cmd.subcommands.mapKeys { it.key.name }[event.subcommandName]
+                                                ?.invoke(event)
+                                        } else {
+                                            cmd(event)
+                                        }
                                     }
                             } else {
-                                command(event)
+                                if (event.subcommandName !== null && command is SubcommandHolder) {
+                                    command.subcommands.mapKeys { it.key.name }[event.subcommandName]
+                                        ?.invoke(event)
+                                } else {
+                                    command(event)
+                                }
                             }
                         } catch (e: Exception) {
                             when (e) {
