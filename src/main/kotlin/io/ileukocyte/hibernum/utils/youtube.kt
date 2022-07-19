@@ -1,3 +1,4 @@
+@file:JvmName("YouTubeUtils")
 package io.ileukocyte.hibernum.utils
 
 import com.google.api.client.http.javanet.NetHttpTransport
@@ -13,7 +14,7 @@ import java.time.Duration
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-val YOUTUBE = YouTube.Builder(NetHttpTransport(), GsonFactory()) {}
+val YOUTUBE: YouTube = YouTube.Builder(NetHttpTransport(), GsonFactory()) {}
     .setApplicationName("hibernum-discord-bot")
     .build()
 

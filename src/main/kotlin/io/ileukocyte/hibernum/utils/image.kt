@@ -1,3 +1,4 @@
+@file:JvmName("ImageUtils")
 package io.ileukocyte.hibernum.utils
 
 import de.androidpit.colorthief.ColorThief

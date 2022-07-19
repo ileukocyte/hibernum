@@ -1,4 +1,4 @@
-@file:Suppress("UNUSED")
+@file:[JvmName("PerspectiveApiUtils") Suppress("UNUSED")]
 package io.ileukocyte.hibernum.utils
 
 import io.ileukocyte.hibernum.Immutable

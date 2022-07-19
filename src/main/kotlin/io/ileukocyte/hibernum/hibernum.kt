@@ -11,10 +11,9 @@ import io.ileukocyte.hibernum.audio.loadGuildMusicManagers
 import io.ileukocyte.hibernum.builders.buildActivity
 import io.ileukocyte.hibernum.builders.buildJDA
 import io.ileukocyte.hibernum.commands.*
-import io.ileukocyte.hibernum.extensions.await
+import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.handlers.EventHandler
-import io.ileukocyte.hibernum.utils.*
 
 import kotlin.reflect.full.createInstance
 

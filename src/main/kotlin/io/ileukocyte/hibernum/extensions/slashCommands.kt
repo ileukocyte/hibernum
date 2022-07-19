@@ -1,4 +1,5 @@
-package io.ileukocyte.hibernum.utils
+@file:JvmName("SlashCommandExtensions")
+package io.ileukocyte.hibernum.extensions
 
 import net.dv8tion.jda.api.interactions.commands.Command.Option
 import net.dv8tion.jda.api.interactions.commands.Command.Subcommand
