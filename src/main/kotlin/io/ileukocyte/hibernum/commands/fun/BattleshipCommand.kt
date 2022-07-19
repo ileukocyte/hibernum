@@ -315,7 +315,7 @@ class BattleshipCommand : SlashOnlyCommand {
 
                                 awaitTurn(battleship, guildMessage, guildChannel, processId)
                             } else {
-                                val serverEmbed = buildEmbed {
+                                val guildEmbed = buildEmbed {
                                     description = "${currentTurn.user.asMention} wins!"
                                     color = getDominantColorByImageUrl(currentTurn.user.effectiveAvatarUrl)
 
@@ -327,7 +327,7 @@ class BattleshipCommand : SlashOnlyCommand {
 
                                 guildMessage
                                     .editMessageComponents()
-                                    .setEmbeds(serverEmbed)
+                                    .setEmbeds(guildEmbed)
                                     .queue(null) {}
 
                                 turnMessage.replyEmbeds(
@@ -356,7 +356,7 @@ class BattleshipCommand : SlashOnlyCommand {
                                         }
                                     },
                                     opponent.getPrintableOwnBoard(),
-                                    currentTurn.getPrintableOwnBoard(),
+                                    currentTurn.getPrintableOwnBoard(isOwn = false),
                                 ).await()
                             }
                         }
@@ -719,7 +719,10 @@ class BattleshipCommand : SlashOnlyCommand {
                 getOrNull(row.dec())?.getOrNull(column.dec()),
             )
 
-            suspend fun getPrintableOwnBoard(isStartingMessage: Boolean = false) = buildEmbed {
+            suspend fun getPrintableOwnBoard(
+                isStartingMessage: Boolean = false,
+                isOwn: Boolean = true,
+            ) = buildEmbed {
                 description = "\u2B1B"
 
                 repeat(10) {
@@ -734,7 +737,12 @@ class BattleshipCommand : SlashOnlyCommand {
                 }
 
                 author {
-                    name = "Your Board"
+                    name = if (isOwn) {
+                        "Your Board"
+                    } else {
+                        "Opponent's Board"
+                    }
+
                     iconUrl = user.effectiveAvatarUrl
                 }
 
