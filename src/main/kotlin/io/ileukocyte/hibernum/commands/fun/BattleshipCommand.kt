@@ -2,15 +2,11 @@ package io.ileukocyte.hibernum.commands.`fun`
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.CommandCategory
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.extensions.EmbedType
-import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
-import io.ileukocyte.hibernum.utils.getProcessById
-import io.ileukocyte.hibernum.utils.kill
-import io.ileukocyte.hibernum.utils.processes
+import io.ileukocyte.hibernum.utils.*
 
 import java.util.concurrent.TimeUnit
 
@@ -20,6 +16,7 @@ import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
@@ -28,22 +25,39 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button
 class BattleshipCommand : SlashOnlyCommand {
     override val name = "battleship"
     override val description = "Starts the battleship game against the specified user in the DMs"
-    override val category = CommandCategory.BETA
     override val options = setOf(
         OptionData(OptionType.USER, "opponent", "The user to play the sea battle against", true)
     )
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
+        if (event.user.processes.any { it.command is BattleshipCommand }) {
+            throw CommandException("You have another Battleship command running somewhere else! " +
+                    "Finish the process first!")
+        }
+
         val opponent = event.getOption("opponent")?.asUser
             ?.takeUnless { it.isBot || it.idLong == event.user.idLong }
             ?: throw CommandException("You cannot play against the specified user!")
 
-        event.replyConfirmation("Do you want to play the sea battle against ${event.user.asMention}?")
+        val staticProcessId = (1..9999).filter {
+            it !in event.jda.processes.map { p -> p.id.toInt() }
+        }.random()
+
+        val hook = event.replyConfirmation("Do you want to play the sea battle against ${event.user.asMention}?")
             .setContent(opponent.asMention)
             .addActionRow(
-                Button.secondary("$name-${opponent.idLong}-${event.user.idLong}-play", "Yes"),
+                Button.secondary("$name-${opponent.idLong}-${event.user.idLong}-$staticProcessId-play", "Yes"),
                 Button.danger("$name-${opponent.idLong}-${event.user.idLong}-deny", "No"),
-            ).queue()
+            ).await()
+        val message = hook.retrieveOriginal().await()
+
+        event.jda.awaitEvent<ButtonInteractionEvent>(waiterProcess = waiterProcess {
+            channel = event.messageChannel.idLong
+            users += setOf(event.user.idLong, opponent.idLong)
+            command = this@BattleshipCommand
+            invoker = message.idLong
+            id = staticProcessId
+        }) { it.user.idLong == opponent.idLong && it.message.idLong == message.idLong } // used to block other commands
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
@@ -63,6 +77,8 @@ class BattleshipCommand : SlashOnlyCommand {
                             event.user.openPrivateChannel().await(),
                             starter.user,
                         )
+
+                        val staticProcessId = id[2].toInt()
 
                         val battleship = Battleship(starter, opponent)
 
@@ -103,10 +119,6 @@ class BattleshipCommand : SlashOnlyCommand {
                             opponent.getPrintableOwnBoard(true),
                             opponent.getPrintableOpponentBoard(true),
                         ).await()
-
-                        val staticProcessId = (1..9999).filter {
-                            it !in event.jda.processes.map { p -> p.id.toInt() }
-                        }.random()
 
                         val termination = Button.danger(
                             "$name-${starter.user.idLong}|${opponent.user.idLong}-$staticProcessId-exit",
