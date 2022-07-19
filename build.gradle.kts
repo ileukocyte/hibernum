@@ -16,7 +16,7 @@ plugins {
 }
 
 group = "io.ileukocyte"
-version = Version(major = 3, minor = 4, unstable = 1, stability = Version.Stability.Beta)
+version = Version(major = 3, minor = 4, unstable = 2, stability = Version.Stability.Beta)
 
 repositories {
     mavenCentral()
@@ -76,7 +76,6 @@ dependencies {
     // Ktor
     implementation(ktor("client-content-negotiation"))
     implementation(ktor("client-core"))
-    implementation(ktor("client-cio"))
     implementation(ktor("client-okhttp"))
     implementation(ktor("serialization-kotlinx-json"))
 
