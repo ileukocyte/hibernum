@@ -32,16 +32,34 @@ class TicTacToeCommand : SlashOnlyCommand {
         OptionData(OptionType.USER, "opponent", "The user to play tic-tac-toe against", true))
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
+        if (event.user.processes.any { it.command is TicTacToeCommand }) {
+            throw CommandException("You have another TicTacToe command running somewhere else! " +
+                    "Finish the process first!")
+        }
+
         val opponent = event.getOption("opponent")?.asUser
             ?.takeUnless { it.isBot || it.idLong == event.user.idLong }
             ?: throw CommandException("You cannot play against the specified user!")
 
-        event.replyConfirmation("Do you want to play tic-tac-toe against ${event.user.asMention}?")
+        val staticProcessId = (1..9999).filter {
+            it !in event.jda.processes.map { p -> p.id.toInt() }
+        }.random()
+
+        val hook = event.replyConfirmation("Do you want to play tic-tac-toe against ${event.user.asMention}?")
             .setContent(opponent.asMention)
             .addActionRow(
-                Button.secondary("$name-${opponent.idLong}-${event.user.idLong}-play", "Yes"),
+                Button.secondary("$name-${opponent.idLong}-${event.user.idLong}-$staticProcessId-play", "Yes"),
                 Button.danger("$name-${opponent.idLong}-${event.user.idLong}-exit", "No"),
-            ).queue()
+            ).await()
+        val message = hook.retrieveOriginal().await()
+
+        event.jda.awaitEvent<ButtonInteractionEvent>(waiterProcess = waiterProcess {
+            channel = event.messageChannel.idLong
+            users += setOf(event.user.idLong, opponent.idLong)
+            command = this@TicTacToeCommand
+            invoker = message.idLong
+            id = staticProcessId
+        }) { it.user.idLong == opponent.idLong && it.message.idLong == message.idLong } // used to block other commands
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
@@ -57,11 +75,9 @@ class TicTacToeCommand : SlashOnlyCommand {
                         val starter = event.guild?.retrieveMemberById(id[1])?.await()?.user
                             ?: return
 
-                        val ttt = TicTacToe(starter, opponent)
+                        val staticProcessId = id[2].toInt()
 
-                        val staticProcessId = (1..9999).filter {
-                            it !in event.jda.processes.map { p -> p.id.toInt() }
-                        }.random()
+                        val ttt = TicTacToe(starter, opponent)
 
                         val embed = buildEmbed {
                             description = "It is ${starter.asMention}'s turn!"
