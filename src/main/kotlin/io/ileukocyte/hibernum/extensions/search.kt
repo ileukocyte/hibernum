@@ -1,3 +1,4 @@
+@file:JvmName("SearchExtensions")
 package io.ileukocyte.hibernum.extensions
 
 import net.dv8tion.jda.api.entities.Guild

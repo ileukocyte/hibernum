@@ -1,5 +1,4 @@
-@file:JvmName("JSONExtensions")
-@file:Suppress("UNUSED")
+@file:[JvmName("JSONExtensions") Suppress("UNUSED")]
 package io.ileukocyte.hibernum.extensions
 
 import org.json.JSONArray
