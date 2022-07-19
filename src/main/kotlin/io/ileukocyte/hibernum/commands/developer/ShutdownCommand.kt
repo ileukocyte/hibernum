@@ -2,9 +2,7 @@ package io.ileukocyte.hibernum.commands.developer
 
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.TextCommand
-import io.ileukocyte.hibernum.extensions.replyConfirmation
-import io.ileukocyte.hibernum.extensions.replySuccess
-import io.ileukocyte.hibernum.extensions.sendConfirmation
+import io.ileukocyte.hibernum.extensions.*
 
 import kotlin.system.exitProcess
 
@@ -27,15 +25,11 @@ class ShutdownCommand : TextCommand {
         event.channel.sendConfirmation(description).setActionRow(buttons).queue()
     }
 
-    override suspend fun invoke(event: SlashCommandInteractionEvent) {
-        val description = "Are you sure you want to shut the bot down?"
-        val buttons = setOf(
-            Button.danger("$name-${event.user.idLong}-shut", "Yes"),
-            Button.secondary("$name-${event.user.idLong}-exit", "No"),
-        )
-
-        event.replyConfirmation(description).addActionRow(buttons).queue()
-    }
+    override suspend fun invoke(event: SlashCommandInteractionEvent) =
+        event.replyConfirmation("Are you sure you want to shut the bot down?")
+            .addActionRow(Button.danger("$name-${event.user.idLong}-shut", "Yes"))
+            .setEphemeral(true)
+            .queue()
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
@@ -43,16 +37,28 @@ class ShutdownCommand : TextCommand {
         if (event.user.id == id.first()) {
             when (id.last()) {
                 "shut" -> {
-                    event.replySuccess("${event.jda.selfUser.name} has been shut down!")
-                        .setEphemeral(true)
-                        .flatMap { event.message.delete() }
-                        .queue({
-                            event.jda.shutdown()
-                            exitProcess(0)
-                        }) {
-                            event.jda.shutdown()
-                            exitProcess(0)
-                        }
+                    if (event.message.isEphemeral) {
+                        event.editComponents()
+                            .setEmbeds(defaultEmbed("${event.jda.selfUser.name} has been shut down!", EmbedType.SUCCESS))
+                            .queue({
+                                event.jda.shutdown()
+                                exitProcess(0)
+                            }) {
+                                event.jda.shutdown()
+                                exitProcess(0)
+                            }
+                    } else {
+                        event.replySuccess("${event.jda.selfUser.name} has been shut down!")
+                            .setEphemeral(true)
+                            .flatMap { event.message.delete() }
+                            .queue({
+                                event.jda.shutdown()
+                                exitProcess(0)
+                            }) {
+                                event.jda.shutdown()
+                                exitProcess(0)
+                            }
+                    }
                 }
                 "exit" -> event.message.delete().queue(null) {}
             }
