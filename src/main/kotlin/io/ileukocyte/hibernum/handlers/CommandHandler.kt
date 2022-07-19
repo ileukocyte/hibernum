@@ -310,7 +310,9 @@ object CommandHandler : MutableSet<GenericCommand> {
                 CoroutineScope(CommandContext).launch {
                     if (event.message.timeCreated.isBefore(event.jda.startDate)) {
                         if (command.eliminateStaleInteractions) {
-                            event.message.delete().queue(null) {}
+                            try {
+                                event.message.delete().queue(null) {}
+                            } catch (_: IllegalStateException) {}
 
                             event.channel.sendMessage {
                                 content += event.user.asMention
@@ -386,7 +388,9 @@ object CommandHandler : MutableSet<GenericCommand> {
                 CoroutineScope(CommandContext).launch {
                     if (event.message.timeCreated.isBefore(event.jda.startDate)) {
                         if (command.eliminateStaleInteractions) {
-                            event.message.delete().queue(null) {}
+                            try {
+                                event.message.delete().queue(null) {}
+                            } catch (_: IllegalStateException) {}
 
                             event.channel.sendMessage {
                                 content += event.user.asMention

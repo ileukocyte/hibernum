@@ -36,12 +36,16 @@ fun Color.getImageBytes(width: Int, height: Int): ByteArray {
     }
 }
 
-suspend fun getDominantColorByImageProxy(proxy: ImageProxy) = proxy.download().await().use {
-    val bufferedImage = withContext(Dispatchers.IO) { ImageIO.read(it) }
-    val rgb = ColorThief.getColor(bufferedImage)
+suspend fun getDominantColorByImageProxy(proxy: ImageProxy) =
+    ImageProxy(proxy.url.replace(".gif", ".png"))
+        .download()
+        .await()
+        .use {
+            val bufferedImage = withContext(Dispatchers.IO) { ImageIO.read(it) }
+            val rgb = ColorThief.getColor(bufferedImage)
 
-    Color(rgb[0], rgb[1], rgb[2])
-}
+            Color(rgb[0], rgb[1], rgb[2])
+        }
 
 suspend fun getDominantColorByImageUrl(url: String) = Immutable.HTTP_CLIENT.get(url)
     .body<InputStream>()
