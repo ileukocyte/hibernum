@@ -5,8 +5,6 @@ import io.ileukocyte.hibernum.commands.*
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.invert
 
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.get
 import io.ktor.client.statement.readBytes
 
@@ -84,7 +82,7 @@ class InvertCommand : TextCommand, ContextCommand {
             }.await()
 
             val response = try {
-                HttpClient(CIO).get(input).readBytes()
+                Immutable.HTTP_CLIENT.get(input).readBytes()
             } catch (_: Exception) {
                 deferred.editMessageEmbeds(
                     defaultEmbed("The provided link is invalid!", EmbedType.FAILURE)
@@ -133,7 +131,7 @@ class InvertCommand : TextCommand, ContextCommand {
         }.await()
 
         val response = try {
-            HttpClient(CIO).get(input).readBytes()
+            Immutable.HTTP_CLIENT.get(input).readBytes()
         } catch (_: Exception) {
             deferred.editOriginalEmbeds(
                 defaultEmbed("The provided link is invalid!", EmbedType.FAILURE)
@@ -199,7 +197,7 @@ class InvertCommand : TextCommand, ContextCommand {
             }.await()
 
             val response = try {
-                HttpClient(CIO).get(input).readBytes()
+                Immutable.HTTP_CLIENT.get(input).readBytes()
             } catch (_: Exception) {
                 deferred.editOriginalEmbeds(
                     defaultEmbed("The provided link is invalid!", EmbedType.FAILURE)
@@ -235,7 +233,7 @@ class InvertCommand : TextCommand, ContextCommand {
         }.await()
 
         val response = try {
-            HttpClient(CIO).get("${event.target.effectiveAvatarUrl}?size=2048").readBytes()
+            Immutable.HTTP_CLIENT.get("${event.target.effectiveAvatarUrl}?size=2048").readBytes()
         } catch (_: Exception) {
             deferred.editOriginalEmbeds(
                 defaultEmbed("The profile picture request has been unsuccessful!", EmbedType.FAILURE)

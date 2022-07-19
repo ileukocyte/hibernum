@@ -1,14 +1,13 @@
 package io.ileukocyte.hibernum.commands.utility
 
+import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.utils.getImageBytes
 
-import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
@@ -39,7 +38,7 @@ class ColorCommand : TextCommand {
         ignoreUnknownKeys = true
     }
 
-    private val client = HttpClient(CIO) {
+    private val client = Immutable.HTTP_CLIENT.config {
         install(ContentNegotiation) { json(jsonSerializer) }
     }
 

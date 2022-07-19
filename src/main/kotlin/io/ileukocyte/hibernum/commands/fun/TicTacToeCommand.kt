@@ -44,7 +44,7 @@ class TicTacToeCommand : SlashOnlyCommand {
             .setContent(opponent.asMention)
             .addActionRow(
                 Button.secondary("$name-${opponent.idLong}-${event.user.idLong}-$staticProcessId-play", "Yes"),
-                Button.danger("$name-${opponent.idLong}-${event.user.idLong}-exit", "No"),
+                Button.danger("$name-${opponent.idLong}-${event.user.idLong}-deny", "No"),
             ).await()
         val message = hook.retrieveOriginal().await()
 
@@ -76,7 +76,7 @@ class TicTacToeCommand : SlashOnlyCommand {
 
                         val embed = buildEmbed {
                             description = "It is ${starter.asMention}'s turn!"
-                            color = getDominantColorByImageUrl(starter.effectiveAvatarUrl)
+                            color = Immutable.SUCCESS
 
                             footer {
                                 text = "Type in \"exit\" to finish the session!"
@@ -108,7 +108,7 @@ class TicTacToeCommand : SlashOnlyCommand {
                         }
                     }
                 }
-                "exit" -> {
+                "deny" -> {
                     val starter = try {
                         event.guild?.retrieveMemberById(id[1])?.await()?.user
                     } catch (_: ErrorResponseException) {
@@ -167,7 +167,7 @@ class TicTacToeCommand : SlashOnlyCommand {
                         if (ttt.isOver) {
                             response.replyEmbed {
                                 description = "${ttt.currentTurn.asMention} wins!"
-                                color = getDominantColorByImageUrl(ttt.currentTurn.effectiveAvatarUrl)
+                                color = Immutable.SUCCESS
 
                                 author {
                                     name = "Congratulations!"
@@ -185,7 +185,7 @@ class TicTacToeCommand : SlashOnlyCommand {
 
                                 val board = response.replyEmbed {
                                     description = "It is ${ttt.currentTurn.asMention}'s turn!"
-                                    color = getDominantColorByImageUrl(ttt.currentTurn.effectiveAvatarUrl)
+                                    color = Immutable.SUCCESS
 
                                     footer {
                                         text = "Type in \"exit\" to finish the session!"
@@ -206,8 +206,8 @@ class TicTacToeCommand : SlashOnlyCommand {
                 if (content.lowercase() == "exit") {
                     val confirmation = response.replyConfirmation("Are you sure you want to exit?")
                         .setActionRow(
-                            Button.danger("$name-exit", "Yes"),
-                            Button.secondary("$name-stay", "No"),
+                            Button.danger("$name-${response.author.idLong}-exit", "Yes"),
+                            Button.secondary("$name-${response.author.idLong}-stay", "No"),
                         ).await()
 
                     try {

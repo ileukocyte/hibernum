@@ -317,7 +317,7 @@ class BattleshipCommand : SlashOnlyCommand {
                             } else {
                                 val guildEmbed = buildEmbed {
                                     description = "${currentTurn.user.asMention} wins!"
-                                    color = getDominantColorByImageUrl(currentTurn.user.effectiveAvatarUrl)
+                                    color = Immutable.SUCCESS
 
                                     author {
                                         name = "Congratulations!"
@@ -719,7 +719,7 @@ class BattleshipCommand : SlashOnlyCommand {
                 getOrNull(row.dec())?.getOrNull(column.dec()),
             )
 
-            suspend fun getPrintableOwnBoard(
+            fun getPrintableOwnBoard(
                 isStartingMessage: Boolean = false,
                 isOwn: Boolean = true,
             ) = buildEmbed {
@@ -746,7 +746,7 @@ class BattleshipCommand : SlashOnlyCommand {
                     iconUrl = user.effectiveAvatarUrl
                 }
 
-                color = getDominantColorByImageUrl(user.effectiveAvatarUrl)
+                color = Immutable.SUCCESS
 
                 if (isStartingMessage) {
                     footer {
@@ -755,7 +755,7 @@ class BattleshipCommand : SlashOnlyCommand {
                 }
             }
 
-            suspend fun getPrintableOpponentBoard(isStartingMessage: Boolean = false) = buildEmbed {
+            fun getPrintableOpponentBoard(isStartingMessage: Boolean = false) = buildEmbed {
                 description = "\u2B1B"
 
                 repeat(10) {
@@ -774,7 +774,7 @@ class BattleshipCommand : SlashOnlyCommand {
                     iconUrl = opponent.effectiveAvatarUrl
                 }
 
-                color = getDominantColorByImageUrl(opponent.effectiveAvatarUrl)
+                color = Immutable.SUCCESS
 
                 if (isStartingMessage) {
                     footer {

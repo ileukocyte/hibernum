@@ -1,10 +1,10 @@
 package io.ileukocyte.hibernum.commands.`fun`
 
+import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
 import io.ileukocyte.hibernum.extensions.*
-import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.emoji.Emoji
@@ -55,7 +55,7 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
 
                         val embed = buildEmbed {
                             description = "It is ${starter.asMention}'s turn!"
-                            color = getDominantColorByImageUrl(starter.effectiveAvatarUrl)
+                            color = Immutable.SUCCESS
 
                             author {
                                 name = "Round #1"
@@ -119,7 +119,7 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
 
                         val embed = buildEmbed {
                             description = "It is ${opponent.asMention}'s turn!"
-                            color = getDominantColorByImageUrl(opponent.effectiveAvatarUrl)
+                            color = Immutable.SUCCESS
 
                             author {
                                 name = "Round #$roundNumber"
@@ -185,7 +185,7 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
 
                             val embed = buildEmbed {
                                 description = "It is ${starter.asMention}'s turn!"
-                                color = getDominantColorByImageUrl(starter.effectiveAvatarUrl)
+                                color = Immutable.SUCCESS
 
                                 author {
                                     name = "Round #$roundNumber"
@@ -252,7 +252,7 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
 
                         val embed = buildEmbed {
                             description = "${winner.asMention} wins!"
-                            color = getDominantColorByImageUrl(winner.effectiveAvatarUrl)
+                            color = Immutable.SUCCESS
 
                             author {
                                 name = "Congratulations!"

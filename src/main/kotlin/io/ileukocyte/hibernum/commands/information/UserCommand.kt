@@ -6,7 +6,7 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.commands.UserContextOnlyCommand
 import io.ileukocyte.hibernum.extensions.*
-import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
+import io.ileukocyte.hibernum.utils.getDominantColorByImageProxy
 
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.*
@@ -197,7 +197,7 @@ class UserCommand : TextCommand, UserContextOnlyCommand {
     private suspend fun infoEmbed(member: Member) = buildEmbed {
         val user = member.user
 
-        color = getDominantColorByImageUrl(user.effectiveAvatarUrl)
+        color = getDominantColorByImageProxy(user.effectiveAvatar)
         thumbnail = user.effectiveAvatarUrl
 
         author {
@@ -359,7 +359,7 @@ class UserCommand : TextCommand, UserContextOnlyCommand {
 
             description = "[Profile Picture URL]($pfp)".surroundWith("**")
             image = pfp
-            color = getDominantColorByImageUrl(pfp)
+            color = getDominantColorByImageProxy(member.user.effectiveAvatar)
 
             member.avatarUrl?.let { guildPfp ->
                 append("\u2022".surroundWith(' '))

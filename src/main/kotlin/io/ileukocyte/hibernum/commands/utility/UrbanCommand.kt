@@ -11,7 +11,6 @@ import io.ileukocyte.hibernum.utils.getPerspectiveApiProbability
 
 import io.ktor.client.*
 import io.ktor.client.call.body
-import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.*
 import io.ktor.http.HttpStatusCode
@@ -41,7 +40,7 @@ class UrbanCommand : TextCommand {
         OptionData(OptionType.STRING, "term", "A word or a phrase to define", true))
 
     private val jsonSerializer = Json { ignoreUnknownKeys = true }
-    private val client = HttpClient(CIO) {
+    private val client = Immutable.HTTP_CLIENT.config {
         install(ContentNegotiation) { json(jsonSerializer) }
     }
 

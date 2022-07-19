@@ -2,9 +2,10 @@ package io.ileukocyte.hibernum.utils
 
 import de.androidpit.colorthief.ColorThief
 
-import io.ktor.client.HttpClient
+import io.ileukocyte.hibernum.Immutable
+import io.ileukocyte.hibernum.extensions.await
+
 import io.ktor.client.call.body
-import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.get
 
 import java.awt.image.BufferedImage
@@ -16,6 +17,8 @@ import javax.imageio.ImageIO
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+
+import net.dv8tion.jda.api.utils.ImageProxy
 
 fun Color.getImageBytes(width: Int, height: Int): ByteArray {
     val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
@@ -32,12 +35,21 @@ fun Color.getImageBytes(width: Int, height: Int): ByteArray {
     }
 }
 
-suspend fun getDominantColorByImageUrl(url: String) = HttpClient(CIO).get(url).body<InputStream>().use {
+suspend fun getDominantColorByImageProxy(proxy: ImageProxy) = proxy.download().await().use {
     val bufferedImage = withContext(Dispatchers.IO) { ImageIO.read(it) }
     val rgb = ColorThief.getColor(bufferedImage)
 
     Color(rgb[0], rgb[1], rgb[2])
 }
+
+suspend fun getDominantColorByImageUrl(url: String) = Immutable.HTTP_CLIENT.get(url)
+    .body<InputStream>()
+    .use {
+        val bufferedImage = withContext(Dispatchers.IO) { ImageIO.read(it) }
+        val rgb = ColorThief.getColor(bufferedImage)
+
+        Color(rgb[0], rgb[1], rgb[2])
+    }
 
 fun BufferedImage.invert() {
     for (x in 0 until width) {

@@ -69,7 +69,7 @@ dependencies {
     implementation(kotlin("scripting-compiler", kotlinVersion))
     implementation(kotlin("scripting-jsr223", kotlinVersion))
     implementation(kotlin("scripting-jvm-host", kotlinVersion))
-    implementation(kotlinx("coroutines-core", "1.6.3"))
+    implementation(kotlinx("coroutines-core", "1.6.4"))
     implementation(kotlinx("serialization-json", "1.3.3"))
     implementation(kotlinx("datetime", "0.4.0"))
 
@@ -77,6 +77,7 @@ dependencies {
     implementation(ktor("client-content-negotiation"))
     implementation(ktor("client-core"))
     implementation(ktor("client-cio"))
+    implementation(ktor("client-okhttp"))
     implementation(ktor("serialization-kotlinx-json"))
 
     // Testing

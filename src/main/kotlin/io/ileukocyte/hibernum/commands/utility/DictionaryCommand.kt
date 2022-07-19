@@ -11,9 +11,7 @@ import io.ileukocyte.hibernum.extensions.defaultEmbed
 import io.ileukocyte.hibernum.extensions.limitTo
 import io.ileukocyte.hibernum.utils.awaitEvent
 
-import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
@@ -50,7 +48,7 @@ class DictionaryCommand : TextCommand {
     override val eliminateStaleInteractions = false
 
     private val jsonSerializer = Json { ignoreUnknownKeys = true }
-    private val client = HttpClient(CIO) {
+    private val client = Immutable.HTTP_CLIENT.config {
         install(ContentNegotiation) {
             json(jsonSerializer)
         }

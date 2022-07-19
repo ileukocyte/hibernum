@@ -1,5 +1,8 @@
 package io.ileukocyte.hibernum
 
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
+
 import java.awt.Color
 
 import javax.script.ScriptEngineManager
@@ -20,6 +23,9 @@ object Immutable {
 
     @JvmField
     val LOGGER = KotlinLogging.logger("Hibernum")
+
+    @JvmField
+    val HTTP_CLIENT = HttpClient(OkHttp)
 
     @JvmField
     val EVAL_KOTLIN_ENGINE = ScriptEngineManager().getEngineByExtension("kts")
