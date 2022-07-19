@@ -103,17 +103,13 @@ class AkinatorCommand : TextCommand {
     }
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
-        val staticProcessId = (1..9999).filter {
-            it !in event.jda.processes.map { p -> p.id.toInt() }
-        }.random()
+        val staticProcessId = generateStaticProcessId(event.jda)
 
         sendGuessTypeMenu(event.channel.idLong, event.author.idLong, event, staticProcessId)
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
-        val staticProcessId = (1..9999).filter {
-            it !in event.jda.processes.map { p -> p.id.toInt() }
-        }.random()
+        val staticProcessId = generateStaticProcessId(event.jda)
 
         sendLanguagesMenu(event, event.getOption("type")?.asString, staticProcessId)
     }

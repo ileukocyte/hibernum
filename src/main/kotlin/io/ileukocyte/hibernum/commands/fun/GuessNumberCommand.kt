@@ -57,9 +57,7 @@ class GuessNumberCommand : TextCommand {
         val range = min..max
         val random = range.random()
 
-        val staticProcessId = (1..9999).filter {
-            it !in event.jda.processes.map { p -> p.id.toInt() }
-        }.random()
+        val staticProcessId = generateStaticProcessId(event.jda)
 
         val message = event.channel.sendEmbed {
             color = Immutable.SUCCESS
@@ -97,9 +95,7 @@ class GuessNumberCommand : TextCommand {
         val range = min..max
         val random = range.random()
 
-        val staticProcessId = (1..9999).filter {
-            it !in event.jda.processes.map { p -> p.id.toInt() }
-        }.random()
+        val staticProcessId = generateStaticProcessId(event.jda)
 
         val message = event.replyEmbed {
             color = Immutable.SUCCESS

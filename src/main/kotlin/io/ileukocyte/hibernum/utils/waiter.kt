@@ -33,6 +33,10 @@ val User.processes get() = jda.getUserProcesses(this)
 
 inline fun waiterProcess(block: WaiterProcess.Builder.() -> Unit) = WaiterProcess.Builder().apply(block)()
 
+fun generateStaticProcessId(jda: JDA) = (1..9999).filter {
+    it !in jda.processes.map { p -> p.id.toInt() }
+}.random()
+
 fun JDA.getProcessById(id: String) = processes.firstOrNull { it.id == id }
 
 fun JDA.getProcessByEntitiesIds(

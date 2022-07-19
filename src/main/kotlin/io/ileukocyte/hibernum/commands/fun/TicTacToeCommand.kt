@@ -5,10 +5,7 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
 import io.ileukocyte.hibernum.extensions.*
-import io.ileukocyte.hibernum.utils.awaitEvent
-import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
-import io.ileukocyte.hibernum.utils.processes
-import io.ileukocyte.hibernum.utils.waiterProcess
+import io.ileukocyte.hibernum.utils.*
 
 import java.util.concurrent.TimeUnit
 
@@ -41,9 +38,7 @@ class TicTacToeCommand : SlashOnlyCommand {
             ?.takeUnless { it.isBot || it.idLong == event.user.idLong }
             ?: throw CommandException("You cannot play against the specified user!")
 
-        val staticProcessId = (1..9999).filter {
-            it !in event.jda.processes.map { p -> p.id.toInt() }
-        }.random()
+        val staticProcessId = generateStaticProcessId(event.jda)
 
         val hook = event.replyConfirmation("Do you want to play tic-tac-toe against ${event.user.asMention}?")
             .setContent(opponent.asMention)

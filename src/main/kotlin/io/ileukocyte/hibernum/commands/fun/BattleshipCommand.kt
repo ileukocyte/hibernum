@@ -10,12 +10,15 @@ import io.ileukocyte.hibernum.utils.*
 
 import java.util.concurrent.TimeUnit
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.launch
 
 import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
@@ -38,9 +41,7 @@ class BattleshipCommand : SlashOnlyCommand {
             ?.takeUnless { it.isBot || it.idLong == event.user.idLong }
             ?: throw CommandException("You cannot play against the specified user!")
 
-        val staticProcessId = (1..9999).filter {
-            it !in event.jda.processes.map { p -> p.id.toInt() }
-        }.random()
+        val staticProcessId = generateStaticProcessId(event.jda)
 
         val hook = event.replyConfirmation("Do you want to play the sea battle against ${event.user.asMention}?")
             .setContent(opponent.asMention)
@@ -66,6 +67,7 @@ class BattleshipCommand : SlashOnlyCommand {
             when (id.last()) {
                 "play" -> {
                     val deferred = event.editComponents().await()
+                    val staticProcessId = id[2].toInt()
 
                     try {
                         val starter = event.guild?.retrieveMemberById(id[1])?.await()?.user
@@ -77,7 +79,14 @@ class BattleshipCommand : SlashOnlyCommand {
                             starter.user,
                         )
 
-                        val staticProcessId = id[2].toInt()
+                        CoroutineScope(WaiterContext).launch {
+                            event.jda.awaitEvent<MessageReceivedEvent>(waiterProcess = waiterProcess {
+                                channel = event.messageChannel.idLong
+                                users += setOf(event.user.idLong, opponent.user.idLong)
+                                command = this@BattleshipCommand
+                                this.id = staticProcessId
+                            }) { false } // used to block other commands
+                        }
 
                         val battleship = Battleship(starter, opponent)
 
@@ -92,6 +101,8 @@ class BattleshipCommand : SlashOnlyCommand {
 
                                 player.generateOwnBoard()
                             } catch (_: ErrorResponseException) {
+                                event.jda.getProcessById("%04d".format(staticProcessId))?.kill(event.jda)
+
                                 val error = "The game session has been aborted " +
                                         "since the bot is unable to DM one of the players (${player.user.asMention})!"
 
@@ -134,8 +145,12 @@ class BattleshipCommand : SlashOnlyCommand {
                             }.setActionRow(termination).await()
                         }
 
+                        event.jda.getProcessById("%04d".format(staticProcessId))?.kill(event.jda)
+
                         awaitTurn(battleship, serverMessage, event.messageChannel, staticProcessId)
                     } catch (_: ErrorResponseException) {
+                        event.jda.getProcessById("%04d".format(staticProcessId))?.kill(event.jda)
+
                         deferred.editOriginalEmbeds(
                             defaultEmbed(
                                 "The user who initiated the game is no longer available for the bot!",
@@ -811,6 +826,7 @@ class BattleshipCommand : SlashOnlyCommand {
             @JvmField
             val TURN_REGEX = Regex("([A-Ja-j])(\\d)")
 
+            @JvmStatic
             fun letterToIndex(letter: Char) =
                 (0..9).associateBy { 'a' + it }[letter]
         }
