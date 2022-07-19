@@ -1,98 +1,363 @@
 package io.ileukocyte.hibernum.commands.`fun`
 
+import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.ClassicTextOnlyCommand
 import io.ileukocyte.hibernum.commands.CommandCategory
 import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.extensions.await
-import io.ileukocyte.hibernum.extensions.sendWarning
+import io.ileukocyte.hibernum.commands.SlashOnlyCommand
+import io.ileukocyte.hibernum.extensions.*
+import io.ileukocyte.hibernum.extensions.EmbedType
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
+import io.ileukocyte.hibernum.utils.getProcessById
+import io.ileukocyte.hibernum.utils.kill
+import io.ileukocyte.hibernum.utils.processes
 
 import java.util.concurrent.TimeUnit
 
-import net.dv8tion.jda.api.entities.PrivateChannel
-import net.dv8tion.jda.api.entities.User
+import kotlinx.coroutines.TimeoutCancellationException
+
+import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.entities.emoji.Emoji
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
+import net.dv8tion.jda.api.interactions.commands.OptionType
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.components.buttons.Button
 
-class BattleshipCommand : ClassicTextOnlyCommand {
-    override val name = "bs"
-    override val description = "n/a"
+class BattleshipCommand : SlashOnlyCommand {
+    override val name = "battleship"
+    override val description = "Starts the battleship game against the specified user in the DMs"
     override val category = CommandCategory.BETA
+    override val options = setOf(
+        OptionData(OptionType.USER, "opponent", "The user to play the sea battle against", true)
+    )
 
-    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
-        val opponent = event.message.mentions.members.firstOrNull()?.user
-            ?.let { Battleship.BattleshipPlayer(it, it.openPrivateChannel().await(), event.author) }
-            ?: return
-        val starter = Battleship.BattleshipPlayer(event.author, event.author.openPrivateChannel().await(), opponent.user)
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
+        val opponent = event.getOption("opponent")?.asUser
+            ?.takeUnless { it.isBot || it.idLong == event.user.idLong }
+            ?: throw CommandException("You cannot play against the specified user!")
 
-        val battleship = Battleship(starter, opponent)
+        event.replyConfirmation("Do you want to play the sea battle against ${event.user.asMention}?")
+            .setContent(opponent.asMention)
+            .addActionRow(
+                Button.secondary("$name-${opponent.idLong}-${event.user.idLong}-play", "Yes"),
+                Button.danger("$name-${opponent.idLong}-${event.user.idLong}-deny", "No"),
+            ).queue()
+    }
 
-        for (player in battleship.players) {
+    override suspend fun invoke(event: ButtonInteractionEvent) {
+        val id = event.componentId.removePrefix("$name-").split("-")
+
+        if (event.user.id in id.first().split("|")) {
+            when (id.last()) {
+                "play" -> {
+                    val deferred = event.editComponents().await()
+
+                    try {
+                        val starter = event.guild?.retrieveMemberById(id[1])?.await()?.user
+                            ?.let { Battleship.BattleshipPlayer(it, it.openPrivateChannel().await(), event.user) }
+                            ?: return
+                        val opponent = Battleship.BattleshipPlayer(
+                            event.user,
+                            event.user.openPrivateChannel().await(),
+                            starter.user,
+                        )
+
+                        val battleship = Battleship(starter, opponent)
+
+                        for (player in battleship.players) {
+                            try {
+                                val check = player.dm
+                                    .sendWarning("Checking if the game can be played in the DMs!") {
+                                        text = "This message will self-delete in 5 seconds"
+                                    }.await()
+
+                                check.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
+
+                                player.generateOwnBoard()
+                            } catch (_: ErrorResponseException) {
+                                val error = "The game session has been aborted " +
+                                        "since the bot is unable to DM one of the players (${player.user.asMention})!"
+
+                                deferred.editOriginalEmbeds(defaultEmbed(error, EmbedType.FAILURE)).queue(null) {
+                                    throw CommandException(error)
+                                }
+                            }
+                        }
+
+                        starter.dm.sendMessageEmbeds(
+                            buildEmbed {
+                                color = Immutable.SUCCESS
+                                description = "It is your turn!"
+                            },
+                            starter.getPrintableOwnBoard(true),
+                            starter.getPrintableOpponentBoard(true),
+                        ).await()
+
+                        opponent.dm.sendMessageEmbeds(
+                            buildEmbed {
+                                color = Immutable.WARNING
+                                description = "It is ${starter.user.asMention}'s turn!"
+                            },
+                            opponent.getPrintableOwnBoard(true),
+                            opponent.getPrintableOpponentBoard(true),
+                        ).await()
+
+                        val staticProcessId = (1..9999).filter {
+                            it !in event.jda.processes.map { p -> p.id.toInt() }
+                        }.random()
+
+                        val termination = Button.danger(
+                            "$name-${starter.user.idLong}|${opponent.user.idLong}-$staticProcessId-exit",
+                            "Terminate",
+                        )
+
+                        val serverMessage = try {
+                            deferred.editOriginalEmbeds(defaultEmbed("The session has started!", EmbedType.SUCCESS) {
+                                text = "Do not delete this message!"
+                            }).setContent(null).setActionRow(termination).await()
+                        } catch (_: ErrorResponseException) {
+                            event.messageChannel.sendSuccess("The session has started!") {
+                                text = "Do not delete this message!"
+                            }.setActionRow(termination).await()
+                        }
+
+                        awaitTurn(battleship, serverMessage, event.messageChannel, staticProcessId)
+                    } catch (_: ErrorResponseException) {
+                        deferred.editOriginalEmbeds(
+                            defaultEmbed(
+                                "The user who initiated the game is no longer available for the bot!",
+                                EmbedType.FAILURE,
+                            )
+                        ).queue(null) {
+                            event.messageChannel
+                                .sendFailure("The user who initiated the game is no longer available for the bot!")
+                                .queue()
+                        }
+                    }
+                }
+                "deny" -> {
+                    val starter = try {
+                        event.guild?.retrieveMemberById(id[1])?.await()?.user
+                    } catch (_: ErrorResponseException) {
+                        null
+                    }
+
+                    val embed = defaultEmbed(
+                        "${event.user.asMention} has denied your battleship invitation!",
+                        EmbedType.FAILURE,
+                    )
+
+                    event.editComponents()
+                        .setEmbeds(embed)
+                        .setContent(starter?.asMention.orEmpty())
+                        .queue(null) {
+                            event.messageChannel.sendMessageEmbeds(embed)
+                                .content(starter?.asMention.orEmpty()).queue()
+                        }
+                }
+                "exit" -> {
+                    val processId = "%04d".format(id[1].toInt())
+
+                    event.jda.getProcessById(processId)?.kill(event.jda)
+
+                    event.editComponents()
+                        .setEmbeds(
+                            defaultEmbed(
+                                "The session has been terminated by ${event.user.asMention}!",
+                                EmbedType.SUCCESS,
+                            )
+                        ).queue(null) {
+                            event.messageChannel.sendSuccess(
+                                "The session has been terminated by ${event.user.asMention}!").queue()
+                        }
+
+                    val anotherPlayer = try {
+                        val anotherPlayer = id.first().split("|").first { it != event.user.id }
+
+                        event.jda.retrieveUserById(anotherPlayer).await()
+                    } catch (_: ErrorResponseException) {
+                        null
+                    }
+
+                    try {
+                        anotherPlayer?.openPrivateChannel()?.await()
+                            ?.sendWarning("The session has been terminated by ${event.user.asMention}!")
+                            ?.await()
+                    } catch (_: ErrorResponseException) {}
+                }
+            }
+        } else {
+            throw CommandException("You did not invoke the initial command!")
+        }
+    }
+
+    private suspend fun awaitTurn(
+        battleship: Battleship,
+        guildMessage: Message,
+        guildChannel: MessageChannel,
+        processId: Int,
+    ) {
+        try {
+            val currentTurn = battleship.currentTurn
+
             try {
-                val check = player.dm
-                    .sendWarning("Checking if the game can be played in the DMs!") {
-                        text = "This message will self-delete in 10 seconds"
-                    }.await()
+                val turnMessage = currentTurn.dm.awaitMessage(
+                    battleship.players.map { it.user }.toSet(),
+                    this,
+                    delay = 10,
+                    processId = processId,
+                ) ?: return
 
-                check.delete().queueAfter(10, TimeUnit.SECONDS, null) {}
+                if (!turnMessage.contentRaw.matches(Battleship.TURN_REGEX)) {
+                    turnMessage.channel.sendFailure(
+                        "The message does not match the valid turn format! " +
+                                "Try again!"
+                    ).queue()
 
-                player.generateOwnBoard()
+                    awaitTurn(battleship, guildMessage, guildChannel, processId)
+                } else {
+                    val (columnLetter, rowChar) = turnMessage.contentRaw.toCharArray()
 
-                val ownBoard = buildEmbed {
-                    description = "\u2B1B"
+                    val row = rowChar.digitToInt()
+                    val column = Battleship.letterToIndex(columnLetter.lowercaseChar()) ?: return
 
-                    repeat(10) {
-                        append(Emoji.fromFormatted(":regional_indicator_${'a' + it}:").name)
+                    val turn = currentTurn.opponentBoard[row][column]
+
+                    if (turn == Battleship.RED_SQUARE || turn == Battleship.YELLOW_CIRCLE) {
+                        turnMessage.channel.sendFailure("The gap is taken! Try again!").queue()
+
+                        awaitTurn(battleship, guildMessage, guildChannel, processId)
+                    } else {
+                        val opponent = battleship.players.first { it.user.idLong != currentTurn.user.idLong }
+
+                        if (opponent.ownBoard[row][column] == Battleship.WHITE_SQUARE) {
+                            opponent.ownBoard[row][column] = Battleship.YELLOW_CIRCLE
+                            currentTurn.opponentBoard[row][column] = Battleship.YELLOW_CIRCLE
+
+                            turnMessage.replyEmbeds(
+                                defaultEmbed(
+                                    "You have missed! It is ${opponent.user.asTag}'s turn!",
+                                    EmbedType.WARNING
+                                ),
+                                currentTurn.getPrintableOwnBoard(),
+                                currentTurn.getPrintableOpponentBoard(),
+                            ).await()
+
+                            opponent.dm.sendMessageEmbeds(
+                                defaultEmbed(
+                                    "${currentTurn.user.asTag} has missed! It is your turn!",
+                                    EmbedType.SUCCESS,
+                                ),
+                                opponent.getPrintableOwnBoard(),
+                                opponent.getPrintableOpponentBoard(),
+                            ).await()
+
+                            battleship.reverseTurn()
+
+                            awaitTurn(battleship, guildMessage, guildChannel, processId)
+                        } else {
+                            opponent.ownBoard[row][column] = Battleship.RED_SQUARE
+                            currentTurn.opponentBoard[row][column] = Battleship.RED_SQUARE
+
+                            if (!battleship.isOver) {
+                                val hitOrDestroyed =
+                                    opponent.ownShips.firstOrNull { row to column in it.coords }?.let { ship ->
+                                        ship.coords.map { (r, c) -> opponent.ownBoard[r][c] }
+                                    }?.takeUnless { it.none { c -> c == Battleship.BLUE_SQUARE } }
+                                        ?.let { "hit" }
+                                        ?: "destroyed"
+
+                                turnMessage.replyEmbeds(
+                                    defaultEmbed(
+                                        "You have $hitOrDestroyed your opponent's ship! It is your turn once again!",
+                                        EmbedType.SUCCESS,
+                                    ),
+                                    currentTurn.getPrintableOwnBoard(),
+                                    currentTurn.getPrintableOpponentBoard(),
+                                ).await()
+
+                                opponent.dm.sendMessageEmbeds(
+                                    defaultEmbed(
+                                        "${currentTurn.user.asTag} has $hitOrDestroyed your ship! It is their turn once again!",
+                                        EmbedType.FAILURE,
+                                    ),
+                                    opponent.getPrintableOwnBoard(),
+                                    opponent.getPrintableOpponentBoard(),
+                                ).await()
+
+                                awaitTurn(battleship, guildMessage, guildChannel, processId)
+                            } else {
+                                val serverEmbed = buildEmbed {
+                                    description = "${currentTurn.user.asMention} wins!"
+                                    color = getDominantColorByImageUrl(currentTurn.user.effectiveAvatarUrl)
+
+                                    author {
+                                        name = "Congratulations!"
+                                        iconUrl = currentTurn.user.effectiveAvatarUrl
+                                    }
+                                }
+
+                                guildMessage
+                                    .editMessageComponents()
+                                    .setEmbeds(serverEmbed)
+                                    .queue(null) {}
+
+                                turnMessage.replyEmbeds(
+                                    buildEmbed {
+                                        description = "You have destroyed all the opponent's ships!"
+                                        color = Immutable.SUCCESS
+
+                                        author {
+                                            name = "Congratulations!"
+                                            iconUrl = currentTurn.user.effectiveAvatarUrl
+                                        }
+                                    },
+                                    currentTurn.getPrintableOwnBoard(),
+                                    currentTurn.getPrintableOpponentBoard(),
+                                ).await()
+
+                                opponent.dm.sendMessageEmbeds(
+                                    buildEmbed {
+                                        description =
+                                            "${currentTurn.user.asTag} wins! All of your ships have been destroyed!"
+                                        color = Immutable.FAILURE
+
+                                        author {
+                                            name = "Game Over!"
+                                            iconUrl = currentTurn.user.effectiveAvatarUrl
+                                        }
+                                    },
+                                    opponent.getPrintableOwnBoard(),
+                                    currentTurn.getPrintableOwnBoard(),
+                                ).await()
+                            }
+                        }
                     }
-
-                    appendLine()
-
-                    for ((index, row) in player.ownBoard.withIndex()) {
-                        append("${'0' + index}\u20E3")
-                        appendLine(row.joinToString(""))
-                    }
-
-                    author {
-                        name = "Your Board"
-                        iconUrl = player.user.effectiveAvatarUrl
-                    }
-
-                    color = getDominantColorByImageUrl(player.user.effectiveAvatarUrl)
                 }
-
-                val opponentBoard = buildEmbed {
-                    description = "\u2B1B"
-
-                    repeat(10) {
-                        append(Emoji.fromFormatted(":regional_indicator_${'a' + it}:").name)
-                    }
-
-                    appendLine()
-
-                    for ((index, row) in player.opponentBoard.withIndex()) {
-                        append("${'0' + index}\u20E3")
-                        appendLine(row.joinToString(""))
-                    }
-
-                    author {
-                        name = "Opponent's Board"
-                        iconUrl = player.opponent.effectiveAvatarUrl
-                    }
-
-                    color = getDominantColorByImageUrl(player.opponent.effectiveAvatarUrl)
+            } catch (_: TimeoutCancellationException) {
+                for (player in battleship.players) {
+                    player.dm.sendFailure("Time is out!").queue(null) {}
                 }
+            }
+        } catch (_: ErrorResponseException) {
+            if (!battleship.isOver) {
+                val error = "The game session has been aborted " +
+                        "since the bot is unable to DM one of the players!"
 
-                player.dm.sendMessageEmbeds(ownBoard, opponentBoard).await()
-            } catch (_: ErrorResponseException) {
-                throw CommandException("The game session has been aborted " +
-                        "since the bot is unable to talk to one of the players in their DMs!")
+                guildMessage.editMessageComponents()
+                    .setEmbeds(defaultEmbed(error, EmbedType.FAILURE))
+                    .queue(null) {
+                        guildChannel.sendFailure(error).queue()
+                    }
             }
         }
     }
 
     data class Battleship(val starter: BattleshipPlayer, val opponent: BattleshipPlayer) {
+        var currentTurn = starter
+
         val players: Set<BattleshipPlayer>
             get() = setOf(starter, opponent)
 
@@ -277,10 +542,10 @@ class BattleshipCommand : ClassicTextOnlyCommand {
                 }
 
                 run {
-                    val coord1: BattleshipCoordinate
-                    val coord2: BattleshipCoordinate
-                    val coord3: BattleshipCoordinate
-                    val coord4: BattleshipCoordinate
+                    val firstCell: BattleshipCoordinate
+                    val secondCell: BattleshipCoordinate
+                    val thirdCell: BattleshipCoordinate
+                    val fourthCell: BattleshipCoordinate
 
                     while (true) {
                         val row = range.random()
@@ -303,47 +568,47 @@ class BattleshipCommand : ClassicTextOnlyCommand {
                                 }
 
                                 if (filtered.isNotEmpty()) {
-                                    val (nextRow, nextColumn) = filtered.keys.random()
+                                    val (secondCellRow, secondCellColumn) = filtered.keys.random()
 
-                                    if (nextRow == row) {
-                                        val nextNextColumn = if (nextColumn == column.inc()) {
-                                            this[row].getOrNull(nextColumn.inc())
+                                    if (secondCellRow == row) {
+                                        val thirdCellColumn = if (secondCellColumn == column.inc()) {
+                                            this[row].getOrNull(secondCellColumn.inc())
                                                 ?.takeUnless { it == BLUE_SQUARE }
-                                                ?.let { nextColumn.inc() }
+                                                ?.let { secondCellColumn.inc() }
                                                 ?: this[row].getOrNull(column.dec())
                                                     ?.takeUnless { it == BLUE_SQUARE }
                                                     ?.let { column.dec() }
                                         } else {
-                                            this[row].getOrNull(nextColumn.dec())
+                                            this[row].getOrNull(secondCellColumn.dec())
                                                 ?.takeUnless { it == BLUE_SQUARE }
-                                                ?.let { nextColumn.dec() }
+                                                ?.let { secondCellColumn.dec() }
                                                 ?: this[row].getOrNull(column.inc())
                                                     ?.takeUnless { it == BLUE_SQUARE }
                                                     ?.let { column.inc() }
                                         }
 
-                                        if (nextNextColumn !== null) {
-                                            if (getPossiblyUnavailableGaps(row to nextNextColumn)
+                                        if (thirdCellColumn !== null) {
+                                            if (getPossiblyUnavailableGaps(row to thirdCellColumn)
                                                     .none { it == BLUE_SQUARE }) {
-                                                val columns = sortedSetOf(column, nextColumn, nextNextColumn)
+                                                val columns = sortedSetOf(column, secondCellColumn, thirdCellColumn)
 
-                                                val nextNextNextColumn = columns.min().dec()
+                                                val fourthCellColumn = columns.min().dec()
                                                     .takeIf { it in range && this[row][it] != BLUE_SQUARE }
                                                     ?: columns.max().inc()
                                                         .takeIf { it in range && this[row][it] != BLUE_SQUARE }
 
-                                                if (nextNextNextColumn !== null) {
-                                                    if (getPossiblyUnavailableGaps(row to nextNextNextColumn)
+                                                if (fourthCellColumn !== null) {
+                                                    if (getPossiblyUnavailableGaps(row to fourthCellColumn)
                                                             .none { it == BLUE_SQUARE }) {
-                                                        coord1 = row to column
-                                                        coord2 = row to nextColumn
-                                                        coord3 = row to nextNextColumn
-                                                        coord4 = row to nextNextNextColumn
+                                                        firstCell = row to column
+                                                        secondCell = row to secondCellColumn
+                                                        thirdCell = row to thirdCellColumn
+                                                        fourthCell = row to fourthCellColumn
 
                                                         this[row][column] = BLUE_SQUARE
-                                                        this[row][nextColumn] = BLUE_SQUARE
-                                                        this[row][nextNextColumn] = BLUE_SQUARE
-                                                        this[row][nextNextNextColumn] = BLUE_SQUARE
+                                                        this[row][secondCellColumn] = BLUE_SQUARE
+                                                        this[row][thirdCellColumn] = BLUE_SQUARE
+                                                        this[row][fourthCellColumn] = BLUE_SQUARE
 
                                                         break
                                                     }
@@ -351,48 +616,48 @@ class BattleshipCommand : ClassicTextOnlyCommand {
                                             }
                                         }
                                     } else {
-                                        val nextNextRow = if (nextRow == row.inc()) {
-                                            getOrNull(nextRow.inc())
+                                        val thirdCellRow = if (secondCellRow == row.inc()) {
+                                            getOrNull(secondCellRow.inc())
                                                 ?.get(column)
                                                 ?.takeUnless { it == BLUE_SQUARE }
-                                                ?.let { nextRow.inc() }
+                                                ?.let { secondCellRow.inc() }
                                                 ?: getOrNull(row.dec())
                                                     ?.get(column)
                                                     ?.takeUnless { it == BLUE_SQUARE }
                                                     ?.let { row.dec() }
                                         } else {
-                                            getOrNull(nextRow.dec())
+                                            getOrNull(secondCellRow.dec())
                                                 ?.get(column)
                                                 ?.takeUnless { it == BLUE_SQUARE }
-                                                ?.let { nextRow.dec() }
+                                                ?.let { secondCellRow.dec() }
                                                 ?: getOrNull(row.inc())
                                                     ?.get(column)
                                                     ?.takeUnless { it == BLUE_SQUARE }
                                                     ?.let { row.inc() }
                                         }
 
-                                        if (nextNextRow !== null) {
-                                            if (getPossiblyUnavailableGaps(nextNextRow to column)
+                                        if (thirdCellRow !== null) {
+                                            if (getPossiblyUnavailableGaps(thirdCellRow to column)
                                                     .none { it == BLUE_SQUARE }) {
-                                                val rows = sortedSetOf(row, nextRow, nextNextRow)
+                                                val rows = sortedSetOf(row, secondCellRow, thirdCellRow)
 
-                                                val nextNextNextRow = rows.min().dec()
+                                                val fourthCellRow = rows.min().dec()
                                                     .takeIf { it in range && this[it][column] != BLUE_SQUARE }
                                                     ?: rows.max().inc()
                                                         .takeIf { it in range && this[it][column] != BLUE_SQUARE }
 
-                                                if (nextNextNextRow !== null) {
-                                                    if (getPossiblyUnavailableGaps(nextNextNextRow to column)
+                                                if (fourthCellRow !== null) {
+                                                    if (getPossiblyUnavailableGaps(fourthCellRow to column)
                                                             .none { it == BLUE_SQUARE }) {
-                                                        coord1 = row to column
-                                                        coord2 = nextRow to column
-                                                        coord3 = nextNextRow to column
-                                                        coord4 = nextNextNextRow to column
+                                                        firstCell = row to column
+                                                        secondCell = secondCellRow to column
+                                                        thirdCell = thirdCellRow to column
+                                                        fourthCell = fourthCellRow to column
 
                                                         this[row][column] = BLUE_SQUARE
-                                                        this[nextRow][column] = BLUE_SQUARE
-                                                        this[nextNextRow][column] = BLUE_SQUARE
-                                                        this[nextNextNextRow][column] = BLUE_SQUARE
+                                                        this[secondCellRow][column] = BLUE_SQUARE
+                                                        this[thirdCellRow][column] = BLUE_SQUARE
+                                                        this[fourthCellRow][column] = BLUE_SQUARE
 
                                                         break
                                                     }
@@ -405,7 +670,7 @@ class BattleshipCommand : ClassicTextOnlyCommand {
                         }
                     }
 
-                    ownShips += QuadrupleCellShip(coord1, coord2, coord3, coord4)
+                    ownShips += QuadrupleCellShip(firstCell, secondCell, thirdCell, fourthCell)
                 }
 
                 return this
@@ -427,50 +692,116 @@ class BattleshipCommand : ClassicTextOnlyCommand {
                 getOrNull(row.dec())?.getOrNull(column.inc()),
                 getOrNull(row.dec())?.getOrNull(column.dec()),
             )
+
+            suspend fun getPrintableOwnBoard(isStartingMessage: Boolean = false) = buildEmbed {
+                description = "\u2B1B"
+
+                repeat(10) {
+                    append(Emoji.fromFormatted(":regional_indicator_${'a' + it}:").name)
+                }
+
+                appendLine()
+
+                for ((index, row) in ownBoard.withIndex()) {
+                    append("${'0' + index}\u20E3")
+                    appendLine(row.joinToString(""))
+                }
+
+                author {
+                    name = "Your Board"
+                    iconUrl = user.effectiveAvatarUrl
+                }
+
+                color = getDominantColorByImageUrl(user.effectiveAvatarUrl)
+
+                if (isStartingMessage) {
+                    footer {
+                        text = "You can go back to the server channel in order to terminate the game session!"
+                    }
+                }
+            }
+
+            suspend fun getPrintableOpponentBoard(isStartingMessage: Boolean = false) = buildEmbed {
+                description = "\u2B1B"
+
+                repeat(10) {
+                    append(Emoji.fromFormatted(":regional_indicator_${'a' + it}:").name)
+                }
+
+                appendLine()
+
+                for ((index, row) in opponentBoard.withIndex()) {
+                    append("${'0' + index}\u20E3")
+                    appendLine(row.joinToString(""))
+                }
+
+                author {
+                    name = "Opponent's Board"
+                    iconUrl = opponent.effectiveAvatarUrl
+                }
+
+                color = getDominantColorByImageUrl(opponent.effectiveAvatarUrl)
+
+                if (isStartingMessage) {
+                    footer {
+                        text = "The turn format is <letter><digit> (e.g. A0, B5, etc.)"
+                    }
+                }
+            }
         }
 
-        enum class BattleshipTurn(val sign: String) {
-            MISS(RED_CIRCLE),
-            HIT(RED_SQUARE),
+        val isOver: Boolean
+            get() = players.map { it.ownBoard }.any { it.flatten().none { gap -> gap == BLUE_SQUARE } }
+
+        fun reverseTurn() = if (currentTurn.user == starter.user) {
+            currentTurn = opponent
+        } else {
+            currentTurn = starter
         }
 
         interface Ship {
             val coords: Set<BattleshipCoordinate>
         }
 
-        data class SingleCellShip(val coord: BattleshipCoordinate) : Ship {
-            override val coords = setOf(coord)
+        data class SingleCellShip(val cell: BattleshipCoordinate) : Ship {
+            override val coords = setOf(cell)
         }
 
         data class DoubleCellShip(
-            val coord1: BattleshipCoordinate,
-            val coord2: BattleshipCoordinate,
+            val firstCell: BattleshipCoordinate,
+            val secondCell: BattleshipCoordinate,
         ) : Ship {
-            override val coords = setOf(coord1, coord2)
+            override val coords = setOf(firstCell, secondCell)
         }
 
         data class TripleCellShip(
-            val coord1: BattleshipCoordinate,
-            val coord2: BattleshipCoordinate,
-            val coord3: BattleshipCoordinate,
+            val firstCell: BattleshipCoordinate,
+            val secondCell: BattleshipCoordinate,
+            val thirdCell: BattleshipCoordinate,
         ) : Ship {
-            override val coords = setOf(coord1, coord2, coord3)
+            override val coords = setOf(firstCell, secondCell, thirdCell)
         }
 
         data class QuadrupleCellShip(
-            val coord1: BattleshipCoordinate,
-            val coord2: BattleshipCoordinate,
-            val coord3: BattleshipCoordinate,
-            val coord4: BattleshipCoordinate,
+            val firstCell: BattleshipCoordinate,
+            val secondCell: BattleshipCoordinate,
+            val thirdCell: BattleshipCoordinate,
+            val fourthCell: BattleshipCoordinate,
         ) : Ship {
-            override val coords = setOf(coord1, coord2, coord3, coord4)
+            override val coords = setOf(firstCell, secondCell, thirdCell, fourthCell)
         }
 
         companion object {
             const val WHITE_SQUARE = "\u2B1C"
             const val BLUE_SQUARE = "\uD83D\uDFE6"
             const val RED_SQUARE = "\uD83D\uDFE5"
-            const val RED_CIRCLE = "\uD83D\uDD34"
+            const val YELLOW_CIRCLE = "\uD83D\uDFE1"
+
+            @JvmField
+            val TURN_REGEX = Regex("([A-Ja-j])(\\d)")
+
+            fun letterToIndex(letter: Char) =
+                (0..9).associateBy { 'a' + it }[letter]
         }
     }
 }
