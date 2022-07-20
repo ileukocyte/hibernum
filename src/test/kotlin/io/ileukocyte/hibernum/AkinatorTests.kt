@@ -1,33 +1,14 @@
 package io.ileukocyte.hibernum
 
-import com.github.markozajc.akiwrapper.AkiwrapperBuilder
 import com.github.markozajc.akiwrapper.core.entities.Server
+
+import io.ileukocyte.hibernum.builders.buildAkiwrapper
 
 import org.junit.jupiter.api.Test
 
-import kotlin.test.assertNotNull
-
 class AkinatorTests {
     @Test
-    fun `running through languages and guess types`() {
-        println(Server.Language.values().map { it.name })
-        println(Server.GuessType.values().map { it.name })
-    }
-
-    @Test
-    fun `initiating a wrapper and choosing the guess type`() {
-        // TODO: write a Kotlin-style builder for Akiwrapper
-        val wrapper = AkiwrapperBuilder().apply {
-            guessType = Server.GuessType.OBJECT
-            setFilterProfanity(false)
-            language = Server.Language.ENGLISH
-        }.build()
-
-        wrapper.question?.apply { assertNotNull(this) }.let { println(it?.question ?: "heck.") }
-    }
-
-    @Test
-    fun `using other languages with other guess types`() {
+    fun `using different languages with different guess types`() {
         var counter = 0
 
         for (type in Server.GuessType.values()) {
@@ -37,10 +18,10 @@ class AkinatorTests {
                 println("Language: ${lang.name}")
 
                 try {
-                    val wrapper = AkiwrapperBuilder().apply {
+                    val wrapper = buildAkiwrapper {
                         guessType = type
                         language = lang
-                    }.build()
+                    }
 
                     println(wrapper.question?.question ?: "NULL QUESTION")
                 } catch (t: Throwable) {
@@ -48,13 +29,5 @@ class AkinatorTests {
                 }
             }
         }
-
-        val wrapper = AkiwrapperBuilder().apply {
-            guessType = Server.GuessType.OBJECT
-            setFilterProfanity(false)
-            language = Server.Language.ENGLISH
-        }.build()
-
-        wrapper.question?.apply { assertNotNull(this) }.let { println(it?.question ?: "heck.") }
     }
 }
