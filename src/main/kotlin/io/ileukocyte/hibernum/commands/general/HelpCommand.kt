@@ -100,7 +100,7 @@ class HelpCommand : TextCommand {
             if (aliases.isNotEmpty()) {
                 field {
                     title = "Classic Text Aliases"
-                    description = aliases.sorted().joinToString()
+                    description = aliases.sorted().joinToString { "${Immutable.DEFAULT_PREFIX}$it" }
                 }
             }
 
