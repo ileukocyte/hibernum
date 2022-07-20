@@ -21,7 +21,7 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button
 
 class ChangelogCommand : TextCommand {
     override val name = "changelog"
-    override val description = "Sends the changelog of the bot's latest stable version " +
+    override val description = "Sends the changelog of the bot's latest stable release " +
             "available on its GitHub repository"
     override val options = setOf(
         OptionData(OptionType.BOOLEAN, "ephemeral", "Whether the response should be invisible to other users"))
