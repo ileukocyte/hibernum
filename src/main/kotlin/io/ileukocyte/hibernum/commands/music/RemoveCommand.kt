@@ -25,7 +25,7 @@ class RemoveCommand : TextCommand {
 
         if (audioPlayer.scheduler.queue.isNotEmpty()) {
             if (event.member?.voiceState?.channel == event.guild.selfMember.voiceState?.channel) {
-                val track = audioPlayer.scheduler.queue.toList().getOrNull(number - 1)
+                val track = audioPlayer.scheduler.queue.toList().getOrNull(number.dec())
                     ?: throw CommandException("You have specified a wrong number!")
 
                 val description = "[${track.info.title}](${track.info.uri}) has been removed from the queue!"
@@ -49,7 +49,7 @@ class RemoveCommand : TextCommand {
 
         if (audioPlayer.scheduler.queue.isNotEmpty()) {
             if (event.member?.voiceState?.channel == event.guild?.selfMember?.voiceState?.channel) {
-                val track = audioPlayer.scheduler.queue.toList().getOrNull(number - 1)
+                val track = audioPlayer.scheduler.queue.toList().getOrNull(number.dec())
                     ?: throw CommandException("You have specified a wrong number!")
 
                 val description = "[${track.info.title}](${track.info.uri}) has been removed from the queue!"
