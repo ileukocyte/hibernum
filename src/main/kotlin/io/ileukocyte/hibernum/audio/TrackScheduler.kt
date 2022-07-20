@@ -82,7 +82,10 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
         }
 
         val consumer = { message: Message ->
-            track.userData = userData.copy(announcement = message, playCount = userData.playCount + 1)
+            track.userData = userData.copy(
+                announcement = message,
+                playCount = userData.playCount.inc(),
+            )
         }
 
         userData.ifFromSlashCommand?.let {

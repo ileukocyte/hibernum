@@ -66,7 +66,7 @@ fun String.limitTo(limit: Int, trim: Boolean = true) = take(limit)
 fun String.remove(input: String) = replace(input, "")
 fun String.remove(regex: Regex) = replace(regex, "")
 
-fun String.removeLastChar() = substring(0, length - 1)
+fun String.removeLastChar() = substring(0, length.dec())
 
 fun String.replaceLastChar(charSequence: CharSequence) = removeLastChar() + charSequence
 fun String.replaceLastChar(char: Char) = removeLastChar() + char

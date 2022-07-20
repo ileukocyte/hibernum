@@ -134,7 +134,7 @@ class QueueCommand : TextCommand {
                     }
                 }
                 "back" -> {
-                    val newPage = max(0, pageNumber - 1)
+                    val newPage = max(0, pageNumber.dec())
 
                     event.editMessageEmbeds(
                         queueEmbed(event.jda, audioPlayer, track, newPage)

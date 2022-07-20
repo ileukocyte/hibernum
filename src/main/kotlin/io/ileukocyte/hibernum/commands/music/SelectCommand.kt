@@ -60,7 +60,7 @@ class SelectCommand : TextCommand {
                 audioPlayer.player.playingTrack.userData.cast<TrackUserData>().announcement?.delete()?.queue({}) {}
 
                 val queue = audioPlayer.scheduler.queue.toMutableList()
-                val track = queue.getOrNull(number - 1)
+                val track = queue.getOrNull(number.dec())
 
                 if (track === null) {
                     val error = "You have specified a wrong number!"

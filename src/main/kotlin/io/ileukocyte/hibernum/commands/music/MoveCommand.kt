@@ -33,7 +33,7 @@ class MoveCommand : TextCommand {
             .take(2)
             .filter { it.isInt }
             .takeIf { it.size == 2 }
-            ?.map { it.toInt() - 1 }
+            ?.map { it.toInt().dec() }
             ?: throw CommandException("You have provided invalid arguments!")
 
         val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
@@ -48,7 +48,7 @@ class MoveCommand : TextCommand {
                     ?: throw CommandException("You have specified an invalid song index!")
 
                 list.removeAt(song)
-                list.add(max(0, min(index, audioPlayer.scheduler.queue.size - 1)), track)
+                list.add(max(0, min(index, audioPlayer.scheduler.queue.size.dec())), track)
 
                 val description = "[${track.info.title}](${track.info.uri}) has been moved to the new position!"
 
@@ -80,7 +80,7 @@ class MoveCommand : TextCommand {
                     ?: throw CommandException("You have specified an invalid song index!")
 
                 list.removeAt(song)
-                list.add(max(0, min(index, audioPlayer.scheduler.queue.size - 1)), track)
+                list.add(max(0, min(index, audioPlayer.scheduler.queue.size.dec())), track)
 
                 val description = "[${track.info.title}](${track.info.uri}) has been moved to the new position!"
 

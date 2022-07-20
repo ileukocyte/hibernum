@@ -202,7 +202,7 @@ class KillCommand : TextCommand {
                                 }
                         }
                         "back" -> {
-                            val newPage = max(0, page - 1)
+                            val newPage = max(0, page.dec())
                             val pages = ceil(processes.size / 5.0).toInt()
 
                             event.editMessageEmbeds(processesListEmbed(processes, newPage, event.jda))
@@ -227,7 +227,7 @@ class KillCommand : TextCommand {
                         "next" -> {
                             val partition = Lists.partition(processes.toList(), 5)
                             val lastPage = partition.lastIndex
-                            val newPage = min(page + 1, lastPage)
+                            val newPage = min(page.inc(), lastPage)
 
                             event.editMessageEmbeds(processesListEmbed(processes, newPage, event.jda))
                                 .setActionRow(
@@ -319,7 +319,7 @@ class KillCommand : TextCommand {
             val value =
                 "Process(pid=$pid, command=$command, users=[$users], channel=$channel, type=$type, timeCreated=$timeCreated)"
 
-            appendLine("**${index + 1 + page * 5}.** $value")
+            appendLine("**${index.inc() + page * 5}.** $value")
         }
 
         author {

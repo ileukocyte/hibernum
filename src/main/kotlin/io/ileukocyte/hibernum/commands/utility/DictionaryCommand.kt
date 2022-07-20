@@ -218,7 +218,7 @@ class DictionaryCommand : TextCommand {
             val (partOfSpeech, def) = value
 
             with(def) {
-                append("**${index + 1}.** ")
+                append("**${index.inc()}.** ")
 
                 partOfSpeech?.let { append("($it) ") }
 

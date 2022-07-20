@@ -301,7 +301,7 @@ class AkinatorCommand : TextCommand {
 
                                 footer { text = "Type in \"exit\" to finish the session!" }
 
-                                author { name = "Question #${nextQuestion.step + 1}" }
+                                author { name = "Question #${nextQuestion.step.inc()}" }
                             }.await()
 
                             awaitAnswer(event.channel, event.user, akiwrapper, processId = id[2].toInt())
@@ -454,7 +454,7 @@ class AkinatorCommand : TextCommand {
                                     color = Immutable.SUCCESS
                                     description = nextQuestion.question
 
-                                    author { name = "Question #${nextQuestion.step + 1}" }
+                                    author { name = "Question #${nextQuestion.step.inc()}" }
                                     footer { text = "Type in \"exit\" to finish the session!" }
                                 }.await()
 
