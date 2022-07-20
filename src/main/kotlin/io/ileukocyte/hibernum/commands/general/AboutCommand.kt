@@ -11,12 +11,14 @@ import io.ileukocyte.hibernum.utils.asText
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDAInfo
+import net.dv8tion.jda.api.entities.ApplicationInfo
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Type
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.components.buttons.Button
 
 class AboutCommand : TextCommand {
     override val name = "about"
@@ -25,23 +27,48 @@ class AboutCommand : TextCommand {
         OptionData(OptionType.BOOLEAN, "ephemeral", "Whether the response should be invisible to other users"))
     override val aliases = setOf("info", "stats")
 
-    override suspend fun invoke(event: MessageReceivedEvent, args: String?) =
-        event.channel.sendMessageEmbeds(statsEmbed(event.jda, event.guild)).queue()
+    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
+        val appInfo = event.jda.retrieveApplicationInfo().await()
+        val buttons = setOf(
+            Button.link(
+                Immutable.INVITE_LINK_FORMAT.format(event.jda.selfUser.id, appInfo.permissionsRaw),
+                "Invite Link",
+            ),
+            Button.link(Immutable.GITHUB_REPOSITORY, "GitHub Repository"),
+        )
 
-    override suspend fun invoke(event: SlashCommandInteractionEvent) =
-        event.replyEmbeds(statsEmbed(event.jda, event.guild!!))
+        event.channel.sendMessageEmbeds(statsEmbed(event.jda, appInfo, event.guild))
+            .setActionRow(buttons)
+            .queue()
+    }
+
+    override suspend fun invoke(event: SlashCommandInteractionEvent) {
+        val appInfo = event.jda.retrieveApplicationInfo().await()
+        val buttons = setOf(
+            Button.link(
+                Immutable.INVITE_LINK_FORMAT.format(event.jda.selfUser.id, appInfo.permissionsRaw),
+                "Invite Link",
+            ),
+            Button.link(Immutable.GITHUB_REPOSITORY, "GitHub Repository"),
+        )
+
+        event.replyEmbeds(statsEmbed(event.jda, appInfo, event.guild ?: return))
+            .addActionRow(buttons)
             .setEphemeral(event.getOption("ephemeral")?.asBoolean ?: false)
             .queue()
+    }
 
-    private suspend fun statsEmbed(jda: JDA, guild: Guild) = buildEmbed {
+    private suspend fun statsEmbed(
+        jda: JDA,
+        appInfo: ApplicationInfo,
+        guild: Guild,
+    ) = buildEmbed {
         color = Immutable.SUCCESS
         thumbnail = jda.selfUser.effectiveAvatarUrl
         timestamp = jda.startDate
 
         description = buildString {
             val restPing = jda.restPing.await()
-            val appInfo = jda.retrieveApplicationInfo().await()
-            val inviteLink = Immutable.INVITE_LINK_FORMAT.format(jda.selfUser.id, appInfo.permissionsRaw)
             val musicStreamingServersCount = jda.guildCache
                 .count { it.selfMember.voiceState?.inAudioChannel() == true }
             val owner = appInfo.owner
@@ -61,7 +88,6 @@ class AboutCommand : TextCommand {
                 ?: "Currently is not streaming any music on any of all the servers"
             )
             appendLine()
-            appendLine("**[Invite Link]($inviteLink)** • **[GitHub Repository](${Immutable.GITHUB_REPOSITORY})**")
             appendLine("**Developer**: ${if (guild.isMember(owner)) owner.asMention else owner.asTag}")
             appendLine("**Bot Version**: ${Immutable.VERSION}")
             appendLine("**JDA Version**: ${JDAInfo.VERSION}")

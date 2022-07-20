@@ -19,6 +19,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.components.buttons.Button
 
 class HelpCommand : TextCommand {
     override val name = "help"
@@ -36,17 +37,29 @@ class HelpCommand : TextCommand {
 
             action.queue()
         } else {
+            val inviteLink = Immutable.INVITE_LINK_FORMAT.format(
+                event.jda.selfUser.id,
+                event.jda.retrieveApplicationInfo().await().permissionsRaw,
+            )
+
+            val buttons = setOf(
+                Button.link(inviteLink, "Invite Link"),
+                Button.link(Immutable.GITHUB_REPOSITORY, "GitHub Repository"),
+            )
+
             try {
                 val dm = event.author.openPrivateChannel().await()
 
-                dm.sendMessageEmbeds(getCommandList(event.jda, event.author, false)).await()
+                dm.sendMessageEmbeds(getCommandList(event.jda, event.author, false))
+                    .setActionRow(buttons)
+                    .await()
 
                 event.message.addReaction(Emoji.fromUnicode("\u2705")).queue(null) {}
             } catch (_: ErrorResponseException) {
                 event.channel.sendMessageEmbeds(getCommandList(event.jda, event.author,
                     isFromSlashCommand = false,
                     isInDm = false,
-                )).queue()
+                )).setActionRow(buttons).queue()
             }
         }
     }
@@ -60,7 +73,18 @@ class HelpCommand : TextCommand {
             command?.let { event.replyEmbeds(it.getHelp(event.jda)).setEphemeral(true).queue() }
                 ?: throw CommandException("The provided command name is invalid!")
         } else {
+            val inviteLink = Immutable.INVITE_LINK_FORMAT.format(
+                event.jda.selfUser.id,
+                event.jda.retrieveApplicationInfo().await().permissionsRaw,
+            )
+
+            val buttons = setOf(
+                Button.link(inviteLink, "Invite Link"),
+                Button.link(Immutable.GITHUB_REPOSITORY, "GitHub Repository"),
+            )
+
             event.replyEmbeds(getCommandList(event.jda, event.user, true, isInDm = false))
+                .addActionRow(buttons)
                 .setEphemeral(true)
                 .queue()
         }
@@ -191,7 +215,7 @@ class HelpCommand : TextCommand {
         }
     }
 
-    private suspend fun getCommandList(
+    private fun getCommandList(
         jda: JDA,
         author: User,
         isFromSlashCommand: Boolean,
@@ -199,17 +223,10 @@ class HelpCommand : TextCommand {
     ) = buildEmbed {
         color = Immutable.SUCCESS
 
-        val inviteLink = Immutable.INVITE_LINK_FORMAT.format(
-            jda.selfUser.id,
-            jda.retrieveApplicationInfo().await().permissionsRaw,
-        )
-
         appendLine("Commands in italics can only be used either as classic text commands " +
                 "(the ones prefixed with \"${Immutable.DEFAULT_PREFIX}\") " +
                 "or slash commands (the ones prefixed with \"/\")!")
         appendLine("The rest of commands can be used either way!")
-        appendLine()
-        appendLine("**[Invite Link]($inviteLink)** \u2022 **[GitHub Repository](${Immutable.GITHUB_REPOSITORY})**")
 
         author {
             name = "${jda.selfUser.name} Help"
