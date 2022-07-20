@@ -30,8 +30,9 @@ class HelpCommand : TextCommand {
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         if (args !== null) {
             val command = CommandHandler[args.lowercase()]
+                ?: CommandHandler.getGenericCommand(args.lowercase())
             val action = command?.let { event.channel.sendMessageEmbeds(it.getHelp(event.jda)) }
-                ?: throw CommandException("The specified command has not been found!")
+                ?: throw CommandException("The provided command name is invalid!")
 
             action.queue()
         } else {
@@ -51,11 +52,12 @@ class HelpCommand : TextCommand {
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
-        val option = event.getOption("command")
+        val option = event.getOption("command")?.asString?.lowercase()
 
         if (option !== null) {
-            CommandHandler.getGenericCommand(option.asString)
-                ?.let { event.replyEmbeds(it.getHelp(event.jda)).setEphemeral(true).queue() }
+            val command = CommandHandler[option] ?: CommandHandler.getGenericCommand(option)
+
+            command?.let { event.replyEmbeds(it.getHelp(event.jda)).setEphemeral(true).queue() }
                 ?: throw CommandException("The provided command name is invalid!")
         } else {
             event.replyEmbeds(getCommandList(event.jda, event.user, true, isInDm = false))
