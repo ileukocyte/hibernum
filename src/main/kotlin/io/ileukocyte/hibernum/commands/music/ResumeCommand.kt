@@ -11,7 +11,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
 class ResumeCommand : TextCommand {
     override val name = "resume"
-    override val description = "Resume the music after a pause"
+    override val description = "Resumes the music after a pause"
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val audioPlayer = event.guild.audioPlayer ?: return

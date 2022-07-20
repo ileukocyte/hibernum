@@ -204,7 +204,7 @@ class HelpCommand : TextCommand {
             jda.retrieveApplicationInfo().await().permissionsRaw,
         )
 
-        appendLine("Commands in italics can only be used either as text commands " +
+        appendLine("Commands in italics can only be used either as classic text commands " +
                 "(the ones prefixed with \"${Immutable.DEFAULT_PREFIX}\") " +
                 "or slash commands (the ones prefixed with \"/\")!")
         appendLine("The rest of commands can be used either way!")

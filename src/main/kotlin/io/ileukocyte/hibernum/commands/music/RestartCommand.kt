@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 class RestartCommand : TextCommand {
     override val name = "restart"
     override val description = "Restarts the track that is currently playing"
+    override val aliases = setOf("replay")
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
