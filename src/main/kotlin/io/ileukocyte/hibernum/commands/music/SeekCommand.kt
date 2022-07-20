@@ -7,6 +7,7 @@ import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendSuccess
 import io.ileukocyte.hibernum.utils.TIME_CODE_REGEX
+import io.ileukocyte.hibernum.utils.durationToMillis
 import io.ileukocyte.hibernum.utils.timeCodeToMillis
 
 import kotlin.math.max
@@ -23,7 +24,12 @@ class SeekCommand : TextCommand {
     override val aliases = setOf("jump")
     override val usages = setOf(setOf("[r(ewind):/f(ast-forward):]time code".toClassicTextUsage()))
     override val options = setOf(
-        OptionData(OptionType.STRING, "time", "The time to jump to (e.g. 0:30 sets the exact time)", true),
+        OptionData(
+            OptionType.STRING,
+            "time",
+            "The time to jump to (e.g. 1:30 (or 1m30s) sets the exact time)",
+            true,
+        ),
         OptionData(OptionType.STRING, "mode", "The direction to jump to (backwards/forwards)")
             .addChoices(
                 Choice("Rewind", "r"),
@@ -36,12 +42,14 @@ class SeekCommand : TextCommand {
 
         if (audioPlayer.player.playingTrack !== null) {
             val time = (args ?: throw NoArgumentsException).takeIf {
-                it
+                val noPrefixes = it
                     .removePrefix("rewind:")
                     .removePrefix("r:")
                     .removePrefix("fast-forward:")
                     .removePrefix("f:")
-                    .matches(TIME_CODE_REGEX)
+
+                noPrefixes matches TIME_CODE_REGEX
+                        || "([1-9]\\d*)([smh])".toRegex().containsMatchIn(noPrefixes)
             } ?: throw CommandException("You have provided an argument of a wrong format!")
 
             if (event.member?.voiceState?.channel != event.guild.selfMember.voiceState?.channel) {
@@ -57,7 +65,13 @@ class SeekCommand : TextCommand {
                 .removePrefix("r:")
                 .removePrefix("fast-forward:")
                 .removePrefix("f:")
-                .let { timeCodeToMillis(it) }
+                .let {
+                    if (it matches TIME_CODE_REGEX) {
+                        timeCodeToMillis(it)
+                    } else {
+                        durationToMillis(it)
+                    }
+                }
 
             if (!time.startsWith("rewind:") && !time.startsWith("r:")) {
                 if (time.startsWith("fast-forward:") || time.startsWith("f:")) {
@@ -93,7 +107,7 @@ class SeekCommand : TextCommand {
         if (audioPlayer.player.playingTrack !== null) {
             val time = (event.getOption("time")?.asString ?: throw NoArgumentsException)
                 .lowercase()
-                .takeIf { it matches TIME_CODE_REGEX }
+                .takeIf { it matches TIME_CODE_REGEX || "([1-9]\\d*)([smh])".toRegex().containsMatchIn(it) }
                 ?: throw CommandException("You have provided an argument of a wrong format!")
             val mode = event.getOption("mode")?.asString.orEmpty()
 
@@ -105,7 +119,11 @@ class SeekCommand : TextCommand {
                 throw CommandException("The track cannot be sought since it is recognized as a stream!")
             }
 
-            val millis = timeCodeToMillis(time)
+            val millis = if (time matches TIME_CODE_REGEX) {
+                timeCodeToMillis(time)
+            } else {
+                durationToMillis(time)
+            }
 
             if (mode != "r") {
                 if (mode == "f") {
