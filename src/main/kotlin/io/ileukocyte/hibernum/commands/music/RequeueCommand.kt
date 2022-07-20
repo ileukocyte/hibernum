@@ -16,7 +16,8 @@ import org.jetbrains.kotlin.utils.addToStdlib.cast
 class RequeueCommand : TextCommand {
     override val name = "requeue"
     override val description = "Adds the specified (or currently playing) song to the end of the queue"
-    override val usages = setOf(setOf("song"))
+    override val aliases = setOf("re-add", "readd", "re-queue")
+    override val usages = setOf(setOf("song".toClassicTextUsage()))
     override val options = setOf(
         OptionData(OptionType.INTEGER, "song", "The number of the song to readd"))
 

@@ -31,7 +31,7 @@ class QueueCommand : TextCommand {
     override val name = "queue"
     override val description = "Shows the current playlist"
     override val aliases = setOf("q", "playlist")
-    override val usages = setOf(setOf("page (optional)"))
+    override val usages = setOf(setOf("page".toClassicTextUsage(true)))
     override val options = setOf(
         OptionData(OptionType.INTEGER, "page", "Initial page number"))
     override val eliminateStaleInteractions = false

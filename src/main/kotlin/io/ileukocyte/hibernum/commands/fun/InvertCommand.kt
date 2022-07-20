@@ -33,9 +33,9 @@ class InvertCommand : TextCommand, ContextCommand {
             "a profile picture of the mentioned user (or yours in case of no arguments provided)"
     override val aliases = setOf("negate", "negative")
     override val usages = setOf(
-        setOf("image file"),
-        setOf("image link"),
-        setOf("user mention"),
+        setOf("image file".toClassicTextUsage(true)),
+        setOf("image link".toClassicTextUsage(true)),
+        setOf("user mention".toClassicTextUsage(true)),
     )
     override val options = setOf(
         OptionData(OptionType.STRING, "link", "The provided image"),

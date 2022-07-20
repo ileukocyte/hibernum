@@ -26,7 +26,7 @@ import se.michaelthelin.spotify.model_objects.specification.Track
 class SpotifyCommand : TextCommand {
     override val name = "spotify"
     override val description = "Searches a Spotify track by the provided query and sends some information about one"
-    override val usages = setOf(setOf("query"))
+    override val usages = setOf(setOf("query".toClassicTextUsage()))
     override val options = setOf(
         OptionData(OptionType.STRING, "query", "A search term", true))
     override val cooldown = 5L

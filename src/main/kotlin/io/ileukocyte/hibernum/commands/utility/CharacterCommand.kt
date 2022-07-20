@@ -23,7 +23,7 @@ class CharacterCommand : TextCommand {
     override val aliases = setOf("character")
     override val options = setOf(
         OptionData(OptionType.STRING, "input", "The characters provided"))
-    override val usages = setOf(setOf("input"))
+    override val usages = setOf(setOf("input".toClassicTextUsage()))
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val input = args

@@ -27,7 +27,10 @@ class PlayCommand : TextCommand {
         OptionData(OptionType.STRING, "query", "A link or a search term"),
         OptionData(OptionType.ATTACHMENT, "attachment", "The media file to play"),
     )
-    override val usages = setOf(setOf("query"), setOf("file"))
+    override val usages = setOf(
+        setOf("query".toClassicTextUsage()),
+        setOf("file".toClassicTextUsage()),
+    )
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         event.member?.voiceState?.channel?.let {

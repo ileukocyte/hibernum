@@ -28,9 +28,9 @@ class RoleCommand : TextCommand {
     override val description = "Sends the available information about the specified role"
     override val aliases = setOf("roleinfo", "role-info")
     override val usages = setOf(
-        setOf("role name (optional)"),
-        setOf("role mention (optional)"),
-        setOf("role ID (optional)"),
+        setOf("role name".toClassicTextUsage()),
+        setOf("role mention".toClassicTextUsage()),
+        setOf("role ID".toClassicTextUsage()),
     )
     override val options = setOf(
         OptionData(OptionType.ROLE, "role", "The role to check information about", true))

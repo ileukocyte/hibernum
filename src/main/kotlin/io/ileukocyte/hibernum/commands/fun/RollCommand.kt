@@ -26,7 +26,10 @@ class RollCommand : TextCommand {
             .setMinValue(1)
             .setMaxValue(25),
     )
-    override val usages = setOf(setOf("number of dice (optional, 1–25)>d<number of sides (2–250)"))
+    override val usages = setOf(
+        setOf("<number of dice (optional, 1–25)>d<number of sides (2–250)>"
+            .toClassicTextUsage(applyDefaultAffixes = false))
+    )
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val input = args?.let { "(?:\\d+)?d(\\d+)".toRegex().find(it)?.value }

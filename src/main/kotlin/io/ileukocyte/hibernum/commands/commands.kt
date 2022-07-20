@@ -154,9 +154,17 @@ interface GenericCommand : Comparable<GenericCommand> {
  * @see SubcommandHolder
  */
 interface TextCommand : GenericCommand {
+    /**
+     * A property containing a set of alternative classic text command names
+     */
     val aliases: Set<String>
         get() = emptySet()
-    val usages: Set<Set<String>>
+
+    /**
+     * A property containing a set of possible classic text usage groups that is
+     * used for providing help for the command
+     */
+    val usages: Set<ClassicTextUsageGroup>
         get() = emptySet()
 
     /**
@@ -201,7 +209,22 @@ interface TextCommand : GenericCommand {
      * The [SlashCommandInteractionEvent] occurring once the command is invoked
      */
     suspend operator fun invoke(event: SlashCommandInteractionEvent)
+
+    data class ClassicTextUsage(
+        val option: String,
+        val isOptional: Boolean = false,
+        val applyDefaultAffixes: Boolean = true,
+    ) {
+        override fun toString() = option
+    }
+
+    fun String.toClassicTextUsage(
+        isOptional: Boolean = false,
+        applyDefaultAffixes: Boolean = true,
+    ) = ClassicTextUsage(this, isOptional, applyDefaultAffixes)
 }
+
+typealias ClassicTextUsageGroup = Collection<TextCommand.ClassicTextUsage>
 
 /**
  * A type of command that can be used as a text command exclusively

@@ -28,7 +28,7 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
     override val contextName = "Execute Kotlin"
     override val description = "Executes the attached Kotlin code"
     override val aliases = setOf("exec", "execute", "kotlin")
-    override val usages = setOf(setOf("Kotlin code"))
+    override val usages = setOf(setOf("Kotlin code".toClassicTextUsage()))
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val code = args?.run {

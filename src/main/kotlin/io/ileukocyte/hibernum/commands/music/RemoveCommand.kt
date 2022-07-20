@@ -14,7 +14,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 class RemoveCommand : TextCommand {
     override val name = "remove"
     override val description = "Removes the selected track from the queue"
-    override val usages = setOf(setOf("song"))
+    override val usages = setOf(setOf("song".toClassicTextUsage()))
     override val options = setOf(
         OptionData(OptionType.INTEGER, "song", "The number of the song to remove", true))
 

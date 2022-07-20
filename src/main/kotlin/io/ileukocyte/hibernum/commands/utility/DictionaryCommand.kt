@@ -43,7 +43,7 @@ class DictionaryCommand : TextCommand {
     override val aliases = setOf("define", "definition", "dict", "merriam-webster", "mw")
     override val options = setOf(
         OptionData(OptionType.STRING, "term", "The term to define", true))
-    override val usages = setOf(setOf("term"))
+    override val usages = setOf(setOf("term".toClassicTextUsage()))
     override val cooldown = 5L
     override val eliminateStaleInteractions = false
 

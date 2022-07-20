@@ -34,7 +34,7 @@ class GuessNumberCommand : TextCommand {
             .setMinValue(6)
             .setMaxValue(500_000),
     )
-    override val usages = setOf(setOf("min", "max"))
+    override val usages = setOf(setOf("min".toClassicTextUsage(), "max".toClassicTextUsage()))
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val (min, max) = args?.split(" ")?.filter { it.toIntOrNull() !== null }?.take(2)

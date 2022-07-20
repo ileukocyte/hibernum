@@ -31,7 +31,7 @@ class EmoteCommand : TextCommand {
     )
     override val options = setOf(
         OptionData(OptionType.STRING, "emote", "The custom emoji to check information about", true))
-    override val usages = setOf(setOf("custom emoji"))
+    override val usages = setOf(setOf("custom emoji".toClassicTextUsage()))
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val emote = event.message.mentions.customEmojis.firstOrNull()

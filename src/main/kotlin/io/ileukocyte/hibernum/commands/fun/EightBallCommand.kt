@@ -15,7 +15,7 @@ class EightBallCommand : TextCommand {
     override val name = "8ball"
     override val description = "Asks your question of the Magic 8 Ball"
     override val aliases = setOf("eightball", "eight-ball")
-    override val usages = setOf(setOf("question"))
+    override val usages = setOf(setOf("question".toClassicTextUsage()))
     override val options = setOf(
         OptionData(OptionType.STRING, "question", "The question to ask of the Magic 8 Ball", true))
 

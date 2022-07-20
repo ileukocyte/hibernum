@@ -34,9 +34,9 @@ class UserCommand : TextCommand, UserContextOnlyCommand {
     override val description = "Sends either detailed information about the specified user's account or their profile picture"
     override val aliases = setOf("member", "memberinfo", "member-info", "userinfo", "user-info")
     override val usages = setOf(
-        setOf("user name (optional)"),
-        setOf("user mention (optional)"),
-        setOf("user ID (optional)"),
+        setOf("user name".toClassicTextUsage(true)),
+        setOf("user mention".toClassicTextUsage(true)),
+        setOf("user ID".toClassicTextUsage(true)),
     )
     override val options = setOf(
         OptionData(OptionType.USER, "user", "The user to check information about"))

@@ -5,6 +5,7 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.*
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.capitalizeAll
+import io.ileukocyte.hibernum.extensions.surroundWith
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asText
 
@@ -22,7 +23,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 class HelpCommand : TextCommand {
     override val name = "help"
     override val description = "Sends a list of all the bot's commands and provides the user with the documentation"
-    override val usages = setOf(setOf("command name (optional)"))
+    override val usages = setOf(setOf("command name".toClassicTextUsage(true)))
     override val options =
         setOf(OptionData(OptionType.STRING, "command", "The command to provide help for"))
 
@@ -107,8 +108,23 @@ class HelpCommand : TextCommand {
             if (usages.isNotEmpty()) {
                 field {
                     title = "Classic Text Usages"
-                    description =
-                        usages.joinToString("\n") { "$nameWithPrefix ${it.joinToString(" ") { u -> "<$u>" }}" }
+                    description = usages.joinToString("\n") { group ->
+                        "$nameWithPrefix ${group.joinToString(" ") { usage ->
+                            usage.let {
+                                if (it.isOptional) {
+                                    "$it (optional)"
+                                } else {
+                                    "$it"
+                                }
+                            }.let {
+                                if (usage.applyDefaultAffixes) {
+                                    it.surroundWith("<", ">")
+                                } else {
+                                    it
+                                }
+                            }
+                        }}"
+                    }
                 }
             }
 

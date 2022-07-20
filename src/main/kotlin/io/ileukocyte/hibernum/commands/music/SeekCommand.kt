@@ -21,14 +21,14 @@ class SeekCommand : TextCommand {
     override val name = "seek"
     override val description = "Jumps to the specified time while playing the track"
     override val aliases = setOf("jump")
-    override val usages = setOf(setOf("[r(ewind):/f(ast-forward):]time code"))
+    override val usages = setOf(setOf("[r(ewind):/f(ast-forward):]time code".toClassicTextUsage()))
     override val options = setOf(
         OptionData(OptionType.STRING, "time", "The time to jump to (e.g. 0:30 sets the exact time)", true),
         OptionData(OptionType.STRING, "mode", "The direction to jump to (backwards/forwards)")
             .addChoices(
                 Choice("Rewind", "r"),
                 Choice("Fast Forward", "f"),
-            )
+            ),
     )
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {

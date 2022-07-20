@@ -75,7 +75,10 @@ fun <N : Number> String.singularOrPlural(number: N) =
     this + "s".takeUnless { number.toLong() == 1L }.orEmpty()
 
 fun String.surroundWith(charSequence: CharSequence) = "$charSequence$this$charSequence"
+fun String.surroundWith(prefix: CharSequence, suffix: CharSequence) = "$prefix$this$suffix"
+
 fun String.surroundWith(char: Char) = "$char$this$char"
+fun String.surroundWith(prefix: Char, suffix: Char) = "$prefix$this$suffix"
 
 operator fun String.times(num: Int) = buildString {
     repeat(num) { append(this@times) }

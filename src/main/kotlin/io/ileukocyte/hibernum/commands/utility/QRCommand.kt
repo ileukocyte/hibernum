@@ -45,13 +45,16 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
     override val name = "qr"
     override val contextName = "QR Code"
     override val description = "Generates or reads a QR code from the provided input"
+    override val cooldown = 5L
     override val subcommands = mapOf(
         SubcommandData("generate", "Generates a QR code from the provided input") to ::generate,
         SubcommandData("read", "Reads a QR code from the provided image")
             .addOption(OptionType.ATTACHMENT, "image", "The image to read a QR code from", true) to ::read,
     )
-    override val usages = setOf(setOf("input"), setOf("image"))
-    override val cooldown = 5L
+    override val usages = setOf(
+        setOf("text input".toClassicTextUsage()),
+        setOf("image".toClassicTextUsage()),
+    )
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         event.message.attachments.firstOrNull { it.isImage }?.let { attachment ->

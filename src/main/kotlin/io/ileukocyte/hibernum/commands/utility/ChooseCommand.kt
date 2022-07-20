@@ -17,7 +17,8 @@ class ChooseCommand : TextCommand {
     override val fullDescription =
         "$description (if you want to use \"|\" within any option, you can prefix the character with \"\\\\\")"
     override val aliases = setOf("random")
-    override val usages = setOf(setOf("option 1> | <option 2> | ... | <option n"))
+    override val usages = setOf(
+        setOf("<option 1> | <option 2> | ... | <option N>".toClassicTextUsage(applyDefaultAffixes = false)))
     override val options = setOf(
         OptionData(OptionType.STRING, "options", "The options provided (split with \"|\")", true))
 

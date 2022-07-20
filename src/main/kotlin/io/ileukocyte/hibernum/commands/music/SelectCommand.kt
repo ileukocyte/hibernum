@@ -25,7 +25,7 @@ import org.jetbrains.kotlin.utils.addToStdlib.cast
 class SelectCommand : TextCommand {
     override val name = "select"
     override val description = "Selects another track from the queue and plays it"
-    override val usages = setOf(setOf("song"))
+    override val usages = setOf(setOf("song".toClassicTextUsage()))
     override val options = setOf(
         OptionData(OptionType.INTEGER, "song", "The number of the song to play", true))
 

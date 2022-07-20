@@ -36,7 +36,7 @@ class YouTubeCommand : TextCommand {
     override val aliases = setOf("yt", "yts", "ytsearch")
     override val options = setOf(
         OptionData(OptionType.STRING, "query", "A link or a search term", true))
-    override val usages = setOf(setOf("query"))
+    override val usages = setOf(setOf("query".toClassicTextUsage()))
     override val cooldown = 5L
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {

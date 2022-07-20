@@ -36,7 +36,7 @@ class KillCommand : TextCommand {
     override val name = "kill"
     override val description = "Sends a list of running processes or terminates the one provided by its ID"
     override val aliases = setOf("kill-process", "terminate")
-    override val usages = setOf(setOf("process ID (optional)"))
+    override val usages = setOf(setOf("process ID".toClassicTextUsage(true)))
     override val options = setOf(OptionData(OptionType.STRING, "pid", "The ID of the process to kill"))
     override val eliminateStaleInteractions = false
 

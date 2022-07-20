@@ -29,7 +29,7 @@ class WeatherCommand : TextCommand {
     override val name = "weather"
     override val description = "Sends the weather in the specified location"
     override val cooldown = 3L
-    override val usages = setOf(setOf("location"))
+    override val usages = setOf(setOf("location".toClassicTextUsage()))
     override val options = setOf(
         OptionData(OptionType.STRING, "location", "A location to get the weather for", true))
 
