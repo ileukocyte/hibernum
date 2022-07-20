@@ -28,36 +28,34 @@ class RequeueCommand : TextCommand {
 
         val audioPlayer = event.guild.audioPlayer ?: return
 
-        if (audioPlayer.scheduler.queue.isNotEmpty()) {
-            if (event.member?.voiceState?.channel == event.guild.selfMember.voiceState?.channel) {
+        if (event.member?.voiceState?.channel == event.guild.selfMember.voiceState?.channel) {
+            if (audioPlayer.player.playingTrack !== null) {
                 val track = number?.let {
                     audioPlayer.scheduler.queue.toList().getOrNull(it.dec())
                         ?: throw CommandException("You have specified a wrong number!")
-                } ?: audioPlayer.player.playingTrack
-                    ?: throw CommandException("Somehow no track appears to be currently playing!")
+                } ?: audioPlayer.player.playingTrack ?: return
 
                 audioPlayer.scheduler += track.makeClone().apply {
                     userData = track.userData.cast<TrackUserData>()
                         .copy(announceQueueing = true)
                 }
             } else {
-                throw CommandException("You are not connected to the required voice channel!")
+                throw CommandException("No track is currently playing!")
             }
         } else {
-            throw CommandException("The current queue is empty!")
+            throw CommandException("You are not connected to the required voice channel!")
         }
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val audioPlayer = event.guild?.audioPlayer ?: return
 
-        if (audioPlayer.scheduler.queue.isNotEmpty()) {
-            if (event.member?.voiceState?.channel == event.guild?.selfMember?.voiceState?.channel) {
+        if (event.member?.voiceState?.channel == event.guild?.selfMember?.voiceState?.channel) {
+            if (audioPlayer.player.playingTrack !== null) {
                 val track = event.getOption("song")?.asInt?.let {
                     audioPlayer.scheduler.queue.toList().getOrNull(it.dec())
                         ?: throw CommandException("You have specified a wrong number!")
-                } ?: audioPlayer.player.playingTrack
-                    ?: throw CommandException("Somehow no track appears to be currently playing!")
+                } ?: audioPlayer.player.playingTrack ?: return
 
                 audioPlayer.scheduler += track.makeClone().apply {
                     userData = track.userData.cast<TrackUserData>().copy(
@@ -66,10 +64,10 @@ class RequeueCommand : TextCommand {
                     )
                 }
             } else {
-                throw CommandException("You are not connected to the required voice channel!")
+                throw CommandException("No track is currently playing!")
             }
         } else {
-            throw CommandException("The current queue is empty!")
+            throw CommandException("You are not connected to the required voice channel!")
         }
     }
 }
