@@ -1,5 +1,7 @@
 package io.ileukocyte.hibernum.commands.general
 
+import com.sun.management.OperatingSystemMXBean
+
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.ClassicTextOnlyCommand
@@ -8,6 +10,11 @@ import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asText
+
+import java.lang.management.ManagementFactory
+import java.text.DecimalFormat
+
+import kotlin.math.min
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDAInfo
@@ -77,6 +84,7 @@ class AboutCommand : TextCommand {
                 CommandHandler.count { it is SlashOnlyCommand }.takeIf { it > 0 }?.let { "slash-only: $it" },
             )
             val discordCommands = jda.retrieveCommands().await()
+            val os = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean::class.java)
 
             appendLine(appInfo.description
                 .replace("Kotlin", "[Kotlin](https://kotlinlang.org/)")
@@ -84,37 +92,70 @@ class AboutCommand : TextCommand {
             )
             appendLine()
             appendLine(musicStreamingServersCount.takeIf { it > 0 }
-                ?.let { "Currently streaming music on **$it ${"server".singularOrPlural(it)}**" }
-                ?: "Currently is not streaming any music on any of all the servers"
+                ?.let { "Music is currently being streamed via the bot on **$it ${"server".singularOrPlural(it)}**" }
+                ?: "No music is currently being streamed via the bot on any of all the servers"
             )
             appendLine()
-            appendLine("**Developer**: ${if (guild.isMember(owner)) owner.asMention else owner.asTag}")
-            appendLine("**Bot Version**: ${Immutable.VERSION}")
-            appendLine("**JDA Version**: ${JDAInfo.VERSION}")
-            appendLine("**Discord Rest API Version**: ${JDAInfo.DISCORD_REST_VERSION}")
-            appendLine("**Kotlin Version**: ${KotlinVersion.CURRENT}")
-            appendLine("**Java Version**: ${System.getProperty("java.version") ?: "Unknown"}")
-            appendLine("**Total Commands**: ${CommandHandler.size}" +
-                    commandCount.filterNotNull().takeUnless { it.isEmpty() }
-                        ?.let { " (${it.joinToString(", ")})" }.orEmpty())
-            appendLine("**Slash Commands**: ${discordCommands.count { it.type == Type.SLASH }}")
-            appendLine("**Message Context Commands**: ${discordCommands.count { it.type == Type.MESSAGE }}")
-            appendLine("**User Context Commands**: ${discordCommands.count { it.type == Type.USER }}")
-            append("**Servers**: ${jda.guildCache.size()}")
+            appendLine("**Developer**: ${
+                if (guild.isMember(owner)) {
+                    owner.asMention
+                } else {
+                    owner.asTag
+                }
+            }")
 
-            if (jda.unavailableGuilds.isNotEmpty()) {
-                append(" (${jda.unavailableGuilds.size} servers are unavailable)")
+            field {
+                title = "Version Information"
+                description = buildString {
+                    appendLine("**Bot Version**: ${Immutable.VERSION}")
+                    appendLine("**JDA Version**: ${JDAInfo.VERSION}")
+                    appendLine("**Discord Rest API Version**: ${JDAInfo.DISCORD_REST_VERSION}")
+                    appendLine("**Kotlin Version**: ${KotlinVersion.CURRENT}")
+                    appendLine("**Java Version**: ${System.getProperty("java.version") ?: "Unknown"}")
+                }
             }
 
-            appendLine()
-            appendLine("**Active Threads**: ${Thread.activeCount()}")
-            appendLine("**Uptime**: ${asText(jda.uptime)}")
-            appendLine("**Rest Ping**: $restPing ms")
-            appendLine("**Gateway Ping**: ${jda.gatewayPing} ms")
+            field {
+                title = "Command Statistics"
+                description = buildString {
+                    appendLine("**Total Commands**: ${CommandHandler.size}" +
+                            commandCount.filterNotNull().takeUnless { it.isEmpty() }
+                                ?.let { " (${it.joinToString(", ")})" }.orEmpty())
+                    appendLine("**Slash Commands**: ${discordCommands.count { it.type == Type.SLASH }}")
+                    appendLine("**Message Context Commands**: ${discordCommands.count { it.type == Type.MESSAGE }}")
+                    appendLine("**User Context Commands**: ${discordCommands.count { it.type == Type.USER }}")
+                    append("**Servers**: ${jda.guildCache.size()}")
+
+                    if (jda.unavailableGuilds.isNotEmpty()) {
+                        append(" (${jda.unavailableGuilds.size} servers are unavailable)")
+                    }
+                }
+            }
+
+            field {
+                title = "Runtime Statistics"
+                description = buildString {
+                    appendLine("**Uptime**: ${asText(jda.uptime)}")
+                    appendLine("**Active Threads**: ${Thread.activeCount()}")
+                    appendLine("**JVM CPU Usage**: ${DecimalFormat("###.##%")
+                        .format(min(0.0001, os.processCpuLoad))}")
+                    appendLine("**CPU Cores**: ${os.availableProcessors}")
+                    appendLine("**Operating System**: ${os.name} (${os.arch}, ${os.version})")
+                }
+            }
+
+            field {
+                title = "Latency Statistics"
+                description = buildString {
+                    appendLine("**Rest Ping**: $restPing ms")
+                    appendLine("**Gateway Ping**: ${jda.gatewayPing} ms")
+                }
+            }
         }
 
         author {
             name = jda.selfUser.name
+            url = Immutable.GITHUB_REPOSITORY
             iconUrl = jda.selfUser.effectiveAvatarUrl
         }
 
