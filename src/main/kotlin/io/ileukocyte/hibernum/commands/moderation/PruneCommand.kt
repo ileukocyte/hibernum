@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.IMentionable
 import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.entities.MessageType
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
@@ -19,19 +20,21 @@ import org.apache.commons.validator.routines.UrlValidator
 
 class PruneCommand : SlashOnlyCommand {
     override val name = "prune"
-    override val description = "Deletes messages by the amount and filters provided"
+    override val description = "Deletes the specified amount of messages matching the provided filters"
     override val options = setOf(
         OptionData(OptionType.INTEGER, "count", "The amount of messages to delete (up to 1000)", true)
             .setMinValue(1)
             .setMaxValue(1000),
         OptionData(OptionType.USER, "user", "The user whose messages are to (not) delete"),
-        OptionData(OptionType.STRING, "filter", "Type of messages to delete")
+        OptionData(OptionType.STRING, "filter", "Type of messages to delete or type of their content")
             .let { o ->
                 val options = sortedSetOf(
+                    "action components",
                     "all attachments",
                     "all embeds",
-                    "bots",
                     "bot embeds",
+                    "bot messages",
+                    "discord commands",
                     "gifs",
                     "images",
                     "invites",
@@ -39,9 +42,11 @@ class PruneCommand : SlashOnlyCommand {
                     "mentions",
                     "no attachments",
                     "stickers",
-                    "unpinned",
+                    "system messages",
+                    "unpinned messages",
                     "users aside from",
                     "videos",
+                    "webhook messages",
                 )
 
                 val choices = options.map {
@@ -56,7 +61,7 @@ class PruneCommand : SlashOnlyCommand {
 
                 o.addChoices(choices)
             },
-        OptionData(OptionType.STRING, "text-filter", "Type of message content check")
+        OptionData(OptionType.STRING, "text-filter", "Type of message text content filter")
             .addChoice("Contains", "contains")
             .addChoice("Does Not Contain", "not")
             .addChoice("Starts With", "startswith")
@@ -89,8 +94,20 @@ class PruneCommand : SlashOnlyCommand {
                     "in case of the \"mention\" option being provided!")
         }
 
-        if (filterOption == "bot-embeds" && event.getOption("user")?.asUser?.isBot == false) {
+        if (filterOption?.startsWith("bot-") == true
+                && event.getOption("user")?.asUser?.isBot == false) {
             throw CommandException("No messages to delete have been found!")
+        }
+
+        if (filterOption in setOf("system-messages", "webhook-messages")
+                && event.getOption("user") !== null) {
+            throw CommandException("The \"user\" option cannot be used " +
+                    "if the \"filter\" option is set to \"System Messages\" or \"Webhook Messages\"!")
+        }
+
+        if (filterOption == "system-messages" && event.getOption("text-filter") !== null) {
+            throw CommandException("The \"text-filter\" option cannot be used " +
+                    "if the \"filter\" option is set to \"System Messages\"!")
         }
 
         val count = event.getOption("count")?.asLong?.toInt() ?: return
@@ -109,10 +126,13 @@ class PruneCommand : SlashOnlyCommand {
                 val mention = event.getOption("mention")?.asMentionable
 
                 when (it) {
+                    "action-components" -> message.actionRows.isNotEmpty()
                     "all-attachments" -> message.attachments.isNotEmpty()
                     "all-embeds" -> message.embeds.isNotEmpty()
-                    "bots" -> message.author.isBot
+                    "bot-messages" -> message.author.isBot
                     "bot-embeds" -> message.author.isBot && message.embeds.isNotEmpty()
+                    "discord-commands" -> message.type == MessageType.SLASH_COMMAND
+                            || message.type == MessageType.CONTEXT_COMMAND
                     "gifs" -> message.attachments.any { a -> a.fileExtension == "gif" }
                             || message.contentRaw.split("\\s+".toRegex())
                                 .any { a -> UrlValidator.getInstance().isValid(a) && (".gif" in a || "-gif-" in a) }
@@ -132,9 +152,11 @@ class PruneCommand : SlashOnlyCommand {
                     }
                     "no-attachments" -> message.attachments.isEmpty()
                     "stickers" -> message.stickers.isNotEmpty()
-                    "unpinned" -> !message.isPinned
+                    "system-messages" -> message.type.isSystem && message.type.canDelete()
+                    "unpinned-messages" -> !message.isPinned
                     "users-aside-from" -> true
                     "videos" -> message.attachments.any { a -> a.isVideo }
+                    "webhook-messages" -> message.isWebhookMessage
                     else -> true
                 }
             } ?: true
@@ -226,13 +248,20 @@ class PruneCommand : SlashOnlyCommand {
             append("embed ")
         }
 
+        if (filter == "system-messages") {
+            append("system ")
+        }
+
         append("message".singularOrPlural(deletedMessages))
 
         filter?.let {
             append(when (it) {
+                "action-components" -> " containing any action components (e.g. buttons or menus)"
                 "all-attachments" -> " containing any attachments"
-                "bots", "bot-embeds" -> " sent by bots" +
+                "bot-messages", "bot-embeds" -> " sent by bots" +
                         user?.takeIf { u -> u.isBot }?.asMention?.let { u -> " ($u)" }.orEmpty()
+                "discord-commands" -> " that ${if (deletedMessages == 1) "is a" else "are"} " +
+                        "response".singularOrPlural(deletedMessages) + " to a slash or context menu command"
                 "gifs" -> " containing any GIFs"
                 "images" -> " containing any images"
                 "invites" -> " containing any invite links"
@@ -240,8 +269,9 @@ class PruneCommand : SlashOnlyCommand {
                 "mentions" -> " mentioning ${mention?.asMention ?: "any users or any roles"}"
                 "no-attachments" -> " containing no attachments"
                 "stickers" -> " containing any stickers"
-                "unpinned" -> " that ${if (deletedMessages == 1) "is" else "are"} not pinned"
+                "unpinned-messages" -> " that ${if (deletedMessages == 1) "is" else "are"} not pinned"
                 "videos" -> " containing any videos"
+                "webhook-messages" -> " sent by webhooks"
                 else -> ""
             })
         }
@@ -251,20 +281,32 @@ class PruneCommand : SlashOnlyCommand {
                 append(",".takeIf { user !== null && filter != "bot-embeds" } ?: " and")
             }
 
-            append(when (it) {
+            var clause = when (it) {
                 "contains" -> " containing the provided text"
                 "not" -> " not containing the provided text"
                 "startswith" -> " starting with the provided text"
-                "equals" -> " with the content equal to the provided text"
-                "doesntequal" -> " with the content not equal to the provided text"
+                "equals" -> " having the content equal to the provided text"
+                "doesntequal" -> " not having the content equal to the provided text"
                 else -> " ending with the provided text"
-            })
+            }
+
+            if (filter == "discord-commands" || filter == "unpinned-messages") {
+                clause = clause
+                    .replace("ing", "s".takeIf { deletedMessages == 1 }.orEmpty())
+                    .replace("not\\s(\\w)".toRegex(), "does not $1".takeIf { deletedMessages == 1 }
+                        ?: "do not $1")
+                    .replace("(do(?:es)?\\snot\\s\\w+(?=s))(s\\s)".toRegex(), "$1 ")
+                    .replace("havs", "has")
+                    .replace("hav", "have")
+            }
+
+            append(clause)
         }
 
         user?.takeUnless { filter == "bot-embeds" }?.let {
             if (filter?.takeUnless { f -> f == "users-aside-from" } !== null || textFilter !== null) {
                 if (filter?.takeUnless { f -> f == "users-aside-from" || f == "all-embeds" } !== null
-                    && textFilter !== null) {
+                        && textFilter !== null) {
                     append(",")
                 }
 
@@ -274,6 +316,10 @@ class PruneCommand : SlashOnlyCommand {
                     }
                 } else {
                     append(" and")
+
+                    if (filter == "discord-commands" || filter == "unpinned-messages") {
+                        append(" is".takeIf { deletedMessages == 1 } ?: " are")
+                    }
                 }
             }
 
