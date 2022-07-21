@@ -315,7 +315,7 @@ object CommandHandler : MutableSet<GenericCommand> {
                             } catch (_: IllegalStateException) {}
 
                             event.channel.sendMessage {
-                                content += event.user.asMention
+                                this += event.user
                                 embeds += defaultEmbed("The interaction has already expired!", EmbedType.FAILURE) {
                                     text = "This message will self-delete in 5 seconds"
                                 }
@@ -393,7 +393,7 @@ object CommandHandler : MutableSet<GenericCommand> {
                             } catch (_: IllegalStateException) {}
 
                             event.channel.sendMessage {
-                                content += event.user.asMention
+                                this += event.user
                                 embeds += defaultEmbed("The interaction has already expired!", EmbedType.FAILURE) {
                                     text = "This message will self-delete in 5 seconds"
                                 }

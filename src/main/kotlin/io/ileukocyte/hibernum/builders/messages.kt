@@ -3,6 +3,7 @@ package io.ileukocyte.hibernum.builders
 import net.dv8tion.jda.api.MessageBuilder
 import net.dv8tion.jda.api.entities.IMentionable
 import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.entities.sticker.StickerSnowflake
 import net.dv8tion.jda.api.interactions.components.ActionRow
 
 class KMessageBuilder {
@@ -13,6 +14,7 @@ class KMessageBuilder {
     val embeds = mutableListOf<MessageEmbed>()
     val actionRows = mutableListOf<ActionRow>()
     val mentions = mutableListOf<IMentionable>()
+    val stickers = mutableListOf<StickerSnowflake>()
 
     fun clear() {
         content = ""
@@ -21,6 +23,7 @@ class KMessageBuilder {
         embeds.clear()
         actionRows.clear()
         mentions.clear()
+        stickers.clear()
     }
 
     operator fun plusAssign(message: String) {
@@ -31,11 +34,20 @@ class KMessageBuilder {
         content += mention.asMention
     }
 
+    fun appendLine(line: String) {
+        this += "$line\n"
+    }
+
+    inline fun embed(block: KEmbedBuilder.() -> Unit) {
+        embeds += buildEmbed(block)
+    }
+
     @PublishedApi
     internal operator fun invoke() = MessageBuilder(content)
         .setTTS(isTTS)
         .setEmbeds(embeds)
         .setActionRows(actionRows)
+        .setStickers(stickers)
         .mention(mentions)
         .setNonce(nonce)
         .build()
