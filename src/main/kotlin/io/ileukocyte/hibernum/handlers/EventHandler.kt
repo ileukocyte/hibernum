@@ -19,6 +19,7 @@ import net.dv8tion.jda.api.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent
+import net.dv8tion.jda.api.events.interaction.GenericAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -45,6 +46,9 @@ object EventHandler : ListenerAdapter() {
         CommandHandler(event)
 
     override fun onModalInteraction(event: ModalInteractionEvent) =
+        CommandHandler(event)
+
+    override fun onGenericAutoCompleteInteraction(event: GenericAutoCompleteInteractionEvent) =
         CommandHandler(event)
 
     override fun onMessageContextInteraction(event: MessageContextInteractionEvent) =

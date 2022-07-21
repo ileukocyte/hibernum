@@ -4,6 +4,7 @@ package io.ileukocyte.hibernum.commands
 import io.ileukocyte.hibernum.extensions.capitalizeAll
 
 import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.events.interaction.GenericAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -210,6 +211,14 @@ interface TextCommand : GenericCommand {
      */
     suspend operator fun invoke(event: SlashCommandInteractionEvent)
 
+    /**
+     * A function that is executed when the slash command's option with auto-completion enabled is triggered
+     *
+     * @param event
+     * The [GenericAutoCompleteInteractionEvent] occurring once the option is triggered
+     */
+    suspend operator fun invoke(event: GenericAutoCompleteInteractionEvent) {}
+
     data class ClassicTextUsage(
         val option: String,
         val isOptional: Boolean = false,
@@ -239,6 +248,9 @@ interface ClassicTextOnlyCommand : TextCommand {
     override fun asJDASlashCommandData(): SlashCommandData? = null
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) =
+        throw UnsupportedOperationException("The command cannot be invoked as a slash command!")
+
+    override suspend fun invoke(event: GenericAutoCompleteInteractionEvent) =
         throw UnsupportedOperationException("The command cannot be invoked as a slash command!")
 }
 

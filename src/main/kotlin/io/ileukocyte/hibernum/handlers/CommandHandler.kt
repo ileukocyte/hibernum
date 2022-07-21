@@ -18,6 +18,7 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 
 import net.dv8tion.jda.api.entities.MessageType
+import net.dv8tion.jda.api.events.interaction.GenericAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -26,6 +27,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException
+import net.dv8tion.jda.api.interactions.commands.CommandAutoCompleteInteraction
 
 import org.jetbrains.kotlin.util.collectionUtils.filterIsInstanceAnd
 
@@ -453,7 +455,7 @@ object CommandHandler : MutableSet<GenericCommand> {
 
     /**
      * A function that handles [ButtonInteractionEvent] that occurs when
-     * a user response to a command's modal
+     * a user responds to a command's modal
      *
      * @param event
      * [ModalInteractionEvent] occurring once the command's modal is triggered
@@ -503,6 +505,27 @@ object CommandHandler : MutableSet<GenericCommand> {
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+
+    /**
+     * A function that handles [ButtonInteractionEvent] that occurs when
+     * the slash command's option with auto-completion enabled is triggered
+     *
+     * @param event
+     * [ModalInteractionEvent] occurring once the option is triggered
+     *
+     * @author Alexander Oksanich
+     */
+    internal operator fun invoke(event: GenericAutoCompleteInteractionEvent) {
+        if (event.isFromGuild) {
+            val interaction = event.interaction as CommandAutoCompleteInteraction
+
+            this[interaction.name]?.takeUnless { it is ClassicTextOnlyCommand }?.let { command ->
+                CoroutineScope(CommandContext).launch {
+                    command(event)
                 }
             }
         }

@@ -5,6 +5,7 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.*
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.capitalizeAll
+import io.ileukocyte.hibernum.extensions.getSearchPriority
 import io.ileukocyte.hibernum.extensions.surroundWith
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asText
@@ -14,9 +15,11 @@ import java.util.concurrent.TimeUnit
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.entities.emoji.Emoji
+import net.dv8tion.jda.api.events.interaction.GenericAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
+import net.dv8tion.jda.api.interactions.commands.CommandAutoCompleteInteraction
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.buttons.Button
@@ -25,8 +28,9 @@ class HelpCommand : TextCommand {
     override val name = "help"
     override val description = "Sends a list of all the bot's commands and provides the user with the documentation"
     override val usages = setOf(setOf("command name".toClassicTextUsage(true)))
-    override val options =
-        setOf(OptionData(OptionType.STRING, "command", "The command to provide help for"))
+    override val options = setOf(
+        OptionData(OptionType.STRING, "command", "The command to provide help for")
+            .setAutoComplete(true))
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         if (args !== null) {
@@ -89,6 +93,36 @@ class HelpCommand : TextCommand {
                 .queue()
         }
     }
+
+    override suspend fun invoke(event: GenericAutoCompleteInteractionEvent) {
+        val interaction = event.interaction as CommandAutoCompleteInteraction
+
+        interaction.getOption("command") { option ->
+            val query = option.asString
+
+            if (query.isNotEmpty()) {
+                searchCommandNames(query).takeUnless { it.isEmpty() }?.let {
+                    val commands = it.mapNotNull { name -> CommandHandler[name] }.distinct()
+                        .take(OptionData.MAX_CHOICES)
+
+                    event.replyChoiceStrings(commands.map { c -> c.name }).queue()
+                }
+            } else {
+                event.replyChoiceStrings().queue()
+            }
+        }
+    }
+
+    private fun searchCommandNames(query: String) = CommandHandler.map {
+        if (it is TextCommand) {
+            it.aliases + it.name
+        } else {
+            setOf(it.name)
+        }
+    }
+        .flatten()
+        .filter { getSearchPriority(query, it) > 0 }
+        .sortedByDescending { getSearchPriority(query, it) }
 
     private fun GenericCommand.getHelp(jda: JDA) = buildEmbed {
         val nameWithPrefix = "${Immutable.DEFAULT_PREFIX.takeUnless { this@getHelp is SlashOnlyCommand } ?: "/"}$name"

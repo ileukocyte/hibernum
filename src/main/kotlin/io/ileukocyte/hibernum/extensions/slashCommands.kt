@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
 
 fun Option.toOptionData() = OptionData(type, name, description, isRequired)
+    .setAutoComplete(isAutoComplete)
     .let {
         if (type == OptionType.CHANNEL) {
             it.setChannelTypes(channelTypes)
