@@ -96,13 +96,14 @@ class PruneCommand : SlashOnlyCommand {
                     "in case of the \"mention\" option being provided!")
         }
 
-        if ((filterOption?.startsWith("bot-") == true && event.getOption("user")?.asUser?.isBot == false)
+        val botFilters = setOf("action-components", "bot-embeds", "bot-messages", "discord-commands")
+
+        if ((filterOption in botFilters && event.getOption("user")?.asUser?.isBot == false)
                 || (filterOption == "human-messages" && event.getOption("user")?.asUser?.isBot == true)) {
             throw CommandException("No messages to delete have been found!")
         }
 
-        if (filterOption in setOf("system-messages", "webhook-messages")
-                && event.getOption("user") !== null) {
+        if (filterOption in setOf("system-messages", "webhook-messages") && event.getOption("user") !== null) {
             throw CommandException("The \"user\" option cannot be used " +
                     "if the \"filter\" option is set to \"System Messages\" or \"Webhook Messages\"!")
         }
