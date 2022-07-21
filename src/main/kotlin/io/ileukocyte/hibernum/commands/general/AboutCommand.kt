@@ -116,7 +116,7 @@ class AboutCommand : TextCommand {
             }
 
             field {
-                title = "Command Statistics"
+                title = "Discord Statistics"
                 description = buildString {
                     appendLine("**Total Commands**: ${CommandHandler.size}" +
                             commandCount.filterNotNull().takeUnless { it.isEmpty() }

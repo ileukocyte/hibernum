@@ -236,7 +236,7 @@ class PruneCommand : SlashOnlyCommand {
 
         event.channel.sendWarning("${event.user.asMention} has used the `$name` command!") {
             text = "This message will self-delete in 5 seconds"
-        }.queue { it.delete().queueAfter(5, TimeUnit.SECONDS, {}) {} }
+        }.queue { it.delete().queueAfter(5, TimeUnit.SECONDS, null) {} }
     }
 
     private fun getResponse(
