@@ -7,6 +7,7 @@ import io.ileukocyte.hibernum.extensions.*
 import java.util.concurrent.TimeUnit
 
 import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.entities.EmbedType as JDAEmbedType
 import net.dv8tion.jda.api.entities.IMentionable
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageType
@@ -36,7 +37,8 @@ class PruneCommand : SlashOnlyCommand {
                     "bot messages",
                     "discord commands",
                     "gifs",
-                    "images",
+                    "human messages",
+                    "image attachments",
                     "invites",
                     "links",
                     "mentions",
@@ -45,7 +47,7 @@ class PruneCommand : SlashOnlyCommand {
                     "system messages",
                     "unpinned messages",
                     "users aside from",
-                    "videos",
+                    "video attachments",
                     "webhook messages",
                 )
 
@@ -94,8 +96,8 @@ class PruneCommand : SlashOnlyCommand {
                     "in case of the \"mention\" option being provided!")
         }
 
-        if (filterOption?.startsWith("bot-") == true
-                && event.getOption("user")?.asUser?.isBot == false) {
+        if ((filterOption?.startsWith("bot-") == true && event.getOption("user")?.asUser?.isBot == false)
+                || (filterOption == "human-messages" && event.getOption("user")?.asUser?.isBot == true)) {
             throw CommandException("No messages to delete have been found!")
         }
 
@@ -130,13 +132,14 @@ class PruneCommand : SlashOnlyCommand {
                     "all-attachments" -> message.attachments.isNotEmpty()
                     "all-embeds" -> message.embeds.isNotEmpty()
                     "bot-messages" -> message.author.isBot
-                    "bot-embeds" -> message.author.isBot && message.embeds.isNotEmpty()
+                    "bot-embeds" -> message.author.isBot && message.embeds.any { e -> e.type == JDAEmbedType.RICH }
                     "discord-commands" -> message.type == MessageType.SLASH_COMMAND
                             || message.type == MessageType.CONTEXT_COMMAND
                     "gifs" -> message.attachments.any { a -> a.fileExtension == "gif" }
                             || message.contentRaw.split("\\s+".toRegex())
                                 .any { a -> UrlValidator.getInstance().isValid(a) && (".gif" in a || "-gif-" in a) }
-                    "images" -> message.attachments.any { a -> a.isImage }
+                    "human-messages" -> !message.author.isBot && !message.author.isSystem
+                    "image-attachments" -> message.attachments.any { a -> a.isImage }
                     "invites" -> message.invites.isNotEmpty()
                     "links" -> message.contentRaw.split(" ").any { s -> UrlValidator.getInstance().isValid(s) }
                     "mentions" -> {
@@ -155,7 +158,7 @@ class PruneCommand : SlashOnlyCommand {
                     "system-messages" -> message.type.isSystem && message.type.canDelete()
                     "unpinned-messages" -> !message.isPinned
                     "users-aside-from" -> true
-                    "videos" -> message.attachments.any { a -> a.isVideo }
+                    "video-attachments" -> message.attachments.any { a -> a.isVideo }
                     "webhook-messages" -> message.isWebhookMessage
                     else -> true
                 }
@@ -258,19 +261,19 @@ class PruneCommand : SlashOnlyCommand {
             append(when (it) {
                 "action-components" -> " containing any action components (e.g. buttons or menus)"
                 "all-attachments" -> " containing any attachments"
-                "bot-messages", "bot-embeds" -> " sent by bots" +
-                        user?.takeIf { u -> u.isBot }?.asMention?.let { u -> " ($u)" }.orEmpty()
+                "bot-messages", "bot-embeds" -> " sent by bots" + user?.asMention?.let { u -> " ($u)" }.orEmpty()
                 "discord-commands" -> " that ${if (deletedMessages == 1) "is a" else "are"} " +
                         "response".singularOrPlural(deletedMessages) + " to a slash or context menu command"
                 "gifs" -> " containing any GIFs"
-                "images" -> " containing any images"
+                "human-messages" -> " sent by people" + user?.asMention?.let { u -> " ($u)" }.orEmpty()
+                "image-attachments" -> " containing any images"
                 "invites" -> " containing any invite links"
                 "links" -> " containing any links"
                 "mentions" -> " mentioning ${mention?.asMention ?: "any users or any roles"}"
                 "no-attachments" -> " containing no attachments"
                 "stickers" -> " containing any stickers"
                 "unpinned-messages" -> " that ${if (deletedMessages == 1) "is" else "are"} not pinned"
-                "videos" -> " containing any videos"
+                "video-attachments" -> " containing any videos"
                 "webhook-messages" -> " sent by webhooks"
                 else -> ""
             })
@@ -303,7 +306,7 @@ class PruneCommand : SlashOnlyCommand {
             append(clause)
         }
 
-        user?.takeUnless { filter == "bot-embeds" }?.let {
+        user?.takeUnless { filter?.contains("bot") == true || filter?.contains("human") == true }?.let {
             if (filter?.takeUnless { f -> f == "users-aside-from" } !== null || textFilter !== null) {
                 if (filter?.takeUnless { f -> f == "users-aside-from" || f == "all-embeds" } !== null
                         && textFilter !== null) {
