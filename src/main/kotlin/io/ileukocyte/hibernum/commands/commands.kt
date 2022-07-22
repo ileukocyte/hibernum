@@ -91,11 +91,11 @@ interface GenericCommand : Comparable<GenericCommand> {
 
     /**
      * A property that shows whether the command's expired interactions should
-     * trigger an explicit failure response or just silent deletion of the command's
-     * components (i.e. buttons and selection menus)
+     * trigger an explicit failure response, silent deletion of the command's
+     * components (i.e. buttons and selection menus), or normal execution of the command
      */
-    val eliminateStaleInteractions: Boolean
-        get() = true
+    val staleInteractionHandling: StaleInteractionHandling
+        get() = StaleInteractionHandling.DELETE_ORIGINAL
 
     val botPermissions: Set<Permission>
         get() = emptySet()
@@ -140,6 +140,12 @@ interface GenericCommand : Comparable<GenericCommand> {
             operator fun get(key: String) =
                 InputType.values().firstOrNull { it.name.equals(key, ignoreCase = true) }
         }
+    }
+
+    enum class StaleInteractionHandling {
+        DELETE_ORIGINAL,
+        REMOVE_COMPONENTS,
+        EXECUTE_COMMAND;
     }
 }
 

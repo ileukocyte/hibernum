@@ -5,6 +5,7 @@ import com.google.common.collect.Lists
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.commands.`fun`.AkinatorCommand
 import io.ileukocyte.hibernum.extensions.*
@@ -38,7 +39,7 @@ class KillCommand : TextCommand {
     override val aliases = setOf("kill-process", "terminate")
     override val usages = setOf(setOf("process ID".toClassicTextUsage(true)))
     override val options = setOf(OptionData(OptionType.STRING, "pid", "The ID of the process to kill"))
-    override val eliminateStaleInteractions = false
+    override val staleInteractionHandling = StaleInteractionHandling.REMOVE_COMPONENTS
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val processes = event.jda.processes.takeUnless { it.isEmpty() }

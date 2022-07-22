@@ -5,6 +5,8 @@ import com.sun.management.OperatingSystemMXBean
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.ClassicTextOnlyCommand
+import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.*
@@ -36,12 +38,12 @@ class AboutCommand : TextCommand {
     override val options = setOf(
         OptionData(OptionType.BOOLEAN, "ephemeral", "Whether the response should be invisible to other users"))
     override val aliases = setOf("info", "stats")
-    override val eliminateStaleInteractions = false
+    override val staleInteractionHandling = StaleInteractionHandling.EXECUTE_COMMAND
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val appInfo = event.jda.retrieveApplicationInfo().await()
         val buttons = setOf(
-            Button.primary("$name-update", "Update"),
+            Button.primary("$name-${event.author.idLong}-update", "Update"),
             Button.link(
                 Immutable.INVITE_LINK_FORMAT.format(event.jda.selfUser.id, appInfo.permissionsRaw),
                 "Invite Link",
@@ -61,7 +63,7 @@ class AboutCommand : TextCommand {
 
         val appInfo = event.jda.retrieveApplicationInfo().await()
         val buttons = listOf(
-            Button.primary("$name-update", "Update"),
+            Button.primary("$name-${event.user.idLong}-update", "Update"),
             Button.link(
                 Immutable.INVITE_LINK_FORMAT.format(event.jda.selfUser.id, appInfo.permissionsRaw),
                 "Invite Link",
@@ -81,9 +83,14 @@ class AboutCommand : TextCommand {
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
-        val appInfo = event.jda.retrieveApplicationInfo().await()
+        if (event.componentId.split("-")[1] == event.user.id) {
+            val appInfo = event.jda.retrieveApplicationInfo().await()
 
-        event.editMessageEmbeds(statsEmbed(event.jda, appInfo, event.guild ?: return)).queue()
+            event.editMessageEmbeds(statsEmbed(event.jda, appInfo, event.guild ?: return))
+                .queue(null) {}
+        } else {
+            throw CommandException("You did not invoke the initial command!")
+        }
     }
 
     private suspend fun statsEmbed(

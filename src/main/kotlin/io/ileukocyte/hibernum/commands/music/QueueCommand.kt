@@ -11,6 +11,7 @@ import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.audio.getEmbedProgressBar
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.limitTo
 import io.ileukocyte.hibernum.utils.asDuration
@@ -34,7 +35,7 @@ class QueueCommand : TextCommand {
     override val usages = setOf(setOf("page".toClassicTextUsage(true)))
     override val options = setOf(
         OptionData(OptionType.INTEGER, "page", "Initial page number"))
-    override val eliminateStaleInteractions = false
+    override val staleInteractionHandling = StaleInteractionHandling.REMOVE_COMPONENTS
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val audioPlayer = event.guild.audioPlayer ?: return

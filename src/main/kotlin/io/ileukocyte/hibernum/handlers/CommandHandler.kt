@@ -2,6 +2,7 @@ package io.ileukocyte.hibernum.handlers
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.commands.*
+import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.asText
 import io.ileukocyte.hibernum.utils.getProcessByEntities
@@ -311,24 +312,30 @@ object CommandHandler : MutableSet<GenericCommand> {
             getGenericCommand(event.componentId.split("-").first())?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     if (event.message.timeCreated.isBefore(event.jda.startDate)) {
-                        if (command.eliminateStaleInteractions) {
-                            try {
-                                event.message.delete().queue(null) {}
-                            } catch (_: IllegalStateException) {}
+                        when (command.staleInteractionHandling) {
+                            StaleInteractionHandling.DELETE_ORIGINAL -> {
+                                try {
+                                    event.message.delete().queue(null) {}
+                                } catch (_: IllegalStateException) {}
 
-                            event.channel.sendMessage {
-                                this += event.user
-                                embeds += defaultEmbed("The interaction has already expired!", EmbedType.FAILURE) {
-                                    text = "This message will self-delete in 5 seconds"
+                                event.channel.sendMessage {
+                                    this += event.user
+                                    embeds += defaultEmbed("The interaction has already expired!", EmbedType.FAILURE) {
+                                        text = "This message will self-delete in 5 seconds"
+                                    }
+                                }.queue {
+                                    it.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
                                 }
-                            }.queue {
-                                it.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
-                            }
-                        } else {
-                            event.message.editMessageComponents().queue(null) {}
-                        }
 
-                        return@launch
+                                return@launch
+                            }
+                            StaleInteractionHandling.REMOVE_COMPONENTS -> {
+                                event.message.editMessageComponents().queue(null) {}
+
+                                return@launch
+                            }
+                            else -> {}
+                        }
                     }
 
                     try {
@@ -389,24 +396,30 @@ object CommandHandler : MutableSet<GenericCommand> {
             getGenericCommand(event.componentId.split("-").first())?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     if (event.message.timeCreated.isBefore(event.jda.startDate)) {
-                        if (command.eliminateStaleInteractions) {
-                            try {
-                                event.message.delete().queue(null) {}
-                            } catch (_: IllegalStateException) {}
+                        when (command.staleInteractionHandling) {
+                            StaleInteractionHandling.DELETE_ORIGINAL -> {
+                                try {
+                                    event.message.delete().queue(null) {}
+                                } catch (_: IllegalStateException) {}
 
-                            event.channel.sendMessage {
-                                this += event.user
-                                embeds += defaultEmbed("The interaction has already expired!", EmbedType.FAILURE) {
-                                    text = "This message will self-delete in 5 seconds"
+                                event.channel.sendMessage {
+                                    this += event.user
+                                    embeds += defaultEmbed("The interaction has already expired!", EmbedType.FAILURE) {
+                                        text = "This message will self-delete in 5 seconds"
+                                    }
+                                }.queue {
+                                    it.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
                                 }
-                            }.queue {
-                                it.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
-                            }
-                        } else {
-                            event.message.editMessageComponents().queue(null) {}
-                        }
 
-                        return@launch
+                                return@launch
+                            }
+                            StaleInteractionHandling.REMOVE_COMPONENTS -> {
+                                event.message.editMessageComponents().queue(null) {}
+
+                                return@launch
+                            }
+                            else -> {}
+                        }
                     }
 
                     try {
