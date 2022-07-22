@@ -120,6 +120,11 @@ class NowPlayingCommand : TextCommand {
                     .queue(null) {}
             }
 
+            if (event.member?.voiceState?.channel != event.guild?.selfMember?.voiceState?.channel
+                    && id.last() != "update") {
+                throw CommandException("You are not connected to the required voice channel!")
+            }
+
             when (id.last()) {
                 "update" -> updatePlayer()
                 "playpause" -> {
