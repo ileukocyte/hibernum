@@ -16,7 +16,7 @@ import io.ileukocyte.hibernum.utils.asText
 import java.lang.management.ManagementFactory
 import java.text.DecimalFormat
 
-import kotlin.math.min
+import kotlin.math.max
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDAInfo
@@ -166,7 +166,7 @@ class AboutCommand : TextCommand {
                     appendLine("**Uptime**: ${asText(jda.uptime)}")
                     appendLine("**Active Threads**: ${Thread.activeCount()}")
                     appendLine("**JVM CPU Usage**: ${DecimalFormat("###.##%")
-                        .format(min(0.0001, os.processCpuLoad))}")
+                        .format(max(0.0001, os.processCpuLoad))}")
                     appendLine("**CPU Cores**: ${os.availableProcessors}")
                     appendLine("**Operating System**: ${os.name} (${os.arch}, ${os.version})")
                 }
