@@ -9,19 +9,37 @@ import io.ileukocyte.hibernum.extensions.*
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.interactions.commands.Command.Choice
+import net.dv8tion.jda.api.interactions.commands.OptionType
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.buttons.Button
+
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
 
 class LoopCommand : TextCommand {
     override val name = "loop"
     override val description = "Sets a repeating mode for the music player"
+    override val options = setOf(
+        OptionData(OptionType.STRING, "mode", "The repeating mode to set")
+            .addChoices(LoopMode.values().map {
+                Choice(it.toString().removeSuffix("d"), it.name)
+            }),
+    )
     override val aliases = setOf("repeat")
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
-        if (event.guild.selfMember.voiceState?.channel !== null) {
+        val audioPlayer = event.guild.audioPlayer ?: return
+
+        if (audioPlayer.player.playingTrack !== null) {
             if (event.member?.voiceState?.channel == event.guild.selfMember.voiceState?.channel) {
                 val buttons = LoopMode.values()
-                    .filter { it != event.guild.audioPlayer?.scheduler?.loopMode }
-                    .map { Button.secondary("$name-${event.author.idLong}-${it.name}", it.toString().removeSuffix("d")) }
+                    .filter { it != audioPlayer.scheduler.loopMode }
+                    .map {
+                        Button.secondary(
+                            "$name-${event.author.idLong}-${it.name}",
+                            it.toString().removeSuffix("d"),
+                        )
+                    }
 
                 event.channel.sendConfirmation("Choose a repeating mode to set!")
                     .setActionRow(
@@ -32,27 +50,50 @@ class LoopCommand : TextCommand {
                 throw CommandException("You are not connected to the required voice channel!")
             }
         } else {
-            throw CommandException("${event.jda.selfUser.name} is not connected to a voice channel!")
+            throw CommandException("No track is currently playing!")
         }
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
-        if (event.guild?.selfMember?.voiceState?.channel !== null) {
-            if (event.member?.voiceState?.channel == event.guild?.selfMember?.voiceState?.channel) {
-                val buttons = LoopMode.values()
-                    .filter { it != event.guild?.audioPlayer?.scheduler?.loopMode }
-                    .map { Button.secondary("$name-${event.user.idLong}-${it.name}", it.toString().removeSuffix("d")) }
+        val audioPlayer = event.guild?.audioPlayer ?: return
 
-                event.replyConfirmation("Choose a repeating mode to set!")
-                    .addActionRow(
-                        *buttons.toTypedArray(),
-                        Button.danger("$name-${event.user.idLong}-exit", "Exit"),
-                    ).queue()
+        if (audioPlayer.player.playingTrack !== null) {
+            if (event.member?.voiceState?.channel == event.guild?.selfMember?.voiceState?.channel) {
+                val option = event.getOption("mode")?.asString
+
+                if (option !== null) {
+                    val currentMode = audioPlayer.scheduler.loopMode
+                    val newMode = LoopMode.valueOf(option)
+
+                    audioPlayer.scheduler.loopMode = newMode
+
+                    val description = "$newMode looping has been enabled!".takeUnless { newMode == LoopMode.DISABLED }
+                        ?: "$currentMode looping has been disabled!".applyIf(currentMode == LoopMode.DISABLED) {
+                            removePrefix("$currentMode ").replaceFirstChar { it.uppercase() }
+                        }
+
+                    event.replySuccess(description).queue()
+                } else {
+                    val buttons = LoopMode.values()
+                        .filter { it != audioPlayer.scheduler.loopMode }
+                        .map {
+                            Button.secondary(
+                                "$name-${event.user.idLong}-${it.name}",
+                                it.toString().removeSuffix("d"),
+                            )
+                        }
+
+                    event.replyConfirmation("Choose a repeating mode to set!")
+                        .addActionRow(
+                            *buttons.toTypedArray(),
+                            Button.danger("$name-${event.user.idLong}-exit", "Exit"),
+                        ).queue()
+                }
             } else {
                 throw CommandException("You are not connected to the required voice channel!")
             }
         } else {
-            throw CommandException("${event.jda.selfUser.name} is not connected to a voice channel!")
+            throw CommandException("No track is currently playing!")
         }
     }
 
@@ -66,7 +107,7 @@ class LoopCommand : TextCommand {
                 return
             }
 
-            val currentMode = event.guild?.audioPlayer?.scheduler?.loopMode ?: throw CommandException()
+            val currentMode = event.guild?.audioPlayer?.scheduler?.loopMode ?: return
             val newMode = LoopMode.valueOf(id.last())
 
             event.guild?.audioPlayer?.scheduler?.loopMode = newMode
@@ -77,9 +118,7 @@ class LoopCommand : TextCommand {
             event.message.editMessageEmbeds(defaultEmbed(description, EmbedType.SUCCESS))
                 .setActionRows()
                 .queue(null) {
-                    event.replySuccess(description)
-                        .flatMap { event.message.delete() }
-                        .queue()
+                    event.messageChannel.sendSuccess(description).queue()
                 }
         }
     }
