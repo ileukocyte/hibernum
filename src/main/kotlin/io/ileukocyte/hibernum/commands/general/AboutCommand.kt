@@ -21,11 +21,14 @@ import net.dv8tion.jda.api.JDAInfo
 import net.dv8tion.jda.api.entities.ApplicationInfo
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.Command.Type
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.buttons.Button
+
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
 
 class AboutCommand : TextCommand {
     override val name = "about"
@@ -33,10 +36,12 @@ class AboutCommand : TextCommand {
     override val options = setOf(
         OptionData(OptionType.BOOLEAN, "ephemeral", "Whether the response should be invisible to other users"))
     override val aliases = setOf("info", "stats")
+    override val eliminateStaleInteractions = false
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val appInfo = event.jda.retrieveApplicationInfo().await()
         val buttons = setOf(
+            Button.primary("$name-update", "Update"),
             Button.link(
                 Immutable.INVITE_LINK_FORMAT.format(event.jda.selfUser.id, appInfo.permissionsRaw),
                 "Invite Link",
@@ -50,19 +55,35 @@ class AboutCommand : TextCommand {
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
+        val isEphemeral = event.getOption("ephemeral")?.asBoolean ?: false
+
+        val deferred = event.deferReply().setEphemeral(isEphemeral).await()
+
         val appInfo = event.jda.retrieveApplicationInfo().await()
-        val buttons = setOf(
+        val buttons = listOf(
+            Button.primary("$name-update", "Update"),
             Button.link(
                 Immutable.INVITE_LINK_FORMAT.format(event.jda.selfUser.id, appInfo.permissionsRaw),
                 "Invite Link",
             ),
             Button.link(Immutable.GITHUB_REPOSITORY, "GitHub Repository"),
-        )
+        ).applyIf(isEphemeral) { subList(1, size) }
 
-        event.replyEmbeds(statsEmbed(event.jda, appInfo, event.guild ?: return))
-            .addActionRow(buttons)
-            .setEphemeral(event.getOption("ephemeral")?.asBoolean ?: false)
-            .queue()
+        val embed = statsEmbed(event.jda, appInfo, event.guild ?: return)
+
+        deferred.editOriginalEmbeds(embed)
+            .setActionRow(buttons)
+            .queue(null) {
+                event.channel.sendMessageEmbeds(embed)
+                    .setActionRow(buttons)
+                    .queue()
+            }
+    }
+
+    override suspend fun invoke(event: ButtonInteractionEvent) {
+        val appInfo = event.jda.retrieveApplicationInfo().await()
+
+        event.editMessageEmbeds(statsEmbed(event.jda, appInfo, event.guild ?: return)).queue()
     }
 
     private suspend fun statsEmbed(
