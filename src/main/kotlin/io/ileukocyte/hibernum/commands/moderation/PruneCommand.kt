@@ -19,6 +19,8 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
 import org.apache.commons.validator.routines.UrlValidator
 
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
+
 class PruneCommand : SlashOnlyCommand {
     override val name = "prune"
     override val description = "Deletes the specified amount of messages matching the provided filters"
@@ -169,21 +171,11 @@ class PruneCommand : SlashOnlyCommand {
                 val isCaseSensitive = event.getOption("text-case-sensitive")?.asBoolean
                     ?: true
 
-                val text = event.getOption("text")!!.asString.let { t ->
-                    if (isCaseSensitive) {
-                        t
-                    } else {
-                        t.lowercase()
-                    }
-                }
+                val text = event.getOption("text")!!.asString
+                    .applyIf(!isCaseSensitive) { lowercase() }
 
-                val content = message.contentRaw.let { c ->
-                    if (isCaseSensitive) {
-                        c
-                    } else {
-                        c.lowercase()
-                    }
-                }
+                val content = message.contentRaw
+                    .applyIf(!isCaseSensitive) { lowercase() }
 
                 when (it.asString) {
                     "contains" -> text in content

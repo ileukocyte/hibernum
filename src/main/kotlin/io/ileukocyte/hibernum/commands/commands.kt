@@ -20,6 +20,8 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
 
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
+
 /**
  * A generic type that is to be implemented by classes of all the bot's commands
  *
@@ -191,13 +193,7 @@ interface TextCommand : GenericCommand {
         Commands.slash(name, "(Developer-only) ".takeIf { isDeveloper }.orEmpty() + description)
             .setGuildOnly(true)
             .setDefaultPermissions(DefaultMemberPermissions.enabledFor(memberPermissions))
-            .let {
-                if (this !is SubcommandHolder) {
-                    it.addOptions(options)
-                } else {
-                    it
-                }
-            }
+            .applyIf(this !is SubcommandHolder) { addOptions(this@TextCommand.options) }
 
     /**
      * A function that is executed when the command is invoked as a classic text command

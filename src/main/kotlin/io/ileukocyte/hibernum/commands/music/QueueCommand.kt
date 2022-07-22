@@ -28,6 +28,8 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
+
 class QueueCommand : TextCommand {
     override val name = "queue"
     override val description = "Shows the current playlist"
@@ -183,13 +185,13 @@ class QueueCommand : TextCommand {
 
     private fun pageButtons(userId: String, page: Int, size: Int) = setOf(
         Button.secondary("$name-$userId-$page-first", "First Page")
-            .let { if (page == 0) it.asDisabled() else it },
+            .applyIf(page == 0) { asDisabled() },
         Button.secondary("$name-$userId-$page-back", "Back")
-            .let { if (page == 0) it.asDisabled() else it },
+            .applyIf(page == 0) { asDisabled() },
         Button.secondary("$name-$userId-$page-next", "Next")
-            .let { if (page == size.dec()) it.asDisabled() else it },
+            .applyIf(page == size.dec()) { asDisabled() },
         Button.secondary("$name-$userId-$page-last", "Last Page")
-            .let { if (page == size.dec()) it.asDisabled() else it },
+            .applyIf(page == size.dec()) { asDisabled() },
         Button.danger("$name-$userId-exit", "Exit"),
     )
 

@@ -38,6 +38,8 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
+
 class DictionaryCommand : TextCommand {
     override val name = "dictionary"
     override val description = "Sends the provided term's definition from Merriam-Webster Dictionary"
@@ -278,13 +280,13 @@ class DictionaryCommand : TextCommand {
 
     private fun pageButtons(page: Int, size: Int) = setOf(
         Button.secondary("$name-first", "First Page")
-            .let { if (page == 0) it.asDisabled() else it },
+            .applyIf(page == 0) { asDisabled() },
         Button.secondary("$name-back", "Back")
-            .let { if (page == 0) it.asDisabled() else it },
+            .applyIf(page == 0) { asDisabled() },
         Button.secondary("$name-next", "Next")
-            .let { if (page == size.dec()) it.asDisabled() else it },
+            .applyIf(page == size.dec()) { asDisabled() },
         Button.secondary("$name-last", "Last Page")
-            .let { if (page == size.dec()) it.asDisabled() else it },
+            .applyIf(page == size.dec()) { asDisabled() },
         Button.danger("$name-exit", "Exit"),
     )
 }

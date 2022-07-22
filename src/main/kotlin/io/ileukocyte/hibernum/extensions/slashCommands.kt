@@ -7,21 +7,13 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
 
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
+
 fun Option.toOptionData() = OptionData(type, name, description, isRequired)
     .setAutoComplete(isAutoComplete)
+    .applyIf(type == OptionType.CHANNEL) { setChannelTypes(this@toOptionData.channelTypes) }
+    .applyIf(type.canSupportChoices()) { addChoices(this@toOptionData.choices) }
     .let {
-        if (type == OptionType.CHANNEL) {
-            it.setChannelTypes(channelTypes)
-        } else {
-            it
-        }
-    }.let {
-         if (type.canSupportChoices()) {
-             it.addChoices(choices)
-         } else {
-             it
-         }
-    }.let {
         when (type) {
             OptionType.NUMBER -> {
                 minValue?.toDouble()?.let { min -> it.setMinValue(min) }

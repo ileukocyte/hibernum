@@ -24,6 +24,8 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
+
 class HelpCommand : TextCommand {
     override val name = "help"
     override val description = "Sends a list of all the bot's commands and provides the user with the documentation"
@@ -170,19 +172,9 @@ class HelpCommand : TextCommand {
                     title = "Classic Text Usages"
                     description = usages.joinToString("\n") { group ->
                         "$nameWithPrefix ${group.joinToString(" ") { usage ->
-                            usage.let {
-                                if (it.isOptional) {
-                                    "$it (optional)"
-                                } else {
-                                    "$it"
-                                }
-                            }.let {
-                                if (usage.applyDefaultAffixes) {
-                                    it.surroundWith("<", ">")
-                                } else {
-                                    it
-                                }
-                            }
+                            usage.toString()
+                                .applyIf(usage.isOptional) { "$this (optional)" }
+                                .applyIf(usage.applyDefaultAffixes) { surroundWith("<", ">") }
                         }}"
                     }
                 }

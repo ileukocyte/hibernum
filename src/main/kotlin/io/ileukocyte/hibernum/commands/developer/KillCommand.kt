@@ -33,6 +33,8 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.text.TextInput
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
+
 class KillCommand : TextCommand {
     override val name = "kill"
     override val description = "Sends a list of running processes or terminates the one provided by its ID"
@@ -142,7 +144,7 @@ class KillCommand : TextCommand {
 
                     event.jda.getChannelById(GuildMessageChannel::class.java, process.channel)?.let { channel ->
                         process.invoker?.let {
-                            channel.retrieveMessageById(it).await().delete().queue({}) {}
+                            channel.retrieveMessageById(it).await().delete().queue(null) {}
                         }
 
                         channel.sendMessage {
@@ -153,7 +155,7 @@ class KillCommand : TextCommand {
                             process.users.mapNotNull { event.jda.getUserById(it)?.asMention }.joinToString()
                                 .takeUnless { it.isEmpty() }
                                 ?.let { content += it }
-                        }.queue({ it.delete().queueAfter(5, TimeUnit.SECONDS, {}) {} }, {})
+                        }.queue({ it.delete().queueAfter(5, TimeUnit.SECONDS, null) {} }) {}
                     }
                 }
                 else -> {
@@ -252,7 +254,9 @@ class KillCommand : TextCommand {
                     }
                 }
             }
-        } else throw CommandException("You did not invoke the initial command!")
+        } else {
+            throw CommandException("You did not invoke the initial command!")
+        }
     }
 
     override suspend fun invoke(event: ModalInteractionEvent) {
@@ -282,7 +286,7 @@ class KillCommand : TextCommand {
 
         event.jda.getChannelById(GuildMessageChannel::class.java, process.channel)?.let { channel ->
             process.invoker?.let {
-                channel.retrieveMessageById(it).await().delete().queue({}) {}
+                channel.retrieveMessageById(it).await().delete().queue(null) {}
             }
 
             channel.sendMessage {
@@ -293,7 +297,7 @@ class KillCommand : TextCommand {
                 process.users.mapNotNull { event.jda.getUserById(it)?.asMention }.joinToString()
                     .takeUnless { it.isEmpty() }
                     ?.let { content += it }
-            }.queue({ it.delete().queueAfter(5, TimeUnit.SECONDS, {}) {} }, {})
+            }.queue({ it.delete().queueAfter(5, TimeUnit.SECONDS, null) {} }) {}
         }
     }
 
@@ -328,19 +332,21 @@ class KillCommand : TextCommand {
             iconUrl = jda.selfUser.effectiveAvatarUrl
         }
 
-        if (partition.size > 1) footer { text = "Total processes: ${originalSet.size}" }
+        if (partition.size > 1) {
+            footer { text = "Total processes: ${originalSet.size}" }
+        }
     }
 
     private fun pageButtons(userId: String, page: Int, size: Int) = setOf(
         Button.primary("$name-$userId-kill", "Kill"),
         Button.secondary("$name-$userId-$page-first", "First Page")
-            .let { if (page == 0) it.asDisabled() else it },
+            .applyIf(page == 0) { asDisabled() },
         Button.secondary("$name-$userId-$page-back", "Back")
-            .let { if (page == 0) it.asDisabled() else it },
+            .applyIf(page == 0) { asDisabled() },
         Button.secondary("$name-$userId-$page-next", "Next")
-            .let { if (page == size.dec()) it.asDisabled() else it },
+            .applyIf(page == size.dec()) { asDisabled() },
         Button.secondary("$name-$userId-$page-last", "Last Page")
-            .let { if (page == size.dec()) it.asDisabled() else it },
+            .applyIf(page == size.dec()) { asDisabled() },
         Button.danger("$name-$userId-exit", "Close"),
     )
 }
