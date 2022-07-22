@@ -158,6 +158,8 @@ class NowPlayingCommand : TextCommand {
                     updatePlayer()
                 }
             }
+        } else {
+            throw CommandException("You did not invoke the initial command!")
         }
     }
 

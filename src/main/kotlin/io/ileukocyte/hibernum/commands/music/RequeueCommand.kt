@@ -36,8 +36,10 @@ class RequeueCommand : TextCommand {
                 } ?: audioPlayer.player.playingTrack ?: return
 
                 audioPlayer.scheduler += track.makeClone().apply {
-                    userData = track.userData.cast<TrackUserData>()
-                        .copy(announceQueueing = true)
+                    userData = track.userData.cast<TrackUserData>().copy(
+                        announceQueueing = true,
+                        user = event.author,
+                    )
                 }
             } else {
                 throw CommandException("No track is currently playing!")
@@ -61,6 +63,7 @@ class RequeueCommand : TextCommand {
                     userData = track.userData.cast<TrackUserData>().copy(
                         announceQueueing = true,
                         ifFromSlashCommand = event.deferReply().await(),
+                        user = event.user,
                     )
                 }
             } else {
