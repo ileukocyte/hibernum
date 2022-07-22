@@ -65,13 +65,8 @@ class DictionaryCommand : TextCommand {
 
         val message = event.channel
             .sendMessageEmbeds(results.first().getEmbed(event.jda.selfUser, 0, results.size))
-            .let {
-                if (total > 1) {
-                    it.setActionRow(pageButtons(0, total))
-                } else {
-                    it
-                }
-            }.await()
+            .applyIf(total > 1) { setActionRow(pageButtons(0, total)) }
+            .await()
 
         if (total > 1) {
             val resultEmbeds = results.withIndex().map { (i, r) ->
@@ -101,13 +96,8 @@ class DictionaryCommand : TextCommand {
 
         val message = deferred
             .editOriginalEmbeds(results.first().getEmbed(event.jda.selfUser, 0, results.size))
-            .let {
-                if (total > 1) {
-                    it.setActionRow(pageButtons(0, total))
-                } else {
-                    it
-                }
-            }.await()
+            .applyIf(total > 1) { setActionRow(pageButtons(0, total)) }
+            .await()
 
         if (total > 1) {
             val resultEmbeds = results.withIndex().map { (i, r) ->

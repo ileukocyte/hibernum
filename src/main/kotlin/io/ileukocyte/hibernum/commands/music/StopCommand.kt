@@ -73,6 +73,12 @@ class StopCommand : TextCommand {
                             it.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
                         }
                     }
+
+                    id[1].toLongOrNull()?.let { playerMessageId ->
+                        event.channel.retrieveMessageById(playerMessageId).queue({ player ->
+                            player.editMessageComponents().queue(null) {}
+                        }) {}
+                    }
                 }
                 "exit" -> event.message.delete().queue(null) {}
             }
