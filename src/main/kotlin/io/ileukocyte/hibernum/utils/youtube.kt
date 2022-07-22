@@ -4,6 +4,7 @@ package io.ileukocyte.hibernum.utils
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.youtube.YouTube
+import com.google.api.services.youtube.model.Playlist
 import com.google.api.services.youtube.model.Video
 import com.google.api.services.youtube.model.VideoContentDetails
 
@@ -36,6 +37,22 @@ suspend fun searchVideos(query: String, maxResults: Long = 15): List<Video> = su
     videos.id = listOf(search.execute().items.joinToString(",") { v -> v.id.videoId })
 
     it.resume(videos.execute().items)
+}
+
+suspend fun searchPlaylists(query: String, maxResults: Long = 15): List<Playlist> = suspendCoroutine {
+    val search = YOUTUBE.search().list(listOf("id", "snippet"))
+
+    search.key = Immutable.YOUTUBE_API_KEY
+    search.q = query
+    search.maxResults = maxResults
+    search.type = listOf("playlist")
+
+    val playlists = YOUTUBE.playlists().list(listOf("id", "snippet", "contentDetails"))
+
+    playlists.key = search.key
+    playlists.id = listOf(search.execute().items.joinToString(",") { p -> p.id.playlistId })
+
+    it.resume(playlists.execute().items)
 }
 
 val VideoContentDetails.durationInMillis get() = Duration.parse(duration).toMillis()

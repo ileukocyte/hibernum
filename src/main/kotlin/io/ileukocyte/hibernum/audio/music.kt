@@ -2,6 +2,7 @@ package io.ileukocyte.hibernum.audio
 
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
+import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager
 
 import java.util.concurrent.Executors
 
@@ -24,6 +25,8 @@ private val musicContextDispatcher = Executors.newFixedThreadPool(3).asCoroutine
 object MusicContext : CoroutineContext by musicContextDispatcher, AutoCloseable by musicContextDispatcher
 
 val PLAYER_MANAGER = DefaultAudioPlayerManager().apply {
+    registerSourceManager(YoutubeAudioSourceManager().apply { setPlaylistPageCount(10) })
+
     AudioSourceManagers.registerLocalSource(this)
     AudioSourceManagers.registerRemoteSources(this)
 }

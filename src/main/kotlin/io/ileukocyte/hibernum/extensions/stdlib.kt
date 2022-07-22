@@ -7,6 +7,8 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
+
 // Java concurrency
 suspend fun <T> CompletableFuture<T>.await() = suspendCoroutine<T> { c ->
     whenComplete { r, e -> e?.let { c.resumeWithException(it) } ?: c.resume(r) }
@@ -53,15 +55,9 @@ fun String.containsAll(elements: Collection<CharSequence>) = containsAll(*elemen
 fun String.containsAll(vararg args: Char) = toCharArray().toList().containsAll(args.toList())
 
 // Only works with UTF-16 encoding
-fun String.limitTo(limit: Int, trim: Boolean = true) = take(limit)
-    .let {
-        if (length > limit) {
-            (it.removeLastChar().takeIf { trim }?.trim()
-                ?: it.removeLastChar()) + '\u2026'
-        } else {
-            this
-        }
-    }
+fun String.limitTo(limit: Int, trim: Boolean = true) = take(limit).applyIf(length > limit) {
+    (removeLastChar().takeIf { trim }?.trim() ?: removeLastChar()) + '\u2026'
+}
 
 fun String.remove(input: String) = replace(input, "")
 fun String.remove(regex: Regex) = replace(regex, "")
@@ -71,8 +67,7 @@ fun String.removeLastChar() = substring(0, length.dec())
 fun String.replaceLastChar(charSequence: CharSequence) = removeLastChar() + charSequence
 fun String.replaceLastChar(char: Char) = removeLastChar() + char
 
-fun <N : Number> String.singularOrPlural(number: N) =
-    this + "s".takeUnless { number.toLong() == 1L }.orEmpty()
+fun <N : Number> String.singularOrPlural(number: N) = applyIf(number.toLong() != 1L) { "${this}s" }
 
 fun String.surroundWith(charSequence: CharSequence) = "$charSequence$this$charSequence"
 fun String.surroundWith(prefix: CharSequence, suffix: CharSequence) = "$prefix$this$suffix"

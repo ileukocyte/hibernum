@@ -31,12 +31,18 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
+
 class YouTubePlayCommand : TextCommand {
     override val name = "ytplay"
-    override val description = "Plays the specified YouTube video in a voice channel"
+    override val description = "Searches a YouTube video or playlist by the provided query and plays it in a voice channel"
     override val aliases = setOf("yp", "ytp", "youtubeplay", "youtube-play")
     override val options = setOf(
-        OptionData(OptionType.STRING, "query", "A link or a search term", true))
+        OptionData(OptionType.STRING, "query", "A search term or a YouTube link", true),
+        OptionData(OptionType.STRING, "kind", "A kind of result (videos or playlists)")
+            .addChoice("Videos", "videos")
+            .addChoice("Playlists", "playlists"),
+    )
     override val usages = setOf(setOf("query".toClassicTextUsage()))
     override val cooldown = 5L
 
@@ -56,6 +62,7 @@ class YouTubePlayCommand : TextCommand {
             event.channel as GuildMessageChannel,
             event.getOption("query")?.asString ?: return,
             deferred,
+            event.getOption("kind")?.asString ?: "videos",
         )
     }
 
@@ -71,11 +78,12 @@ class YouTubePlayCommand : TextCommand {
                 return
             }
 
-            if (id.last() == "videos") {
-                val videoUrl = event.selectedOptions.firstOrNull()?.value ?: return
+            val entity = event.selectedOptions.firstOrNull()
+                ?.value
+                ?.applyIf(id.last() == "playlists") { "https://www.youtube.com/playlist?list=$this" }
+                ?: return
 
-                play(videoUrl, event.channel as GuildMessageChannel, event.user, true, deferred)
-            }
+            play(entity, event.channel as GuildMessageChannel, event.user, id.last() == "videos", deferred)
         } else {
             throw CommandException("You did not invoke the initial command!")
         }
@@ -86,6 +94,7 @@ class YouTubePlayCommand : TextCommand {
         textChannel: GuildMessageChannel,
         query: String,
         ifFromAnInteraction: InteractionHook? = null,
+        kind: String = "videos",
     ) {
         member.voiceState?.channel?.let { vc ->
             val channel = vc.takeUnless { textChannel.guild.selfMember.voiceState?.channel == vc }
@@ -98,50 +107,100 @@ class YouTubePlayCommand : TextCommand {
                 return
             }
 
-            val videos = withContext(MusicContext) { searchVideos(query) }
+            if (kind == "videos") {
+                val videos = withContext(MusicContext) { searchVideos(query) }
 
-            if (videos.isEmpty()) {
-                val error = "No results have been found by the query!"
+                if (videos.isEmpty()) {
+                    val error = "No results have been found by the query!"
+
+                    ifFromAnInteraction?.let {
+                        try {
+                            it.editOriginalEmbeds(defaultEmbed(error, EmbedType.FAILURE)).await()
+
+                            return
+                        } catch (_: ErrorResponseException) {
+                            throw CommandException(error)
+                        }
+                    } ?: throw CommandException(error)
+                }
+
+                val menu by lazy {
+                    val options = videos.map {
+                        SelectOption.of(
+                            it.snippet.title.limitTo(SelectOption.LABEL_MAX_LENGTH),
+                            it.id,
+                        ).withDescription(
+                            "${it.snippet.channelTitle} \u2022 ${asDuration(it.contentDetails.durationInMillis)}"
+                                .limitTo(SelectOption.DESCRIPTION_MAX_LENGTH)
+                        )
+                    }
+
+                    SelectMenu.create("$name-${member.user.idLong}-videos")
+                        .addOptions(
+                            *options.toTypedArray(),
+                            SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),
+                        ).build()
+                }
+
+                val embed = buildEmbed {
+                    color = Immutable.SUCCESS
+                    description = "Select the video you want to play!"
+                }
 
                 ifFromAnInteraction?.let {
-                    try {
-                        it.editOriginalEmbeds(defaultEmbed(error, EmbedType.FAILURE)).await()
-
-                        return
-                    } catch (_: ErrorResponseException) {
-                        throw CommandException(error)
+                    it.editOriginalEmbeds(embed).setActionRow(menu).queue(null) {
+                        textChannel.sendMessageEmbeds(embed).setActionRow(menu).queue()
                     }
-                } ?: throw CommandException(error)
-            }
+                } ?: textChannel.sendMessageEmbeds(embed).setActionRow(menu).queue()
+            } else {
+                val playlists = withContext(MusicContext) { searchPlaylists(query) }
 
-            val menu by lazy {
-                val options = videos.map {
-                    SelectOption.of(
-                        it.snippet.title.limitTo(SelectOption.LABEL_MAX_LENGTH),
-                        it.id,
-                    ).withDescription(
-                        "${it.snippet.channelTitle} - ${asDuration(it.contentDetails.durationInMillis)}"
-                            .limitTo(SelectOption.DESCRIPTION_MAX_LENGTH)
-                    )
+                if (playlists.isEmpty()) {
+                    val error = "No results have been found by the query!"
+
+                    ifFromAnInteraction?.let {
+                        try {
+                            it.editOriginalEmbeds(defaultEmbed(error, EmbedType.FAILURE)).await()
+
+                            return
+                        } catch (_: ErrorResponseException) {
+                            throw CommandException(error)
+                        }
+                    } ?: throw CommandException(error)
                 }
 
-                SelectMenu.create("$name-${member.user.idLong}-videos")
-                    .addOptions(
-                        *options.toTypedArray(),
-                        SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),
-                    ).build()
-            }
+                val menu by lazy {
+                    val options = playlists.map {
+                        val count = it.contentDetails.itemCount
+                            .run { "$this " + "video".singularOrPlural(this) }
 
-            val embed = buildEmbed {
-                color = Immutable.SUCCESS
-                description = "Select the video you want to play!"
-            }
+                        SelectOption.of(
+                            it.snippet.title.limitTo(SelectOption.LABEL_MAX_LENGTH),
+                            it.id,
+                        ).withDescription(
+                            "${it.snippet.channelTitle} \u2022 $count"
+                                .limitTo(SelectOption.DESCRIPTION_MAX_LENGTH)
+                        )
+                    }
 
-            ifFromAnInteraction?.let {
-                it.editOriginalEmbeds(embed).setActionRow(menu).queue(null) {
-                    textChannel.sendMessageEmbeds(embed).setActionRow(menu).queue()
+                    SelectMenu.create("$name-${member.user.idLong}-playlists")
+                        .addOptions(
+                            *options.toTypedArray(),
+                            SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),
+                        ).build()
                 }
-            } ?: textChannel.sendMessageEmbeds(embed).setActionRow(menu).queue()
+
+                val embed = buildEmbed {
+                    color = Immutable.SUCCESS
+                    description = "Select the playlist you want to play!"
+                }
+
+                ifFromAnInteraction?.let {
+                    it.editOriginalEmbeds(embed).setActionRow(menu).queue(null) {
+                        textChannel.sendMessageEmbeds(embed).setActionRow(menu).queue()
+                    }
+                } ?: textChannel.sendMessageEmbeds(embed).setActionRow(menu).queue()
+            }
         } ?: ifFromAnInteraction?.let {
             try {
                 it.editOriginalEmbeds(
