@@ -64,22 +64,24 @@ data class Version(
     val major: Int,
     val minor: Int,
     val patch: Int = 0,
-    val stability: Stability = Stability.Stable,
+    val stability: Stability = Stability.STABLE,
     val unstable: Int = 0,
 ) {
     override fun toString() = arrayOf(
         major,
         minor,
         patch.takeUnless { it == 0 },
-    ).filterNotNull().joinToString(separator = ".") +
-            stability.suffix?.let { "-$it${unstable.takeIf { u -> u != 0 } ?: ""}" }.orEmpty()
+    ).filterNotNull().joinToString(separator = ".") + stability.toString()
+        .takeUnless { stability == Stability.STABLE }
+        ?.let { "-$it${unstable.takeIf { u -> u != 0 } ?: ""}" }
+        .orEmpty()
 
-    sealed class Stability(val suffix: String? = null) {
-        object Stable : Stability()
-        object ReleaseCandidate : Stability("RC")
-        object Beta : Stability("BETA")
-        object Alpha : Stability("ALPHA")
+    enum class Stability(private val suffix: String? = null) {
+        STABLE,
+        RELEASE_CANDIDATE("RC"),
+        BETA,
+        ALPHA;
 
-        override fun toString() = suffix ?: "STABLE"
+        override fun toString() = suffix ?: name
     }
 }

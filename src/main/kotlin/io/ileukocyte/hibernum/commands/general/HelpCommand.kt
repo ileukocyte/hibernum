@@ -36,12 +36,9 @@ class HelpCommand : TextCommand {
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         if (args !== null) {
-            val command = CommandHandler[args.lowercase()]
-                ?: CommandHandler.getGenericCommand(args.lowercase())
-            val action = command?.let { event.channel.sendMessageEmbeds(it.getHelp(event.jda)) }
-                ?: throw CommandException("The provided command name is invalid!")
-
-            action.queue()
+            CommandHandler[args.lowercase()]?.let {
+                event.channel.sendMessageEmbeds(it.getHelp(event.jda)).queue()
+            } ?: throw CommandException("The provided command name is invalid!")
         } else {
             val inviteLink = Immutable.INVITE_LINK_FORMAT.format(
                 event.jda.selfUser.id,
@@ -74,10 +71,9 @@ class HelpCommand : TextCommand {
         val option = event.getOption("command")?.asString?.lowercase()
 
         if (option !== null) {
-            val command = CommandHandler[option] ?: CommandHandler.getGenericCommand(option)
-
-            command?.let { event.replyEmbeds(it.getHelp(event.jda)).setEphemeral(true).queue() }
-                ?: throw CommandException("The provided command name is invalid!")
+            CommandHandler[option]?.let {
+                event.replyEmbeds(it.getHelp(event.jda)).setEphemeral(true).queue()
+            } ?: throw CommandException("The provided command name is invalid!")
         } else {
             val inviteLink = Immutable.INVITE_LINK_FORMAT.format(
                 event.jda.selfUser.id,

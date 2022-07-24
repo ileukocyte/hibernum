@@ -339,6 +339,6 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
     enum class RPSTurn(val sign: String) {
         ROCK("\u270A"),
         PAPER("\u270B"),
-        SCISSORS("\u270C");
+        SCISSORS("\u270C"),
     }
 }

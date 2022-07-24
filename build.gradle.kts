@@ -70,7 +70,7 @@ dependencies {
     implementation(kotlin("scripting-jsr223", kotlinVersion))
     implementation(kotlin("scripting-jvm-host", kotlinVersion))
     implementation(kotlinx("coroutines-core", "1.6.4"))
-    implementation(kotlinx("serialization-json", "1.3.3"))
+    implementation(kotlinx("serialization-json", "1.4.0-RC"))
     implementation(kotlinx("datetime", "0.4.0"))
 
     // Ktor
@@ -125,22 +125,24 @@ data class Version(
     val major: Int,
     val minor: Int,
     val patch: Int = 0,
-    val stability: Stability = Stability.Stable,
+    val stability: Stability = Stability.STABLE,
     val unstable: Int = 0,
 ) {
     override fun toString() = arrayOf(
         major,
         minor,
         patch.takeUnless { it == 0 },
-    ).filterNotNull().joinToString(separator = ".") +
-            stability.suffix?.let { "-$it${unstable.takeIf { u -> u != 0 } ?: ""}" }.orEmpty()
+    ).filterNotNull().joinToString(separator = ".") + stability.toString()
+        .takeUnless { stability == Stability.STABLE }
+        ?.let { "-$it${unstable.takeIf { u -> u != 0 } ?: ""}" }
+        .orEmpty()
 
-    sealed class Stability(val suffix: String? = null) {
-        object Stable : Stability()
-        object ReleaseCandidate : Stability("RC")
-        object Beta : Stability("BETA")
-        object Alpha : Stability("ALPHA")
+    enum class Stability(private val suffix: String? = null) {
+        STABLE,
+        RELEASE_CANDIDATE("RC"),
+        BETA,
+        ALPHA;
 
-        override fun toString() = suffix ?: "STABLE"
+        override fun toString() = suffix ?: name
     }
 }

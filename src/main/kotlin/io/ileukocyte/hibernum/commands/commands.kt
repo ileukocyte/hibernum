@@ -147,7 +147,7 @@ interface GenericCommand : Comparable<GenericCommand> {
     enum class StaleInteractionHandling {
         DELETE_ORIGINAL,
         REMOVE_COMPONENTS,
-        EXECUTE_COMMAND;
+        EXECUTE_COMMAND,
     }
 }
 

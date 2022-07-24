@@ -54,24 +54,14 @@ object CommandHandler : MutableSet<GenericCommand> {
     override fun clear() = registeredCommands.clear()
 
     /**
-     * A function that looks for a [GenericCommand] by its name provided
+     * A function that specifically looks for a [GenericCommand] by its name or alias provided
      *
      * @param name
      * The name of the command to search
      *
      * @return A [GenericCommand] having the same name as the provided query
      */
-    fun getGenericCommand(name: String) = firstOrNull { it.name == name }
-
-    /**
-     * A function that specifically looks for a [TextCommand] by its name or alias provided
-     *
-     * @param name
-     * The name of the command to search
-     *
-     * @return A [TextCommand] having the same name as the provided query
-     */
-    operator fun get(name: String): TextCommand? {
+    operator fun get(name: String): GenericCommand? {
         fun checkPriority(actual: String, expected: TextCommand) = when (actual) {
             expected.name -> 2
             in expected.aliases -> 1
@@ -80,6 +70,7 @@ object CommandHandler : MutableSet<GenericCommand> {
 
         return filterIsInstanceAnd<TextCommand> { checkPriority(name, it) > 0 }
             .maxByOrNull { checkPriority(name, it) }
+            ?: firstOrNull { it.name == name }
     }
 
     /**
@@ -92,7 +83,10 @@ object CommandHandler : MutableSet<GenericCommand> {
      *
      * @return A [ContextCommand] having the same name and type as provided
      */
-    operator fun get(name: String, type: ContextCommand.ContextType) = filterIsInstanceAnd<ContextCommand> {
+    operator fun get(
+        name: String,
+        type: ContextCommand.ContextType,
+    ) = filterIsInstanceAnd<ContextCommand> {
         it.contextName == name && type in it.contextTypes
     }.firstOrNull()
 
@@ -132,6 +126,7 @@ object CommandHandler : MutableSet<GenericCommand> {
                 val args = event.message.contentRaw.split(Regex("\\s+"), 2)
 
                 this[args.first().removePrefix(Immutable.DEFAULT_PREFIX).lowercase()]
+                    ?.let { it as? TextCommand }
                     ?.takeIf { it !is SlashOnlyCommand }
                     ?.let { command ->
                         CoroutineScope(CommandContext).launch {
@@ -209,92 +204,94 @@ object CommandHandler : MutableSet<GenericCommand> {
      */
     internal operator fun invoke(event: SlashCommandInteractionEvent) {
         if (event.isFromGuild) {
-            this[event.name]?.takeIf { it !is ClassicTextOnlyCommand }?.let { command ->
-                CoroutineScope(CommandContext).launch {
-                    if (event.jda.getProcessByEntities(event.user, event.channel) === null
+            this[event.name]?.let { it as? TextCommand }
+                ?.takeIf { it !is ClassicTextOnlyCommand }
+                ?.let { command ->
+                    CoroutineScope(CommandContext).launch {
+                        if (event.jda.getProcessByEntities(event.user, event.channel) === null
                             || command.neglectProcessBlock) {
-                        if (command.isDeveloper && !event.user.isBotDeveloper) {
-                            event.replyFailure("You cannot execute the command " +
-                                    "since you are not a developer of the bot!").queue()
+                            if (command.isDeveloper && !event.user.isBotDeveloper) {
+                                event.replyFailure("You cannot execute the command " +
+                                        "since you are not a developer of the bot!").queue()
 
-                            return@launch
-                        }
-
-                        try {
-                            if (event.guild?.selfMember?.hasPermission(command.botPermissions) == false) {
-                                throw CommandException(
-                                    "${event.jda.selfUser.name} is not able to execute the command " +
-                                            "since no required permissions (${command.botPermissions.joinToString { it.getName() }}) were granted!",
-                                    footer = "Try contacting the server's staff!",
-                                )
+                                return@launch
                             }
 
-                            if (command.cooldown > 0) {
-                                command.getCooldownError(event.user.idLong)
-                                    ?.let { event.replyFailure(it).setEphemeral(true).queue() }
-                                    ?: command.let { cmd ->
-                                        cmd.applyCooldown(event.user.idLong)
-
-                                        if (event.subcommandName !== null && cmd is SubcommandHolder) {
-                                            cmd.subcommands.mapKeys { it.key.name }[event.subcommandName]
-                                                ?.invoke(event)
-                                        } else {
-                                            cmd(event)
-                                        }
-                                    }
-                            } else {
-                                if (event.subcommandName !== null && command is SubcommandHolder) {
-                                    command.subcommands.mapKeys { it.key.name }[event.subcommandName]
-                                        ?.invoke(event)
-                                } else {
-                                    command(event)
+                            try {
+                                if (event.guild?.selfMember?.hasPermission(command.botPermissions) == false) {
+                                    throw CommandException(
+                                        "${event.jda.selfUser.name} is not able to execute the command " +
+                                                "since no required permissions (${command.botPermissions.joinToString { it.getName() }}) were granted!",
+                                        footer = "Try contacting the server's staff!",
+                                    )
                                 }
-                            }
-                        } catch (e: Exception) {
-                            when (e) {
-                                is CommandException ->
-                                    event.replyFailure(e.message ?: "CommandException has occurred!") { text = e.footer }
-                                        .setEphemeral(true)
-                                        .queue(null) {
-                                            event.channel.sendFailure(e.message ?: "CommandException has occurred!") {
-                                                text = e.footer ?: e.selfDeletion?.let { sd ->
-                                                    "This message will self-delete in ${asText(sd.delay, sd.unit)}"
-                                                }
-                                            }.queue({
-                                                e.selfDeletion?.let { sd ->
-                                                    it.delete().queueAfter(sd.delay, sd.unit, null) {}
-                                                }
-                                            }) { e.printStackTrace() }
-                                        }
-                                is InsufficientPermissionException -> {} // ignored
-                                else -> {
-                                    val errorMessage = """
-                                        |${e::class.simpleName ?: "An unknown exception"} has occurred:
-                                        |${e.message ?: "No message provided"}
-                                        |""".trimMargin()
 
-                                    event.hook
-                                        .editOriginalComponents()
-                                        .retainFiles(emptyList())
-                                        .setContent("")
-                                        .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
-                                        .queue(null) {
-                                            event.replyFailure(errorMessage).queue(null) {
-                                                event.channel.sendFailure(errorMessage).queue()
+                                if (command.cooldown > 0) {
+                                    command.getCooldownError(event.user.idLong)
+                                        ?.let { event.replyFailure(it).setEphemeral(true).queue() }
+                                        ?: command.let { cmd ->
+                                            cmd.applyCooldown(event.user.idLong)
+
+                                            if (event.subcommandName !== null && cmd is SubcommandHolder) {
+                                                cmd.subcommands.mapKeys { it.key.name }[event.subcommandName]
+                                                    ?.invoke(event)
+                                            } else {
+                                                cmd(event)
                                             }
                                         }
+                                } else {
+                                    if (event.subcommandName !== null && command is SubcommandHolder) {
+                                        command.subcommands.mapKeys { it.key.name }[event.subcommandName]
+                                            ?.invoke(event)
+                                    } else {
+                                        command(event)
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                when (e) {
+                                    is CommandException ->
+                                        event.replyFailure(e.message ?: "CommandException has occurred!") { text = e.footer }
+                                            .setEphemeral(true)
+                                            .queue(null) {
+                                                event.channel.sendFailure(e.message ?: "CommandException has occurred!") {
+                                                    text = e.footer ?: e.selfDeletion?.let { sd ->
+                                                        "This message will self-delete in ${asText(sd.delay, sd.unit)}"
+                                                    }
+                                                }.queue({
+                                                    e.selfDeletion?.let { sd ->
+                                                        it.delete().queueAfter(sd.delay, sd.unit, null) {}
+                                                    }
+                                                }) { e.printStackTrace() }
+                                            }
+                                    is InsufficientPermissionException -> {} // ignored
+                                    else -> {
+                                        val errorMessage = """
+                                            |${e::class.simpleName ?: "An unknown exception"} has occurred:
+                                            |${e.message ?: "No message provided"}
+                                            |""".trimMargin()
 
-                                    e.printStackTrace()
+                                        event.hook
+                                            .editOriginalComponents()
+                                            .retainFiles(emptyList())
+                                            .setContent("")
+                                            .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
+                                            .queue(null) {
+                                                event.replyFailure(errorMessage).queue(null) {
+                                                    event.channel.sendFailure(errorMessage).queue()
+                                                }
+                                            }
+
+                                        e.printStackTrace()
+                                    }
                                 }
                             }
+                        } else {
+                            event.replyFailure("You have some other command processes running right now!")
+                                .setEphemeral(true)
+                                .queue()
                         }
-                    } else {
-                        event.replyFailure("You have some other command processes running right now!")
-                            .setEphemeral(true)
-                            .queue()
                     }
                 }
-            }
         }
     }
 
@@ -309,7 +306,7 @@ object CommandHandler : MutableSet<GenericCommand> {
      */
     internal operator fun invoke(event: ButtonInteractionEvent) {
         if (event.isFromGuild && event.message.author == event.jda.selfUser) {
-            getGenericCommand(event.componentId.split("-").first())?.let { command ->
+            this[event.componentId.split("-").first()]?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     if (event.message.timeCreated.isBefore(event.jda.startDate)) {
                         when (command.staleInteractionHandling) {
@@ -393,7 +390,7 @@ object CommandHandler : MutableSet<GenericCommand> {
      */
     internal operator fun invoke(event: SelectMenuInteractionEvent) {
         if (event.isFromGuild && event.message.author == event.jda.selfUser) {
-            getGenericCommand(event.componentId.split("-").first())?.let { command ->
+            this[event.componentId.split("-").first()]?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     if (event.message.timeCreated.isBefore(event.jda.startDate)) {
                         when (command.staleInteractionHandling) {
@@ -477,7 +474,7 @@ object CommandHandler : MutableSet<GenericCommand> {
      */
     internal operator fun invoke(event: ModalInteractionEvent) {
         if (event.isFromGuild) {
-            getGenericCommand(event.modalId.split("-").first())?.let { command ->
+            this[event.modalId.split("-").first()]?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     try {
                         command(event)
@@ -536,11 +533,13 @@ object CommandHandler : MutableSet<GenericCommand> {
         if (event.isFromGuild) {
             val interaction = event.interaction as CommandAutoCompleteInteraction
 
-            this[interaction.name]?.takeUnless { it is ClassicTextOnlyCommand }?.let { command ->
-                CoroutineScope(CommandContext).launch {
-                    command(event)
+            this[interaction.name]?.let { it as? TextCommand }
+                ?.takeUnless { it is ClassicTextOnlyCommand }
+                ?.let { command ->
+                    CoroutineScope(CommandContext).launch {
+                        command(event)
+                    }
                 }
-            }
         }
     }
 
