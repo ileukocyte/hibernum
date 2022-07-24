@@ -146,9 +146,9 @@ class InvertCommand : TextCommand, ContextCommand {
         val response = try {
             Immutable.HTTP_CLIENT.get(input).readBytes()
         } catch (_: Exception) {
-            deferred.editOriginalEmbeds(
-                defaultEmbed("The provided link is invalid!", EmbedType.FAILURE)
-            ).queue(null) { throw CommandException("The provided link is invalid!") }
+            deferred.setFailureEmbed("The provided link is invalid!").queue(null) {
+                throw CommandException("The provided link is invalid!")
+            }
 
             return
         }
@@ -156,9 +156,9 @@ class InvertCommand : TextCommand, ContextCommand {
         val image = try {
             withContext(Dispatchers.IO) { ImageIO.read(ByteArrayInputStream(response)) }.apply { invert() }
         } catch (_: Exception) {
-            deferred.editOriginalEmbeds(
-                defaultEmbed("The provided link is invalid!", EmbedType.FAILURE)
-            ).queue(null) { throw CommandException("The provided link is invalid!") }
+            deferred.setFailureEmbed("The provided link is invalid!").queue(null) {
+                throw CommandException("The provided link is invalid!")
+            }
 
             return
         }
@@ -222,9 +222,9 @@ class InvertCommand : TextCommand, ContextCommand {
             val response = try {
                 Immutable.HTTP_CLIENT.get(input).readBytes()
             } catch (_: Exception) {
-                deferred.editOriginalEmbeds(
-                    defaultEmbed("The provided link is invalid!", EmbedType.FAILURE)
-                ).queue(null) { throw CommandException("The provided link is invalid!") }
+                deferred.setFailureEmbed("The provided link is invalid!").queue(null) {
+                    throw CommandException("The provided link is invalid!")
+                }
 
                 return
             }
@@ -232,9 +232,9 @@ class InvertCommand : TextCommand, ContextCommand {
             val image = try {
                 withContext(Dispatchers.IO) { ImageIO.read(ByteArrayInputStream(response)) }.apply { invert() }
             } catch (_: Exception) {
-                deferred.editOriginalEmbeds(
-                    defaultEmbed("The provided link is invalid!", EmbedType.FAILURE)
-                ).queue(null) { throw CommandException("The provided link is invalid!") }
+                deferred.setFailureEmbed("The provided link is invalid!").queue(null) {
+                    throw CommandException("The provided link is invalid!")
+                }
 
                 return
             }
@@ -264,9 +264,9 @@ class InvertCommand : TextCommand, ContextCommand {
         val response = try {
             Immutable.HTTP_CLIENT.get("${event.target.effectiveAvatarUrl}?size=2048").readBytes()
         } catch (_: Exception) {
-            deferred.editOriginalEmbeds(
-                defaultEmbed("The profile picture request has been unsuccessful!", EmbedType.FAILURE)
-            ).queue(null) { throw CommandException("The profile picture request has been unsuccessful!") }
+            deferred.setFailureEmbed("The profile picture request has been unsuccessful!").queue(null) {
+                throw CommandException("The profile picture request has been unsuccessful!")
+            }
 
             return
         }

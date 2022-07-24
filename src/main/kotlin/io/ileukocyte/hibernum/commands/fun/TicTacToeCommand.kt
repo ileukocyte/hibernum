@@ -96,11 +96,8 @@ class TicTacToeCommand : SlashOnlyCommand {
 
                         awaitTurn(ttt, event.channel, board, staticProcessId)
                     } catch (_: ErrorResponseException) {
-                        deferred.editOriginalEmbeds(
-                            defaultEmbed(
-                                "The user who initiated the game is no longer available for the bot!",
-                                EmbedType.FAILURE,
-                            )
+                        deferred.setFailureEmbed(
+                            "The user who initiated the game is no longer available for the bot!"
                         ).queue(null) {
                             event.messageChannel
                                 .sendFailure("The user who initiated the game is no longer available for the bot!")

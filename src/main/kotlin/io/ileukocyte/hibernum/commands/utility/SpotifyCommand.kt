@@ -104,9 +104,7 @@ class SpotifyCommand : TextCommand {
                     .await()
             } catch (_: BadRequestException) {
                 try {
-                    deferred.editOriginalEmbeds(
-                        defaultEmbed("You have provided an invalid URL!", EmbedType.FAILURE)
-                    ).await()
+                    deferred.setFailureEmbed("You have provided an invalid URL!").await()
 
                     return
                 } catch (_: ErrorResponseException) {
@@ -128,9 +126,7 @@ class SpotifyCommand : TextCommand {
 
         if (items === null) {
             try {
-                deferred.editOriginalEmbeds(
-                    defaultEmbed("No track has been found by the query!", EmbedType.FAILURE)
-                ).await()
+                deferred.setFailureEmbed("No track has been found by the query!").await()
 
                 return
             } catch (_: ErrorResponseException) {

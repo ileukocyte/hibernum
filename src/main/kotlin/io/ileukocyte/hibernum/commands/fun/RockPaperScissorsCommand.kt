@@ -90,11 +90,8 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
                                 .await()
                         }
                     } catch (_: ErrorResponseException) {
-                        deferred.editOriginalEmbeds(
-                            defaultEmbed(
-                                "The user who initiated the game is no longer available for the bot!",
-                                EmbedType.FAILURE,
-                            )
+                        deferred.setFailureEmbed(
+                            "The user who initiated the game is no longer available for the bot!",
                         ).queue(null) {
                             event.messageChannel
                                 .sendFailure("The user who initiated the game is no longer available for the bot!")
@@ -153,11 +150,8 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
                                 .await()
                         }
                     } catch (_: ErrorResponseException) {
-                        deferred.editOriginalEmbeds(
-                            defaultEmbed(
-                                "One of the players is no longer available for the bot!",
-                                EmbedType.FAILURE,
-                            )
+                        deferred.setFailureEmbed(
+                            "One of the players is no longer available for the bot!"
                         ).queue(null) {
                             event.messageChannel
                                 .sendFailure("One of the players is no longer available for the bot!")
@@ -288,11 +282,8 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
                             event.messageChannel.sendMessageEmbeds(embed).await()
                         }
                     } catch (_: ErrorResponseException) {
-                        deferred.editOriginalEmbeds(
-                            defaultEmbed(
-                                "One of the players is no longer available for the bot!",
-                                EmbedType.FAILURE,
-                            )
+                        deferred.setFailureEmbed(
+                            "One of the players is no longer available for the bot!"
                         ).queue(null) {
                             event.messageChannel
                                 .sendFailure("One of the players is no longer available for the bot!")

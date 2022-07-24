@@ -6,10 +6,7 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
-import io.ileukocyte.hibernum.extensions.EmbedType
-import io.ileukocyte.hibernum.extensions.await
-import io.ileukocyte.hibernum.extensions.defaultEmbed
-import io.ileukocyte.hibernum.extensions.limitTo
+import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.awaitEvent
 
 import io.ktor.client.call.body
@@ -82,12 +79,9 @@ class DictionaryCommand : TextCommand {
         val results = searchDefinition(event.getOption("term")?.asString ?: return)
 
         if (results.isEmpty()) {
-            deferred.editOriginalEmbeds(
-                defaultEmbed(
-                    "No definition has been found by the query!",
-                    EmbedType.FAILURE,
-                ) { text = "This message will self-delete in 5 seconds" }
-            ).queue { it.delete().queueAfter(5, TimeUnit.SECONDS, {}) {} }
+            deferred.setFailureEmbed("No definition has been found by the query!") {
+                text = "This message will self-delete in 5 seconds"
+            }.queue { it.delete().queueAfter(5, TimeUnit.SECONDS, {}) {} }
 
             return
         }

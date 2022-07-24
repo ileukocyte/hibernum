@@ -2,6 +2,7 @@
 package io.ileukocyte.hibernum.extensions
 
 import io.ileukocyte.hibernum.builders.KEmbedBuilder
+import io.ileukocyte.hibernum.builders.KMessageBuilder
 import io.ileukocyte.hibernum.commands.GenericCommand
 import io.ileukocyte.hibernum.utils.awaitEvent
 import io.ileukocyte.hibernum.utils.waiterProcess
@@ -89,3 +90,21 @@ fun MessageEditData.toCreateData() = MessageCreateData.fromEditData(this)
 fun Message.toEditData() = MessageEditData.fromMessage(this)
 
 fun MessageCreateData.toEditData() = MessageEditData.fromCreateData(this)
+
+fun Message.editMessage(block: KMessageBuilder.() -> Unit) =
+    editMessage(KMessageBuilder().apply(block)().toEditData())
+
+fun Message.editMessageEmbed(block: KEmbedBuilder.() -> Unit) =
+    editMessageEmbeds(KEmbedBuilder().apply(block)())
+
+fun Message.setSuccessEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
+    editMessageEmbeds(defaultEmbed(desc, EmbedType.SUCCESS, footer))
+
+fun Message.setFailureEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
+    editMessageEmbeds(defaultEmbed(desc, EmbedType.FAILURE, footer))
+
+fun Message.setConfirmationEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
+    editMessageEmbeds(defaultEmbed(desc, EmbedType.CONFIRMATION, footer))
+
+fun Message.setWarningEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
+    editMessageEmbeds(defaultEmbed(desc, EmbedType.WARNING, footer))

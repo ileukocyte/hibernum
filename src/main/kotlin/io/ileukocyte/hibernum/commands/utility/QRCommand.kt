@@ -174,9 +174,7 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
                         event.channel.sendMessageEmbeds(resultEmbed).queue()
                     }
                 } catch (_: NotFoundException) {
-                    deferred.editOriginalEmbeds(
-                        defaultEmbed("No QR code has been found in the image!", EmbedType.FAILURE)
-                    ).queue(null) {
+                    deferred.setFailureEmbed("No QR code has been found in the image!").queue(null) {
                         throw CommandException("No QR code has been found in the image!")
                     }
 
@@ -262,9 +260,7 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
                                 event.messageChannel.sendMessageEmbeds(resultEmbed).queue()
                             }
                         } catch (_: NotFoundException) {
-                            deferred.editOriginalEmbeds(
-                                defaultEmbed("No QR code has been found in the image!", EmbedType.FAILURE)
-                            ).queue(null) {
+                            deferred.setFailureEmbed("No QR code has been found in the image!").queue(null) {
                                 throw CommandException("No QR code has been found in the image!")
                             }
 
@@ -373,9 +369,7 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
                                             buttonEvent.messageChannel.sendMessageEmbeds(resultEmbed).queue()
                                         }
                                     } catch (_: NotFoundException) {
-                                        deferred.editOriginalEmbeds(
-                                            defaultEmbed("No QR code has been found in the image!", EmbedType.FAILURE)
-                                        ).queue(null) {
+                                        deferred.setFailureEmbed("No QR code has been found in the image!").queue(null) {
                                             throw CommandException("No QR code has been found in the image!")
                                         }
 

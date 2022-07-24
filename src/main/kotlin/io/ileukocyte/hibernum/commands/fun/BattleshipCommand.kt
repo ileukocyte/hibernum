@@ -106,7 +106,7 @@ class BattleshipCommand : SlashOnlyCommand {
                                 val error = "The game session has been aborted " +
                                         "since the bot is unable to DM one of the players (${player.user.asMention})!"
 
-                                deferred.editOriginalEmbeds(defaultEmbed(error, EmbedType.FAILURE)).queue(null) {
+                                deferred.setFailureEmbed(error).queue(null) {
                                     throw CommandException(error)
                                 }
                             }
@@ -136,9 +136,11 @@ class BattleshipCommand : SlashOnlyCommand {
                         )
 
                         val serverMessage = try {
-                            deferred.editOriginalEmbeds(defaultEmbed("The session has started!", EmbedType.SUCCESS) {
+                            deferred.setSuccessEmbed("The session has started!") {
                                 text = "Do not delete this message!"
-                            }).setContent(null).setActionRow(termination).await()
+                            }.setContent(null)
+                                .setActionRow(termination)
+                                .await()
                         } catch (_: ErrorResponseException) {
                             event.messageChannel.sendSuccess("The session has started!") {
                                 text = "Do not delete this message!"
@@ -151,11 +153,8 @@ class BattleshipCommand : SlashOnlyCommand {
                     } catch (_: ErrorResponseException) {
                         event.jda.getProcessById("%04d".format(staticProcessId))?.kill(event.jda)
 
-                        deferred.editOriginalEmbeds(
-                            defaultEmbed(
-                                "The user who initiated the game is no longer available for the bot!",
-                                EmbedType.FAILURE,
-                            )
+                        deferred.setFailureEmbed(
+                            "The user who initiated the game is no longer available for the bot!"
                         ).queue(null) {
                             event.messageChannel
                                 .sendFailure("The user who initiated the game is no longer available for the bot!")

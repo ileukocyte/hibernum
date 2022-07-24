@@ -151,20 +151,16 @@ class PlayCommand : TextCommand {
                     }
 
                     override fun noMatches() =
-                        deferred.editOriginalEmbeds(defaultEmbed(
-                            desc = "No results have been found by the query!",
-                            type = EmbedType.FAILURE,
-                        ) { text = "Try using the \"ytplay\" command instead!" }).queue(null) {
+                        deferred.setFailureEmbed("No results have been found by the query!") {
+                            text = "Try using the \"ytplay\" command instead!"
+                        }.queue(null) {
                             event.channel.sendFailure("No results have been found by the query!") {
                                 text = "Try using the \"ytplay\" command instead!"
                             }.queue()
                         }
 
                     override fun loadFailed(exception: FriendlyException) =
-                        deferred.editOriginalEmbeds(defaultEmbed(
-                            desc = "The track cannot be played!",
-                            type = EmbedType.FAILURE,
-                        )).queue(null) {
+                        deferred.setFailureEmbed("The track cannot be played!").queue(null) {
                             event.channel.sendFailure("The track cannot be played!").queue()
                         }
                 })

@@ -115,7 +115,7 @@ class YouTubePlayCommand : TextCommand {
 
                     ifFromAnInteraction?.let {
                         try {
-                            it.editOriginalEmbeds(defaultEmbed(error, EmbedType.FAILURE)).await()
+                            it.setFailureEmbed(error).await()
 
                             return
                         } catch (_: ErrorResponseException) {
@@ -160,7 +160,7 @@ class YouTubePlayCommand : TextCommand {
 
                     ifFromAnInteraction?.let {
                         try {
-                            it.editOriginalEmbeds(defaultEmbed(error, EmbedType.FAILURE)).await()
+                            it.setFailureEmbed(error).await()
 
                             return
                         } catch (_: ErrorResponseException) {
@@ -203,9 +203,7 @@ class YouTubePlayCommand : TextCommand {
             }
         } ?: ifFromAnInteraction?.let {
             try {
-                it.editOriginalEmbeds(
-                    defaultEmbed("You are not connected to a voice channel!", EmbedType.FAILURE)
-                ).await()
+                it.setFailureEmbed("You are not connected to a voice channel!").await()
 
                 return
             } catch (_: ErrorResponseException) {

@@ -208,8 +208,7 @@ class PruneCommand : SlashOnlyCommand {
         }.await()
 
         filtered.takeUnless { it.isEmpty() } ?: run {
-            deferred.editOriginalEmbeds(defaultEmbed("No messages to delete have been found!", EmbedType.FAILURE))
-                .queue()
+            deferred.setFailureEmbed("No messages to delete have been found!").queue()
 
             return
         }
@@ -224,7 +223,7 @@ class PruneCommand : SlashOnlyCommand {
 
         event.channel.purgeMessages(filtered)
 
-        deferred.editOriginalEmbeds(defaultEmbed(response, EmbedType.SUCCESS)).queue()
+        deferred.setSuccessEmbed(response).queue()
 
         event.channel.sendWarning("${event.user.asMention} has used the `$name` command!") {
             text = "This message will self-delete in 5 seconds"

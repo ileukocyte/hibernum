@@ -65,7 +65,7 @@ class SkipCommand : TextCommand {
                     .takeIf { audioPlayer.player.playingTrack === null }
 
                 description?.let {
-                    deferred.editOriginalEmbeds(defaultEmbed(it, EmbedType.SUCCESS)).queue(null) { _ ->
+                    deferred.setSuccessEmbed(it).queue(null) { _ ->
                         event.channel.sendSuccess(it).queue()
                     }
                 }
