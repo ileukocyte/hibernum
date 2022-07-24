@@ -84,4 +84,8 @@ fun Message.replyWarning(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)
     replyEmbeds(defaultEmbed(desc, EmbedType.WARNING, footer))
 
 fun Message.toCreateData() = MessageCreateData.fromMessage(this)
+fun MessageEditData.toCreateData() = MessageCreateData.fromEditData(this)
+
 fun Message.toEditData() = MessageEditData.fromMessage(this)
+
+fun MessageCreateData.toEditData() = MessageEditData.fromCreateData(this)

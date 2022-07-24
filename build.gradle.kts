@@ -34,7 +34,7 @@ repositories {
 
 dependencies {
     // Discord
-    implementation(group = "com.github.DV8FromtheWorld", name = "JDA", version = "feature~message-rework-SNAPSHOT") {
+    implementation(group = "com.github.DV8FromtheWorld", name = "JDA", version = "b73e9e464b") {
         exclude(module = "opus-java")
     }
     implementation(group = "com.sedmelluq", name = "lavaplayer", version = "1.3.78")

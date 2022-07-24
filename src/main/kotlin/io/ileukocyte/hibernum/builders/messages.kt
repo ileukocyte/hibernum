@@ -7,9 +7,12 @@ import net.dv8tion.jda.api.interactions.components.LayoutComponent
 import net.dv8tion.jda.api.utils.FileUpload
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
+
 class KMessageBuilder {
     var content = ""
     var isTTS = false
+    var mentionRepliedUser = true
 
     val actionRow = mutableListOf<ItemComponent>()
     val components = mutableListOf<LayoutComponent>()
@@ -47,12 +50,13 @@ class KMessageBuilder {
     @PublishedApi
     internal operator fun invoke() = MessageCreateBuilder()
         .setContent(content)
-        .setActionRow(actionRow)
         .setComponents(components)
         .setEmbeds(embeds)
         .setFiles(files)
         .setTTS(isTTS)
         .mention(mentions)
+        .mentionRepliedUser(mentionRepliedUser)
+        .applyIf(actionRow.isNotEmpty()) { setActionRow(actionRow) }
         .build()
 }
 
