@@ -49,7 +49,11 @@ class SayCommand : TextCommand {
         }
 
         imageStream?.let {
-            restAction.setFiles(FileUpload.fromData(it, imageName.orEmpty())).queue()
+            val file = FileUpload.fromData(it, imageName.orEmpty())
+
+            restAction.setFiles(file).queue(null) {
+                file.close()
+            }
         } ?: restAction.queue()
     }
 
@@ -78,7 +82,11 @@ class SayCommand : TextCommand {
         }
 
         attachment?.second?.let {
-            restAction.setFiles(FileUpload.fromData(it, attachment.first)).queue()
+            val file = FileUpload.fromData(it, attachment.first)
+
+            restAction.setFiles(file).queue(null) {
+                file.close()
+            }
         } ?: restAction.queue()
     }
 }
