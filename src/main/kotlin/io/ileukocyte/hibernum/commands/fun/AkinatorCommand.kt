@@ -36,7 +36,6 @@ import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import net.dv8tion.jda.api.interactions.components.ActionRow
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
@@ -190,7 +189,7 @@ class AkinatorCommand : TextCommand {
 
                         event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda)
 
-                        val embed = buildEmbed {
+                        val invoker = deferred.editOriginalEmbed {
                             color = Immutable.SUCCESS
                             description = akiwrapper.question?.question ?: "N/A"
 
@@ -205,9 +204,7 @@ class AkinatorCommand : TextCommand {
                                     }
                                 }
                             }
-                        }
-
-                        val invoker = deferred.editOriginalEmbeds(embed).await()
+                        }.await()
 
                         awaitAnswer(event.channel, event.user, akiwrapper, invoker, processId)
                     } catch (e: Exception) {
@@ -573,12 +570,11 @@ class AkinatorCommand : TextCommand {
             is SlashCommandInteractionEvent ->
                 event.reply {
                     embeds += defaultEmbed("Choose your guess type!", EmbedType.CONFIRMATION)
-                    actionRows += ActionRow.of(menu)
+                    actionRow += menu
                 }.await().retrieveOriginal().await()
             is SelectMenuInteractionEvent ->
-                event.deferEdit()
-                    .await()
-                    .editOriginalEmbeds(defaultEmbed("Choose your guess type!", EmbedType.CONFIRMATION))
+                event.deferEdit().await()
+                    .setConfirmationEmbed("Choose your guess type!")
                     .setActionRow(menu)
                     .await()
             else -> null // must never occur
@@ -620,13 +616,13 @@ class AkinatorCommand : TextCommand {
 
         val message = if (callback is SelectMenuInteractionEvent) {
             callback.deferEdit().await()
-                .editOriginalEmbeds(defaultEmbed("Choose your language!", EmbedType.CONFIRMATION))
+                .setConfirmationEmbed("Choose your language!")
                 .setActionRow(menu)
                 .await()
         } else {
             callback.reply {
                 embeds += defaultEmbed("Choose your language!", EmbedType.CONFIRMATION)
-                actionRows += ActionRow.of(menu)
+                actionRow += menu
             }.await().retrieveOriginal().await()
         }
 

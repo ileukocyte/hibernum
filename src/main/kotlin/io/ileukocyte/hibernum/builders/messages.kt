@@ -1,29 +1,34 @@
 package io.ileukocyte.hibernum.builders
 
-import net.dv8tion.jda.api.MessageBuilder
 import net.dv8tion.jda.api.entities.IMentionable
 import net.dv8tion.jda.api.entities.MessageEmbed
-import net.dv8tion.jda.api.entities.sticker.StickerSnowflake
-import net.dv8tion.jda.api.interactions.components.ActionRow
+import net.dv8tion.jda.api.interactions.components.ItemComponent
+import net.dv8tion.jda.api.interactions.components.LayoutComponent
+import net.dv8tion.jda.api.utils.FileUpload
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
+
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
 
 class KMessageBuilder {
     var content = ""
     var isTTS = false
-    var nonce: String? = null
+    var mentionRepliedUser = true
 
+    val actionRow = mutableListOf<ItemComponent>()
+    val components = mutableListOf<LayoutComponent>()
     val embeds = mutableListOf<MessageEmbed>()
-    val actionRows = mutableListOf<ActionRow>()
+    val files = mutableListOf<FileUpload>()
     val mentions = mutableListOf<IMentionable>()
-    val stickers = mutableListOf<StickerSnowflake>()
 
     fun clear() {
         content = ""
         isTTS = false
 
+        actionRow.clear()
+        components.clear()
         embeds.clear()
-        actionRows.clear()
+        files.clear()
         mentions.clear()
-        stickers.clear()
     }
 
     operator fun plusAssign(message: String) {
@@ -43,13 +48,15 @@ class KMessageBuilder {
     }
 
     @PublishedApi
-    internal operator fun invoke() = MessageBuilder(content)
-        .setTTS(isTTS)
+    internal operator fun invoke() = MessageCreateBuilder()
+        .setContent(content)
+        .setComponents(components)
         .setEmbeds(embeds)
-        .setActionRows(actionRows)
-        .setStickers(stickers)
+        .setFiles(files)
+        .setTTS(isTTS)
         .mention(mentions)
-        .setNonce(nonce)
+        .mentionRepliedUser(mentionRepliedUser)
+        .applyIf(actionRow.isNotEmpty()) { setActionRow(actionRow) }
         .build()
 }
 

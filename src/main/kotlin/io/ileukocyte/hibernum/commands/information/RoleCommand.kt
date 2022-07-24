@@ -21,6 +21,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
+import net.dv8tion.jda.api.utils.FileUpload
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
 class RoleCommand : TextCommand {
@@ -37,7 +38,9 @@ class RoleCommand : TextCommand {
     override val cooldown = 3L
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
-        if (args === null) throw NoArgumentsException
+        if (args === null) {
+            throw NoArgumentsException
+        }
 
         val exception = CommandException("No users have been found by the query!")
 
@@ -45,28 +48,30 @@ class RoleCommand : TextCommand {
             args matches Regex("\\d{17,20}") -> {
                 val role = event.guild.getRoleById(args) ?: throw exception
 
+                val file = role.color?.let {
+                    FileUpload.fromData(
+                        it.getImageBytes(150, 150),
+                        "${"%02x%02x%02x".format(it.red, it.green, it.blue)}.png",
+                    )
+                }
+
                 event.channel.sendMessageEmbeds(infoEmbed(role))
-                    .let {
-                        role.color?.let { c ->
-                            it.addFile(
-                                c.getImageBytes(150, 150),
-                                "${"%02x%02x%02x".format(c.red, c.green, c.blue)}.png",
-                            )
-                        } ?: it
-                    }.queue()
+                    .setFiles(setOfNotNull(file))
+                    .queue(null) { file?.close() }
             }
             event.message.mentions.rolesBag.isNotEmpty() -> {
                 val role = event.message.mentions.rolesBag.first()
 
+                val file = role.color?.let {
+                    FileUpload.fromData(
+                        it.getImageBytes(150, 150),
+                        "${"%02x%02x%02x".format(it.red, it.green, it.blue)}.png",
+                    )
+                }
+
                 event.channel.sendMessageEmbeds(infoEmbed(role))
-                    .let {
-                        role.color?.let { c ->
-                            it.addFile(
-                                c.getImageBytes(150, 150),
-                                "${"%02x%02x%02x".format(c.red, c.green, c.blue)}.png",
-                            )
-                        } ?: it
-                    }.queue()
+                    .setFiles(setOfNotNull(file))
+                    .queue(null) { file?.close() }
             }
             else -> {
                 val results = event.guild.searchRoles(args)
@@ -77,15 +82,16 @@ class RoleCommand : TextCommand {
                 if (results.size == 1) {
                     val role = results.first()
 
+                    val file = role.color?.let {
+                        FileUpload.fromData(
+                            it.getImageBytes(150, 150),
+                            "${"%02x%02x%02x".format(it.red, it.green, it.blue)}.png",
+                        )
+                    }
+
                     event.channel.sendMessageEmbeds(infoEmbed(role))
-                        .let {
-                            role.color?.let { c ->
-                                it.addFile(
-                                    c.getImageBytes(150, 150),
-                                    "${"%02x%02x%02x".format(c.red, c.green, c.blue)}.png",
-                                )
-                            } ?: it
-                        }.queue()
+                        .setFiles(setOfNotNull(file))
+                        .queue(null) { file?.close() }
 
                     return
                 }
@@ -109,15 +115,18 @@ class RoleCommand : TextCommand {
         val deferred = event.deferReply().await()
         val role = event.getOption("role")?.asRole ?: return
 
+        val file = role.color?.let {
+            FileUpload.fromData(
+                it.getImageBytes(150, 150),
+                "${"%02x%02x%02x".format(it.red, it.green, it.blue)}.png",
+            )
+        }
+
         deferred.editOriginalEmbeds(infoEmbed(role))
-            .let {
-                role.color?.let { c ->
-                    it.addFile(
-                        c.getImageBytes(150, 150),
-                        "${"%02x%02x%02x".format(c.red, c.green, c.blue)}.png",
-                    )
-                } ?: it
-            }.queue()
+            .setFiles(setOfNotNull(file))
+            .queue(null) {
+                file?.close()
+            }
     }
 
     override suspend fun invoke(event: SelectMenuInteractionEvent) {
@@ -135,17 +144,20 @@ class RoleCommand : TextCommand {
             val deferred = event.deferEdit().await()
             val role = event.guild?.getRoleById(value) ?: return
 
+            val file = role.color?.let {
+                FileUpload.fromData(
+                    it.getImageBytes(150, 150),
+                    "${"%02x%02x%02x".format(it.red, it.green, it.blue)}.png",
+                )
+            }
+
             deferred.editOriginalEmbeds(infoEmbed(role))
-                .setActionRows()
-                .let {
-                    role.color?.let { c ->
-                        it.addFile(
-                            c.getImageBytes(150, 150),
-                            "${"%02x%02x%02x".format(c.red, c.green, c.blue)}.png",
-                        )
-                    } ?: it
-                }.queue()
-        } else throw CommandException("You did not invoke the initial command!")
+                .setComponents(emptyList())
+                .setFiles(setOfNotNull(file))
+                .queue()
+        } else {
+            throw CommandException("You did not invoke the initial command!")
+        }
     }
 
     private suspend fun infoEmbed(role: Role) = buildEmbed {

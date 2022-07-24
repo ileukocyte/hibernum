@@ -2,6 +2,7 @@
 package io.ileukocyte.hibernum.extensions
 
 import io.ileukocyte.hibernum.builders.KEmbedBuilder
+import io.ileukocyte.hibernum.builders.KMessageBuilder
 import io.ileukocyte.hibernum.commands.GenericCommand
 import io.ileukocyte.hibernum.utils.awaitEvent
 import io.ileukocyte.hibernum.utils.waiterProcess
@@ -14,6 +15,8 @@ import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
+import net.dv8tion.jda.api.utils.messages.MessageCreateData
+import net.dv8tion.jda.api.utils.messages.MessageEditData
 
 const val CHECK_MARK = "\u2705"
 const val CROSS_MARK = "\u274E"
@@ -80,3 +83,28 @@ fun Message.replyConfirmation(desc: String, footer: (KEmbedBuilder.Footer.() -> 
 
 fun Message.replyWarning(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
     replyEmbeds(defaultEmbed(desc, EmbedType.WARNING, footer))
+
+fun Message.toCreateData() = MessageCreateData.fromMessage(this)
+fun MessageEditData.toCreateData() = MessageCreateData.fromEditData(this)
+
+fun Message.toEditData() = MessageEditData.fromMessage(this)
+
+fun MessageCreateData.toEditData() = MessageEditData.fromCreateData(this)
+
+fun Message.editMessage(block: KMessageBuilder.() -> Unit) =
+    editMessage(KMessageBuilder().apply(block)().toEditData())
+
+fun Message.editMessageEmbed(block: KEmbedBuilder.() -> Unit) =
+    editMessageEmbeds(KEmbedBuilder().apply(block)())
+
+fun Message.setSuccessEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
+    editMessageEmbeds(defaultEmbed(desc, EmbedType.SUCCESS, footer))
+
+fun Message.setFailureEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
+    editMessageEmbeds(defaultEmbed(desc, EmbedType.FAILURE, footer))
+
+fun Message.setConfirmationEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
+    editMessageEmbeds(defaultEmbed(desc, EmbedType.CONFIRMATION, footer))
+
+fun Message.setWarningEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
+    editMessageEmbeds(defaultEmbed(desc, EmbedType.WARNING, footer))

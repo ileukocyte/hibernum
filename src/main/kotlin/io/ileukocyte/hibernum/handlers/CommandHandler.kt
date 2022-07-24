@@ -209,7 +209,7 @@ object CommandHandler : MutableSet<GenericCommand> {
                 ?.let { command ->
                     CoroutineScope(CommandContext).launch {
                         if (event.jda.getProcessByEntities(event.user, event.channel) === null
-                            || command.neglectProcessBlock) {
+                                || command.neglectProcessBlock) {
                             if (command.isDeveloper && !event.user.isBotDeveloper) {
                                 event.replyFailure("You cannot execute the command " +
                                         "since you are not a developer of the bot!").queue()
@@ -270,16 +270,16 @@ object CommandHandler : MutableSet<GenericCommand> {
                                             |${e.message ?: "No message provided"}
                                             |""".trimMargin()
 
-                                        event.hook
-                                            .editOriginalComponents()
-                                            .retainFiles(emptyList())
-                                            .setContent("")
-                                            .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
-                                            .queue(null) {
-                                                event.replyFailure(errorMessage).queue(null) {
-                                                    event.channel.sendFailure(errorMessage).queue()
-                                                }
+                                    event.hook
+                                        .editOriginalComponents()
+                                        .setFiles(emptyList())
+                                        .setContent(null)
+                                        .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
+                                        .queue(null) {
+                                            event.replyFailure(errorMessage).queue(null) {
+                                                event.channel.sendFailure(errorMessage).queue()
                                             }
+                                        }
 
                                         e.printStackTrace()
                                     }
@@ -361,8 +361,8 @@ object CommandHandler : MutableSet<GenericCommand> {
 
                                 event.hook
                                     .editOriginalComponents()
-                                    .retainFiles(emptyList())
-                                    .setContent("")
+                                    .setFiles(emptyList())
+                                    .setContent(null)
                                     .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
                                     .queue(null) {
                                         event.replyFailure(errorMessage).queue(null) {
@@ -445,8 +445,8 @@ object CommandHandler : MutableSet<GenericCommand> {
 
                                 event.hook
                                     .editOriginalComponents()
-                                    .retainFiles(emptyList())
-                                    .setContent("")
+                                    .setFiles(emptyList())
+                                    .setContent(null)
                                     .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
                                     .queue(null) {
                                         event.replyFailure(errorMessage).queue(null) {
@@ -502,8 +502,8 @@ object CommandHandler : MutableSet<GenericCommand> {
 
                                 event.hook
                                     .editOriginalComponents()
-                                    .retainFiles(emptyList())
-                                    .setContent("")
+                                    .setFiles(emptyList())
+                                    .setContent(null)
                                     .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
                                     .queue(null) {
                                         event.replyFailure(errorMessage).queue(null) {
@@ -607,8 +607,8 @@ object CommandHandler : MutableSet<GenericCommand> {
 
                                     event.hook
                                         .editOriginalComponents()
-                                        .retainFiles(emptyList())
-                                        .setContent("")
+                                        .setFiles(emptyList())
+                                        .setContent(null)
                                         .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
                                         .queue(null) {
                                             event.replyFailure(errorMessage).queue(null) {
@@ -694,8 +694,8 @@ object CommandHandler : MutableSet<GenericCommand> {
 
                                     event.hook
                                         .editOriginalComponents()
-                                        .retainFiles(emptyList())
-                                        .setContent("")
+                                        .setFiles(emptyList())
+                                        .setContent(null)
                                         .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
                                         .queue(null) {
                                             event.replyFailure(errorMessage).queue(null) {

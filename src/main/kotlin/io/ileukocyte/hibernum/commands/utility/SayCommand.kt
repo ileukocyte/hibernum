@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.utils.FileUpload
 
 class SayCommand : TextCommand {
     override val name = "say"
@@ -47,7 +48,13 @@ class SayCommand : TextCommand {
             }
         }
 
-        imageStream?.let { restAction.addFile(it, imageName.orEmpty()).queue() } ?: restAction.queue()
+        imageStream?.let {
+            val file = FileUpload.fromData(it, imageName.orEmpty())
+
+            restAction.setFiles(file).queue(null) {
+                file.close()
+            }
+        } ?: restAction.queue()
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
@@ -74,6 +81,12 @@ class SayCommand : TextCommand {
             }
         }
 
-        attachment?.second?.let { restAction.addFile(it, attachment.first).queue() } ?: restAction.queue()
+        attachment?.second?.let {
+            val file = FileUpload.fromData(it, attachment.first)
+
+            restAction.setFiles(file).queue(null) {
+                file.close()
+            }
+        } ?: restAction.queue()
     }
 }

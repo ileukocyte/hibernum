@@ -34,7 +34,9 @@ repositories {
 
 dependencies {
     // Discord
-    implementation(group = "net.dv8tion", name = "JDA", version = "5.0.0-alpha.16") { exclude(module = "opus-java") }
+    implementation(group = "com.github.DV8FromtheWorld", name = "JDA", version = "b73e9e464b") {
+        exclude(module = "opus-java")
+    }
     implementation(group = "com.sedmelluq", name = "lavaplayer", version = "1.3.78")
 
     // Logging

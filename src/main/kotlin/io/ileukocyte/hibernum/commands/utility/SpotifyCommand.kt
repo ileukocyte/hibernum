@@ -41,7 +41,10 @@ class SpotifyCommand : TextCommand {
 
         if (regexMatches.any()) {
             val track = try {
-                api.getTrack(regexMatches.first().groups.last()?.value ?: return).build().executeAsync().await()
+                api.getTrack(regexMatches.first().groups.last()?.value ?: return)
+                    .build()
+                    .executeAsync()
+                    .await()
             } catch (_: BadRequestException) {
                 throw CommandException("You have provided an invalid URL!")
             }
@@ -95,12 +98,13 @@ class SpotifyCommand : TextCommand {
 
         if (regexMatches.any()) {
             val track = try {
-                api.getTrack(regexMatches.first().groups.last()?.value ?: return).build().executeAsync().await()
+                api.getTrack(regexMatches.first().groups.last()?.value ?: return)
+                    .build()
+                    .executeAsync()
+                    .await()
             } catch (_: BadRequestException) {
                 try {
-                    deferred.editOriginalEmbeds(
-                        defaultEmbed("You have provided an invalid URL!", EmbedType.FAILURE)
-                    ).await()
+                    deferred.setFailureEmbed("You have provided an invalid URL!").await()
 
                     return
                 } catch (_: ErrorResponseException) {
@@ -122,9 +126,7 @@ class SpotifyCommand : TextCommand {
 
         if (items === null) {
             try {
-                deferred.editOriginalEmbeds(
-                    defaultEmbed("No track has been found by the query!", EmbedType.FAILURE)
-                ).await()
+                deferred.setFailureEmbed("No track has been found by the query!").await()
 
                 return
             } catch (_: ErrorResponseException) {
@@ -186,7 +188,11 @@ class SpotifyCommand : TextCommand {
                 val api = SPOTIFY_API.apply {
                     accessToken = clientCredentials().build().executeAsync().await().accessToken
                 }
-                val track = api.getTrack(event.selectedOptions.firstOrNull()?.value).build().executeAsync().await()
+
+                val track = api.getTrack(event.selectedOptions.firstOrNull()?.value)
+                    .build()
+                    .executeAsync()
+                    .await()
 
                 try {
                     deferred.editOriginalComponents().setEmbeds(trackEmbed(track, api)).await()

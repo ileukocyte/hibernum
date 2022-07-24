@@ -94,7 +94,7 @@ class ServerCommand : TextCommand {
             val guild = event.guild ?: return
             val deferred = event.editMessage("Executing\u2026".surroundWith('*'))
                 .setEmbeds()
-                .setActionRows()
+                .setComponents(emptyList())
                 .await()
 
             val embed = when (type) {

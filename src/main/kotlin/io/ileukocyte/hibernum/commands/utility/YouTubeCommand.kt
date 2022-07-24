@@ -7,10 +7,7 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
-import io.ileukocyte.hibernum.extensions.EmbedType
-import io.ileukocyte.hibernum.extensions.await
-import io.ileukocyte.hibernum.extensions.defaultEmbed
-import io.ileukocyte.hibernum.extensions.limitTo
+import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.*
 
 import kotlin.coroutines.resume
@@ -73,9 +70,7 @@ class YouTubeCommand : TextCommand {
 
             if (video === null) {
                 try {
-                    deferred.editOriginalEmbeds(
-                        defaultEmbed("No results have been found by the query!", EmbedType.FAILURE)
-                    ).await()
+                    deferred.setFailureEmbed("No results have been found by the query!").await()
 
                     return
                 } catch (_: ErrorResponseException) {
@@ -188,7 +183,7 @@ class YouTubeCommand : TextCommand {
 
             ifFromSlashCommand?.let {
                 try {
-                    it.editOriginalEmbeds(defaultEmbed(error, EmbedType.FAILURE)).await()
+                    it.setFailureEmbed(error).await()
 
                     return
                 } catch (_: ErrorResponseException) {

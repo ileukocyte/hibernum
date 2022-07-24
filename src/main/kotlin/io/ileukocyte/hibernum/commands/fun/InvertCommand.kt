@@ -22,6 +22,7 @@ import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEven
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.utils.FileUpload
 
 import org.apache.commons.validator.routines.UrlValidator
 
@@ -60,9 +61,15 @@ class InvertCommand : TextCommand, ContextCommand {
                         .apply { ImageIO.write(image, "png", this) }
                         .use { s -> s.toByteArray() }
 
-                    deferred.editMessageEmbeds().addFile(bytesToSend, "inverted.png").queue({}) {
-                        event.channel.sendFile(bytesToSend, "inverted.png").queue()
-                    }
+                    val file = FileUpload.fromData(bytesToSend, "inverted.png")
+
+                    deferred.editMessageEmbeds()
+                        .setFiles(file)
+                        .queue(null) {
+                            event.channel.sendFiles(file).queue(null) {
+                                file.close()
+                            }
+                        }
                 } catch (e: Exception) {
                     deferred.delete().queue(null) {}
 
@@ -105,9 +112,15 @@ class InvertCommand : TextCommand, ContextCommand {
                 .apply { withContext(Dispatchers.IO) { ImageIO.write(image, "png", this@apply) } }
                 .use { it.toByteArray() }
 
-            deferred.editMessageEmbeds().addFile(bytesToSend, "inverted.png").queue({}) {
-                event.channel.sendFile(bytesToSend, "inverted.png").queue()
-            }
+            val file = FileUpload.fromData(bytesToSend, "inverted.png")
+
+            deferred.editMessageEmbeds()
+                .setAttachments(file)
+                .queue(null) {
+                    event.channel.sendFiles(file).queue(null) {
+                        file.close()
+                    }
+                }
         }
     }
 
@@ -133,9 +146,9 @@ class InvertCommand : TextCommand, ContextCommand {
         val response = try {
             Immutable.HTTP_CLIENT.get(input).readBytes()
         } catch (_: Exception) {
-            deferred.editOriginalEmbeds(
-                defaultEmbed("The provided link is invalid!", EmbedType.FAILURE)
-            ).queue(null) { throw CommandException("The provided link is invalid!") }
+            deferred.setFailureEmbed("The provided link is invalid!").queue(null) {
+                throw CommandException("The provided link is invalid!")
+            }
 
             return
         }
@@ -143,9 +156,9 @@ class InvertCommand : TextCommand, ContextCommand {
         val image = try {
             withContext(Dispatchers.IO) { ImageIO.read(ByteArrayInputStream(response)) }.apply { invert() }
         } catch (_: Exception) {
-            deferred.editOriginalEmbeds(
-                defaultEmbed("The provided link is invalid!", EmbedType.FAILURE)
-            ).queue(null) { throw CommandException("The provided link is invalid!") }
+            deferred.setFailureEmbed("The provided link is invalid!").queue(null) {
+                throw CommandException("The provided link is invalid!")
+            }
 
             return
         }
@@ -154,8 +167,12 @@ class InvertCommand : TextCommand, ContextCommand {
             .apply { withContext(Dispatchers.IO) { ImageIO.write(image, "png", this@apply) } }
             .toByteArray()
 
-        deferred.editOriginalEmbeds().addFile(bytesToSend, "inverted.png").queue(null) {
-            event.channel.sendFile(bytesToSend, "inverted.png").queue()
+        val file = FileUpload.fromData(bytesToSend, "inverted.png")
+
+        deferred.editOriginalEmbeds().setFiles(file).queue(null) {
+            event.channel.sendFiles(file).queue(null) {
+                file.close()
+            }
         }
     }
 
@@ -175,9 +192,15 @@ class InvertCommand : TextCommand, ContextCommand {
                         .apply { ImageIO.write(image, "png", this) }
                         .use { s -> s.toByteArray() }
 
-                    deferred.editOriginalEmbeds().addFile(bytesToSend, "inverted.png").queue({}) {
-                        event.messageChannel.sendFile(bytesToSend, "inverted.png").queue()
-                    }
+                    val file = FileUpload.fromData(bytesToSend, "inverted.png")
+
+                    deferred.editOriginalEmbeds()
+                        .setFiles(file)
+                        .queue(null) {
+                            event.messageChannel.sendFiles(file).queue(null) {
+                                file.close()
+                            }
+                        }
                 } catch (e: Exception) {
                     deferred.deleteOriginal().queue(null) {}
 
@@ -199,9 +222,9 @@ class InvertCommand : TextCommand, ContextCommand {
             val response = try {
                 Immutable.HTTP_CLIENT.get(input).readBytes()
             } catch (_: Exception) {
-                deferred.editOriginalEmbeds(
-                    defaultEmbed("The provided link is invalid!", EmbedType.FAILURE)
-                ).queue(null) { throw CommandException("The provided link is invalid!") }
+                deferred.setFailureEmbed("The provided link is invalid!").queue(null) {
+                    throw CommandException("The provided link is invalid!")
+                }
 
                 return
             }
@@ -209,9 +232,9 @@ class InvertCommand : TextCommand, ContextCommand {
             val image = try {
                 withContext(Dispatchers.IO) { ImageIO.read(ByteArrayInputStream(response)) }.apply { invert() }
             } catch (_: Exception) {
-                deferred.editOriginalEmbeds(
-                    defaultEmbed("The provided link is invalid!", EmbedType.FAILURE)
-                ).queue(null) { throw CommandException("The provided link is invalid!") }
+                deferred.setFailureEmbed("The provided link is invalid!").queue(null) {
+                    throw CommandException("The provided link is invalid!")
+                }
 
                 return
             }
@@ -220,9 +243,15 @@ class InvertCommand : TextCommand, ContextCommand {
                 .apply { withContext(Dispatchers.IO) { ImageIO.write(image, "png", this@apply) } }
                 .use { it.toByteArray() }
 
-            deferred.editOriginalEmbeds().addFile(bytesToSend, "inverted.png").queue({}) {
-                event.messageChannel.sendFile(bytesToSend, "inverted.png").queue()
-            }
+            val file = FileUpload.fromData(bytesToSend, "inverted.png")
+
+            deferred.editOriginalEmbeds()
+                .setFiles(file)
+                .queue(null) {
+                    event.messageChannel.sendFiles(file).queue(null) {
+                        file.close()
+                    }
+                }
         }
     }
 
@@ -235,9 +264,9 @@ class InvertCommand : TextCommand, ContextCommand {
         val response = try {
             Immutable.HTTP_CLIENT.get("${event.target.effectiveAvatarUrl}?size=2048").readBytes()
         } catch (_: Exception) {
-            deferred.editOriginalEmbeds(
-                defaultEmbed("The profile picture request has been unsuccessful!", EmbedType.FAILURE)
-            ).queue(null) { throw CommandException("The profile picture request has been unsuccessful!") }
+            deferred.setFailureEmbed("The profile picture request has been unsuccessful!").queue(null) {
+                throw CommandException("The profile picture request has been unsuccessful!")
+            }
 
             return
         }
@@ -249,8 +278,14 @@ class InvertCommand : TextCommand, ContextCommand {
             .apply { withContext(Dispatchers.IO) { ImageIO.write(image, "png", this@apply) } }
             .toByteArray()
 
-        deferred.editOriginalEmbeds().addFile(bytesToSend, "inverted.png").queue(null) {
-            event.messageChannel.sendFile(bytesToSend, "inverted.png").queue()
-        }
+        val file = FileUpload.fromData(bytesToSend, "inverted.png")
+
+        deferred.editOriginalEmbeds()
+            .setFiles(file)
+            .queue(null) {
+                event.messageChannel.sendFiles(file).queue(null) {
+                    file.close()
+                }
+            }
     }
 }

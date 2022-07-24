@@ -25,6 +25,7 @@ import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.commands.Command.Type
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
@@ -84,10 +85,16 @@ class AboutCommand : TextCommand {
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
         if (event.componentId.split("-")[1] == event.user.id) {
+            val deferred = event.deferEdit().await()
             val appInfo = event.jda.retrieveApplicationInfo().await()
 
-            event.editMessageEmbeds(statsEmbed(event.jda, appInfo, event.guild ?: return))
-                .queue(null) {}
+            try {
+                deferred.editOriginalEmbeds(statsEmbed(event.jda, appInfo, event.guild ?: return))
+                    .await()
+            } catch (_: ErrorResponseException) {
+                event.messageChannel.sendMessageEmbeds(statsEmbed(event.jda, appInfo, event.guild ?: return))
+                    .queue()
+            }
         } else {
             throw CommandException("You did not invoke the initial command!")
         }

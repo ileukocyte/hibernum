@@ -5,6 +5,7 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.utils.getImageBytes
 
 import io.ktor.client.call.body
@@ -23,6 +24,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.utils.FileUpload
 
 class ColorCommand : TextCommand {
     override val name = "color"
@@ -48,23 +50,38 @@ class ColorCommand : TextCommand {
             ?: throw CommandException("You have provided invalid arguments!")
         val info = getColorInfo(input)
 
+        val file = FileUpload.fromData(
+            info.javaColor.getImageBytes(150, 150),
+            "${info.hex.value.lowercase().removePrefix("#")}.png",
+        )
+
         event.channel.sendMessageEmbeds(colorEmbed(info))
-            .addFile(
-                info.javaColor.getImageBytes(150, 150),
-                "${info.hex.value.lowercase().removePrefix("#")}.png",
-            ).queue()
+            .setFiles(file)
+            .queue(null) { file.close() }
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val input = event.getOption("hex")?.asString?.takeIf { it matches HEX_REGEX }
             ?: throw CommandException("You have provided invalid arguments!")
+
+        val deferred = event.deferReply().await()
+
         val info = getColorInfo(input)
 
-        event.replyEmbeds(colorEmbed(info))
-            .addFile(
-                info.javaColor.getImageBytes(150, 150),
-                "${info.hex.value.lowercase().removePrefix("#")}.png",
-            ).queue()
+        val file = FileUpload.fromData(
+            info.javaColor.getImageBytes(150, 150),
+            "${info.hex.value.lowercase().removePrefix("#")}.png",
+        )
+
+        deferred.editOriginalEmbeds(colorEmbed(info))
+            .setFiles(file)
+            .queue(null) {
+                event.channel.sendMessageEmbeds(colorEmbed(info))
+                    .setFiles(file)
+                    .queue(null) {
+                        file.close()
+                    }
+            }
     }
 
     private fun colorEmbed(colorInfo: Color) = buildEmbed {

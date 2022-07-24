@@ -37,6 +37,7 @@ import net.dv8tion.jda.api.interactions.components.Modal
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.text.TextInput
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
+import net.dv8tion.jda.api.utils.FileUpload
 
 import net.glxn.qrgen.core.image.ImageType
 import net.glxn.qrgen.javase.QRCode
@@ -119,9 +120,11 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
                     }
                 }
 
+                val file = FileUpload.fromData(it.toByteArray(), "qr.png")
+
                 event.channel.sendMessageEmbeds(resultEmbed)
-                    .addFile(it.toByteArray(), "qr.png")
-                    .queue()
+                    .setFiles(file)
+                    .queue(null) { file.close() }
             }
         }
     }
@@ -171,9 +174,7 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
                         event.channel.sendMessageEmbeds(resultEmbed).queue()
                     }
                 } catch (_: NotFoundException) {
-                    deferred.editOriginalEmbeds(
-                        defaultEmbed("No QR code has been found in the image!", EmbedType.FAILURE)
-                    ).queue(null) {
+                    deferred.setFailureEmbed("No QR code has been found in the image!").queue(null) {
                         throw CommandException("No QR code has been found in the image!")
                     }
 
@@ -193,52 +194,34 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
     override suspend fun invoke(event: ModalInteractionEvent) {
         val input = event.getValue("input")?.asString ?: return
 
+        val deferred = event.deferReply().await()
+
+        val qr = QRCode.from(input)
+            .withSize(768, 768)
+            .withCharset("UTF-8")
+            .to(ImageType.PNG)
+            .stream()
+
+        val file = qr.use { FileUpload.fromData(it.toByteArray(), "qr.png") }
+
+        val resultEmbed = buildEmbed {
+            color = Immutable.SUCCESS
+            image = "attachment://qr.png"
+
+            author {
+                name = "QR Generator"
+                iconUrl = event.jda.selfUser.effectiveAvatarUrl
+            }
+        }
+
         try {
-            val deferred = event.deferReply().await()
-
-            val qr = QRCode.from(input)
-                .withSize(768, 768)
-                .withCharset("UTF-8")
-                .to(ImageType.PNG)
-                .stream()
-
-            qr.use {
-                val resultEmbed = buildEmbed {
-                    color = Immutable.SUCCESS
-                    image = "attachment://qr.png"
-
-                    author {
-                        name = "QR Generator"
-                        iconUrl = event.jda.selfUser.effectiveAvatarUrl
-                    }
-                }
-
-                deferred.editOriginalEmbeds(resultEmbed)
-                    .addFile(it.toByteArray(), "qr.png")
-                    .await()
-            }
+            deferred.editOriginalEmbeds(resultEmbed)
+                .setFiles(file)
+                .await()
         } catch (_: ErrorResponseException) {
-            val qr = QRCode.from(input)
-                .withSize(768, 768)
-                .withCharset("UTF-8")
-                .to(ImageType.PNG)
-                .stream()
-
-            qr.use {
-                val resultEmbed = buildEmbed {
-                    color = Immutable.SUCCESS
-                    image = "attachment://qr.png"
-
-                    author {
-                        name = "QR Generator"
-                        iconUrl = event.jda.selfUser.effectiveAvatarUrl
-                    }
-                }
-
-                event.messageChannel.sendMessageEmbeds(resultEmbed)
-                    .addFile(it.toByteArray(), "qr.png")
-                    .queue()
-            }
+            event.messageChannel.sendMessageEmbeds(resultEmbed)
+                .setFiles(file)
+                .queue(null) { file.close() }
         }
     }
 
@@ -277,9 +260,7 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
                                 event.messageChannel.sendMessageEmbeds(resultEmbed).queue()
                             }
                         } catch (_: NotFoundException) {
-                            deferred.editOriginalEmbeds(
-                                defaultEmbed("No QR code has been found in the image!", EmbedType.FAILURE)
-                            ).queue(null) {
+                            deferred.setFailureEmbed("No QR code has been found in the image!").queue(null) {
                                 throw CommandException("No QR code has been found in the image!")
                             }
 
@@ -325,52 +306,37 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
                     when (buttonEvent.componentId.split("-").last()) {
                         "exit" -> buttonEvent.message.delete().queue()
                         "gen" -> {
+                            val deferred = buttonEvent.deferEdit()
+                                .setComponents(emptyList())
+                                .await()
+
+                            val qr = QRCode.from(event.target.contentRaw)
+                                .withSize(768, 768)
+                                .withCharset("UTF-8")
+                                .to(ImageType.PNG)
+                                .stream()
+
+                            val file = qr.use { FileUpload.fromData(it.toByteArray(), "qr.png") }
+
+                            val resultEmbed = buildEmbed {
+                                color = Immutable.SUCCESS
+                                image = "attachment://qr.png"
+
+                                author {
+                                    name = "QR Generator"
+                                    iconUrl = event.jda.selfUser.effectiveAvatarUrl
+                                }
+                            }
+
                             try {
-                                val deferred = buttonEvent.deferEdit().setActionRows().await()
-
-                                val qr = QRCode.from(event.target.contentRaw)
-                                    .withSize(768, 768)
-                                    .withCharset("UTF-8")
-                                    .to(ImageType.PNG)
-                                    .stream()
-
-                                qr.use {
-                                    val resultEmbed = buildEmbed {
-                                        color = Immutable.SUCCESS
-                                        image = "attachment://qr.png"
-
-                                        author {
-                                            name = "QR Generator"
-                                            iconUrl = event.jda.selfUser.effectiveAvatarUrl
-                                        }
-                                    }
-
-                                    deferred.editOriginalEmbeds(resultEmbed)
-                                        .addFile(it.toByteArray(), "qr.png")
-                                        .await()
-                                }
+                                deferred.editOriginalAttachments(file)
+                                    .setEmbeds(resultEmbed)
+                                    .await()
                             } catch (_: ErrorResponseException) {
-                                val qr = QRCode.from(event.target.contentRaw)
-                                    .withSize(768, 768)
-                                    .withCharset("UTF-8")
-                                    .to(ImageType.PNG)
-                                    .stream()
-
-                                qr.use {
-                                    val resultEmbed = buildEmbed {
-                                        color = Immutable.SUCCESS
-                                        image = "attachment://qr.png"
-
-                                        author {
-                                            name = "QR Generator"
-                                            iconUrl = event.jda.selfUser.effectiveAvatarUrl
-                                        }
-                                    }
-
-                                    buttonEvent.messageChannel.sendMessageEmbeds(resultEmbed)
-                                        .addFile(it.toByteArray(), "qr.png")
-                                        .queue()
-                                }
+                                buttonEvent.messageChannel
+                                    .sendMessageEmbeds(resultEmbed)
+                                    .setFiles(file)
+                                    .queue(null) { file.close() }
                             }
                         }
                         "read" -> {
@@ -403,9 +369,7 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
                                             buttonEvent.messageChannel.sendMessageEmbeds(resultEmbed).queue()
                                         }
                                     } catch (_: NotFoundException) {
-                                        deferred.editOriginalEmbeds(
-                                            defaultEmbed("No QR code has been found in the image!", EmbedType.FAILURE)
-                                        ).queue(null) {
+                                        deferred.setFailureEmbed("No QR code has been found in the image!").queue(null) {
                                             throw CommandException("No QR code has been found in the image!")
                                         }
 
@@ -436,52 +400,34 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
             val input = event.target.contentRaw.takeUnless { it.isEmpty() }
                 ?: throw CommandException("Neither text content nor image file has been provided in the message!")
 
+            val deferred = event.deferReply().await()
+
+            val qr = QRCode.from(input)
+                .withSize(768, 768)
+                .withCharset("UTF-8")
+                .to(ImageType.PNG)
+                .stream()
+
+            val file = qr.use { FileUpload.fromData(it.toByteArray(), "qr.png") }
+
+            val resultEmbed = buildEmbed {
+                color = Immutable.SUCCESS
+                image = "attachment://qr.png"
+
+                author {
+                    name = "QR Generator"
+                    iconUrl = event.jda.selfUser.effectiveAvatarUrl
+                }
+            }
+
             try {
-                val deferred = event.deferReply().await()
-
-                val qr = QRCode.from(input)
-                    .withSize(768, 768)
-                    .withCharset("UTF-8")
-                    .to(ImageType.PNG)
-                    .stream()
-
-                qr.use {
-                    val resultEmbed = buildEmbed {
-                        color = Immutable.SUCCESS
-                        image = "attachment://qr.png"
-
-                        author {
-                            name = "QR Generator"
-                            iconUrl = event.jda.selfUser.effectiveAvatarUrl
-                        }
-                    }
-
-                    deferred.editOriginalEmbeds(resultEmbed)
-                        .addFile(it.toByteArray(), "qr.png")
-                        .await()
-                }
+                deferred.editOriginalEmbeds(resultEmbed)
+                    .setFiles(file)
+                    .await()
             } catch (_: ErrorResponseException) {
-                val qr = QRCode.from(input)
-                    .withSize(768, 768)
-                    .withCharset("UTF-8")
-                    .to(ImageType.PNG)
-                    .stream()
-
-                qr.use {
-                    val resultEmbed = buildEmbed {
-                        color = Immutable.SUCCESS
-                        image = "attachment://qr.png"
-
-                        author {
-                            name = "QR Generator"
-                            iconUrl = event.jda.selfUser.effectiveAvatarUrl
-                        }
-                    }
-
-                    event.messageChannel.sendMessageEmbeds(resultEmbed)
-                        .addFile(it.toByteArray(), "qr.png")
-                        .queue()
-                }
+                event.messageChannel.sendMessageEmbeds(resultEmbed)
+                    .setFiles(file)
+                    .queue(null) { file.close() }
             }
         }
     }

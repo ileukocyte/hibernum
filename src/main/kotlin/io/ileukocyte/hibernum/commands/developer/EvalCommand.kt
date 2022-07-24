@@ -20,6 +20,10 @@ import net.dv8tion.jda.api.interactions.components.Modal
 import net.dv8tion.jda.api.interactions.components.text.TextInput
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 import net.dv8tion.jda.api.requests.RestAction
+import net.dv8tion.jda.api.utils.messages.MessageCreateData
+import net.dv8tion.jda.api.utils.messages.MessageEditData
+
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
 
 import org.json.JSONObject
 
@@ -31,13 +35,11 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
     override val usages = setOf(setOf("Kotlin code".toClassicTextUsage()))
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
-        val code = args?.run {
-            takeIf { it.startsWith("```") }
-                ?.removeSurrounding("```")
-                ?.removePrefix("kts\n")
-                ?.removePrefix("kt\n")
-                ?.removePrefix("kotlin\n")
-                ?: this
+        val code = args?.applyIf(args.startsWith("```")) {
+            removeSurrounding("```")
+                .removePrefix("kts\n")
+                .removePrefix("kt\n")
+                .removePrefix("kotlin\n")
         } ?: throw NoArgumentsException
 
         val packages = buildString {
@@ -72,7 +74,9 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
             if (result !== null) {
                 when (result) {
                     is EmbedBuilder -> event.channel.sendMessageEmbeds(result.build()).queue()
-                    is Message -> event.channel.sendMessage(result).queue()
+                    is Message -> event.channel.sendMessage(result.toCreateData()).queue()
+                    is MessageCreateData -> event.channel.sendMessage(result).queue()
+                    is MessageEditData -> event.channel.sendMessage(result.toCreateData()).queue()
                     is MessageEmbed -> event.channel.sendMessageEmbeds(result).queue()
                     is RestAction<*> -> result.queue()
                     is Array<*> -> event.channel.sendMessage(result.contentDeepToString()).queue()
@@ -148,8 +152,14 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
                     is EmbedBuilder -> deferred.editOriginalEmbeds(result.build()).queue(null) {
                         event.messageChannel.sendMessageEmbeds(result.build()).queue()
                     }
-                    is Message -> deferred.editOriginal(result).queue(null) {
+                    is Message -> deferred.editOriginal(result.toEditData()).queue(null) {
+                        event.messageChannel.sendMessage(result.toCreateData()).queue()
+                    }
+                    is MessageCreateData -> deferred.editOriginal(result.toEditData()).queue(null) {
                         event.messageChannel.sendMessage(result).queue()
+                    }
+                    is MessageEditData -> deferred.editOriginal(result).queue(null) {
+                        event.messageChannel.sendMessage(result.toCreateData()).queue()
                     }
                     is MessageEmbed -> deferred.editOriginalEmbeds(result).queue(null) {
                         event.messageChannel.sendMessageEmbeds(result).queue()
@@ -195,12 +205,12 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
         val code = event.target.contentRaw.takeUnless { it.isEmpty() }
             ?.removePrefix("${Immutable.DEFAULT_PREFIX}$name ")
             ?.let { code ->
-                code.takeIf { it.startsWith("```") }
-                    ?.removeSurrounding("```")
-                    ?.removePrefix("kts\n")
-                    ?.removePrefix("kt\n")
-                    ?.removePrefix("kotlin\n")
-                    ?: code
+                code.applyIf(code.startsWith("```")) {
+                    removeSurrounding("```")
+                        .removePrefix("kts\n")
+                        .removePrefix("kt\n")
+                        .removePrefix("kotlin\n")
+                }
             } ?: throw CommandException("No Kotlin code has been provided in the message!")
 
         val deferred = event.deferReply().await()
@@ -247,8 +257,14 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
                     is EmbedBuilder -> deferred.editOriginalEmbeds(result.build()).queue(null) {
                         event.messageChannel.sendMessageEmbeds(result.build()).queue()
                     }
-                    is Message -> deferred.editOriginal(result).queue(null) {
+                    is Message -> deferred.editOriginal(result.toEditData()).queue(null) {
+                        event.messageChannel.sendMessage(result.toCreateData()).queue()
+                    }
+                    is MessageCreateData -> deferred.editOriginal(result.toEditData()).queue(null) {
                         event.messageChannel.sendMessage(result).queue()
+                    }
+                    is MessageEditData -> deferred.editOriginal(result).queue(null) {
+                        event.messageChannel.sendMessage(result.toCreateData()).queue()
                     }
                     is MessageEmbed -> deferred.editOriginalEmbeds(result).queue(null) {
                         event.messageChannel.sendMessageEmbeds(result).queue()

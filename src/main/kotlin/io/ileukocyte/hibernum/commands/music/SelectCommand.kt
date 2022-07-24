@@ -5,9 +5,8 @@ import io.ileukocyte.hibernum.audio.TrackUserData
 import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.TextCommand
-import io.ileukocyte.hibernum.extensions.EmbedType
 import io.ileukocyte.hibernum.extensions.await
-import io.ileukocyte.hibernum.extensions.defaultEmbed
+import io.ileukocyte.hibernum.extensions.setFailureEmbed
 
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -67,7 +66,7 @@ class SelectCommand : TextCommand {
 
                     ifFromSlashCommandEvent?.let {
                         try {
-                            it.editOriginalEmbeds(defaultEmbed(error, EmbedType.FAILURE)).await()
+                            it.setFailureEmbed(error).await()
 
                             return
                         } catch (_: ErrorResponseException) {
@@ -87,7 +86,7 @@ class SelectCommand : TextCommand {
                 val error = "You are not connected to the required voice channel!"
 
                 ifFromSlashCommandEvent
-                    ?.editOriginalEmbeds(defaultEmbed(error, EmbedType.FAILURE))
+                    ?.setFailureEmbed(error)
                     ?.queue(null) { throw CommandException(error) }
                     ?: throw CommandException(error)
             }
@@ -95,7 +94,7 @@ class SelectCommand : TextCommand {
             val error = "The current queue is empty!"
 
             ifFromSlashCommandEvent
-                ?.editOriginalEmbeds(defaultEmbed(error, EmbedType.FAILURE))
+                ?.setFailureEmbed(error)
                 ?.queue(null) { throw CommandException(error) }
                 ?: throw CommandException(error)
         }

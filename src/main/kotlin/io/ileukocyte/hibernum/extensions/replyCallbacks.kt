@@ -7,6 +7,7 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.builders.buildMessage
 
 import net.dv8tion.jda.api.EmbedBuilder.ZERO_WIDTH_SPACE
+import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.interactions.components.ActionComponent
 
@@ -30,3 +31,21 @@ fun IReplyCallback.replyWarning(desc: String, footer: (KEmbedBuilder.Footer.() -
 
 fun IReplyCallback.replyActionRow(vararg components: ActionComponent) =
     reply(ZERO_WIDTH_SPACE).addActionRow(*components)
+
+fun InteractionHook.editOriginal(block: KMessageBuilder.() -> Unit) =
+    editOriginal(KMessageBuilder().apply(block)().toEditData())
+
+fun InteractionHook.editOriginalEmbed(block: KEmbedBuilder.() -> Unit) =
+    editOriginalEmbeds(buildEmbed(block))
+
+fun InteractionHook.setSuccessEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
+    editOriginalEmbeds(defaultEmbed(desc, EmbedType.SUCCESS, footer))
+
+fun InteractionHook.setFailureEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
+    editOriginalEmbeds(defaultEmbed(desc, EmbedType.FAILURE, footer))
+
+fun InteractionHook.setConfirmationEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
+    editOriginalEmbeds(defaultEmbed(desc, EmbedType.CONFIRMATION, footer))
+
+fun InteractionHook.setWarningEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
+    editOriginalEmbeds(defaultEmbed(desc, EmbedType.WARNING, footer))

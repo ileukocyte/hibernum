@@ -104,7 +104,7 @@ class UrbanCommand : TextCommand {
             defaultEmbed(e.message ?: "An exception has occurred!", EmbedType.FAILURE)
         }
 
-        deferred.editOriginalEmbeds(embed).queue({}) {
+        deferred.editOriginalEmbeds(embed).queue(null) {
             event.channel.sendMessageEmbeds(embed).queue()
         }
     }
