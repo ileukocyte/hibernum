@@ -138,7 +138,8 @@ class YouTubePlayCommand : TextCommand {
                     SelectMenu.create("$name-${member.user.idLong}-videos")
                         .addOptions(
                             *options.toTypedArray(),
-                            SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),
+                            SelectOption.of("Exit", "exit")
+                                .withEmoji(Emoji.fromUnicode("\u274C")),
                         ).build()
                 }
 

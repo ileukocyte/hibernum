@@ -117,10 +117,10 @@ class YouTubeCommand : TextCommand {
 
                 try {
                     deferred.editOriginalComponents()
-                        .setEmbeds(videoEmbed(video, event.user.takeIf { id.getOrNull(1) == "slash" }))
+                        .setEmbeds(videoEmbed(video))
                         .await()
                 } catch (_: Exception) {
-                    event.channel.sendMessageEmbeds(videoEmbed(video, event.user.takeIf { id.getOrNull(1) == "slash" }))
+                    event.channel.sendMessageEmbeds(videoEmbed(video))
                         .queue()
                 }
             }
@@ -129,13 +129,29 @@ class YouTubeCommand : TextCommand {
         }
     }
 
-    private suspend fun videoEmbed(video: Video, author: User? = null) = buildEmbed {
-        video.snippet.thumbnails?.let {
-            it.maxres?.url ?: it.standard?.url ?: it.high?.url ?: it.medium?.url ?: it.default?.url
-        }?.let {
-            image = it
-            color = getDominantColorByImageUrl(it)
+    private suspend fun videoEmbed(video: Video) = buildEmbed {
+        val pfp by lazy {
+            val list = YOUTUBE.channels().list(listOf("snippet"))
+
+            list.id = listOf(video.snippet.channelId)
+            list.key = Immutable.YOUTUBE_API_KEY
+
+            list.execute().items.firstOrNull()
+                ?.snippet
+                ?.thumbnails
+                ?.default
+                ?.url
         }
+
+        image = video.snippet.thumbnails?.let {
+            it.maxres?.url
+                ?: it.standard?.url
+                ?: it.high?.url
+                ?: it.medium?.url
+                ?: it.default?.url
+        }
+
+        pfp?.let { color = getDominantColorByImageUrl(it) }
 
         description = video.snippet.description.takeUnless { it.isEmpty() }
             ?.limitTo(DESCRIPTION_MAX_LENGTH)
@@ -154,14 +170,8 @@ class YouTubeCommand : TextCommand {
 
         author {
             name = video.snippet.channelTitle
+            iconUrl = pfp
             url = "https://www.youtube.com/channel/${video.snippet.channelId}"
-        }
-
-        author?.let {
-            footer {
-                text = "Requested by ${it.asTag}"
-                iconUrl = it.effectiveAvatarUrl
-            }
         }
     }
 
@@ -198,7 +208,7 @@ class YouTubeCommand : TextCommand {
                 )
             }
 
-            SelectMenu.create("$name-${author.idLong}${"-slash".takeIf { ifFromSlashCommand !== null }.orEmpty()}-videos")
+            SelectMenu.create("$name-${author.idLong}-videos")
                 .addOptions(
                     *options.toTypedArray(),
                     SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),
