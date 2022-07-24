@@ -116,7 +116,7 @@ class LoopCommand : TextCommand {
                 ?: "$currentMode looping has been disabled!"
 
             event.message.editMessageEmbeds(defaultEmbed(description, EmbedType.SUCCESS))
-                .setActionRows()
+                .setComponents(emptyList())
                 .queue(null) {
                     event.messageChannel.sendSuccess(description).queue()
                 }

@@ -573,7 +573,7 @@ class AkinatorCommand : TextCommand {
             is SlashCommandInteractionEvent ->
                 event.reply {
                     embeds += defaultEmbed("Choose your guess type!", EmbedType.CONFIRMATION)
-                    actionRows += ActionRow.of(menu)
+                    actionRow += ActionRow.of(menu)
                 }.await().retrieveOriginal().await()
             is SelectMenuInteractionEvent ->
                 event.deferEdit()
@@ -626,7 +626,7 @@ class AkinatorCommand : TextCommand {
         } else {
             callback.reply {
                 embeds += defaultEmbed("Choose your language!", EmbedType.CONFIRMATION)
-                actionRows += ActionRow.of(menu)
+                actionRow += ActionRow.of(menu)
             }.await().retrieveOriginal().await()
         }
 

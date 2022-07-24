@@ -72,7 +72,7 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
             if (result !== null) {
                 when (result) {
                     is EmbedBuilder -> event.channel.sendMessageEmbeds(result.build()).queue()
-                    is Message -> event.channel.sendMessage(result).queue()
+                    is Message -> event.channel.sendMessage(result.toCreateData()).queue()
                     is MessageEmbed -> event.channel.sendMessageEmbeds(result).queue()
                     is RestAction<*> -> result.queue()
                     is Array<*> -> event.channel.sendMessage(result.contentDeepToString()).queue()
@@ -148,8 +148,8 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
                     is EmbedBuilder -> deferred.editOriginalEmbeds(result.build()).queue(null) {
                         event.messageChannel.sendMessageEmbeds(result.build()).queue()
                     }
-                    is Message -> deferred.editOriginal(result).queue(null) {
-                        event.messageChannel.sendMessage(result).queue()
+                    is Message -> deferred.editOriginal(result.toEditData()).queue(null) {
+                        event.messageChannel.sendMessage(result.toCreateData()).queue()
                     }
                     is MessageEmbed -> deferred.editOriginalEmbeds(result).queue(null) {
                         event.messageChannel.sendMessageEmbeds(result).queue()
@@ -247,8 +247,8 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
                     is EmbedBuilder -> deferred.editOriginalEmbeds(result.build()).queue(null) {
                         event.messageChannel.sendMessageEmbeds(result.build()).queue()
                     }
-                    is Message -> deferred.editOriginal(result).queue(null) {
-                        event.messageChannel.sendMessage(result).queue()
+                    is Message -> deferred.editOriginal(result.toEditData()).queue(null) {
+                        event.messageChannel.sendMessage(result.toCreateData()).queue()
                     }
                     is MessageEmbed -> deferred.editOriginalEmbeds(result).queue(null) {
                         event.messageChannel.sendMessageEmbeds(result).queue()

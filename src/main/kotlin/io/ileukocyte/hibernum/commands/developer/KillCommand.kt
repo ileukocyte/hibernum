@@ -133,7 +133,7 @@ class KillCommand : TextCommand {
                     }
 
                     event.editMessageEmbeds(defaultEmbed("The process has been terminated!", EmbedType.SUCCESS))
-                        .setActionRows()
+                        .setComponents(emptyList())
                         .queue(null) {
                             event.channel.sendSuccess("The process has been terminated!").queue()
                         }
@@ -275,7 +275,7 @@ class KillCommand : TextCommand {
         }
 
         event.editMessageEmbeds(defaultEmbed("The process has been terminated!", EmbedType.SUCCESS))
-            .setActionRows()
+            .setComponents(emptyList())
             .queue(null) {
                 event.messageChannel.sendSuccess("The process has been terminated!").queue()
             }

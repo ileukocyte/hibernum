@@ -23,6 +23,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.utils.FileUpload
 
 class ColorCommand : TextCommand {
     override val name = "color"
@@ -49,10 +50,10 @@ class ColorCommand : TextCommand {
         val info = getColorInfo(input)
 
         event.channel.sendMessageEmbeds(colorEmbed(info))
-            .addFile(
+            .setFiles(FileUpload.fromData(
                 info.javaColor.getImageBytes(150, 150),
                 "${info.hex.value.lowercase().removePrefix("#")}.png",
-            ).queue()
+            )).queue()
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
@@ -61,10 +62,10 @@ class ColorCommand : TextCommand {
         val info = getColorInfo(input)
 
         event.replyEmbeds(colorEmbed(info))
-            .addFile(
+            .setFiles(FileUpload.fromData(
                 info.javaColor.getImageBytes(150, 150),
                 "${info.hex.value.lowercase().removePrefix("#")}.png",
-            ).queue()
+            )).queue()
     }
 
     private fun colorEmbed(colorInfo: Color) = buildEmbed {

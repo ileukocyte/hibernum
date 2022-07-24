@@ -275,8 +275,8 @@ object CommandHandler : MutableSet<GenericCommand> {
 
                                     event.hook
                                         .editOriginalComponents()
-                                        .retainFiles(emptyList())
-                                        .setContent("")
+                                        .setFiles(emptyList())
+                                        .setContent(null)
                                         .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
                                         .queue(null) {
                                             event.replyFailure(errorMessage).queue(null) {
@@ -364,8 +364,8 @@ object CommandHandler : MutableSet<GenericCommand> {
 
                                 event.hook
                                     .editOriginalComponents()
-                                    .retainFiles(emptyList())
-                                    .setContent("")
+                                    .setFiles(emptyList())
+                                    .setContent(null)
                                     .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
                                     .queue(null) {
                                         event.replyFailure(errorMessage).queue(null) {
@@ -448,8 +448,8 @@ object CommandHandler : MutableSet<GenericCommand> {
 
                                 event.hook
                                     .editOriginalComponents()
-                                    .retainFiles(emptyList())
-                                    .setContent("")
+                                    .setFiles(emptyList())
+                                    .setContent(null)
                                     .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
                                     .queue(null) {
                                         event.replyFailure(errorMessage).queue(null) {
@@ -505,8 +505,8 @@ object CommandHandler : MutableSet<GenericCommand> {
 
                                 event.hook
                                     .editOriginalComponents()
-                                    .retainFiles(emptyList())
-                                    .setContent("")
+                                    .setFiles(emptyList())
+                                    .setContent(null)
                                     .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
                                     .queue(null) {
                                         event.replyFailure(errorMessage).queue(null) {
@@ -608,8 +608,8 @@ object CommandHandler : MutableSet<GenericCommand> {
 
                                     event.hook
                                         .editOriginalComponents()
-                                        .retainFiles(emptyList())
-                                        .setContent("")
+                                        .setFiles(emptyList())
+                                        .setContent(null)
                                         .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
                                         .queue(null) {
                                             event.replyFailure(errorMessage).queue(null) {
@@ -695,8 +695,8 @@ object CommandHandler : MutableSet<GenericCommand> {
 
                                     event.hook
                                         .editOriginalComponents()
-                                        .retainFiles(emptyList())
-                                        .setContent("")
+                                        .setFiles(emptyList())
+                                        .setContent(null)
                                         .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
                                         .queue(null) {
                                             event.replyFailure(errorMessage).queue(null) {

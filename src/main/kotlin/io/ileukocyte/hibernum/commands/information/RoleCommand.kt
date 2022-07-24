@@ -21,6 +21,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
+import net.dv8tion.jda.api.utils.FileUpload
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
 class RoleCommand : TextCommand {
@@ -48,10 +49,10 @@ class RoleCommand : TextCommand {
                 event.channel.sendMessageEmbeds(infoEmbed(role))
                     .let {
                         role.color?.let { c ->
-                            it.addFile(
+                            it.setFiles(FileUpload.fromData(
                                 c.getImageBytes(150, 150),
                                 "${"%02x%02x%02x".format(c.red, c.green, c.blue)}.png",
-                            )
+                            ))
                         } ?: it
                     }.queue()
             }
@@ -61,10 +62,10 @@ class RoleCommand : TextCommand {
                 event.channel.sendMessageEmbeds(infoEmbed(role))
                     .let {
                         role.color?.let { c ->
-                            it.addFile(
+                            it.setFiles(FileUpload.fromData(
                                 c.getImageBytes(150, 150),
                                 "${"%02x%02x%02x".format(c.red, c.green, c.blue)}.png",
-                            )
+                            ))
                         } ?: it
                     }.queue()
             }
@@ -80,10 +81,10 @@ class RoleCommand : TextCommand {
                     event.channel.sendMessageEmbeds(infoEmbed(role))
                         .let {
                             role.color?.let { c ->
-                                it.addFile(
+                                it.setFiles(FileUpload.fromData(
                                     c.getImageBytes(150, 150),
                                     "${"%02x%02x%02x".format(c.red, c.green, c.blue)}.png",
-                                )
+                                ))
                             } ?: it
                         }.queue()
 
@@ -112,10 +113,10 @@ class RoleCommand : TextCommand {
         deferred.editOriginalEmbeds(infoEmbed(role))
             .let {
                 role.color?.let { c ->
-                    it.addFile(
+                    it.setFiles(FileUpload.fromData(
                         c.getImageBytes(150, 150),
                         "${"%02x%02x%02x".format(c.red, c.green, c.blue)}.png",
-                    )
+                    ))
                 } ?: it
             }.queue()
     }
@@ -136,16 +137,18 @@ class RoleCommand : TextCommand {
             val role = event.guild?.getRoleById(value) ?: return
 
             deferred.editOriginalEmbeds(infoEmbed(role))
-                .setActionRows()
+                .setComponents(emptyList())
                 .let {
                     role.color?.let { c ->
-                        it.addFile(
+                        it.setFiles(FileUpload.fromData(
                             c.getImageBytes(150, 150),
                             "${"%02x%02x%02x".format(c.red, c.green, c.blue)}.png",
-                        )
+                        ))
                     } ?: it
                 }.queue()
-        } else throw CommandException("You did not invoke the initial command!")
+        } else {
+            throw CommandException("You did not invoke the initial command!")
+        }
     }
 
     private suspend fun infoEmbed(role: Role) = buildEmbed {

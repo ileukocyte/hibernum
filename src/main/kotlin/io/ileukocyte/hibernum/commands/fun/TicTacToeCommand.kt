@@ -90,7 +90,7 @@ class TicTacToeCommand : SlashOnlyCommand {
                                 .await()
                         } catch (_: ErrorResponseException) {
                             event.channel.sendMessageEmbeds(embed)
-                                .content(ttt.printableBoard)
+                                .setContent(ttt.printableBoard)
                                 .await()
                         }
 
@@ -125,7 +125,8 @@ class TicTacToeCommand : SlashOnlyCommand {
                         .setContent(starter?.asMention.orEmpty())
                         .queue(null) {
                             event.messageChannel.sendMessageEmbeds(embed)
-                                .content(starter?.asMention.orEmpty()).queue()
+                                .setContent(starter?.asMention.orEmpty())
+                                .queue()
                         }
                 }
             }
@@ -173,13 +174,13 @@ class TicTacToeCommand : SlashOnlyCommand {
                                     name = "Congratulations!"
                                     iconUrl = ttt.currentTurn.effectiveAvatarUrl
                                 }
-                            }.content(ttt.printableBoard).queue()
+                            }.setContent(ttt.printableBoard).queue()
                         } else {
                             if (ttt.board.flatten().none { it matches TicTacToe.GAP_REGEX }) {
                                 response.replyEmbed {
                                     description = "It is a draw!"
                                     color = Immutable.SUCCESS
-                                }.content(ttt.printableBoard).queue()
+                                }.setContent(ttt.printableBoard).queue()
                             } else {
                                 ttt.switchTurns()
 
@@ -191,7 +192,7 @@ class TicTacToeCommand : SlashOnlyCommand {
                                         text = "Type in \"exit\" to finish the session!"
                                         iconUrl = ttt.currentTurn.effectiveAvatarUrl
                                     }
-                                }.content(ttt.printableBoard).await()
+                                }.setContent(ttt.printableBoard).await()
 
                                 awaitTurn(ttt, channel, board, processId)
                             }
@@ -251,7 +252,7 @@ class TicTacToeCommand : SlashOnlyCommand {
                     } catch (_: TimeoutCancellationException) {
                         confirmation.editMessageComponents().setEmbeds(
                             defaultEmbed("Time is out!", EmbedType.FAILURE)
-                        ).content(EmbedBuilder.ZERO_WIDTH_SPACE).queue(null) {
+                        ).setContent(EmbedBuilder.ZERO_WIDTH_SPACE).queue(null) {
                             channel.sendFailure("Time is out!").queue()
                         }
                     }
@@ -265,7 +266,7 @@ class TicTacToeCommand : SlashOnlyCommand {
             }
         } catch (_: TimeoutCancellationException) {
             message.editMessageEmbeds(defaultEmbed("Time is out!", EmbedType.FAILURE))
-                .content(EmbedBuilder.ZERO_WIDTH_SPACE)
+                .setContent(EmbedBuilder.ZERO_WIDTH_SPACE)
                 .queue(null) {
                     channel.sendFailure("Time is out!").queue()
                 }

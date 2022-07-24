@@ -37,6 +37,7 @@ import net.dv8tion.jda.api.interactions.components.Modal
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.text.TextInput
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
+import net.dv8tion.jda.api.utils.FileUpload
 
 import net.glxn.qrgen.core.image.ImageType
 import net.glxn.qrgen.javase.QRCode
@@ -120,7 +121,7 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
                 }
 
                 event.channel.sendMessageEmbeds(resultEmbed)
-                    .addFile(it.toByteArray(), "qr.png")
+                    .setFiles(FileUpload.fromData(it.toByteArray(), "qr.png"))
                     .queue()
             }
         }
@@ -214,7 +215,7 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
                 }
 
                 deferred.editOriginalEmbeds(resultEmbed)
-                    .addFile(it.toByteArray(), "qr.png")
+                    .setFiles(FileUpload.fromData(it.toByteArray(), "qr.png"))
                     .await()
             }
         } catch (_: ErrorResponseException) {
@@ -236,7 +237,7 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
                 }
 
                 event.messageChannel.sendMessageEmbeds(resultEmbed)
-                    .addFile(it.toByteArray(), "qr.png")
+                    .setFiles(FileUpload.fromData(it.toByteArray(), "qr.png"))
                     .queue()
             }
         }
@@ -326,7 +327,9 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
                         "exit" -> buttonEvent.message.delete().queue()
                         "gen" -> {
                             try {
-                                val deferred = buttonEvent.deferEdit().setActionRows().await()
+                                val deferred = buttonEvent.deferEdit()
+                                    .setComponents(emptyList())
+                                    .await()
 
                                 val qr = QRCode.from(event.target.contentRaw)
                                     .withSize(768, 768)
@@ -346,7 +349,7 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
                                     }
 
                                     deferred.editOriginalEmbeds(resultEmbed)
-                                        .addFile(it.toByteArray(), "qr.png")
+                                        .setFiles(FileUpload.fromData(it.toByteArray(), "qr.png"))
                                         .await()
                                 }
                             } catch (_: ErrorResponseException) {
@@ -368,7 +371,7 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
                                     }
 
                                     buttonEvent.messageChannel.sendMessageEmbeds(resultEmbed)
-                                        .addFile(it.toByteArray(), "qr.png")
+                                        .setFiles(FileUpload.fromData(it.toByteArray(), "qr.png"))
                                         .queue()
                                 }
                             }
@@ -457,7 +460,7 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
                     }
 
                     deferred.editOriginalEmbeds(resultEmbed)
-                        .addFile(it.toByteArray(), "qr.png")
+                        .setFiles(FileUpload.fromData(it.toByteArray(), "qr.png"))
                         .await()
                 }
             } catch (_: ErrorResponseException) {
@@ -479,7 +482,7 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
                     }
 
                     event.messageChannel.sendMessageEmbeds(resultEmbed)
-                        .addFile(it.toByteArray(), "qr.png")
+                        .setFiles(FileUpload.fromData(it.toByteArray(), "qr.png"))
                         .queue()
                 }
             }

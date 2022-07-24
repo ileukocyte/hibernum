@@ -134,7 +134,7 @@ class UserCommand : TextCommand, UserContextOnlyCommand {
                     else -> return
                 }
 
-                deferred.editOriginalEmbeds(embed).setActionRows().await()
+                deferred.editOriginalEmbeds(embed).setComponents(emptyList()).await()
             } catch (_: ErrorResponseException) {
                 val member = event.guild?.getMemberById(id[1]) ?: return
 

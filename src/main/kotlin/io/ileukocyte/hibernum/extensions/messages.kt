@@ -14,6 +14,8 @@ import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
+import net.dv8tion.jda.api.utils.messages.MessageCreateData
+import net.dv8tion.jda.api.utils.messages.MessageEditData
 
 const val CHECK_MARK = "\u2705"
 const val CROSS_MARK = "\u274E"
@@ -80,3 +82,6 @@ fun Message.replyConfirmation(desc: String, footer: (KEmbedBuilder.Footer.() -> 
 
 fun Message.replyWarning(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
     replyEmbeds(defaultEmbed(desc, EmbedType.WARNING, footer))
+
+fun Message.toCreateData() = MessageCreateData.fromMessage(this)
+fun Message.toEditData() = MessageEditData.fromMessage(this)

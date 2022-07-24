@@ -50,9 +50,10 @@ class QueueCommand : TextCommand {
             ?: 0
 
         event.channel.sendMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, initialPage))
-            .let { it.takeIf { audioPlayer.scheduler.queue.size > 10 }
-                ?.setActionRow(pageButtons(event.author.id, initialPage, partitionSize))
-                ?: it
+            .let {
+                it.applyIf(audioPlayer.scheduler.queue.size > 10) {
+                    setActionRow(pageButtons(event.author.id, initialPage, partitionSize))
+                }
             }.queue()
     }
 
@@ -68,9 +69,10 @@ class QueueCommand : TextCommand {
             ?: 0
 
         event.replyEmbeds(queueEmbed(event.jda, audioPlayer, track, initialPage))
-            .let { it.takeIf { audioPlayer.scheduler.queue.size > 10 }
-                ?.addActionRow(pageButtons(event.user.id, initialPage, partitionSize))
-                ?: it
+            .let {
+                it.applyIf(audioPlayer.scheduler.queue.size > 10) {
+                    addActionRow(pageButtons(event.user.id, initialPage, partitionSize))
+                }
             }.queue()
     }
 
@@ -102,17 +104,17 @@ class QueueCommand : TextCommand {
                 "first" -> {
                     event.editMessageEmbeds(
                         queueEmbed(event.jda, audioPlayer, track, 0)
-                    ).setActionRows().let {
-                        it.takeIf { audioPlayer.scheduler.queue.size > 10 }
-                            ?.setActionRow(pageButtons(id.first(), 0, pagesCount))
-                            ?: it
+                    ).setComponents(emptyList()).let {
+                        it.applyIf(audioPlayer.scheduler.queue.size > 10) {
+                            setActionRow(pageButtons(id.first(), 0, pagesCount))
+                        }
                     }.queue(null) { _ ->
                         event.message.editMessageEmbeds(
                             queueEmbed(event.jda, audioPlayer, track, 0)
-                        ).setActionRows().let {
-                            it.takeIf { audioPlayer.scheduler.queue.size > 10 }
-                                ?.setActionRow(pageButtons(id.first(), 0, pagesCount))
-                                ?: it
+                        ).setComponents(emptyList()).let {
+                            it.applyIf(audioPlayer.scheduler.queue.size > 10) {
+                                setActionRow(pageButtons(id.first(), 0, pagesCount))
+                            }
                         }.queue()
                     }
                 }
@@ -122,17 +124,17 @@ class QueueCommand : TextCommand {
 
                     event.editMessageEmbeds(
                         queueEmbed(event.jda, audioPlayer, track, lastPage)
-                    ).setActionRows().let {
-                        it.takeIf { audioPlayer.scheduler.queue.size > 10 }
-                            ?.setActionRow(pageButtons(id.first(), lastPage, pagesCount))
-                            ?: it
+                    ).setComponents(emptyList()).let {
+                        it.applyIf(audioPlayer.scheduler.queue.size > 10) {
+                            setActionRow(pageButtons(id.first(), lastPage, pagesCount))
+                        }
                     }.queue(null) { _ ->
                         event.message.editMessageEmbeds(
                             queueEmbed(event.jda, audioPlayer, track, lastPage)
-                        ).setActionRows().let {
-                            it.takeIf { audioPlayer.scheduler.queue.size > 10 }
-                                ?.setActionRow(pageButtons(id.first(), lastPage, pagesCount))
-                                ?: it
+                        ).setComponents(emptyList()).let {
+                            it.applyIf(audioPlayer.scheduler.queue.size > 10) {
+                                setActionRow(pageButtons(id.first(), lastPage, pagesCount))
+                            }
                         }.queue()
                     }
                 }
@@ -141,17 +143,17 @@ class QueueCommand : TextCommand {
 
                     event.editMessageEmbeds(
                         queueEmbed(event.jda, audioPlayer, track, newPage)
-                    ).setActionRows().let {
-                        it.takeIf { audioPlayer.scheduler.queue.size > 10 }
-                            ?.setActionRow(pageButtons(id.first(), newPage, pagesCount))
-                            ?: it
+                    ).setComponents(emptyList()).let {
+                        it.applyIf(audioPlayer.scheduler.queue.size > 10) {
+                            setActionRow(pageButtons(id.first(), newPage, pagesCount))
+                        }
                     }.queue(null) { _ ->
                         event.message.editMessageEmbeds(
                             queueEmbed(event.jda, audioPlayer, track, newPage)
-                        ).setActionRows().let {
-                            it.takeIf { audioPlayer.scheduler.queue.size > 10 }
-                                ?.setActionRow(pageButtons(id.first(), newPage, pagesCount))
-                                ?: it
+                        ).setComponents(emptyList()).let {
+                            it.applyIf(audioPlayer.scheduler.queue.size > 10) {
+                                setActionRow(pageButtons(id.first(), newPage, pagesCount))
+                            }
                         }.queue()
                     }
                 }
@@ -161,19 +163,19 @@ class QueueCommand : TextCommand {
                     val newPage = min(pageNumber.inc(), lastPage)
 
                     event.editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, newPage))
-                        .setActionRows()
+                        .setComponents(emptyList())
                         .let {
-                            it.takeIf { audioPlayer.scheduler.queue.size > 10 }
-                                ?.setActionRow(pageButtons(id.first(), newPage, pagesCount))
-                                ?: it
+                            it.applyIf(audioPlayer.scheduler.queue.size > 10) {
+                                setActionRow(pageButtons(id.first(), newPage, pagesCount))
+                            }
                         }.queue(null) { _ ->
                             event.message
                                 .editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, newPage))
-                                .setActionRows()
+                                .setComponents(emptyList())
                                 .let {
-                                    it.takeIf { audioPlayer.scheduler.queue.size > 10 }
-                                        ?.setActionRow(pageButtons(id.first(), newPage, pagesCount))
-                                        ?: it
+                                    it.applyIf(audioPlayer.scheduler.queue.size > 10) {
+                                        setActionRow(pageButtons(id.first(), newPage, pagesCount))
+                                    }
                                 }.queue()
                         }
                 }

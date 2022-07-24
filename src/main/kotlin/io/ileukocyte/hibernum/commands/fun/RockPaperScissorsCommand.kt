@@ -317,7 +317,8 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
                         .setContent(starter?.asMention.orEmpty())
                         .queue(null) {
                             event.messageChannel.sendMessageEmbeds(embed)
-                                .content(starter?.asMention.orEmpty()).queue()
+                                .setContent(starter?.asMention.orEmpty())
+                                .queue()
                         }
                 }
                 "stop" -> event.editComponents().setEmbeds(

@@ -22,6 +22,7 @@ import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEven
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.utils.FileUpload
 
 import org.apache.commons.validator.routines.UrlValidator
 
@@ -60,9 +61,11 @@ class InvertCommand : TextCommand, ContextCommand {
                         .apply { ImageIO.write(image, "png", this) }
                         .use { s -> s.toByteArray() }
 
-                    deferred.editMessageEmbeds().addFile(bytesToSend, "inverted.png").queue({}) {
-                        event.channel.sendFile(bytesToSend, "inverted.png").queue()
-                    }
+                    deferred.editMessageEmbeds()
+                        .setFiles(FileUpload.fromData(bytesToSend, "inverted.png"))
+                        .queue(null) {
+                            event.channel.sendFiles(FileUpload.fromData(bytesToSend, "inverted.png")).queue()
+                        }
                 } catch (e: Exception) {
                     deferred.delete().queue(null) {}
 
@@ -105,9 +108,11 @@ class InvertCommand : TextCommand, ContextCommand {
                 .apply { withContext(Dispatchers.IO) { ImageIO.write(image, "png", this@apply) } }
                 .use { it.toByteArray() }
 
-            deferred.editMessageEmbeds().addFile(bytesToSend, "inverted.png").queue({}) {
-                event.channel.sendFile(bytesToSend, "inverted.png").queue()
-            }
+            deferred.editMessageEmbeds()
+                .setFiles(FileUpload.fromData(bytesToSend, "inverted.png"))
+                .queue(null) {
+                    event.channel.sendFiles(FileUpload.fromData(bytesToSend, "inverted.png")).queue()
+                }
         }
     }
 
@@ -154,8 +159,8 @@ class InvertCommand : TextCommand, ContextCommand {
             .apply { withContext(Dispatchers.IO) { ImageIO.write(image, "png", this@apply) } }
             .toByteArray()
 
-        deferred.editOriginalEmbeds().addFile(bytesToSend, "inverted.png").queue(null) {
-            event.channel.sendFile(bytesToSend, "inverted.png").queue()
+        deferred.editOriginalEmbeds().setFiles(FileUpload.fromData(bytesToSend, "inverted.png")).queue(null) {
+            event.channel.sendFiles(FileUpload.fromData(bytesToSend, "inverted.png")).queue()
         }
     }
 
@@ -175,9 +180,11 @@ class InvertCommand : TextCommand, ContextCommand {
                         .apply { ImageIO.write(image, "png", this) }
                         .use { s -> s.toByteArray() }
 
-                    deferred.editOriginalEmbeds().addFile(bytesToSend, "inverted.png").queue({}) {
-                        event.messageChannel.sendFile(bytesToSend, "inverted.png").queue()
-                    }
+                    deferred.editOriginalEmbeds()
+                        .setFiles(FileUpload.fromData(bytesToSend, "inverted.png"))
+                        .queue(null) {
+                            event.messageChannel.sendFiles(FileUpload.fromData(bytesToSend, "inverted.png")).queue()
+                        }
                 } catch (e: Exception) {
                     deferred.deleteOriginal().queue(null) {}
 
@@ -220,9 +227,11 @@ class InvertCommand : TextCommand, ContextCommand {
                 .apply { withContext(Dispatchers.IO) { ImageIO.write(image, "png", this@apply) } }
                 .use { it.toByteArray() }
 
-            deferred.editOriginalEmbeds().addFile(bytesToSend, "inverted.png").queue({}) {
-                event.messageChannel.sendFile(bytesToSend, "inverted.png").queue()
-            }
+            deferred.editOriginalEmbeds()
+                .setFiles(FileUpload.fromData(bytesToSend, "inverted.png"))
+                .queue(null) {
+                    event.messageChannel.sendFiles(FileUpload.fromData(bytesToSend, "inverted.png")).queue()
+                }
         }
     }
 
@@ -249,8 +258,10 @@ class InvertCommand : TextCommand, ContextCommand {
             .apply { withContext(Dispatchers.IO) { ImageIO.write(image, "png", this@apply) } }
             .toByteArray()
 
-        deferred.editOriginalEmbeds().addFile(bytesToSend, "inverted.png").queue(null) {
-            event.messageChannel.sendFile(bytesToSend, "inverted.png").queue()
-        }
+        deferred.editOriginalEmbeds()
+            .setFiles(FileUpload.fromData(bytesToSend, "inverted.png"))
+            .queue(null) {
+                event.messageChannel.sendFiles(FileUpload.fromData(bytesToSend, "inverted.png")).queue()
+            }
     }
 }

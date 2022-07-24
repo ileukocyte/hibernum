@@ -24,6 +24,7 @@ import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.components.Modal
 import net.dv8tion.jda.api.interactions.components.text.TextInput
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
+import net.dv8tion.jda.api.utils.FileUpload
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
 class TextToImageCommand : TextCommand, MessageContextOnlyCommand {
@@ -44,7 +45,7 @@ class TextToImageCommand : TextCommand, MessageContextOnlyCommand {
 
         val bytes = textToImage(lines.take(25), lines.maxByOrNull { it.length } ?: return)
 
-        event.channel.sendFile(bytes, "tti.png").queue()
+        event.channel.sendFiles(FileUpload.fromData(bytes, "tti.png")).queue()
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
@@ -67,13 +68,13 @@ class TextToImageCommand : TextCommand, MessageContextOnlyCommand {
                 ?: return
             val bytes = textToImage(lines.take(25), lines.maxByOrNull { it.length } ?: return)
 
-            deferred.sendFile(bytes, "tti.png").await()
+            deferred.sendFiles(setOf(FileUpload.fromData(bytes, "tti.png"))).await()
         } catch (_: ErrorResponseException) {
             val lines = event.getValue("input")?.asString?.split("\n")?.map { it.limitTo(100) }
                 ?: return
             val bytes = textToImage(lines.take(25), lines.maxByOrNull { it.length } ?: return)
 
-            event.messageChannel.sendFile(bytes, "tti.png").await()
+            event.messageChannel.sendFiles(FileUpload.fromData(bytes, "tti.png")).await()
         }
     }
 
@@ -87,7 +88,7 @@ class TextToImageCommand : TextCommand, MessageContextOnlyCommand {
         val lines = content.split("\n").map { it.limitTo(100) }
         val bytes = textToImage(lines.take(25), lines.maxByOrNull { it.length } ?: return)
 
-        deferred.sendFile(bytes, "tti.png").queue()
+        deferred.sendFiles(setOf(FileUpload.fromData(bytes, "tti.png"))).queue()
     }
 
     private fun textToImage(lines: List<String>, longest: String): ByteArray {
