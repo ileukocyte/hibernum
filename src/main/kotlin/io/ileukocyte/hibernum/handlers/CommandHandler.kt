@@ -31,6 +31,7 @@ import net.dv8tion.jda.api.exceptions.InsufficientPermissionException
 import net.dv8tion.jda.api.interactions.commands.CommandAutoCompleteInteraction
 
 import org.jetbrains.kotlin.util.collectionUtils.filterIsInstanceAnd
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
 
 private val commandContextDispatcher = newFixedThreadPool(3).asCoroutineDispatcher()
 
@@ -64,7 +65,7 @@ object CommandHandler : MutableSet<GenericCommand> {
     operator fun get(name: String): GenericCommand? {
         fun checkPriority(actual: String, expected: TextCommand) = when (actual) {
             expected.name -> 2
-            in expected.aliases -> 1
+            in expected.aliases -> (1).applyIf(expected is SlashOnlyCommand) { 0 }
             else -> 0
         }
 

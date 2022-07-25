@@ -112,7 +112,7 @@ class HelpCommand : TextCommand {
     }
 
     private fun searchCommandNames(query: String) = CommandHandler.map {
-        if (it is TextCommand) {
+        if (it is TextCommand && it !is SlashOnlyCommand) {
             it.aliases + it.name
         } else {
             setOf(it.name)
@@ -129,7 +129,7 @@ class HelpCommand : TextCommand {
         description = this@getHelp.fullDescription
 
         if (this@getHelp is TextCommand) {
-            if (aliases.isNotEmpty()) {
+            if (this@getHelp !is SlashOnlyCommand && aliases.isNotEmpty()) {
                 field {
                     title = "Classic Text Aliases"
                     description = aliases.sorted().joinToString { "${Immutable.DEFAULT_PREFIX}$it" }
@@ -163,7 +163,7 @@ class HelpCommand : TextCommand {
                 }
             }
 
-            if (usages.isNotEmpty()) {
+            if (this@getHelp !is SlashOnlyCommand && usages.isNotEmpty()) {
                 field {
                     title = "Classic Text Usages"
                     description = usages.joinToString("\n") { group ->
@@ -176,7 +176,10 @@ class HelpCommand : TextCommand {
                 }
             }
 
-            if (this@getHelp !is SubcommandHolder && options.isNotEmpty()) {
+            if (this@getHelp !is SubcommandHolder
+                    && this@getHelp !is ClassicTextOnlyCommand
+                    && options.isNotEmpty()
+            ) {
                 field {
                     title = "Slash Options"
                     description = "/$name ${options.joinToString(" ") { "<${it.name}>" }}\n\n" +
