@@ -16,15 +16,13 @@ import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.InteractionType
 
-import org.jetbrains.kotlin.utils.addToStdlib.cast
-
 class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
     var queue = ConcurrentLinkedQueue<AudioTrack>()
     var loopMode = LoopMode.DISABLED
 
     operator fun plusAssign(track: AudioTrack) {
         if (!player.startTrack(track, true)) {
-            val userData = track.userData as TrackUserData
+            val userData = track.customUserData
 
             if (userData.announceQueueing) {
                 val embed = defaultEmbed(
@@ -51,9 +49,9 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
         if (queue.isNotEmpty()) {
             val next = queue.poll()
 
-            next.userData = next.userData.cast<TrackUserData>().copy(
+            next.userData = next.customUserData.copy(
                 ifFromSlashCommand = ifFromSlashCommand,
-                channel = newAnnouncementChannel ?: next.userData.cast<TrackUserData>().channel,
+                channel = newAnnouncementChannel ?: next.customUserData.channel,
             )
 
             player.startTrack(next, false)
@@ -67,9 +65,9 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
     }
 
     override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {
-        val userData = track.userData as TrackUserData
+        val userData = track.customUserData
 
-        val embed = if (userData.isFirstTrackPlaying && userData.playCount == 0) {
+        val embed = if (userData.isFirstToPlay && userData.playCount == 0) {
             defaultEmbed(
                 desc = "[${track.info.title}](${track.info.uri}) is playing now!",
                 type = EmbedType.SUCCESS,
@@ -103,7 +101,7 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
                 LoopMode.QUEUE -> {
                     queue.offer(track.makeClone().apply { userData = track.userData })
 
-                    val userData = track.userData as TrackUserData
+                    val userData = track.customUserData
 
                     userData.announcement?.takeIf {
                         it.interaction?.takeIf { i -> i.type == InteractionType.COMMAND } === null
@@ -112,7 +110,7 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
                     nextTrack()
                 }
                 else -> {
-                    val userData = track.userData as TrackUserData
+                    val userData = track.customUserData
 
                     userData.announcement?.takeIf {
                         it.interaction?.takeIf { i -> i.type == InteractionType.COMMAND } === null

@@ -53,7 +53,7 @@ class PlayCommand : TextCommand {
                                 event.channel,
                                 thumbnail,
                                 announceQueueing = musicManager.player.playingTrack !== null,
-                                isFirstTrackPlaying = musicManager.player.playingTrack === null,
+                                isFirstToPlay = musicManager.player.playingTrack === null,
                             )
 
                             musicManager.scheduler += track
@@ -68,7 +68,7 @@ class PlayCommand : TextCommand {
                                     event.author,
                                     event.channel,
                                     thumbnail,
-                                    isFirstTrackPlaying = musicManager.player.playingTrack === null,
+                                    isFirstToPlay = musicManager.player.playingTrack === null,
                                 )
 
                                 musicManager.scheduler += track
@@ -117,7 +117,7 @@ class PlayCommand : TextCommand {
                             event.channel,
                             thumbnail,
                             announceQueueing = musicManager.player.playingTrack !== null,
-                            isFirstTrackPlaying = musicManager.player.playingTrack === null,
+                            isFirstToPlay = musicManager.player.playingTrack === null,
                             ifFromSlashCommand = deferred,
                         )
 
@@ -143,7 +143,7 @@ class PlayCommand : TextCommand {
                                 event.user,
                                 event.channel,
                                 thumbnail,
-                                isFirstTrackPlaying = musicManager.player.playingTrack === null,
+                                isFirstToPlay = musicManager.player.playingTrack === null,
                             )
 
                             musicManager.scheduler += track

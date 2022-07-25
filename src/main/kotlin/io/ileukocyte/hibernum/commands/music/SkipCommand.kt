@@ -1,7 +1,7 @@
 package io.ileukocyte.hibernum.commands.music
 
-import io.ileukocyte.hibernum.audio.TrackUserData
 import io.ileukocyte.hibernum.audio.audioPlayer
+import io.ileukocyte.hibernum.audio.customUserData
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.*
@@ -9,8 +9,6 @@ import io.ileukocyte.hibernum.extensions.*
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.InteractionType
-
-import org.jetbrains.kotlin.utils.addToStdlib.cast
 
 class SkipCommand : TextCommand {
     override val name = "skip"
@@ -21,7 +19,7 @@ class SkipCommand : TextCommand {
 
         if (audioPlayer.player.playingTrack !== null) {
             if (event.member?.voiceState?.channel == event.guild.selfMember.voiceState?.channel) {
-                val announcement = audioPlayer.player.playingTrack.userData.cast<TrackUserData>().announcement
+                val announcement = audioPlayer.player.playingTrack.customUserData.announcement
 
                 announcement?.takeUnless {
                     val interaction = it.interaction?.takeIf { i -> i.type == InteractionType.COMMAND }
@@ -51,7 +49,7 @@ class SkipCommand : TextCommand {
             if (event.member?.voiceState?.channel == guild.selfMember.voiceState?.channel) {
                 val deferred = event.deferReply().await()
 
-                val announcement = audioPlayer.player.playingTrack.userData.cast<TrackUserData>().announcement
+                val announcement = audioPlayer.player.playingTrack.customUserData.announcement
 
                 announcement?.takeUnless {
                     val interaction = it.interaction?.takeIf { i -> i.type == InteractionType.COMMAND }

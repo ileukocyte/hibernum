@@ -3,6 +3,7 @@ package io.ileukocyte.hibernum.audio
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 
 import java.util.concurrent.Executors
 
@@ -46,7 +47,7 @@ fun JDA.loadGuildMusicManagers() =
     guildCache.forEach { MUSIC_MANAGERS[it.idLong] = GuildMusicManager(PLAYER_MANAGER) }
 
 fun GuildMusicManager.stop() {
-    val announcement = player.playingTrack?.userData?.cast<TrackUserData>()?.announcement
+    val announcement = player.playingTrack?.customUserData?.announcement
 
     announcement?.takeIf {
         it.interaction?.takeIf { i -> i.type == InteractionType.COMMAND } === null
@@ -79,13 +80,16 @@ fun getEmbedProgressBar(currentTime: Long, totalDuration: Long, blocks: Int = 15
     }
 }
 
+val AudioTrack.customUserData: TrackUserData
+    get() = userData.cast()
+
 data class TrackUserData(
     val user: User,
     val channel: MessageChannel,
     val thumbnail: String? = null,
     val announcement: Message? = null,
     val announceQueueing: Boolean = false,
-    val isFirstTrackPlaying: Boolean = false,
+    val isFirstToPlay: Boolean = false,
     val ifFromSlashCommand: InteractionHook? = null,
     val playCount: Int = 0,
 )

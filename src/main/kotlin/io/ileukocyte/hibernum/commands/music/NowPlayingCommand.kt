@@ -3,10 +3,7 @@ package io.ileukocyte.hibernum.commands.music
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 
 import io.ileukocyte.hibernum.Immutable
-import io.ileukocyte.hibernum.audio.GuildMusicManager
-import io.ileukocyte.hibernum.audio.TrackUserData
-import io.ileukocyte.hibernum.audio.audioPlayer
-import io.ileukocyte.hibernum.audio.getEmbedProgressBar
+import io.ileukocyte.hibernum.audio.*
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
@@ -24,7 +21,6 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 
 import org.jetbrains.kotlin.utils.addToStdlib.applyIf
-import org.jetbrains.kotlin.utils.addToStdlib.cast
 
 class NowPlayingCommand : TextCommand {
     override val name = "nowplaying"
@@ -143,7 +139,7 @@ class NowPlayingCommand : TextCommand {
                 }
                 "skip" -> {
                     if (audioPlayer.scheduler.queue.isNotEmpty()) {
-                        val announcement = audioPlayer.player.playingTrack.userData.cast<TrackUserData>().announcement
+                        val announcement = audioPlayer.player.playingTrack.customUserData.announcement
 
                         announcement?.takeUnless {
                             val interaction = it.interaction?.takeIf { i -> i.type == InteractionType.COMMAND }
@@ -173,7 +169,7 @@ class NowPlayingCommand : TextCommand {
         musicManager: GuildMusicManager,
         track: AudioTrack,
     ) = buildEmbed {
-        val trackData = track.userData.cast<TrackUserData>()
+        val trackData = track.customUserData
 
         color = Immutable.SUCCESS
         thumbnail = trackData.thumbnail ?: jda.selfUser.effectiveAvatarUrl

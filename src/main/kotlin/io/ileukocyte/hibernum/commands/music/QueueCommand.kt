@@ -5,10 +5,7 @@ import com.google.common.collect.Lists
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 
 import io.ileukocyte.hibernum.Immutable
-import io.ileukocyte.hibernum.audio.GuildMusicManager
-import io.ileukocyte.hibernum.audio.TrackUserData
-import io.ileukocyte.hibernum.audio.audioPlayer
-import io.ileukocyte.hibernum.audio.getEmbedProgressBar
+import io.ileukocyte.hibernum.audio.*
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
@@ -217,7 +214,7 @@ class QueueCommand : TextCommand {
 
             description = buildString {
                 partition[page].forEachIndexed { i, t ->
-                    val userData = t.userData as TrackUserData
+                    val userData = t.customUserData
 
                     val trackTitle = "[${t.info.title.limitTo(32)
                         .replace('[', '(')
@@ -239,7 +236,7 @@ class QueueCommand : TextCommand {
         }
 
         field {
-            val userData = track.userData as TrackUserData
+            val userData = track.customUserData
 
             val timeline = getEmbedProgressBar(
                 track.position.takeUnless { track.info.isStream } ?: Long.MAX_VALUE,

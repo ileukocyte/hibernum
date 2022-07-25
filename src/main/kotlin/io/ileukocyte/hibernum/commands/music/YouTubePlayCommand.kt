@@ -234,7 +234,7 @@ class YouTubePlayCommand : TextCommand {
                         channel,
                         "https://i3.ytimg.com/vi/$id/hqdefault.jpg",
                         announceQueueing = musicManager.player.playingTrack !== null,
-                        isFirstTrackPlaying = musicManager.player.playingTrack === null,
+                        isFirstToPlay = musicManager.player.playingTrack === null,
                         ifFromSlashCommand = ifFromSlashCommand,
                     )
 
@@ -261,7 +261,7 @@ class YouTubePlayCommand : TextCommand {
                             user,
                             channel,
                             thumbnail,
-                            isFirstTrackPlaying = musicManager.player.playingTrack === null,
+                            isFirstToPlay = musicManager.player.playingTrack === null,
                         )
 
                         musicManager.scheduler += track

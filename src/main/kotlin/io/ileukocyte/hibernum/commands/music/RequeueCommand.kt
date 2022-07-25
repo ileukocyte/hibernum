@@ -1,7 +1,7 @@
 package io.ileukocyte.hibernum.commands.music
 
-import io.ileukocyte.hibernum.audio.TrackUserData
 import io.ileukocyte.hibernum.audio.audioPlayer
+import io.ileukocyte.hibernum.audio.customUserData
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.await
@@ -10,8 +10,6 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-
-import org.jetbrains.kotlin.utils.addToStdlib.cast
 
 class RequeueCommand : TextCommand {
     override val name = "requeue"
@@ -36,7 +34,7 @@ class RequeueCommand : TextCommand {
                 } ?: audioPlayer.player.playingTrack ?: return
 
                 audioPlayer.scheduler += track.makeClone().apply {
-                    userData = track.userData.cast<TrackUserData>().copy(
+                    userData = track.customUserData.copy(
                         announceQueueing = true,
                         user = event.author,
                     )
@@ -60,7 +58,7 @@ class RequeueCommand : TextCommand {
                 } ?: audioPlayer.player.playingTrack ?: return
 
                 audioPlayer.scheduler += track.makeClone().apply {
-                    userData = track.userData.cast<TrackUserData>().copy(
+                    userData = track.customUserData.copy(
                         announceQueueing = true,
                         ifFromSlashCommand = event.deferReply().await(),
                         user = event.user,

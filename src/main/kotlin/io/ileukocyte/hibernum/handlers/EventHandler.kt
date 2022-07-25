@@ -107,8 +107,9 @@ object EventHandler : ListenerAdapter() {
                                         }
                                     }
 
-                                    event.guild.audioPlayer?.player?.playingTrack?.userData
-                                        ?.cast<TrackUserData>()
+                                    event.guild.audioPlayer?.player
+                                        ?.playingTrack
+                                        ?.customUserData
                                         ?.channel
                                         ?.let {
                                             it.sendWarning("${event.jda.selfUser.name} has been inactive for too long to stay in the voice channel! The bot has left!") {
@@ -180,8 +181,9 @@ object EventHandler : ListenerAdapter() {
                                     }
                                 }
 
-                                event.guild.audioPlayer?.player?.playingTrack?.userData
-                                    ?.cast<TrackUserData>()
+                                event.guild.audioPlayer?.player
+                                    ?.playingTrack
+                                    ?.customUserData
                                     ?.channel
                                     ?.let {
                                         it.sendWarning("${event.jda.selfUser.name} has been inactive for too long to stay in the voice channel! The bot has left!") {
