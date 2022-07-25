@@ -6,7 +6,9 @@ import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 import net.dv8tion.jda.api.requests.RestAction
 import net.dv8tion.jda.api.utils.concurrent.Task
@@ -48,8 +50,8 @@ suspend fun <T> RestAction<T>.awaitAfter(
  *
  * @return the response value
  */
-suspend fun <T> Task<T>.await() = suspendCoroutine<T> { c ->
-    this
-        .onSuccess { c.resume(it) }
-        .onError { c.resumeWithException(it) }
+suspend fun <T> Task<T>.await() = suspendCancellableCoroutine<T> { continuation ->
+    continuation.invokeOnCancellation { cancel() }
+    onSuccess { continuation.resume(it) }
+    onError { continuation.resumeWithException(it) }
 }

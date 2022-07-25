@@ -6,12 +6,19 @@ import java.util.concurrent.CompletableFuture
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 import org.jetbrains.kotlin.utils.addToStdlib.applyIf
 
 // Java concurrency
-suspend fun <T> CompletableFuture<T>.await() = suspendCoroutine<T> { c ->
-    whenComplete { r, e -> e?.let { c.resumeWithException(it) } ?: c.resume(r) }
+suspend fun <T> CompletableFuture<T>.await() = suspendCancellableCoroutine<T> { continuation ->
+    continuation.invokeOnCancellation {
+        cancel(true)
+    }
+
+    whenComplete { r, e ->
+        e?.let { continuation.resumeWithException(it) } ?: continuation.resume(r)
+    }
 }
 
 // kotlin.Boolean
