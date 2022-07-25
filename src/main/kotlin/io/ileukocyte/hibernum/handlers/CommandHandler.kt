@@ -152,7 +152,8 @@ object CommandHandler : MutableSet<GenericCommand> {
                                     }
 
                                     if (event.member?.hasPermission(command.memberPermissions) == false) {
-                                        throw CommandException("You do not have the required permission to manage messages!")
+                                        throw CommandException("You do not have the required permissions " +
+                                                "(${command.memberPermissions.joinToString { it.getName() }})!")
                                     }
 
                                     if (command.cooldown > 0) {
