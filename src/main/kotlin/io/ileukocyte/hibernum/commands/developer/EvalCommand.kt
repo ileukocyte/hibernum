@@ -9,7 +9,6 @@ import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.openweather.Forecast
 import io.ileukocyte.openweather.OpenWeatherApi
 
-import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
@@ -42,18 +41,6 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
                 .removePrefix("kotlin\n")
         } ?: throw NoArgumentsException
 
-        val packages = buildString {
-            for ((key, value) in IMPORTS) {
-                if (value.isNotEmpty()) {
-                    for (`package` in value) {
-                        appendLine("import $key.$`package`.*")
-                    }
-                } else {
-                    appendLine("import $key.*")
-                }
-            }
-        }
-
         try {
             val engine = Immutable.EVAL_KOTLIN_ENGINE
 
@@ -66,14 +53,13 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
             engine.put("event", event)
 
             val result: Any? = engine.eval("""
-                        |$packages
+                        |$PACKAGES
                         |
                         |$code
                     """.trimMargin())
 
             if (result !== null) {
                 when (result) {
-                    is EmbedBuilder -> event.channel.sendMessageEmbeds(result.build()).queue()
                     is Message -> event.channel.sendMessage(result.toCreateData()).queue()
                     is MessageCreateData -> event.channel.sendMessage(result).queue()
                     is MessageEditData -> event.channel.sendMessage(result.toCreateData()).queue()
@@ -85,7 +71,9 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
                     is OpenWeatherApi -> event.channel.sendMessage(result.toString().remove(result.key)).queue()
                     else -> event.channel.sendMessage("$result").queue()
                 }
-            } else event.channel.sendSuccess("Successful execution!").queue()
+            } else {
+                event.channel.sendSuccess("Successful execution!").queue()
+            }
         } catch (e: Exception) {
             throw CommandException("""
                     |${e::class.simpleName ?: "An unknown exception"} has occurred:
@@ -110,18 +98,6 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
         val code = event.getValue("$name-code")?.asString ?: return
         val deferred = event.deferReply().await()
 
-        val packages = buildString {
-            for ((key, value) in IMPORTS) {
-                if (value.isNotEmpty()) {
-                    for (`package` in value) {
-                        appendLine("import $key.$`package`.*")
-                    }
-                } else {
-                    appendLine("import $key.*")
-                }
-            }
-        }
-
         val success = defaultEmbed("Successful execution!", EmbedType.SUCCESS)
         val failure = { t: Throwable ->
             defaultEmbed("""
@@ -142,16 +118,13 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
             engine.put("event", event)
 
             val result: Any? = engine.eval("""
-                        |$packages
+                        |$PACKAGES
                         |
                         |$code
                     """.trimMargin())
 
             if (result !== null) {
                 when (result) {
-                    is EmbedBuilder -> deferred.editOriginalEmbeds(result.build()).queue(null) {
-                        event.messageChannel.sendMessageEmbeds(result.build()).queue()
-                    }
                     is Message -> deferred.editOriginal(result.toEditData()).queue(null) {
                         event.messageChannel.sendMessage(result.toCreateData()).queue()
                     }
@@ -215,18 +188,6 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
 
         val deferred = event.deferReply().await()
 
-        val packages = buildString {
-            for ((key, value) in IMPORTS) {
-                if (value.isNotEmpty()) {
-                    for (`package` in value) {
-                        appendLine("import $key.$`package`.*")
-                    }
-                } else {
-                    appendLine("import $key.*")
-                }
-            }
-        }
-
         val success = defaultEmbed("Successful execution!", EmbedType.SUCCESS)
         val failure = { t: Throwable ->
             defaultEmbed("""
@@ -247,16 +208,13 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
             engine.put("event", event)
 
             val result: Any? = engine.eval("""
-                        |$packages
+                        |$PACKAGES
                         |
                         |$code
                     """.trimMargin())
 
             if (result !== null) {
                 when (result) {
-                    is EmbedBuilder -> deferred.editOriginalEmbeds(result.build()).queue(null) {
-                        event.messageChannel.sendMessageEmbeds(result.build()).queue()
-                    }
                     is Message -> deferred.editOriginal(result.toEditData()).queue(null) {
                         event.messageChannel.sendMessage(result.toCreateData()).queue()
                     }
@@ -317,6 +275,7 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
                 "hibernum.commands.developer",
                 "hibernum.commands.`fun`",
                 "hibernum.commands.general",
+                "hibernum.commands.moderation",
                 "hibernum.commands.music",
                 "hibernum.commands.utility",
                 "hibernum.extensions",
@@ -326,35 +285,36 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
                 "openweather.entities",
                 "openweather.extensions",
             ),
-            "net.dv8tion.jda" to setOf(
-                "api",
-                "api.audit",
-                "api.entities",
-                "api.events",
-                "api.events.guild",
-                "api.events.guild.voice",
-                "api.events.interaction",
-                "api.events.interaction.command",
-                "api.events.interaction.component",
-                "api.events.message",
-                "api.events.message",
-                "api.events.message.react",
-                "api.exceptions",
-                "api.hooks",
-                "api.interactions",
-                "api.interactions.commands",
-                "api.interactions.commands.build",
-                "api.interactions.components",
-                "api.interactions.components.buttons",
-                "api.interactions.components.selections",
-                "api.interactions.components.text",
-                "api.managers",
-                "api.requests",
-                "api.requests.restaction",
-                "api.requests.restaction.order",
-                "api.requests.restaction.pagination",
-                "api.utils",
-                "api.utils.cache",
+            "net.dv8tion.jda.api" to setOf(
+                "",
+                "audit",
+                "entities",
+                "events",
+                "events.guild",
+                "events.guild.voice",
+                "events.interaction",
+                "events.interaction.command",
+                "events.interaction.component",
+                "events.message",
+                "events.message",
+                "events.message.react",
+                "exceptions",
+                "hooks",
+                "interactions",
+                "interactions.commands",
+                "interactions.commands.build",
+                "interactions.components",
+                "interactions.components.buttons",
+                "interactions.components.selections",
+                "interactions.components.text",
+                "managers",
+                "requests",
+                "requests.restaction",
+                "requests.restaction.order",
+                "requests.restaction.pagination",
+                "utils",
+                "utils.cache",
+                "utils.messages",
             ),
             "java" to setOf(
                 "io",
@@ -385,13 +345,13 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
             "io.ktor" to setOf(
                 "client",
                 "client.call",
-                "client.engine.cio",
                 "client.plugins.contentnegotiation",
                 "client.request",
                 "http",
                 "serialization.kotlinx.json",
             ),
             "org" to setOf(
+                "jetbrains.kotlin.util.collectionUtils",
                 "jetbrains.kotlin.utils.addToStdlib",
                 "json",
                 "jsoup",
@@ -399,5 +359,24 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
             ),
             "mu" to emptySet(),
         )
+
+        @JvmField
+        val PACKAGES = buildString {
+            for ((key, value) in IMPORTS) {
+                if (value.isNotEmpty()) {
+                    for (`package` in value) {
+                        append("import $key.")
+
+                        if (`package`.isNotEmpty()) {
+                            append("$`package`.")
+                        }
+
+                        appendLine("*")
+                    }
+                } else {
+                    appendLine("import $key.*")
+                }
+            }
+        }
     }
 }
