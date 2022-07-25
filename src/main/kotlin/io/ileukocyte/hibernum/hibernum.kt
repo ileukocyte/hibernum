@@ -11,7 +11,7 @@ import io.ileukocyte.hibernum.audio.loadGuildMusicManagers
 import io.ileukocyte.hibernum.builders.buildActivity
 import io.ileukocyte.hibernum.builders.buildJDA
 import io.ileukocyte.hibernum.commands.*
-import io.ileukocyte.hibernum.extensions.*
+import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.handlers.EventHandler
 
@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Activity.ActivityType
+import net.dv8tion.jda.api.interactions.commands.Command
 import net.dv8tion.jda.api.interactions.commands.Command.Type
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 
@@ -119,14 +120,13 @@ suspend fun main() = coroutineScope {
                         || cmd.description !in discordCommands.map { it.description.removePrefix("(Developer-only) ") }
                         || discordCommands.any {
                     val unequalOptions = if (cmd !is SubcommandHolder) {
-                        !cmd.options.toList().optionsEqual(it.options.map { o -> o.toOptionData() })
+                        it.options != cmd.options.map { o -> Command.Option(o.toData()) }
                     } else {
                         false
                     }
 
                     val unequalSubcommands = if (cmd is SubcommandHolder) {
-                        !cmd.subcommands.keys.toList()
-                            .subcommandsEqual(it.subcommands.map { s -> s.toSubcommandData() })
+                        it.subcommands != cmd.subcommands.keys.map { s -> Command.Subcommand(s.toData()) }
                     } else {
                         false
                     }
