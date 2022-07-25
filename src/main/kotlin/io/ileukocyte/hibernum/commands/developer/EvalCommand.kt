@@ -33,6 +33,24 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
     override val aliases = setOf("exec", "execute", "kotlin")
     override val usages = setOf(setOf("Kotlin code".toClassicTextUsage()))
 
+    private val packages get() = buildString {
+        for ((key, value) in IMPORTS) {
+            if (value.isNotEmpty()) {
+                for (`package` in value) {
+                    append("import $key.")
+
+                    if (`package`.isNotEmpty()) {
+                        append("$`package`.")
+                    }
+
+                    appendLine("*")
+                }
+            } else {
+                appendLine("import $key.*")
+            }
+        }
+    }
+
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val code = args?.applyIf(args.startsWith("```")) {
             removeSurrounding("```")
@@ -53,7 +71,7 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
             engine.put("event", event)
 
             val result: Any? = engine.eval("""
-                        |$PACKAGES
+                        |$packages
                         |
                         |$code
                     """.trimMargin())
@@ -118,7 +136,7 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
             engine.put("event", event)
 
             val result: Any? = engine.eval("""
-                        |$PACKAGES
+                        |$packages
                         |
                         |$code
                     """.trimMargin())
@@ -208,7 +226,7 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
             engine.put("event", event)
 
             val result: Any? = engine.eval("""
-                        |$PACKAGES
+                        |$packages
                         |
                         |$code
                     """.trimMargin())
@@ -289,6 +307,8 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
                 "",
                 "audit",
                 "entities",
+                "entities.emoji",
+                "entities.sticker",
                 "events",
                 "events.guild",
                 "events.guild.voice",
@@ -359,24 +379,5 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
             ),
             "mu" to emptySet(),
         )
-
-        @JvmField
-        val PACKAGES = buildString {
-            for ((key, value) in IMPORTS) {
-                if (value.isNotEmpty()) {
-                    for (`package` in value) {
-                        append("import $key.")
-
-                        if (`package`.isNotEmpty()) {
-                            append("$`package`.")
-                        }
-
-                        appendLine("*")
-                    }
-                } else {
-                    appendLine("import $key.*")
-                }
-            }
-        }
     }
 }
