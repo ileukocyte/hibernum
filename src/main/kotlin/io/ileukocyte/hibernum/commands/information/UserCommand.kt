@@ -356,13 +356,13 @@ class UserCommand : TextCommand, UserContextOnlyCommand {
                 iconUrl = pfp
             }
 
-            description = "[Profile Picture URL]($pfp)".surroundWith("**")
+            description = "[Profile Picture URL]($pfp)".bold()
             image = pfp
             color = getDominantColorByImageProxy(member.user.effectiveAvatar)
 
             member.avatarUrl?.let { guildPfp ->
                 append("\u2022".surroundWith(' '))
-                append("[Local Profile Picture]($guildPfp?size=2048)".surroundWith("**"))
+                append("[Local Profile Picture]($guildPfp?size=2048)".bold())
             }
         }
     }

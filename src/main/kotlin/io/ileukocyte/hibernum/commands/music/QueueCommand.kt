@@ -10,7 +10,9 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
 import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.extensions.bold
 import io.ileukocyte.hibernum.extensions.limitTo
+import io.ileukocyte.hibernum.extensions.maskedLink
 import io.ileukocyte.hibernum.utils.asDuration
 
 import kotlin.math.ceil
@@ -40,7 +42,7 @@ class QueueCommand : TextCommand {
         val audioPlayer = event.guild.audioPlayer ?: return
         val track = audioPlayer.player.playingTrack ?: throw CommandException("No track is currently playing!")
 
-        val partitionSize = Lists.partition(audioPlayer.scheduler.queue.toList(), 10).size
+        val partitionSize = ceil(audioPlayer.scheduler.queue.size / 10.0).toInt()
         val initialPage = args?.toIntOrNull()
             ?.takeIf { it in 1..partitionSize }
             ?.dec()
@@ -58,7 +60,7 @@ class QueueCommand : TextCommand {
         val audioPlayer = event.guild?.audioPlayer ?: return
         val track = audioPlayer.player.playingTrack ?: throw CommandException("No track is currently playing!")
 
-        val partitionSize = Lists.partition(audioPlayer.scheduler.queue.toList(), 10).size
+        val partitionSize = ceil(audioPlayer.scheduler.queue.size / 10.0).toInt()
 
         val initialPage = event.getOption("page")?.asString?.toIntOrNull()
             ?.takeIf { it in 1..partitionSize }
@@ -84,14 +86,12 @@ class QueueCommand : TextCommand {
             }
 
             val audioPlayer = event.guild?.audioPlayer ?: return
-            val track = audioPlayer.player.playingTrack.let {
-                if (it === null) {
-                    event.message.delete().queue()
+            val track = audioPlayer.player.playingTrack
 
-                    return
-                } else {
-                    it
-                }
+            if (track === null) {
+                event.message.delete().queue()
+
+                return
             }
 
             val pageNumber = id[1].toInt()
@@ -216,9 +216,9 @@ class QueueCommand : TextCommand {
                 partition[page].forEachIndexed { i, t ->
                     val userData = t.customUserData
 
-                    val trackTitle = "[${t.info.title.limitTo(32)
-                        .replace('[', '(')
-                        .replace(']', ')')}](${t.info.uri})"
+                    val trackTitle = (t.info.title.limitTo(32) to t.info.uri)
+                        .maskedLink()
+
                     val trackDuration = if (t.info.isStream) {
                         "(LIVE)"
                     } else {
@@ -244,9 +244,7 @@ class QueueCommand : TextCommand {
             )
 
             title = "Playing Now"
-            description = "**[${track.info.title
-                .replace('[', '(')
-                .replace(']', ')')}](${track.info.uri})** (${userData.user.asMention})\n" +
+            description = "${(track.info.title to track.info.uri).maskedLink().bold()} (${userData.user.asMention})\n" +
                     "$timeline " + ("(${asDuration(track.position)}/${asDuration(track.duration)})"
                 .takeUnless { track.info.isStream } ?: "(LIVE)")
         }

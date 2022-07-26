@@ -3,9 +3,9 @@ package io.ileukocyte.hibernum.commands.`fun`
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.extensions.monospace
 import io.ileukocyte.hibernum.extensions.replyEmbed
 import io.ileukocyte.hibernum.extensions.sendEmbed
-import io.ileukocyte.hibernum.extensions.surroundWith
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
@@ -16,7 +16,7 @@ class RollCommand : TextCommand {
     override val name = "roll"
     override val description = "Rolls the dice of the provided parameters"
     override val fullDescription = "$description\n\n_An example of classic text use is " +
-            "${Immutable.DEFAULT_PREFIX}$name 7d27".surroundWith('`') + "_"
+            "${Immutable.DEFAULT_PREFIX}$name 5d27".monospace() + "_"
     override val aliases = setOf("dice")
     override val options = setOf(
         OptionData(OptionType.INTEGER, "sides", "A number of sides per die", true)

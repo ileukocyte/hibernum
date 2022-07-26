@@ -92,7 +92,7 @@ class ServerCommand : TextCommand {
             }
 
             val guild = event.guild ?: return
-            val deferred = event.editMessage("Executing\u2026".surroundWith('*'))
+            val deferred = event.editMessage("Executing\u2026".italics())
                 .setEmbeds()
                 .setComponents(emptyList())
                 .await()
@@ -291,7 +291,7 @@ class ServerCommand : TextCommand {
         }
 
         "$icon?size=2048".let { hqIcon ->
-            description = "[Server Icon URL]($hqIcon)".surroundWith("**")
+            description = "[Server Icon URL]($hqIcon)".bold()
             image = hqIcon
         }
     }

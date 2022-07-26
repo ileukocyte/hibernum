@@ -52,7 +52,7 @@ class ChangelogCommand : TextCommand {
             for (changeGroup in changelog) {
                 val lines = changeGroup.remove("\r").split("\n")
 
-                appendLine(lines.first().removePrefix("## ").surroundWith("**"))
+                appendLine(lines.first().removePrefix("## ").bold())
                 append(lines.drop(1).joinToString("\n") {
                     var line = it
 
@@ -99,7 +99,7 @@ class ChangelogCommand : TextCommand {
             for (changeGroup in changelog) {
                 val lines = changeGroup.remove("\r").split("\n")
 
-                appendLine(lines.first().removePrefix("## ").surroundWith("**"))
+                appendLine(lines.first().removePrefix("## ").bold())
                 append(lines.drop(1).joinToString("\n") {
                     var line = it
 

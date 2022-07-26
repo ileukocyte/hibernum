@@ -8,6 +8,8 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
 import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.extensions.bold
+import io.ileukocyte.hibernum.extensions.maskedLink
 import io.ileukocyte.hibernum.extensions.replyConfirmation
 import io.ileukocyte.hibernum.utils.asDuration
 
@@ -176,9 +178,7 @@ class NowPlayingCommand : TextCommand {
 
         field {
             title = "Playing Now"
-            description = "**[${track.info.title
-                .replace('[', '(')
-                .replace(']', ')')}](${track.info.uri})**"
+            description = (track.info.title to track.info.uri).maskedLink().bold()
         }
 
         field {
