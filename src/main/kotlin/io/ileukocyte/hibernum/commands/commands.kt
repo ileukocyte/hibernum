@@ -185,7 +185,8 @@ interface TextCommand : GenericCommand {
      *
      * **Note**: the [options] property cannot be used alongside the [subcommands][SubcommandHolder.subcommands] property!
      *
-     * @throws UnsupportedOperationException if the command class also implements [SubcommandHolder]
+     * @throws UnsupportedOperationException if the command class also implements
+     * either [SubcommandHolder] or [ClassicTextOnlyCommand]
      */
     val options: Set<OptionData>
         get() = emptySet()
@@ -242,7 +243,7 @@ interface TextCommand : GenericCommand {
 typealias ClassicTextUsageGroup = Collection<TextCommand.ClassicTextUsage>
 
 /**
- * A type of command that can be used as a text command exclusively
+ * A type of command that can be used as a classic text command exclusively
  *
  * @author Alexander Oksanich
  *
@@ -251,6 +252,9 @@ typealias ClassicTextUsageGroup = Collection<TextCommand.ClassicTextUsage>
  * @see SlashOnlyCommand
  */
 interface ClassicTextOnlyCommand : TextCommand {
+    override val options get() =
+        throw UnsupportedOperationException("This type of text command cannot have any options!")
+
     override fun asJDASlashCommandData(): SlashCommandData? = null
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) =
@@ -293,8 +297,8 @@ interface SubcommandHolder : TextCommand {
     val subcommands: Map<SubcommandData, suspend (SlashCommandInteractionEvent) -> Unit>
         get() = emptyMap()
 
-    override val options: Set<OptionData>
-        get() = throw UnsupportedOperationException("This type of slash command cannot have any options!")
+    override val options get() =
+        throw UnsupportedOperationException("This type of slash command cannot have any options!")
 
     override fun asJDASlashCommandData(): SlashCommandData? =
         super.asJDASlashCommandData()?.addSubcommands(subcommands.keys)
