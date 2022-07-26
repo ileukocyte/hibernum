@@ -22,9 +22,11 @@ import kotlin.math.min
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.GuildMessageChannel
+import net.dv8tion.jda.api.events.interaction.GenericAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import net.dv8tion.jda.api.interactions.commands.CommandAutoCompleteInteraction
 import net.dv8tion.jda.api.interactions.commands.OptionType.STRING
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.Modal
@@ -37,7 +39,9 @@ import org.jetbrains.kotlin.utils.addToStdlib.applyIf
 class SessionsCommand : SlashOnlyCommand {
     override val name = "sessions"
     override val description = "Sends a list of running game sessions of yours or aborts the one provided by its ID"
-    override val options = setOf(OptionData(STRING, "id", "The ID of the session to abort"))
+    override val options = setOf(
+        OptionData(STRING, "id", "The ID of the session to abort")
+            .setAutoComplete(true))
     override val staleInteractionHandling = StaleInteractionHandling.REMOVE_COMPONENTS
     override val neglectProcessBlock = true
 
@@ -70,6 +74,25 @@ class SessionsCommand : SlashOnlyCommand {
                     Button.danger("$name-${event.user.idLong}-${session.id}-abortc", "Yes"),
                     Button.secondary("$name-${event.user.idLong}-exit", "No"),
                 ).queue()
+        }
+    }
+
+    override suspend fun invoke(event: GenericAutoCompleteInteractionEvent) {
+        val interaction = event.interaction as CommandAutoCompleteInteraction
+
+        interaction.getOption("id") { option ->
+            val query = option.asString
+
+            if (query.isNotEmpty()) {
+                event.jda.getUserProcesses(event.user)
+                    .filter { it.id.startsWith(query) && it.command?.category == CommandCategory.FUN }
+                    .takeUnless { it.isEmpty() }
+                    ?.let { wp ->
+                        event.replyChoiceStrings(wp.map { it.id }).queue()
+                    }
+            } else {
+                event.replyChoiceStrings().queue()
+            }
         }
     }
 

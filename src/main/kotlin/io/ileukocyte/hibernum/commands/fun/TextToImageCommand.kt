@@ -25,7 +25,6 @@ import net.dv8tion.jda.api.interactions.components.Modal
 import net.dv8tion.jda.api.interactions.components.text.TextInput
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 import net.dv8tion.jda.api.utils.FileUpload
-import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
 class TextToImageCommand : TextCommand, MessageContextOnlyCommand {
     override val name = "tti"
@@ -36,7 +35,7 @@ class TextToImageCommand : TextCommand, MessageContextOnlyCommand {
     override val cooldown = 5L
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
-        val lines = MarkdownSanitizer.sanitize(event.message.contentDisplay)
+        val lines = event.message.contentStripped
             .split("\\s+".toRegex(), 2)
             .getOrNull(1)
             ?.split("\n")
@@ -78,8 +77,7 @@ class TextToImageCommand : TextCommand, MessageContextOnlyCommand {
     }
 
     override suspend fun invoke(event: MessageContextInteractionEvent) {
-        val content = event.target.contentDisplay.takeUnless { it.isEmpty() }
-            ?.let { MarkdownSanitizer.sanitize(it) }
+        val content = event.target.contentStripped.takeUnless { it.isEmpty() }
             ?: throw CommandException("The message has no text provided!")
 
         val deferred = event.deferReply().await()

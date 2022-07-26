@@ -26,7 +26,6 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
-import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
 class UserCommand : TextCommand, UserContextOnlyCommand {
     override val name = "user"
@@ -207,13 +206,13 @@ class UserCommand : TextCommand, UserContextOnlyCommand {
 
         field {
             title = "Username"
-            description = MarkdownSanitizer.escape(user.name)
+            description = user.name.escapeMarkdown()
             isInline = true
         }
 
         field {
             title = "Nickname"
-            description = member.nickname?.let { MarkdownSanitizer.escape(it) } ?: "None"
+            description = member.nickname?.escapeMarkdown() ?: "None"
             isInline = true
         }
 
@@ -341,7 +340,7 @@ class UserCommand : TextCommand, UserContextOnlyCommand {
                 title = "Roles" + " (${roles.size})".takeUnless { roles.isEmpty() }.orEmpty()
                 description = roles.takeUnless { it.isEmpty() }
                     ?.joinToString { it.name }
-                    ?.let { MarkdownSanitizer.escape(it) }
+                    ?.escapeMarkdown()
                     ?.limitTo(1024)
                     ?: "None"
                 isInline = roles.isEmpty()

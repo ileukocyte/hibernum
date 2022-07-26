@@ -5,6 +5,7 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.asWord
 import io.ileukocyte.hibernum.extensions.await
+import io.ileukocyte.hibernum.extensions.escapeMarkdown
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
 import net.dv8tion.jda.api.JDA
@@ -15,7 +16,6 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
 class EmoteCommand : TextCommand {
     override val name = "emote"
@@ -75,7 +75,7 @@ class EmoteCommand : TextCommand {
 
         field {
             title = "Server"
-            description = richEmoji?.guild?.name?.let { MarkdownSanitizer.escape(it) } ?: "Unknown"
+            description = richEmoji?.guild?.name?.escapeMarkdown() ?: "Unknown"
             isInline = true
         }
 
@@ -85,7 +85,7 @@ class EmoteCommand : TextCommand {
                 if (currentGuild.isMember(it)) {
                     it.asMention
                 } else {
-                    MarkdownSanitizer.escape(it.asTag)
+                    it.asTag
                 }
             } ?: "Unknown"
             isInline = true

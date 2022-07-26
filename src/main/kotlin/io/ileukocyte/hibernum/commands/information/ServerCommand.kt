@@ -15,7 +15,6 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.components.buttons.Button
-import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
 class ServerCommand : TextCommand {
     override val name = "server"
@@ -127,7 +126,7 @@ class ServerCommand : TextCommand {
 
         field {
             title = "Name"
-            description = MarkdownSanitizer.escape(guild.name)
+            description = guild.name.escapeMarkdown()
             isInline = true
         }
 
@@ -139,7 +138,7 @@ class ServerCommand : TextCommand {
 
         field {
             title = "Owner"
-            description = guild.owner?.user?.asMention?.let { MarkdownSanitizer.escape(it) }
+            description = guild.owner?.user?.asMention?.escapeMarkdown()
                 ?: "None (${guild.ownerIdLong})"
             isInline = true
         }

@@ -22,10 +22,12 @@ import kotlin.math.min
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.GuildMessageChannel
+import net.dv8tion.jda.api.events.interaction.GenericAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.interactions.commands.CommandAutoCompleteInteraction
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.Modal
@@ -40,7 +42,9 @@ class KillCommand : TextCommand {
     override val description = "Sends a list of running processes or terminates the one provided by its ID"
     override val aliases = setOf("kill-process", "terminate")
     override val usages = setOf(setOf("process ID".toClassicTextUsage(true)))
-    override val options = setOf(OptionData(OptionType.STRING, "pid", "The ID of the process to kill"))
+    override val options = setOf(
+        OptionData(OptionType.STRING, "pid", "The ID of the process to kill")
+            .setAutoComplete(true))
     override val staleInteractionHandling = StaleInteractionHandling.REMOVE_COMPONENTS
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
@@ -95,6 +99,25 @@ class KillCommand : TextCommand {
                     Button.danger("$name-${event.user.idLong}-${process.id}-killc", "Yes"),
                     Button.secondary("$name-${event.user.idLong}-exit", "No"),
                 ).queue()
+        }
+    }
+
+    override suspend fun invoke(event: GenericAutoCompleteInteractionEvent) {
+        val interaction = event.interaction as CommandAutoCompleteInteraction
+
+        interaction.getOption("pid") { option ->
+            val query = option.asString
+
+            if (query.isNotEmpty()) {
+                event.jda.processes
+                    .filter { it.id.startsWith(query) }
+                    .takeUnless { it.isEmpty() }
+                    ?.let { wp ->
+                        event.replyChoiceStrings(wp.map { it.id }).queue()
+                    }
+            } else {
+                event.replyChoiceStrings().queue()
+            }
         }
     }
 

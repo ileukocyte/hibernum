@@ -6,10 +6,7 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.commands.information.UserCommand.Companion.FEATURED_PERMISSIONS
-import io.ileukocyte.hibernum.extensions.asWord
-import io.ileukocyte.hibernum.extensions.await
-import io.ileukocyte.hibernum.extensions.searchRoles
-import io.ileukocyte.hibernum.extensions.sendEmbed
+import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.getImageBytes
 
 import net.dv8tion.jda.api.entities.Role
@@ -22,7 +19,6 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.utils.FileUpload
-import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
 class RoleCommand : TextCommand {
     override val name = "role"
@@ -172,7 +168,7 @@ class RoleCommand : TextCommand {
 
         field {
             title = "Name"
-            description = MarkdownSanitizer.escape(role.name)
+            description = role.name.escapeMarkdown()
             isInline = true
         }
 

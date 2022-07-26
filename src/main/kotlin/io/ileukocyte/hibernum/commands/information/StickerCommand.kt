@@ -6,6 +6,7 @@ import io.ileukocyte.hibernum.commands.ClassicTextOnlyCommand
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.MessageContextOnlyCommand
 import io.ileukocyte.hibernum.extensions.await
+import io.ileukocyte.hibernum.extensions.escapeMarkdown
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
 import net.dv8tion.jda.api.EmbedBuilder
@@ -15,7 +16,6 @@ import net.dv8tion.jda.api.entities.sticker.StickerItem
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
-import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
 class StickerCommand : ClassicTextOnlyCommand, MessageContextOnlyCommand {
     override val name = "sticker"
@@ -109,7 +109,7 @@ class StickerCommand : ClassicTextOnlyCommand, MessageContextOnlyCommand {
         asGuildSticker?.let { gs ->
             field {
                 title = "Server"
-                description = gs.guild?.name?.let { MarkdownSanitizer.escape(it) } ?: "Unknown"
+                description = gs.guild?.name?.escapeMarkdown() ?: "Unknown"
                 isInline = true
             }
 
