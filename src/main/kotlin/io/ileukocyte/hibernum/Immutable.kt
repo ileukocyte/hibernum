@@ -30,6 +30,9 @@ object Immutable {
     @JvmField
     val EVAL_KOTLIN_ENGINE = ScriptEngineManager().getEngineByExtension("kts")
             as KotlinJsr223ScriptEngineImpl
+    @JvmField
+    val EVAL_MODAL_INPUT_BACKUP_CHANNEL_ID: String? =
+        System.getenv("EVAL_MODAL_INPUT_BACKUP_CHANNEL_ID")
 
     @JvmField
     val VERSION = Version(major = 3, minor = 5)

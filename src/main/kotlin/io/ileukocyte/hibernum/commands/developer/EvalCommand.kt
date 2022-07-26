@@ -15,6 +15,8 @@ import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.interactions.commands.OptionType
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.Modal
 import net.dv8tion.jda.api.interactions.components.text.TextInput
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
@@ -30,6 +32,13 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
     override val name = "eval"
     override val contextName = "Execute Kotlin"
     override val description = "Executes the attached Kotlin code"
+    override val options = setOf(
+        OptionData(
+            OptionType.BOOLEAN,
+            "backup",
+            "Whether the input should be backed up to the designated text channel (default is false)",
+        ),
+    )
     override val aliases = setOf("exec", "execute", "kotlin")
     override val usages = setOf(setOf("Kotlin code".toClassicTextUsage()))
 
@@ -101,11 +110,13 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
+        val backup = event.getOption("backup")?.asBoolean ?: false
+
         val input = TextInput
             .create("$name-code", "Enter Your Kotlin Code:", TextInputStyle.PARAGRAPH)
             .build()
         val modal = Modal
-            .create("$name-modal", "Kotlin Code Execution")
+            .create("$name-$backup", "Kotlin Code Execution")
             .addActionRow(input)
             .build()
 
@@ -115,6 +126,20 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
     override suspend fun invoke(event: ModalInteractionEvent) {
         val code = event.getValue("$name-code")?.asString ?: return
         val deferred = event.deferReply().await()
+
+        Immutable.EVAL_MODAL_INPUT_BACKUP_CHANNEL_ID?.let { backup ->
+            if (event.modalId.split("-").last().toBoolean()) {
+                event.jda.getTextChannelById(backup)?.sendEmbed {
+                    color = Immutable.SUCCESS
+                    description = code.limitTo(MessageEmbed.DESCRIPTION_MAX_LENGTH - 9).codeblock("kt")
+
+                    author {
+                        name = "Kotlin Execution Input Backup"
+                        iconUrl = event.jda.selfUser.effectiveAvatarUrl
+                    }
+                }?.queue()
+            }
+        }
 
         val success = defaultEmbed("Successful execution!", EmbedType.SUCCESS)
         val failure = { t: Throwable ->
