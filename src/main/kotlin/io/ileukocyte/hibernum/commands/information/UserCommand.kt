@@ -327,13 +327,12 @@ class UserCommand : TextCommand, UserContextOnlyCommand {
             }
         }
 
-        member.permissions.intersect(KEY_PERMISSIONS).takeUnless { it.isEmpty() }?.let { keyPermissions ->
+        member.permissions.intersect(FEATURED_PERMISSIONS).takeUnless { it.isEmpty() }?.let { permissions ->
             field {
-                title = "Key Permissions"
-                description = keyPermissions
-                    .map { it.getName() }
-                    .sorted()
-                    .joinToString()
+                title = "Featured Permissions"
+                description = permissions
+                    .sortedBy { it.getName() }
+                    .joinToString { it.getName() }
             }
         }
 
@@ -370,7 +369,7 @@ class UserCommand : TextCommand, UserContextOnlyCommand {
 
     internal companion object {
         @JvmField
-        val KEY_PERMISSIONS = setOf(
+        val FEATURED_PERMISSIONS = setOf(
             Permission.ADMINISTRATOR,
             Permission.BAN_MEMBERS,
             Permission.CREATE_INSTANT_INVITE,

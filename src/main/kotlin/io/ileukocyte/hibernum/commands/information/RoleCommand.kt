@@ -5,7 +5,7 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
-import io.ileukocyte.hibernum.commands.information.UserCommand.Companion.KEY_PERMISSIONS
+import io.ileukocyte.hibernum.commands.information.UserCommand.Companion.FEATURED_PERMISSIONS
 import io.ileukocyte.hibernum.extensions.asWord
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.searchRoles
@@ -248,13 +248,12 @@ class RoleCommand : TextCommand {
             }
         }
 
-        role.permissions.intersect(KEY_PERMISSIONS).takeUnless { it.isEmpty() }?.let { keyPermissions ->
+        role.permissions.intersect(FEATURED_PERMISSIONS).takeUnless { it.isEmpty() }?.let { permissions ->
             field {
-                title = "Key Permissions"
-                description = keyPermissions
-                    .map { it.getName() }
-                    .sorted()
-                    .joinToString()
+                title = "Featured Permissions"
+                description = permissions
+                    .sortedBy { it.getName() }
+                    .joinToString { it.getName() }
             }
         }
     }
