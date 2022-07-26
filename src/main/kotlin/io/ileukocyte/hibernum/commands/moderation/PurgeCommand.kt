@@ -25,8 +25,8 @@ import org.apache.commons.validator.routines.UrlValidator
 
 import org.jetbrains.kotlin.utils.addToStdlib.applyIf
 
-class PruneCommand : SlashOnlyCommand {
-    override val name = "prune"
+class PurgeCommand : SlashOnlyCommand {
+    override val name = "purge"
     override val description = "Deletes the specified amount of messages matching the provided filters"
     override val options = setOf(
         OptionData(OptionType.INTEGER, "count", "The amount of messages to delete", true)
