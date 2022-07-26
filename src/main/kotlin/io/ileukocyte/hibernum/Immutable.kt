@@ -35,7 +35,7 @@ object Immutable {
         System.getenv("EVAL_MODAL_INPUT_BACKUP_CHANNEL_ID")
 
     @JvmField
-    val VERSION = Version(major = 3, minor = 5)
+    val VERSION = Version(major = 3, minor = 6)
 
     @JvmField
     val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0" //"User-Agent: DiscordBot ($GITHUB_REPOSITORY, $VERSION)"
