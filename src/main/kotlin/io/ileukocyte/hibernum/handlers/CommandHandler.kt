@@ -59,19 +59,28 @@ object CommandHandler : MutableSet<GenericCommand> {
      *
      * @param name
      * The name of the command to search
+     * @param ignoreCase
+     * Whether the string case should be ignored when comparing names (default is `true`)
      *
      * @return A [GenericCommand] having the same name as the provided query
      */
-    operator fun get(name: String): GenericCommand? {
-        fun checkPriority(actual: String, expected: TextCommand) = when (actual) {
-            expected.name -> 2
-            in expected.aliases -> (1).applyIf(expected is SlashOnlyCommand) { 0 }
-            else -> 0
-        }
+    operator fun get(name: String, ignoreCase: Boolean = true): GenericCommand? {
+        fun checkPriority(actual: String, expected: TextCommand) =
+            when (actual.applyIf(ignoreCase) { lowercase() }) {
+                expected.name.applyIf(ignoreCase) { lowercase() } -> 2
+                in expected.aliases.applyIf(ignoreCase) { map(String::lowercase).toSet() } ->
+                    (1).applyIf(expected is SlashOnlyCommand) { 0 }
+                else -> 0
+            }
 
         return filterIsInstanceAnd<TextCommand> { checkPriority(name, it) > 0 }
             .maxByOrNull { checkPriority(name, it) }
-            ?: firstOrNull { it.name == name }
+            ?: firstOrNull {
+                it.name.applyIf(ignoreCase) { lowercase() } == name.applyIf(ignoreCase) { lowercase() }
+            }?.takeUnless { it is ContextCommand && it !is TextCommand }
+            ?: filterIsInstanceAnd<ContextCommand> {
+                it.contextName.applyIf(ignoreCase) { lowercase() } == name.applyIf(ignoreCase) { lowercase() }
+            }.firstOrNull()
     }
 
     /**
@@ -84,12 +93,10 @@ object CommandHandler : MutableSet<GenericCommand> {
      *
      * @return A [ContextCommand] having the same name and type as provided
      */
-    operator fun get(
-        name: String,
-        type: ContextCommand.ContextType,
-    ) = filterIsInstanceAnd<ContextCommand> {
-        it.contextName == name && type in it.contextTypes
-    }.firstOrNull()
+    operator fun get(name: String, type: ContextCommand.ContextType) =
+        filterIsInstanceAnd<ContextCommand> {
+            it.contextName == name && type in it.contextTypes
+        }.firstOrNull()
 
     // Command cooldown extensions
     private fun GenericCommand.getRemainingCooldown(userId: Long) =
@@ -126,7 +133,7 @@ object CommandHandler : MutableSet<GenericCommand> {
             if (event.message.contentRaw.trim().startsWith(Immutable.DEFAULT_PREFIX)) {
                 val args = event.message.contentRaw.split(Regex("\\s+"), 2)
 
-                this[args.first().removePrefix(Immutable.DEFAULT_PREFIX).lowercase()]
+                this[args.first().removePrefix(Immutable.DEFAULT_PREFIX)]
                     ?.let { it as? TextCommand }
                     ?.takeIf { it !is SlashOnlyCommand }
                     ?.let { command ->

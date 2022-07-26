@@ -36,6 +36,10 @@ import org.jetbrains.kotlin.utils.addToStdlib.applyIf
  * @see UserContextOnlyCommand
  */
 interface GenericCommand : Comparable<GenericCommand> {
+    /**
+     * **Note**: the property is always mandatory to override unless the command is a context-menu one;
+     * therefore, do not forget to override it yourself in case the command is not context menu only!
+     */
     val name: String
     val description: String
     val category: CommandCategory
@@ -311,6 +315,9 @@ interface SubcommandHolder : TextCommand {
  * @see UserContextOnlyCommand
  */
 interface ContextCommand : GenericCommand {
+    override val name: String
+        get() = contextName
+
     val contextName: String
     val contextTypes: Set<ContextType>
         get() = setOf(ContextType.MESSAGE, ContextType.USER)

@@ -4,11 +4,8 @@ import com.sun.management.OperatingSystemMXBean
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.ClassicTextOnlyCommand
-import io.ileukocyte.hibernum.commands.CommandException
+import io.ileukocyte.hibernum.commands.*
 import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
-import io.ileukocyte.hibernum.commands.SlashOnlyCommand
-import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asText
@@ -115,8 +112,12 @@ class AboutCommand : TextCommand {
                 .count { it.selfMember.voiceState?.inAudioChannel() == true }
             val owner = appInfo.owner
             val commandCount = setOf(
-                CommandHandler.count { it is ClassicTextOnlyCommand }.takeIf { it > 0 }?.let { "text-only: $it" },
-                CommandHandler.count { it is SlashOnlyCommand }.takeIf { it > 0 }?.let { "slash-only: $it" },
+                CommandHandler.count { it is ClassicTextOnlyCommand }.takeIf { it > 0 }
+                    ?.let { "classic-text-only: $it" },
+                CommandHandler.count { it is SlashOnlyCommand }.takeIf { it > 0 }
+                    ?.let { "slash-only: $it" },
+                CommandHandler.count { it is ContextCommand && it !is TextCommand }.takeIf { it > 0 }
+                    ?.let { "context-menu-only: $it" },
             )
             val discordCommands = jda.retrieveCommands().await()
             val os = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean::class.java)

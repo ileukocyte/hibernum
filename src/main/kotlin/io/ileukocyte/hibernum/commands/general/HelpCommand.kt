@@ -3,10 +3,8 @@ package io.ileukocyte.hibernum.commands.general
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.*
-import io.ileukocyte.hibernum.extensions.await
-import io.ileukocyte.hibernum.extensions.capitalizeAll
+import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.extensions.getSearchPriority
-import io.ileukocyte.hibernum.extensions.surroundWith
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asText
 
@@ -25,6 +23,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 
 import org.jetbrains.kotlin.utils.addToStdlib.applyIf
+import org.jetbrains.kotlin.utils.addToStdlib.cast
 
 class HelpCommand : TextCommand {
     override val name = "help"
@@ -36,7 +35,7 @@ class HelpCommand : TextCommand {
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         if (args !== null) {
-            CommandHandler[args.lowercase()]?.let {
+            CommandHandler[args]?.let {
                 event.channel.sendMessageEmbeds(it.getHelp(event.jda)).queue()
             } ?: throw CommandException("The provided command name is invalid!")
         } else {
@@ -68,7 +67,7 @@ class HelpCommand : TextCommand {
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
-        val option = event.getOption("command")?.asString?.lowercase()
+        val option = event.getOption("command")?.asString
 
         if (option !== null) {
             CommandHandler[option]?.let {
@@ -103,7 +102,13 @@ class HelpCommand : TextCommand {
                     val commands = it.mapNotNull { name -> CommandHandler[name] }.distinct()
                         .take(OptionData.MAX_CHOICES)
 
-                    event.replyChoiceStrings(commands.map { c -> c.name }).queue()
+                    event.replyChoiceStrings(commands.map { command ->
+                        if (command is ContextCommand && command !is TextCommand) {
+                            command.contextName
+                        } else {
+                            command.name
+                        }
+                    }).queue()
                 }
             } else {
                 event.replyChoiceStrings().queue()
@@ -112,10 +117,20 @@ class HelpCommand : TextCommand {
     }
 
     private fun searchCommandNames(query: String) = CommandHandler.map {
-        if (it is TextCommand && it !is SlashOnlyCommand) {
+        val names = if (it is TextCommand && it !is SlashOnlyCommand) {
             it.aliases + it.name
         } else {
             setOf(it.name)
+        }
+
+        names.applyIf(it is ContextCommand) {
+            val ctxName = it.cast<ContextCommand>().contextName
+
+            if (it !is TextCommand) {
+                setOf(ctxName)
+            } else {
+                this + ctxName
+            }
         }
     }
         .flatten()
@@ -123,10 +138,19 @@ class HelpCommand : TextCommand {
         .sortedByDescending { getSearchPriority(query, it) }
 
     private fun GenericCommand.getHelp(jda: JDA) = buildEmbed {
-        val nameWithPrefix = "${Immutable.DEFAULT_PREFIX.takeUnless { this@getHelp is SlashOnlyCommand } ?: "/"}$name"
+        val prefix = when {
+            this@getHelp is SlashOnlyCommand -> "/"
+            this@getHelp is ContextCommand && this@getHelp !is TextCommand -> "\u2261"
+            else -> Immutable.DEFAULT_PREFIX
+        }
 
         color = Immutable.SUCCESS
         description = this@getHelp.fullDescription
+
+        field {
+            title = "Input Types"
+            description = inputTypes.joinToString("\n")
+        }
 
         if (this@getHelp is TextCommand) {
             if (this@getHelp !is SlashOnlyCommand && aliases.isNotEmpty()) {
@@ -136,10 +160,23 @@ class HelpCommand : TextCommand {
                 }
             }
 
+            if (this@getHelp !is SlashOnlyCommand && usages.isNotEmpty()) {
+                field {
+                    title = "Classic Text Usages"
+                    description = usages.joinToString("\n") { group ->
+                        "$prefix$name ${group.joinToString(" ") { usage ->
+                            usage.toString()
+                                .applyIf(usage.isOptional) { "$this (optional)" }
+                                .applyIf(usage.applyDefaultAffixes) { surroundWith("<", ">") }
+                        }}"
+                    }
+                }
+            }
+
             if (this@getHelp is SubcommandHolder) {
                 for (subcommand in subcommands.keys) {
                     field {
-                        title = "${subcommand.name.capitalizeAll()} Subcommand"
+                        title = "${subcommand.name.capitalizeAll()} Slash Subcommand"
                         description = "${subcommand.description}\n\n/$name ${subcommand.name} ${
                             subcommand.options.joinToString(" ") { "<${it.name}>" }
                         }\n\n" + subcommand.options.joinToString("\n") { o ->
@@ -159,19 +196,6 @@ class HelpCommand : TextCommand {
                                 " (optional)".takeUnless { o.isRequired }.orEmpty()
                             } — $description"
                         }
-                    }
-                }
-            }
-
-            if (this@getHelp !is SlashOnlyCommand && usages.isNotEmpty()) {
-                field {
-                    title = "Classic Text Usages"
-                    description = usages.joinToString("\n") { group ->
-                        "$nameWithPrefix ${group.joinToString(" ") { usage ->
-                            usage.toString()
-                                .applyIf(usage.isOptional) { "$this (optional)" }
-                                .applyIf(usage.applyDefaultAffixes) { surroundWith("<", ">") }
-                        }}"
                     }
                 }
             }
@@ -202,6 +226,13 @@ class HelpCommand : TextCommand {
                             }
                 }
             }
+
+            if (this@getHelp is ContextCommand) {
+                field {
+                    title = "Context Menu Name"
+                    description = contextName
+                }
+            }
         }
 
         field {
@@ -216,26 +247,19 @@ class HelpCommand : TextCommand {
             }
         }
 
-        field {
-            title = "Input Types"
-            description = inputTypes.joinToString("\n") {
-                val contextInputTypes = setOf(
-                    GenericCommand.InputType.MESSAGE_CONTEXT_MENU,
-                    GenericCommand.InputType.USER_CONTEXT_MENU,
-                )
-
-                if (this@getHelp is ContextCommand && it in contextInputTypes) {
-                    "$it (\"$contextName\")"
-                } else {
-                    "$it"
-                }
-            }
-        }
-
         author {
-            name = nameWithPrefix +
-                    " (text-only)".takeIf { this@getHelp is ClassicTextOnlyCommand }.orEmpty() +
-                    " (slash-only)".takeIf { this@getHelp is SlashOnlyCommand }.orEmpty()
+            val cmdName = if (this@getHelp is ContextCommand && this@getHelp !is TextCommand) {
+                contextName
+            } else {
+                this@getHelp.name
+            }
+
+            name = "$prefix$cmdName" +
+                    " (classic-text-only)".takeIf { this@getHelp is ClassicTextOnlyCommand }.orEmpty() +
+                    " (slash-only)".takeIf { this@getHelp is SlashOnlyCommand }.orEmpty() +
+                    " (context-menu-only)"
+                        .takeIf { this@getHelp is ContextCommand && this@getHelp !is TextCommand }
+                        .orEmpty()
             iconUrl = jda.selfUser.effectiveAvatarUrl
         }
     }
@@ -248,9 +272,10 @@ class HelpCommand : TextCommand {
     ) = buildEmbed {
         color = Immutable.SUCCESS
 
-        appendLine("Commands in italics can only be used either as classic text commands " +
-                "(the ones prefixed with \"${Immutable.DEFAULT_PREFIX}\") " +
-                "or slash commands (the ones prefixed with \"/\")!")
+        appendLine("Commands in italics can only be used either as " +
+                "classic text commands (the ones prefixed with \"${Immutable.DEFAULT_PREFIX}\"), " +
+                "slash commands (the ones prefixed with \"/\"), " +
+                "or context-menu commands (the ones prefixed with \"\u2261\")!")
         appendLine("The rest of commands can be used either way!")
 
         author {
@@ -268,10 +293,16 @@ class HelpCommand : TextCommand {
         for ((category, cmd) in CommandHandler.groupBy { it.category }.toSortedMap())
             field {
                 title = "$category Commands"
-                description = cmd.sortedBy { it.name }.joinToString { cmd ->
-                    when (cmd) {
-                        is ClassicTextOnlyCommand -> "*${Immutable.DEFAULT_PREFIX}${cmd.name}*"
-                        is SlashOnlyCommand -> "*/${cmd.name}*"
+                description = cmd.sortedBy {
+                    (it as? ContextCommand)?.takeUnless { c -> c is TextCommand }
+                        ?.contextName
+                        ?.lowercase()
+                        ?: it.name
+                }.joinToString { cmd ->
+                    when {
+                        cmd is ClassicTextOnlyCommand -> "${Immutable.DEFAULT_PREFIX}${cmd.name}".italics()
+                        cmd is SlashOnlyCommand -> "/${cmd.name}".italics()
+                        cmd is ContextCommand && cmd !is TextCommand -> "\u2261${cmd.contextName}".italics()
                         else -> cmd.name
                     }
                 }
