@@ -271,6 +271,6 @@ class DictionaryCommand : TextCommand {
             .applyIf(page == size.dec()) { asDisabled() },
         Button.secondary("$name-last", "Last Page")
             .applyIf(page == size.dec()) { asDisabled() },
-        Button.danger("$name-exit", "Exit"),
+        Button.danger("$name-exit", "Close"),
     )
 }

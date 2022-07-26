@@ -191,7 +191,7 @@ class QueueCommand : TextCommand {
             .applyIf(page == size.dec()) { asDisabled() },
         Button.secondary("$name-$userId-$page-last", "Last Page")
             .applyIf(page == size.dec()) { asDisabled() },
-        Button.danger("$name-$userId-exit", "Exit"),
+        Button.danger("$name-$userId-exit", "Close"),
     )
 
     private fun queueEmbed(
