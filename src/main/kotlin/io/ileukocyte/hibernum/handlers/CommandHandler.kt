@@ -76,9 +76,9 @@ object CommandHandler : MutableSet<GenericCommand> {
         return filterIsInstanceAnd<TextCommand> { checkPriority(name, it) > 0 }
             .maxByOrNull { checkPriority(name, it) }
             ?: firstOrNull {
-                it.name.applyIf(ignoreCase) { lowercase() } == name.applyIf(ignoreCase) { lowercase() }
-            }?.takeUnless { it is ContextCommand && it !is TextCommand }
-            ?: filterIsInstanceAnd<ContextCommand> {
+                it.getEffectiveContextName().applyIf(ignoreCase) { lowercase() } ==
+                        name.applyIf(ignoreCase) { lowercase() }
+            } ?: filterIsInstanceAnd<ContextCommand> {
                 it.contextName.applyIf(ignoreCase) { lowercase() } == name.applyIf(ignoreCase) { lowercase() }
             }.firstOrNull()
     }

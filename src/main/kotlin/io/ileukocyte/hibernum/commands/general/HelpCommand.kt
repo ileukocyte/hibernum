@@ -103,11 +103,7 @@ class HelpCommand : TextCommand {
                         .take(OptionData.MAX_CHOICES)
 
                     event.replyChoiceStrings(commands.map { command ->
-                        if (command is ContextCommand && command !is TextCommand) {
-                            command.contextName
-                        } else {
-                            command.name
-                        }
+                        command.getEffectiveContextName()
                     }).queue()
                 }
             } else {
@@ -248,13 +244,7 @@ class HelpCommand : TextCommand {
         }
 
         author {
-            val cmdName = if (this@getHelp is ContextCommand && this@getHelp !is TextCommand) {
-                contextName
-            } else {
-                this@getHelp.name
-            }
-
-            name = "$prefix$cmdName" +
+            name = "$prefix${getEffectiveContextName()}" +
                     " (classic-text-only)".takeIf { this@getHelp is ClassicTextOnlyCommand }.orEmpty() +
                     " (slash-only)".takeIf { this@getHelp is SlashOnlyCommand }.orEmpty() +
                     " (context-menu-only)"
@@ -294,10 +284,7 @@ class HelpCommand : TextCommand {
             field {
                 title = "$category Commands"
                 description = cmd.sortedBy {
-                    (it as? ContextCommand)?.takeUnless { c -> c is TextCommand }
-                        ?.contextName
-                        ?.lowercase()
-                        ?: it.name
+                    it.getEffectiveContextName().lowercase()
                 }.joinToString { cmd ->
                     when {
                         cmd is ClassicTextOnlyCommand -> "${Immutable.DEFAULT_PREFIX}${cmd.name}".italics()
