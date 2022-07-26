@@ -12,7 +12,7 @@ import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.interactions.components.ActionComponent
 
 inline fun IReplyCallback.reply(block: KMessageBuilder.() -> Unit) =
-    reply(buildMessage(block))
+    reply(buildMessage(block = block))
 
 inline fun IReplyCallback.replyEmbed(block: KEmbedBuilder.() -> Unit) =
     replyEmbeds(buildEmbed(block))

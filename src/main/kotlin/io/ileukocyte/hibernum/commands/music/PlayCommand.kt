@@ -22,6 +22,10 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 class PlayCommand : TextCommand {
     override val name = "play"
     override val description = "Plays the specified media in a voice channel"
+    override val fullDescription = description +
+            "\n\n**Available search prefixes**:" +
+            "\n\u2022 `ytsearch:` (YouTube)" +
+            "\n\u2022 `scsearch:` (SoundCloud)"
     override val aliases = setOf("p")
     override val options = setOf(
         OptionData(OptionType.STRING, "query", "A link or a search term"),

@@ -21,7 +21,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.components.ActionComponent
 
 inline fun MessageChannel.sendMessage(block: KMessageBuilder.() -> Unit) =
-    sendMessage(buildMessage(block))
+    sendMessage(buildMessage(block = block))
 
 inline fun MessageChannel.sendEmbed(block: KEmbedBuilder.() -> Unit) =
     sendMessageEmbeds(buildEmbed(block))

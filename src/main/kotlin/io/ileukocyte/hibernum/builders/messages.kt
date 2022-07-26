@@ -13,6 +13,7 @@ class KMessageBuilder {
     var content = ""
     var isTTS = false
     var mentionRepliedUser = true
+    var suppressEmbeds = false
 
     val actionRow = mutableListOf<ItemComponent>()
     val components = mutableListOf<LayoutComponent>()
@@ -53,6 +54,7 @@ class KMessageBuilder {
         .setComponents(components)
         .setEmbeds(embeds)
         .setFiles(files)
+        .setSuppressEmbeds(suppressEmbeds)
         .setTTS(isTTS)
         .mention(mentions)
         .mentionRepliedUser(mentionRepliedUser)
@@ -60,4 +62,7 @@ class KMessageBuilder {
         .build()
 }
 
-inline fun buildMessage(block: KMessageBuilder.() -> Unit) = KMessageBuilder().apply(block)()
+inline fun buildMessage(
+    content: String = "",
+    block: KMessageBuilder.() -> Unit,
+) = KMessageBuilder().apply { this.content = content }.apply(block)()
