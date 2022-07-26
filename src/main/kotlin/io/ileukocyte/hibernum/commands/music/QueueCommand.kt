@@ -216,8 +216,12 @@ class QueueCommand : TextCommand {
                 partition[page].forEachIndexed { i, t ->
                     val userData = t.customUserData
 
-                    val trackTitle = (t.info.title.limitTo(32) to t.info.uri)
-                        .maskedLink()
+                    val trackTitle = t.info.uri.maskedLink(
+                        t.info.title
+                            .limitTo(32)
+                            .replace('[', '(')
+                            .replace(']', ')')
+                    )
 
                     val trackDuration = if (t.info.isStream) {
                         "(LIVE)"
@@ -244,7 +248,11 @@ class QueueCommand : TextCommand {
             )
 
             title = "Playing Now"
-            description = "${(track.info.title to track.info.uri).maskedLink().bold()} (${userData.user.asMention})\n" +
+            description = "${track.info.uri.maskedLink(
+                track.info.title
+                    .replace('[', '(')
+                    .replace(']', ')')
+            ).bold()} (${userData.user.asMention})\n" +
                     "$timeline " + ("(${asDuration(track.position)}/${asDuration(track.duration)})"
                 .takeUnless { track.info.isStream } ?: "(LIVE)")
         }

@@ -365,6 +365,10 @@ class BattleshipCommand : SlashOnlyCommand {
                 for (player in battleship.players) {
                     player.dm.sendFailure("Time is out!").queue(null) {}
                 }
+
+                guildMessage.editMessageComponents()
+                    .setFailureEmbed("Time is out!")
+                    .queue(null) {}
             }
         } catch (_: ErrorResponseException) {
             if (!battleship.isOver) {
@@ -372,9 +376,9 @@ class BattleshipCommand : SlashOnlyCommand {
                         "since the bot is unable to DM one of the players!"
 
                 guildMessage.editMessageComponents()
-                    .setEmbeds(defaultEmbed(error, EmbedType.FAILURE))
+                    .setFailureEmbed(error)
                     .queue(null) {
-                        guildChannel.sendFailure(error).queue()
+                        guildChannel.sendFailure(error).queue(null) {}
                     }
             }
         }

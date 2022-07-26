@@ -15,6 +15,8 @@ import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
+import net.dv8tion.jda.api.requests.restaction.MessageEditAction
+import net.dv8tion.jda.api.requests.restaction.interactions.MessageEditCallbackAction
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import net.dv8tion.jda.api.utils.messages.MessageEditData
 
@@ -108,3 +110,30 @@ fun Message.setConfirmationEmbed(desc: String, footer: (KEmbedBuilder.Footer.() 
 
 fun Message.setWarningEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
     editMessageEmbeds(defaultEmbed(desc, EmbedType.WARNING, footer))
+
+fun MessageEditAction.setEmbed(block: KEmbedBuilder.() -> Unit) =
+    setEmbeds(KEmbedBuilder().apply(block)())
+
+fun MessageEditAction.setSuccessEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
+    setEmbeds(defaultEmbed(desc, EmbedType.SUCCESS, footer))
+
+fun MessageEditAction.setFailureEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
+    setEmbeds(defaultEmbed(desc, EmbedType.FAILURE, footer))
+
+fun MessageEditAction.setConfirmationEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
+    setEmbeds(defaultEmbed(desc, EmbedType.CONFIRMATION, footer))
+
+fun MessageEditAction.setWarningEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
+    setEmbeds(defaultEmbed(desc, EmbedType.WARNING, footer))
+
+fun MessageEditCallbackAction.setSuccessEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
+    setEmbeds(defaultEmbed(desc, EmbedType.SUCCESS, footer))
+
+fun MessageEditCallbackAction.setFailureEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
+    setEmbeds(defaultEmbed(desc, EmbedType.FAILURE, footer))
+
+fun MessageEditCallbackAction.setConfirmationEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
+    setEmbeds(defaultEmbed(desc, EmbedType.CONFIRMATION, footer))
+
+fun MessageEditCallbackAction.setWarningEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
+    setEmbeds(defaultEmbed(desc, EmbedType.WARNING, footer))

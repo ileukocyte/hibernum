@@ -11,6 +11,10 @@ fun String.bold() = MarkdownUtil.bold(this)
 fun String.codeblock(language: String? = null) = MarkdownUtil.codeblock(language, this)
 fun String.italics() = MarkdownUtil.italics(this)
 fun String.monospace() = MarkdownUtil.monospace(this)
+/**
+ * @receiver the hyperlink's URL
+ */
+fun String.maskedLink(text: String) = (text to this).maskedLink()
 fun Pair<String, String>.maskedLink() = MarkdownUtil.maskedLink(first, second)
 fun String.quote() = MarkdownUtil.quote(this)
 fun String.quoteBlock() = MarkdownUtil.quoteBlock(this)

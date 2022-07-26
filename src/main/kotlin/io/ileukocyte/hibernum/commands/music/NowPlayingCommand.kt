@@ -178,7 +178,11 @@ class NowPlayingCommand : TextCommand {
 
         field {
             title = "Playing Now"
-            description = (track.info.title to track.info.uri).maskedLink().bold()
+            description = track.info.uri.maskedLink(
+                track.info.title
+                    .replace('[', '(')
+                    .replace(']', ')')
+            ).bold()
         }
 
         field {
