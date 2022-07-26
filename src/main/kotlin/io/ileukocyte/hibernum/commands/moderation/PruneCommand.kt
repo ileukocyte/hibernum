@@ -6,6 +6,10 @@ import io.ileukocyte.hibernum.extensions.*
 
 import java.util.concurrent.TimeUnit
 
+import kotlin.time.Duration.Companion.seconds
+
+import kotlinx.coroutines.withTimeoutOrNull
+
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.EmbedType as JDAEmbedType
 import net.dv8tion.jda.api.entities.IMentionable
@@ -25,7 +29,7 @@ class PruneCommand : SlashOnlyCommand {
     override val name = "prune"
     override val description = "Deletes the specified amount of messages matching the provided filters"
     override val options = setOf(
-        OptionData(OptionType.INTEGER, "count", "The amount of messages to delete (up to 1000)", true)
+        OptionData(OptionType.INTEGER, "count", "The amount of messages to delete", true)
             .setMinValue(1)
             .setMaxValue(1000),
         OptionData(OptionType.USER, "user", "The user whose messages are to (not) delete"),
@@ -76,7 +80,7 @@ class PruneCommand : SlashOnlyCommand {
         OptionData(OptionType.BOOLEAN, "text-case-sensitive", "Case sensitivity for text filtering (default is true)"),
         OptionData(OptionType.MENTIONABLE, "mention", "The mentions that messages to delete contain"),
     )
-    override val cooldown = 5L
+    override val cooldown = 10L
     override val memberPermissions = setOf(Permission.MESSAGE_MANAGE)
     override val botPermissions = setOf(Permission.MESSAGE_MANAGE)
 
@@ -122,90 +126,96 @@ class PruneCommand : SlashOnlyCommand {
         var counter = 0
         val filtered = mutableListOf<Message>()
 
-        event.channel.iterableHistory.forEachAsync { message ->
-            if (counter == count) {
-                return@forEachAsync false
-            }
+        var gottenAllMessages = false
 
-            val filter = filterOption?.let {
-                val mention = event.getOption("mention")?.asMentionable
+        withTimeoutOrNull((15).seconds) {
+            event.channel.iterableHistory.forEachAsync { message ->
+                if (counter == count) {
+                    gottenAllMessages = true
 
-                when (it) {
-                    "action-components" -> message.actionRows.isNotEmpty()
-                    "all-attachments" -> message.attachments.isNotEmpty()
-                    "all-embeds" -> message.embeds.isNotEmpty()
-                    "bot-messages" -> message.author.isBot
-                    "bot-embeds" -> message.author.isBot && message.embeds.any { e -> e.type == JDAEmbedType.RICH }
-                    "discord-commands" -> message.type == MessageType.SLASH_COMMAND
-                            || message.type == MessageType.CONTEXT_COMMAND
-                    "gifs" -> message.attachments.any { a -> a.fileExtension == "gif" }
-                            || message.contentRaw.split("\\s+".toRegex())
-                                .any { a -> UrlValidator.getInstance().isValid(a) && (".gif" in a || "-gif-" in a) }
-                    "human-messages" -> !message.author.isBot && !message.author.isSystem
-                    "image-attachments" -> message.attachments.any { a -> a.isImage }
-                    "invites" -> message.invites.isNotEmpty()
-                    "links" -> message.contentRaw.split(" ").any { s -> UrlValidator.getInstance().isValid(s) }
-                    "mentions" -> {
-                        val users = message.mentions.users
-                        val roles = message.mentions.roles
+                    return@forEachAsync false
+                }
 
-                        if (mention !== null) {
-                            users.any { u -> u.idLong == mention.idLong } ||
-                                    roles.any { r -> r.idLong == mention.idLong }
-                        } else {
-                            users.isNotEmpty() || roles.isNotEmpty()
+                val filter = filterOption?.let {
+                    val mention = event.getOption("mention")?.asMentionable
+
+                    when (it) {
+                        "action-components" -> message.actionRows.isNotEmpty()
+                        "all-attachments" -> message.attachments.isNotEmpty()
+                        "all-embeds" -> message.embeds.isNotEmpty()
+                        "bot-messages" -> message.author.isBot
+                        "bot-embeds" -> message.author.isBot && message.embeds.any { e -> e.type == JDAEmbedType.RICH }
+                        "discord-commands" -> message.type == MessageType.SLASH_COMMAND
+                                || message.type == MessageType.CONTEXT_COMMAND
+                        "gifs" -> message.attachments.any { a -> a.fileExtension == "gif" }
+                                || message.contentRaw.split("\\s+".toRegex())
+                            .any { a -> UrlValidator.getInstance().isValid(a) && (".gif" in a || "-gif-" in a) }
+                        "human-messages" -> !message.author.isBot && !message.author.isSystem
+                        "image-attachments" -> message.attachments.any { a -> a.isImage }
+                        "invites" -> message.invites.isNotEmpty()
+                        "links" -> message.contentRaw.split(" ").any { s -> UrlValidator.getInstance().isValid(s) }
+                        "mentions" -> {
+                            val users = message.mentions.users
+                            val roles = message.mentions.roles
+
+                            if (mention !== null) {
+                                users.any { u -> u.idLong == mention.idLong } ||
+                                        roles.any { r -> r.idLong == mention.idLong }
+                            } else {
+                                users.isNotEmpty() || roles.isNotEmpty()
+                            }
                         }
+                        "no-attachments" -> message.attachments.isEmpty()
+                        "stickers" -> message.stickers.isNotEmpty()
+                        "system-messages" -> message.type.isSystem && message.type.canDelete()
+                        "unpinned-messages" -> !message.isPinned
+                        "users-aside-from" -> true
+                        "video-attachments" -> message.attachments.any { a -> a.isVideo }
+                        "webhook-messages" -> message.isWebhookMessage
+                        else -> true
                     }
-                    "no-attachments" -> message.attachments.isEmpty()
-                    "stickers" -> message.stickers.isNotEmpty()
-                    "system-messages" -> message.type.isSystem && message.type.canDelete()
-                    "unpinned-messages" -> !message.isPinned
-                    "users-aside-from" -> true
-                    "video-attachments" -> message.attachments.any { a -> a.isVideo }
-                    "webhook-messages" -> message.isWebhookMessage
-                    else -> true
+                } ?: true
+
+                val textFilter = event.getOption("text-filter")?.let {
+                    val isCaseSensitive = event.getOption("text-case-sensitive")?.asBoolean
+                        ?: true
+
+                    val text = event.getOption("text")!!.asString
+                        .applyIf(!isCaseSensitive) { lowercase() }
+
+                    val content = message.contentRaw
+                        .applyIf(!isCaseSensitive) { lowercase() }
+
+                    when (it.asString) {
+                        "contains" -> text in content
+                        "not" -> text !in content
+                        "startswith" -> content.startsWith(text)
+                        "endswith" -> content.endsWith(text)
+                        "equals" -> content == text
+                        "doesntequal" -> content != text
+                        else -> true
+                    }
+                } ?: true
+
+                val userFilter = event.getOption("user")?.asUser?.let {
+                    if (filterOption == "users-aside-from") {
+                        message.author != it
+                    } else {
+                        message.author == it
+                    }
+                } ?: true
+
+                val predicate = userFilter && filter && textFilter
+
+                if (predicate) {
+                    counter++
+
+                    filtered += message
                 }
-            } ?: true
 
-            val textFilter = event.getOption("text-filter")?.let {
-                val isCaseSensitive = event.getOption("text-case-sensitive")?.asBoolean
-                    ?: true
-
-                val text = event.getOption("text")!!.asString
-                    .applyIf(!isCaseSensitive) { lowercase() }
-
-                val content = message.contentRaw
-                    .applyIf(!isCaseSensitive) { lowercase() }
-
-                when (it.asString) {
-                    "contains" -> text in content
-                    "not" -> text !in content
-                    "startswith" -> content.startsWith(text)
-                    "endswith" -> content.endsWith(text)
-                    "equals" -> content == text
-                    "doesntequal" -> content != text
-                    else -> true
-                }
-            } ?: true
-
-            val userFilter = event.getOption("user")?.asUser?.let {
-                if (filterOption == "users-aside-from") {
-                    message.author != it
-                } else {
-                    message.author == it
-                }
-            } ?: true
-
-            val predicate = userFilter && filter && textFilter
-
-            if (predicate) {
-                counter++
-
-                filtered += message
-            }
-
-            true
-        }.await()
+                true
+            }.await()
+        }
 
         filtered.takeUnless { it.isEmpty() } ?: run {
             deferred.setFailureEmbed("No messages to delete have been found!").queue()
@@ -221,9 +231,14 @@ class PruneCommand : SlashOnlyCommand {
             event.getOption("mention")?.asMentionable,
         )
 
-        event.channel.purgeMessages(filtered)
+        event.guildChannel.purgeMessages(filtered).forEach { it.await() }
 
-        deferred.setSuccessEmbed(response).queue()
+        deferred.setSuccessEmbed(response) {
+            if (!gottenAllMessages) {
+                text = "The bot has been unable to get all the messages " +
+                        "since iterating the history was taking longer than 15 seconds!"
+            }
+        }.queue()
 
         event.channel.sendWarning("${event.user.asMention} has used the `$name` command!") {
             text = "This message will self-delete in 5 seconds"
