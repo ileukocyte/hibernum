@@ -37,10 +37,10 @@ import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 
 import org.jetbrains.kotlin.utils.addToStdlib.applyIf
 
-class KillCommand : TextCommand {
-    override val name = "kill"
-    override val description = "Sends a list of running processes or terminates the one provided by its ID"
-    override val aliases = setOf("kill-process", "terminate")
+class ProcessesCommand : TextCommand {
+    override val name = "processes"
+    override val description = "Sends a list of all the running processes or terminates the one provided by its ID"
+    override val aliases = setOf("kill", "terminate")
     override val usages = setOf(setOf("process ID".toClassicTextUsage(true)))
     override val options = setOf(
         OptionData(OptionType.STRING, "pid", "The ID of the process to kill")

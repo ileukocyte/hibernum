@@ -1,13 +1,13 @@
-package io.ileukocyte.hibernum.commands.`fun`
+package io.ileukocyte.hibernum.commands.general
 
 import com.google.common.collect.Lists
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.CommandCategory
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
+import io.ileukocyte.hibernum.commands.`fun`.AkinatorCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.extensions.EmbedType.SUCCESS
 import io.ileukocyte.hibernum.extensions.EmbedType.WARNING
@@ -38,7 +38,8 @@ import org.jetbrains.kotlin.utils.addToStdlib.applyIf
 
 class SessionsCommand : SlashOnlyCommand {
     override val name = "sessions"
-    override val description = "Sends a list of running game sessions of yours or aborts the one provided by its ID"
+    override val description = "Sends a list of the currently running sessions of yours " +
+            "or aborts the one provided by its ID"
     override val options = setOf(
         OptionData(STRING, "id", "The ID of the session to abort")
             .setAutoComplete(true))
@@ -47,7 +48,7 @@ class SessionsCommand : SlashOnlyCommand {
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val sessions = event.jda.getUserProcesses(event.user)
-            .filter { it.command?.category == CommandCategory.FUN }
+            .filter { it.command !== null }
             .takeUnless { it.isEmpty() }
             ?: throw CommandException("No sessions of yours are currently running!")
 
@@ -66,7 +67,7 @@ class SessionsCommand : SlashOnlyCommand {
                 ).queue()
         } else {
             val session = event.jda.getProcessById(input)
-                ?.takeIf { event.user.idLong in it.users && it.command?.category == CommandCategory.FUN }
+                ?.takeIf { event.user.idLong in it.users && it.command !== null }
                 ?: throw CommandException("No session of yours has been found by the provided ID!")
 
             event.replyConfirmation("Are you sure you want to abort the session?")
@@ -85,7 +86,7 @@ class SessionsCommand : SlashOnlyCommand {
 
             if (query.isNotEmpty()) {
                 event.jda.getUserProcesses(event.user)
-                    .filter { it.id.startsWith(query) && it.command?.category == CommandCategory.FUN }
+                    .filter { it.id.startsWith(query) && it.command !== null }
                     .takeUnless { it.isEmpty() }
                     ?.let { wp ->
                         event.replyChoiceStrings(wp.map { it.id }).queue()
@@ -103,7 +104,7 @@ class SessionsCommand : SlashOnlyCommand {
         if (event.user.id == id.first()) {
             val type = id.last()
             val sessions = event.jda.getUserProcesses(event.user)
-                .filter { it.command?.category == CommandCategory.FUN }
+                .filter { it.command !== null }
                 .takeUnless { it.isEmpty() }
                 ?: return
 
@@ -123,7 +124,7 @@ class SessionsCommand : SlashOnlyCommand {
                 }
                 "abortc" -> {
                     val session = event.jda.getProcessById(id[1])
-                        ?.takeIf { event.user.idLong in it.users && it.command?.category == CommandCategory.FUN }
+                        ?.takeIf { event.user.idLong in it.users && it.command !== null }
                         ?: return
 
                     session.kill(event.jda)
@@ -266,7 +267,7 @@ class SessionsCommand : SlashOnlyCommand {
     override suspend fun invoke(event: ModalInteractionEvent) {
         val id = event.getValue("$name-id")?.asString ?: return
         val sessions = event.jda.getProcessById(id)
-            ?.takeIf { event.user.idLong in it.users && it.command?.category == CommandCategory.FUN }
+            ?.takeIf { event.user.idLong in it.users && it.command !== null }
             ?: throw CommandException("No session of yours has been found by the provided ID!")
 
         sessions.kill(event.jda)
