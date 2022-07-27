@@ -5,8 +5,6 @@ import arrow.fx.coroutines.onCancel
 
 import io.ileukocyte.hibernum.commands.GenericCommand
 
-import java.time.OffsetDateTime
-import java.time.ZoneId
 import java.util.concurrent.Executors.newFixedThreadPool
 import java.util.concurrent.TimeUnit
 
@@ -28,7 +26,7 @@ private val waiterContextDispatcher = newFixedThreadPool(3).asCoroutineDispatche
 object WaiterContext : CoroutineContext by waiterContextDispatcher, AutoCloseable by waiterContextDispatcher
 
 // Process management functions
-val JDA.processes get() = WaiterProcess.CURRENTLY_RUNNING.keys
+val JDA.processes get() = WaiterProcess.CURRENTLY_RUNNING.keys.toSortedSet(compareBy { it.timeCreated })
 val User.processes get() = jda.getUserProcesses(this)
 
 inline fun waiterProcess(block: WaiterProcess.Builder.() -> Unit) = WaiterProcess.Builder().apply(block)()
@@ -98,7 +96,7 @@ data class WaiterProcess internal constructor(
     val id: String = "%04d".format((1..9999).filter {
         it !in CURRENTLY_RUNNING.keys.map { p -> p.id.toInt() }
     }.random()),
-    val timeCreated: OffsetDateTime = OffsetDateTime.now(ZoneId.of("Etc/GMT0")),
+    val timeCreated: Long = System.currentTimeMillis(),
     var eventType: KClass<out GenericEvent>? = null,
 ) {
     @DslMarker

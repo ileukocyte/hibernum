@@ -26,6 +26,8 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
+import net.dv8tion.jda.api.utils.TimeFormat.DATE_TIME_LONG
+import net.dv8tion.jda.api.utils.TimeFormat.RELATIVE
 
 class UserCommand : TextCommand, UserContextOnlyCommand {
     override val name = "user"
@@ -264,18 +266,18 @@ class UserCommand : TextCommand, UserContextOnlyCommand {
         }
 
         field {
-            val timestamp = member.timeCreated.toEpochSecond()
+            val timestamp = member.timeCreated
 
             title = "Registration Date"
-            description = "<t:$timestamp:F> (<t:$timestamp:R>)"
+            description = "${DATE_TIME_LONG.format(timestamp)} (${RELATIVE.format(timestamp)})"
             isInline = true
         }
 
         field {
-            val timestamp = member.timeJoined.toEpochSecond()
+            val timestamp = member.timeJoined
 
             title = "Join Date"
-            description = "<t:$timestamp:F> (<t:$timestamp:R>)"
+            description = "${DATE_TIME_LONG.format(timestamp)} (${RELATIVE.format(timestamp)})"
             isInline = true
         }
 

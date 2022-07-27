@@ -33,6 +33,7 @@ import net.dv8tion.jda.api.interactions.components.Modal
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.text.TextInput
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
+import net.dv8tion.jda.api.utils.TimeFormat
 
 import org.jetbrains.kotlin.utils.addToStdlib.applyIf
 
@@ -47,7 +48,7 @@ class SessionsCommand : SlashOnlyCommand {
     override val neglectProcessBlock = true
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
-        val sessions = event.jda.getUserProcesses(event.user)
+        val sessions = event.user.processes
             .filter { it.command !== null }
             .takeUnless { it.isEmpty() }
             ?: throw CommandException("No sessions of yours are currently running!")
@@ -62,7 +63,7 @@ class SessionsCommand : SlashOnlyCommand {
                     pageButtons(event.user.id, 0, pages).takeIf { sessions.size > 5 }
                         ?: setOf(
                             Button.primary("$name-${event.user.idLong}-abort", "Abort"),
-                            Button.danger("$name-${event.user.idLong}-exit", "Close"),
+                            Button.danger("$name-${event.user.idLong}-exit", "Exit"),
                         )
                 ).queue()
         } else {
@@ -85,7 +86,7 @@ class SessionsCommand : SlashOnlyCommand {
             val query = option.asString
 
             if (query.isNotEmpty()) {
-                event.jda.getUserProcesses(event.user)
+                event.user.processes
                     .filter { it.id.startsWith(query) && it.command !== null }
                     .takeUnless { it.isEmpty() }
                     ?.let { wp ->
@@ -103,7 +104,7 @@ class SessionsCommand : SlashOnlyCommand {
 
         if (event.user.id == id.first()) {
             val type = id.last()
-            val sessions = event.jda.getUserProcesses(event.user)
+            val sessions = event.user.processes
                 .filter { it.command !== null }
                 .takeUnless { it.isEmpty() }
                 ?: return
@@ -175,7 +176,7 @@ class SessionsCommand : SlashOnlyCommand {
                                     pageButtons(id.first(), 0, pages).takeIf { sessions.size > 5 }
                                         ?: setOf(
                                             Button.primary("$name-${id.first()}-kill", "Kill"),
-                                            Button.danger("$name-${id.first()}-exit", "Close"),
+                                            Button.danger("$name-${id.first()}-exit", "Exit"),
                                         )
                                 ).queue(null) {
                                     event.message
@@ -184,7 +185,7 @@ class SessionsCommand : SlashOnlyCommand {
                                             pageButtons(id.first(), 0, pages).takeIf { sessions.size > 5 }
                                                 ?: setOf(
                                                     Button.primary("$name-${id.first()}-kill", "Kill"),
-                                                    Button.danger("$name-${id.first()}-exit", "Close"),
+                                                    Button.danger("$name-${id.first()}-exit", "Exit"),
                                                 )
                                         ).queue()
                                 }
@@ -204,7 +205,7 @@ class SessionsCommand : SlashOnlyCommand {
                                             pageButtons(id.first(), lastPage, partition.size).takeIf { sessions.size > 5 }
                                                 ?: setOf(
                                                     Button.primary("$name-${id.first()}-kill", "Kill"),
-                                                    Button.danger("$name-${id.first()}-exit", "Close"),
+                                                    Button.danger("$name-${id.first()}-exit", "Exit"),
                                                 )
                                         ).queue()
                                 }
@@ -218,7 +219,7 @@ class SessionsCommand : SlashOnlyCommand {
                                     pageButtons(id.first(), newPage, pages).takeIf { sessions.size > 5 }
                                         ?: setOf(
                                             Button.primary("$name-${id.first()}-kill", "Kill"),
-                                            Button.danger("$name-${id.first()}-exit", "Close"),
+                                            Button.danger("$name-${id.first()}-exit", "Exit"),
                                         )
                                 ).queue(null) {
                                     event.message
@@ -227,7 +228,7 @@ class SessionsCommand : SlashOnlyCommand {
                                             pageButtons(id.first(), newPage, pages).takeIf { sessions.size > 5 }
                                                 ?: setOf(
                                                     Button.primary("$name-${id.first()}-kill", "Kill"),
-                                                    Button.danger("$name-${id.first()}-exit", "Close"),
+                                                    Button.danger("$name-${id.first()}-exit", "Exit"),
                                                 )
                                         ).queue()
                                 }
@@ -242,7 +243,7 @@ class SessionsCommand : SlashOnlyCommand {
                                     pageButtons(id.first(), newPage, partition.size).takeIf { sessions.size > 5 }
                                         ?: setOf(
                                             Button.primary("$name-${id.first()}-kill", "Kill"),
-                                            Button.danger("$name-${id.first()}-exit", "Close"),
+                                            Button.danger("$name-${id.first()}-exit", "Exit"),
                                         )
                                 ).queue(null) {
                                     event.message
@@ -251,7 +252,7 @@ class SessionsCommand : SlashOnlyCommand {
                                             pageButtons(id.first(), newPage, partition.size).takeIf { sessions.size > 5 }
                                                 ?: setOf(
                                                     Button.primary("$name-${id.first()}-kill", "Kill"),
-                                                    Button.danger("$name-${id.first()}-exit", "Close"),
+                                                    Button.danger("$name-${id.first()}-exit", "Exit"),
                                                 )
                                         ).queue()
                                 }
@@ -345,6 +346,7 @@ class SessionsCommand : SlashOnlyCommand {
                     **Session ID**: ${session.id}
                     **Users**: $users
                     **Channel**: $channel
+                    **Creation Time**: ${TimeFormat.DATE_TIME_LONG.format(session.timeCreated)}
                 """.trimIndent()
             }
         }

@@ -21,6 +21,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.GuildMessageChannel
 import net.dv8tion.jda.api.events.interaction.GenericAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
@@ -34,6 +35,7 @@ import net.dv8tion.jda.api.interactions.components.Modal
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.text.TextInput
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
+import net.dv8tion.jda.api.utils.TimeFormat
 
 import org.jetbrains.kotlin.utils.addToStdlib.applyIf
 
@@ -54,12 +56,12 @@ class ProcessesCommand : TextCommand {
         if (args === null) {
             val pages = ceil(processes.size / 5.0).toInt()
 
-            event.channel.sendMessageEmbeds(processesListEmbed(processes, 0, event.jda))
+            event.channel.sendMessageEmbeds(processesListEmbed(processes, 0, event.jda, event.guild))
                 .setActionRow(
                     pageButtons(event.author.id, 0, pages).takeIf { processes.size > 5 }
                         ?: setOf(
                             Button.primary("$name-${event.author.idLong}-kill", "Kill"),
-                            Button.danger("$name-${event.author.idLong}-exit", "Close"),
+                            Button.danger("$name-${event.author.idLong}-exit", "Exit"),
                         )
                 ).queue()
         } else {
@@ -82,12 +84,12 @@ class ProcessesCommand : TextCommand {
         if (input === null) {
             val pages = ceil(processes.size / 5.0).toInt()
 
-            event.replyEmbeds(processesListEmbed(processes, 0, event.jda))
+            event.replyEmbeds(processesListEmbed(processes, 0, event.jda, event.guild ?: return))
                 .addActionRow(
                     pageButtons(event.user.id, 0, pages).takeIf { processes.size > 5 }
                         ?: setOf(
                             Button.primary("$name-${event.user.idLong}-kill", "Kill"),
-                            Button.danger("$name-${event.user.idLong}-exit", "Close"),
+                            Button.danger("$name-${event.user.idLong}-exit", "Exit"),
                         )
                 ).queue()
         } else {
@@ -122,6 +124,7 @@ class ProcessesCommand : TextCommand {
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
+        val guild = event.guild ?: return
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
@@ -188,21 +191,21 @@ class ProcessesCommand : TextCommand {
                         "first" -> {
                             val pages = ceil(processes.size / 5.0).toInt()
 
-                            event.editMessageEmbeds(processesListEmbed(processes, 0, event.jda))
+                            event.editMessageEmbeds(processesListEmbed(processes, 0, event.jda, guild))
                                 .setActionRow(
                                     pageButtons(id.first(), 0, pages).takeIf { processes.size > 5 }
                                         ?: setOf(
                                             Button.primary("$name-${id.first()}-kill", "Kill"),
-                                            Button.danger("$name-${id.first()}-exit", "Close"),
+                                            Button.danger("$name-${id.first()}-exit", "Exit"),
                                         )
                                 ).queue(null) {
                                     event.message
-                                        .editMessageEmbeds(processesListEmbed(processes, 0, event.jda))
+                                        .editMessageEmbeds(processesListEmbed(processes, 0, event.jda, guild))
                                         .setActionRow(
                                             pageButtons(id.first(), 0, pages).takeIf { processes.size > 5 }
                                                 ?: setOf(
                                                     Button.primary("$name-${id.first()}-kill", "Kill"),
-                                                    Button.danger("$name-${id.first()}-exit", "Close"),
+                                                    Button.danger("$name-${id.first()}-exit", "Exit"),
                                                 )
                                         ).queue()
                                 }
@@ -211,18 +214,18 @@ class ProcessesCommand : TextCommand {
                             val partition = Lists.partition(processes.toList(), 5)
                             val lastPage = partition.lastIndex
 
-                            event.editMessageEmbeds(processesListEmbed(processes, lastPage, event.jda))
+                            event.editMessageEmbeds(processesListEmbed(processes, lastPage, event.jda, guild))
                                 .setActionRow(
                                     pageButtons(id.first(), lastPage, partition.size).takeIf { processes.size > 5 }
-                                        ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
+                                        ?: setOf(Button.danger("$name-${id.first()}-exit", "Exit"))
                                 ).queue(null) {
                                     event.message
-                                        .editMessageEmbeds(processesListEmbed(processes, lastPage, event.jda))
+                                        .editMessageEmbeds(processesListEmbed(processes, lastPage, event.jda, guild))
                                         .setActionRow(
                                             pageButtons(id.first(), lastPage, partition.size).takeIf { processes.size > 5 }
                                                 ?: setOf(
                                                     Button.primary("$name-${id.first()}-kill", "Kill"),
-                                                    Button.danger("$name-${id.first()}-exit", "Close"),
+                                                    Button.danger("$name-${id.first()}-exit", "Exit"),
                                                 )
                                         ).queue()
                                 }
@@ -231,21 +234,21 @@ class ProcessesCommand : TextCommand {
                             val newPage = max(0, page.dec())
                             val pages = ceil(processes.size / 5.0).toInt()
 
-                            event.editMessageEmbeds(processesListEmbed(processes, newPage, event.jda))
+                            event.editMessageEmbeds(processesListEmbed(processes, newPage, event.jda, guild))
                                 .setActionRow(
                                     pageButtons(id.first(), newPage, pages).takeIf { processes.size > 5 }
                                         ?: setOf(
                                             Button.primary("$name-${id.first()}-kill", "Kill"),
-                                            Button.danger("$name-${id.first()}-exit", "Close"),
+                                            Button.danger("$name-${id.first()}-exit", "Exit"),
                                         )
                                 ).queue(null) {
                                     event.message
-                                        .editMessageEmbeds(processesListEmbed(processes, newPage, event.jda))
+                                        .editMessageEmbeds(processesListEmbed(processes, newPage, event.jda, guild))
                                         .setActionRow(
                                             pageButtons(id.first(), newPage, pages).takeIf { processes.size > 5 }
                                                 ?: setOf(
                                                     Button.primary("$name-${id.first()}-kill", "Kill"),
-                                                    Button.danger("$name-${id.first()}-exit", "Close"),
+                                                    Button.danger("$name-${id.first()}-exit", "Exit"),
                                                 )
                                         ).queue()
                                 }
@@ -255,21 +258,21 @@ class ProcessesCommand : TextCommand {
                             val lastPage = partition.lastIndex
                             val newPage = min(page.inc(), lastPage)
 
-                            event.editMessageEmbeds(processesListEmbed(processes, newPage, event.jda))
+                            event.editMessageEmbeds(processesListEmbed(processes, newPage, event.jda, guild))
                                 .setActionRow(
                                     pageButtons(id.first(), newPage, partition.size).takeIf { processes.size > 5 }
                                         ?: setOf(
                                             Button.primary("$name-${id.first()}-kill", "Kill"),
-                                            Button.danger("$name-${id.first()}-exit", "Close"),
+                                            Button.danger("$name-${id.first()}-exit", "Exit"),
                                         )
                                 ).queue(null) {
                                     event.message
-                                        .editMessageEmbeds(processesListEmbed(processes, newPage, event.jda))
+                                        .editMessageEmbeds(processesListEmbed(processes, newPage, event.jda, guild))
                                         .setActionRow(
                                             pageButtons(id.first(), newPage, partition.size).takeIf { processes.size > 5 }
                                                 ?: setOf(
                                                     Button.primary("$name-${id.first()}-kill", "Kill"),
-                                                    Button.danger("$name-${id.first()}-exit", "Close"),
+                                                    Button.danger("$name-${id.first()}-exit", "Exit"),
                                                 )
                                         ).queue()
                                 }
@@ -328,6 +331,7 @@ class ProcessesCommand : TextCommand {
         originalSet: Set<WaiterProcess>,
         page: Int,
         jda: JDA,
+        guild: Guild,
     ) = buildEmbed {
         val partition = Lists.partition(originalSet.toList(), 5)
         val processes = partition[page]
@@ -335,19 +339,36 @@ class ProcessesCommand : TextCommand {
         color = Immutable.SUCCESS
 
         for ((index, process) in processes.withIndex()) {
-            val pid = process.id
-            val command = process.command?.name ?: "Unknown"
-            val users = process.users.joinToString { jda.getUserById(it)?.asTag?.let { t -> "$t ($it)" } ?: "$it" }
-            val channel = process.channel.let {
-                jda.getChannelById(GuildMessageChannel::class.java, it)?.name?.let { c -> "#$c ($it)" } ?: "$it"
+            val users = process.users.joinToString { id ->
+                jda.getUserById(id)?.let {
+                    if (guild.isMember(it)) {
+                        it.asMention
+                    } else {
+                        it.asTag
+                    }
+                } ?: id.toString()
             }
-            val type = process.eventType?.simpleName ?: "Unknown"
-            val timeCreated = process.timeCreated
 
-            val value =
-                "Process(pid=$pid, command=$command, users=[$users], channel=$channel, type=$type, timeCreated=$timeCreated)"
+            val channel = process.channel.let { id ->
+                jda.getChannelById(GuildMessageChannel::class.java, id)?.let {
+                    if (it.guild.idLong == guild.idLong) {
+                        it.asMention
+                    } else {
+                        "${it.name} (${it.id}, ${it.guild.name.escapeMarkdown()} (${it.guild.id}))"
+                    }
+                } ?: id.toString()
+            }
 
-            appendLine("**${index.inc() + page * 5}.** $value")
+            field {
+                title = "Process #${index.inc() + page * 5}"
+                description = """**Command**: ${process.command?.getEffectiveContextName() ?: "Unknown"}
+                    **Event**: ${process.eventType?.simpleName ?: "Unknown"}
+                    **Process ID**: ${process.id}
+                    **Users**: $users
+                    **Channel**: $channel
+                    **Creation Time**: ${TimeFormat.DATE_TIME_LONG.format(process.timeCreated)}
+                """.trimIndent()
+            }
         }
 
         author {

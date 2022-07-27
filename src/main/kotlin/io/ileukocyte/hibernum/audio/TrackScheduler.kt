@@ -96,8 +96,15 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
     override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
         if (endReason.mayStartNext) {
             when (loopMode) {
-                LoopMode.SONG ->
-                    player.playTrack(track.makeClone().apply { userData = track.userData })
+                LoopMode.SONG -> {
+                    val data = track.customUserData
+
+                    data.announcement?.takeIf {
+                        it.interaction?.takeIf { i -> i.type == InteractionType.COMMAND } === null
+                    }?.delete()?.queue(null) {}
+
+                    player.playTrack(track.makeClone().apply { userData = data })
+                }
                 LoopMode.QUEUE -> {
                     queue.offer(track.makeClone().apply { userData = track.userData })
 

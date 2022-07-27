@@ -19,6 +19,8 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.utils.FileUpload
+import net.dv8tion.jda.api.utils.TimeFormat.DATE_TIME_LONG
+import net.dv8tion.jda.api.utils.TimeFormat.RELATIVE
 
 class RoleCommand : TextCommand {
     override val name = "role"
@@ -229,10 +231,10 @@ class RoleCommand : TextCommand {
         }
 
         field {
-            val timestamp = role.timeCreated.toEpochSecond()
+            val timestamp = role.timeCreated
 
             title = "Creation Date"
-            description = "<t:$timestamp:F> (<t:$timestamp:R>)"
+            description = "${DATE_TIME_LONG.format(timestamp)} (${RELATIVE.format(timestamp)})"
             isInline = true
         }
 

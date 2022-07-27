@@ -16,6 +16,8 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.utils.TimeFormat.DATE_TIME_LONG
+import net.dv8tion.jda.api.utils.TimeFormat.RELATIVE
 
 class EmoteCommand : TextCommand {
     override val name = "emote"
@@ -96,10 +98,10 @@ class EmoteCommand : TextCommand {
         }
 
         field {
-            val timestamp = emote.timeCreated.toEpochSecond()
+            val timestamp = emote.timeCreated
 
             title = "Creation Date"
-            description = "<t:$timestamp:F> (<t:$timestamp:R>)"
+            description = "${DATE_TIME_LONG.format(timestamp)} (${RELATIVE.format(timestamp)})"
             isInline = true
         }
     }

@@ -15,6 +15,8 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.components.buttons.Button
+import net.dv8tion.jda.api.utils.TimeFormat.DATE_TIME_LONG
+import net.dv8tion.jda.api.utils.TimeFormat.RELATIVE
 
 class ServerCommand : TextCommand {
     override val name = "server"
@@ -110,7 +112,9 @@ class ServerCommand : TextCommand {
             deferred.editOriginal(ZERO_WIDTH_SPACE)
                 .setEmbeds(embed)
                 .queue()
-        } else throw CommandException("You did not invoke the initial command!")
+        } else {
+            throw CommandException("You did not invoke the initial command!")
+        }
     }
 
     private suspend fun infoEmbed(guild: Guild) = buildEmbed {
@@ -271,10 +275,10 @@ class ServerCommand : TextCommand {
         }
 
         field {
-            val timestamp = guild.timeCreated.toEpochSecond()
+            val timestamp = guild.timeCreated
 
             title = "Creation Date"
-            description = "<t:$timestamp:F> (<t:$timestamp:R>)"
+            description = "${DATE_TIME_LONG.format(timestamp)} (${RELATIVE.format(timestamp)})"
             isInline = true
         }
     }
@@ -309,9 +313,13 @@ class ServerCommand : TextCommand {
                     if (!l.removePrefix("\u2026").endsWith(">")) {
                         l.split(", ").toMutableList().apply { removeLast() }
                             .joinToString() + "\u2026"
-                    } else l
+                    } else {
+                        l
+                    }
                 }
-            } else it
+            } else {
+                it
+            }
         }
 
         guild.iconUrl?.let { icon -> color = getDominantColorByImageUrl(icon) }
