@@ -4,6 +4,7 @@ package io.ileukocyte.hibernum.utils
 import arrow.fx.coroutines.onCancel
 
 import io.ileukocyte.hibernum.commands.GenericCommand
+import io.ileukocyte.hibernum.extensions.toSetSortedBy
 
 import java.util.concurrent.Executors.newFixedThreadPool
 import java.util.concurrent.TimeUnit
@@ -26,7 +27,7 @@ private val waiterContextDispatcher = newFixedThreadPool(3).asCoroutineDispatche
 object WaiterContext : CoroutineContext by waiterContextDispatcher, AutoCloseable by waiterContextDispatcher
 
 // Process management functions
-val JDA.processes get() = WaiterProcess.CURRENTLY_RUNNING.keys.toSortedSet(compareBy { it.timeCreated })
+val JDA.processes get() = WaiterProcess.CURRENTLY_RUNNING.keys.toSetSortedBy { it.timeCreated }
 val User.processes get() = jda.getUserProcesses(this)
 
 inline fun waiterProcess(block: WaiterProcess.Builder.() -> Unit) = WaiterProcess.Builder().apply(block)()

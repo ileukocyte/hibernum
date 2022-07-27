@@ -1,11 +1,11 @@
 @file:JvmName("StandardLibraryExtensions")
 package io.ileukocyte.hibernum.extensions
 
+import java.util.SortedSet
 import java.util.concurrent.CompletableFuture
 
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 import org.jetbrains.kotlin.utils.addToStdlib.applyIf
@@ -33,6 +33,10 @@ val Int.charName: String?
     get() = Character.getName(this)
 
 fun Int.toChars(): CharArray = Character.toChars(this)
+
+// kotlin.Iterable
+inline fun <T, R : Comparable<R>> Iterable<T>.toSetSortedBy(crossinline selector: (T) -> R?): SortedSet<T> =
+    toSortedSet(compareBy(selector))
 
 // kotlin.String
 val String.isByte get() = toByteOrNull() !== null
