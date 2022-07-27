@@ -29,7 +29,7 @@ import net.dv8tion.jda.api.utils.FileUpload
 class ColorCommand : TextCommand {
     override val name = "color"
     override val description = "Sends brief information about the color provided by its hexadecimal representation"
-    override val aliases = setOf("colorinfo", "color-info", "colour", "colourinfo", "colour-info")
+    override val aliases = setOf("color-info", "colour", "colour-info")
     override val usages = setOf(setOf("hex".toClassicTextUsage()))
     override val options = setOf(
         OptionData(OptionType.STRING, "hex", "The color's hexadecimal representation", true))

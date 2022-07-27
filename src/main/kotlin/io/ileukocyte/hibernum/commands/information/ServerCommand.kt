@@ -19,7 +19,7 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button
 class ServerCommand : TextCommand {
     override val name = "server"
     override val description = "Sends the server's icon, its list of custom emojis, or detailed information about it"
-    override val aliases = setOf("guild", "guildinfo", "guild-info", "serverinfo", "server-info")
+    override val aliases = setOf("guild", "guild-info", "server-info")
     override val cooldown = 5L
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {

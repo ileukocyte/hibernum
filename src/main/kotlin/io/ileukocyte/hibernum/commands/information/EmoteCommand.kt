@@ -20,15 +20,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 class EmoteCommand : TextCommand {
     override val name = "emote"
     override val description = "Sends the available information about the provided **custom** emoji"
-    override val aliases = setOf(
-        "customemoji",
-        "custom-emoji",
-        "emoji",
-        "emojiinfo",
-        "emoji-info",
-        "emoteinfo",
-        "emote-info",
-    )
+    override val aliases = setOf("emoji", "emoji-info", "emote-info")
     override val options = setOf(
         OptionData(OptionType.STRING, "emote", "The custom emoji to check information about", true))
     override val usages = setOf(setOf("custom emoji".toClassicTextUsage()))

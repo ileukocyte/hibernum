@@ -35,7 +35,7 @@ class AboutCommand : TextCommand {
     override val description = "Sends the bot's detailed technical statistics"
     override val options = setOf(
         OptionData(OptionType.BOOLEAN, "ephemeral", "Whether the response should be invisible to other users"))
-    override val aliases = setOf("info", "stats")
+    override val aliases = setOf("bot-info", "info", "stats")
     override val staleInteractionHandling = StaleInteractionHandling.EXECUTE_COMMAND
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {

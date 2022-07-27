@@ -25,7 +25,7 @@ class ChangelogCommand : TextCommand {
             "available on its GitHub repository"
     override val options = setOf(
         OptionData(OptionType.BOOLEAN, "ephemeral", "Whether the response should be invisible to other users"))
-    override val aliases = setOf("version")
+    override val aliases = setOf("release", "version")
 
     private val jsonSerializer = Json { ignoreUnknownKeys = true }
     private val client = Immutable.HTTP_CLIENT.config {

@@ -23,7 +23,7 @@ import net.dv8tion.jda.api.utils.FileUpload
 class RoleCommand : TextCommand {
     override val name = "role"
     override val description = "Sends the available information about the specified role"
-    override val aliases = setOf("roleinfo", "role-info")
+    override val aliases = setOf("role-info")
     override val usages = setOf(
         setOf("role name".toClassicTextUsage()),
         setOf("role mention".toClassicTextUsage()),

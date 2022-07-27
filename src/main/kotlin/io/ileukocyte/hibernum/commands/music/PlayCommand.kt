@@ -12,12 +12,15 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.*
+import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.YOUTUBE_LINK_REGEX
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+
+import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstance
 
 class PlayCommand : TextCommand {
     override val name = "play"
@@ -43,6 +46,8 @@ class PlayCommand : TextCommand {
                 ?: event.message.attachments.map { a -> a.proxyUrl }.takeUnless { l -> l.isEmpty() }
                 ?: throw NoArgumentsException
 
+            val ytplay = CommandHandler.firstIsInstance<YouTubePlayCommand>().name
+
             event.guild.audioPlayer?.let { musicManager ->
                 channel?.let { event.guild.audioManager.openAudioConnection(channel) }
 
@@ -64,6 +69,14 @@ class PlayCommand : TextCommand {
                         }
 
                         override fun playlistLoaded(playlist: AudioPlaylist) {
+                            val playlistName = if (!playlist.isSearchResult) {
+                                url.maskedLink(playlist.name
+                                    .replace('[', '(')
+                                    .replace(']', ')'))
+                            } else {
+                                playlist.name.surroundWith('"')
+                            }
+
                             for (track in playlist.tracks) {
                                 val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
                                     ?.let { id -> "https://i3.ytimg.com/vi/$id/hqdefault.jpg" }
@@ -78,15 +91,13 @@ class PlayCommand : TextCommand {
                                 musicManager.scheduler += track
                             }
 
-                            event.channel.sendSuccess(
-                                "The ${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else "\"${playlist.name}\""} playlist " +
-                                        "has been added to the queue!"
-                            ).queue()
+                            event.channel.sendSuccess("The $playlistName playlist " +
+                                    "has been added to the queue!").queue()
                         }
 
                         override fun noMatches() =
                             event.channel.sendFailure("No results have been found by the query!") {
-                                text = "Try using the \"ytplay\" command instead!"
+                                text = "Try using the \"$ytplay\" command instead!"
                             }.queue()
 
                         override fun loadFailed(exception: FriendlyException) =
@@ -105,6 +116,8 @@ class PlayCommand : TextCommand {
             val url = event.getOption("attachment")?.asAttachment?.proxyUrl
                 ?: event.getOption("query")?.asString
                 ?: throw NoArgumentsException
+
+            val ytplay = CommandHandler.firstIsInstance<YouTubePlayCommand>().name
 
             val deferred = event.deferReply().await()
 
@@ -129,9 +142,16 @@ class PlayCommand : TextCommand {
                     }
 
                     override fun playlistLoaded(playlist: AudioPlaylist) {
+                        val playlistName = if (!playlist.isSearchResult) {
+                            url.maskedLink(playlist.name
+                                .replace('[', '(')
+                                .replace(']', ')'))
+                        } else {
+                            playlist.name.surroundWith('"')
+                        }
+
                         val embed = defaultEmbed(
-                            desc = "The ${if (!playlist.isSearchResult) "[${playlist.name}]($url)" else "\"${playlist.name}\""} playlist " +
-                                "has been added to the queue!",
+                            desc = "The $playlistName playlist has been added to the queue!",
                             type = EmbedType.SUCCESS,
                         )
 
@@ -156,10 +176,10 @@ class PlayCommand : TextCommand {
 
                     override fun noMatches() =
                         deferred.setFailureEmbed("No results have been found by the query!") {
-                            text = "Try using the \"ytplay\" command instead!"
+                            text = "Try using the \"$ytplay\" command instead!"
                         }.queue(null) {
                             event.channel.sendFailure("No results have been found by the query!") {
-                                text = "Try using the \"ytplay\" command instead!"
+                                text = "Try using the \"$ytplay\" command instead!"
                             }.queue()
                         }
 

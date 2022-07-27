@@ -30,7 +30,7 @@ class WeatherCommand : TextCommand {
     override val cooldown = 3L
     override val usages = setOf(setOf("location".toClassicTextUsage()))
     override val options = setOf(
-        OptionData(OptionType.STRING, "location", "A location to get the weather for", true))
+        OptionData(OptionType.STRING, "location", "The location to get the weather for", true))
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val api = openWeatherApi(Immutable.WEATHER_API_KEY, Units.METRIC)

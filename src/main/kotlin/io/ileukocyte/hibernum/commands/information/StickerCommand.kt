@@ -21,7 +21,7 @@ class StickerCommand : ClassicTextOnlyCommand, MessageContextOnlyCommand {
     override val name = "sticker"
     override val contextName = "Sticker Information"
     override val description = "Sends the available information about the provided sticker"
-    override val aliases = setOf("stickerinfo", "sticker-info")
+    override val aliases = setOf("sticker-info")
     override val usages = setOf(setOf("sticker".toClassicTextUsage()))
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {

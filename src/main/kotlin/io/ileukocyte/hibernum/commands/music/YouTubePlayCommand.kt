@@ -36,7 +36,7 @@ import org.jetbrains.kotlin.utils.addToStdlib.applyIf
 class YouTubePlayCommand : TextCommand {
     override val name = "ytplay"
     override val description = "Searches a YouTube video or playlist by the provided query and plays it in a voice channel"
-    override val aliases = setOf("yp", "ytp", "youtubeplay", "youtube-play")
+    override val aliases = setOf("yp", "ytp", "youtube-play")
     override val options = setOf(
         OptionData(OptionType.STRING, "query", "A search term or a YouTube link", true),
         OptionData(OptionType.STRING, "kind", "A kind of result (videos or playlists)")
