@@ -16,7 +16,6 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button
 class StopCommand : TextCommand {
     override val name = "stop"
     override val description = "Stops the song that is currently playing and clears the queue"
-    override val aliases = setOf("clear-playlist", "clear-queue")
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         if (event.guild.audioPlayer?.player?.playingTrack !== null) {
@@ -67,7 +66,7 @@ class StopCommand : TextCommand {
                     event.guild?.audioPlayer?.stop()
 
                     event.editComponents().setEmbeds(embed).queue({
-                        it.deleteOriginal().queueAfter(5, TimeUnit.SECONDS, null) {}
+                        it.deleteOriginal().queueAfter(5, TimeUnit.SECONDS,null) {}
                     }) { _ ->
                         event.channel.sendMessageEmbeds(embed).queue {
                             it.delete().queueAfter(5, TimeUnit.SECONDS, null) {}

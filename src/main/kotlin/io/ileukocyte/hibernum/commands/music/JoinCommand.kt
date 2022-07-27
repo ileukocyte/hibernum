@@ -1,7 +1,5 @@
 package io.ileukocyte.hibernum.commands.music
 
-import io.ileukocyte.hibernum.audio.audioPlayer
-import io.ileukocyte.hibernum.audio.stop
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.replySuccess
@@ -20,10 +18,6 @@ class JoinCommand : TextCommand {
                 throw CommandException("${event.jda.selfUser.name} is already connected to the voice channel!")
             }
 
-            if (event.guild.selfMember.voiceState?.channel === null) {
-                event.guild.audioPlayer?.stop()
-            }
-
             event.guild.audioManager.openAudioConnection(it)
 
             event.channel.sendSuccess("Joined the voice channel!").queue()
@@ -34,10 +28,6 @@ class JoinCommand : TextCommand {
         event.member?.voiceState?.channel?.let {
             if (it == event.guild?.selfMember?.voiceState?.channel) {
                 throw CommandException("${event.jda.selfUser.name} is already connected to the voice channel!")
-            }
-
-            if (event.guild?.selfMember?.voiceState?.channel === null) {
-                event.guild?.audioPlayer?.stop()
             }
 
             event.guild?.audioManager?.openAudioConnection(it)
