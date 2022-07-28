@@ -12,8 +12,11 @@ import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.asCoroutineDispatcher
 
 import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.entities.AudioChannel
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.GuildMessageChannel
+import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.interactions.InteractionHook
@@ -64,7 +67,7 @@ fun getEmbedProgressBar(currentTime: Long, totalDuration: Long, blocks: Int = 15
     val passed = (currentTime.toDouble() / totalDuration * blocks).toInt()
 
     return buildString {
-        passed.takeIf { it > 0 }?.let { _ ->
+        passed.takeIf { it > 0 }?.let {
             append("[")
 
             for (i in 0 until blocks) {
@@ -78,6 +81,15 @@ fun getEmbedProgressBar(currentTime: Long, totalDuration: Long, blocks: Int = 15
             append("\u25AC".takeUnless { passed >= i }.orEmpty())
         }
     }
+}
+
+fun AudioChannel.canJoinFromAnother(member: Member): Boolean {
+    val isNotPlaying = guild.audioPlayer?.player?.playingTrack === null
+    val isPlayingAndCanMove = !isNotPlaying && member.hasPermission(Permission.VOICE_MOVE_OTHERS)
+    val isPlayingInEmptyChannel = !isNotPlaying
+            && guild.selfMember.voiceState?.channel?.members?.none { !it.user.isBot } == true
+
+    return isNotPlaying || isPlayingAndCanMove || isPlayingInEmptyChannel
 }
 
 val AudioTrack.customUserData: TrackUserData

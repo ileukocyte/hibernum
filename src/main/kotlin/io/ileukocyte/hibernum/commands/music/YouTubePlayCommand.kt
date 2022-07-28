@@ -5,10 +5,7 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.*
 
 import io.ileukocyte.hibernum.Immutable
-import io.ileukocyte.hibernum.audio.MusicContext
-import io.ileukocyte.hibernum.audio.PLAYER_MANAGER
-import io.ileukocyte.hibernum.audio.TrackUserData
-import io.ileukocyte.hibernum.audio.audioPlayer
+import io.ileukocyte.hibernum.audio.*
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
@@ -98,6 +95,22 @@ class YouTubePlayCommand : TextCommand {
     ) {
         member.voiceState?.channel?.let { vc ->
             val channel = vc.takeUnless { textChannel.guild.selfMember.voiceState?.channel == vc }
+
+            if (channel?.canJoinFromAnother(member) == false) {
+                val error = "The bot cannot leave another voice channel unless " +
+                        "it is playing no track, you have the permission to move members, " +
+                        "or the current voice channel is empty!"
+
+                ifFromAnInteraction?.let {
+                    try {
+                        it.setFailureEmbed(error).await()
+
+                        return
+                    } catch (_: ErrorResponseException) {
+                        throw CommandException(error)
+                    }
+                } ?: throw CommandException(error)
+            }
 
             channel?.let { textChannel.guild.audioManager.openAudioConnection(channel) }
 

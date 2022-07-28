@@ -8,6 +8,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import io.ileukocyte.hibernum.audio.PLAYER_MANAGER
 import io.ileukocyte.hibernum.audio.TrackUserData
 import io.ileukocyte.hibernum.audio.audioPlayer
+import io.ileukocyte.hibernum.audio.canJoinFromAnother
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
@@ -49,6 +50,12 @@ class PlayCommand : TextCommand {
             val ytplay = CommandHandler.firstIsInstance<YouTubePlayCommand>().name
 
             event.guild.audioPlayer?.let { musicManager ->
+                if (channel?.canJoinFromAnother(event.member ?: return) == false) {
+                    throw CommandException("The bot cannot leave another voice channel " +
+                            "unless it is playing no track, you have the permission to move members, " +
+                            "or the current voice channel is empty!")
+                }
+
                 channel?.let { event.guild.audioManager.openAudioConnection(channel) }
 
                 for (url in urls) {
@@ -122,6 +129,12 @@ class PlayCommand : TextCommand {
             val deferred = event.deferReply().await()
 
             guild.audioPlayer?.let { musicManager ->
+                if (channel?.canJoinFromAnother(event.member ?: return) == false) {
+                    throw CommandException("The bot cannot leave another voice channel " +
+                            "unless it is playing no track, you have the permission to move members, " +
+                            "or the current voice channel is empty!")
+                }
+
                 channel?.let { guild.audioManager.openAudioConnection(channel) }
 
                 PLAYER_MANAGER.loadItemOrdered(musicManager, url, object : AudioLoadResultHandler {
