@@ -211,7 +211,7 @@ class ProcessesCommand : SlashOnlyCommand {
                                 }
                         }
                         "back" -> {
-                            val newPage = max(0, page.dec())
+                            val newPage = min(max(0, page.dec()), pages.dec())
 
                             event.editMessageEmbeds(processesListEmbed(processes, newPage, event.jda, guild))
                                 .setComponents(getUpdatedButtons(newPage))

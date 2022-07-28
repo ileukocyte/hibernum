@@ -18,6 +18,8 @@ import io.ktor.serialization.kotlinx.json.json
 import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 
+import kotlin.math.min
+
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -33,6 +35,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.components.ActionRow
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 
 import org.jetbrains.kotlin.utils.addToStdlib.applyIf
@@ -62,7 +65,7 @@ class DictionaryCommand : TextCommand {
 
         val message = event.channel
             .sendMessageEmbeds(results.first().getEmbed(event.jda.selfUser, 0, results.size))
-            .applyIf(total > 1) { setActionRow(pageButtons(0, total)) }
+            .applyIf(total > 1) { setComponents(pageButtons(0, total)) }
             .await()
 
         if (total > 1) {
@@ -90,7 +93,7 @@ class DictionaryCommand : TextCommand {
 
         val message = deferred
             .editOriginalEmbeds(results.first().getEmbed(event.jda.selfUser, 0, results.size))
-            .applyIf(total > 1) { setActionRow(pageButtons(0, total)) }
+            .applyIf(total > 1) { setComponents(pageButtons(0, total)) }
             .await()
 
         if (total > 1) {
@@ -130,7 +133,7 @@ class DictionaryCommand : TextCommand {
             "first" -> {
                 deferred
                     .editMessageEmbeds(results.first())
-                    .setActionRow(pageButtons(0, results.size))
+                    .setComponents(pageButtons(0, results.size))
                     .queue()
 
                 awaitButtonClick(results, 0, jda, message, author)
@@ -138,8 +141,8 @@ class DictionaryCommand : TextCommand {
             "back" -> {
                 if (page.dec() >= 0) {
                     deferred
-                        .editMessageEmbeds(results[page.dec()])
-                        .setActionRow(pageButtons(page.dec(), results.size))
+                        .editMessageEmbeds(results[min(page.dec(), results.lastIndex)])
+                        .setComponents(pageButtons(min(page.dec(), results.lastIndex), results.size))
                         .queue()
                 }
 
@@ -155,7 +158,7 @@ class DictionaryCommand : TextCommand {
                 if (page.inc() < results.size) {
                     deferred
                         .editMessageEmbeds(results[page.inc()])
-                        .setActionRow(pageButtons(page.inc(), results.size))
+                        .setComponents(pageButtons(page.inc(), results.size))
                         .queue()
                 }
 
@@ -170,7 +173,7 @@ class DictionaryCommand : TextCommand {
             "last" -> {
                 deferred
                     .editMessageEmbeds(results.last())
-                    .setActionRow(pageButtons(results.size.dec(), results.size))
+                    .setComponents(pageButtons(results.size.dec(), results.size))
                     .queue()
 
                 awaitButtonClick(results, results.size.dec(), jda, message, author)
@@ -263,14 +266,16 @@ class DictionaryCommand : TextCommand {
     }
 
     private fun pageButtons(page: Int, size: Int) = setOf(
-        Button.secondary("$name-first", "First Page")
-            .applyIf(page == 0) { asDisabled() },
-        Button.secondary("$name-back", "Back")
-            .applyIf(page == 0) { asDisabled() },
-        Button.secondary("$name-next", "Next")
-            .applyIf(page == size.dec()) { asDisabled() },
-        Button.secondary("$name-last", "Last Page")
-            .applyIf(page == size.dec()) { asDisabled() },
-        Button.danger("$name-exit", "Close"),
+        ActionRow.of(
+            Button.secondary("$name-first", "First Page")
+                .applyIf(page == 0) { asDisabled() },
+            Button.secondary("$name-back", "Back")
+                .applyIf(page == 0) { asDisabled() },
+            Button.secondary("$name-next", "Next")
+                .applyIf(page == size.dec()) { asDisabled() },
+            Button.secondary("$name-last", "Last Page")
+                .applyIf(page == size.dec()) { asDisabled() },
+        ),
+        ActionRow.of(Button.danger("$name-exit", "Close")),
     )
 }
