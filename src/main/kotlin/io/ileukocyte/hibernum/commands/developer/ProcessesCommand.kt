@@ -6,7 +6,7 @@ import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
-import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.commands.SlashOnlyCommand
 import io.ileukocyte.hibernum.commands.`fun`.AkinatorCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.WaiterProcess
@@ -27,10 +27,10 @@ import net.dv8tion.jda.api.events.interaction.GenericAutoCompleteInteractionEven
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.CommandAutoCompleteInteraction
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.components.ActionRow
 import net.dv8tion.jda.api.interactions.components.Modal
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.text.TextInput
@@ -39,42 +39,13 @@ import net.dv8tion.jda.api.utils.TimeFormat
 
 import org.jetbrains.kotlin.utils.addToStdlib.applyIf
 
-class ProcessesCommand : TextCommand {
+class ProcessesCommand : SlashOnlyCommand {
     override val name = "processes"
     override val description = "Sends a list of all the running processes or terminates the one provided by its ID"
-    override val aliases = setOf("kill", "terminate")
-    override val usages = setOf(setOf("process ID".toClassicTextUsage(true)))
     override val options = setOf(
         OptionData(OptionType.STRING, "pid", "The ID of the process to kill")
             .setAutoComplete(true))
     override val staleInteractionHandling = StaleInteractionHandling.REMOVE_COMPONENTS
-
-    override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
-        val processes = event.jda.processes.takeUnless { it.isEmpty() }
-            ?: throw CommandException("No processes are currently running!")
-
-        if (args === null) {
-            val pages = ceil(processes.size / 5.0).toInt()
-
-            event.channel.sendMessageEmbeds(processesListEmbed(processes, 0, event.jda, event.guild))
-                .setActionRow(
-                    pageButtons(event.author.id, 0, pages).takeIf { processes.size > 5 }
-                        ?: setOf(
-                            Button.primary("$name-${event.author.idLong}-kill", "Kill"),
-                            Button.danger("$name-${event.author.idLong}-exit", "Exit"),
-                        )
-                ).queue()
-        } else {
-            val process = event.jda.getProcessById(args)
-                ?: throw CommandException("No process has been found by the provided ID!")
-
-            event.channel.sendConfirmation("Are you sure you want to terminate the process?")
-                .setActionRow(
-                    Button.danger("$name-${event.author.idLong}-${process.id}-killc", "Yes"),
-                    Button.secondary("$name-${event.author.idLong}-exit", "No"),
-                ).queue()
-        }
-    }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val processes = event.jda.processes.takeUnless { it.isEmpty() }
@@ -84,14 +55,23 @@ class ProcessesCommand : TextCommand {
         if (input === null) {
             val pages = ceil(processes.size / 5.0).toInt()
 
+            val actionRows = mutableSetOf<ActionRow>()
+
+            actionRows += ActionRow.of(
+                pageButtons(event.user.id, 0, pages).takeIf { processes.size > 5 }
+                    ?: setOf(
+                        Button.primary("$name-${event.user.idLong}-kill", "Kill"),
+                        Button.danger("$name-${event.user.idLong}-exit", "Exit"),
+                    )
+            )
+
+            if (processes.size > 5) {
+                actionRows += ActionRow.of(Button.danger("$name-${event.user.idLong}-exit", "Exit"))
+            }
+
             event.replyEmbeds(processesListEmbed(processes, 0, event.jda, event.guild ?: return))
-                .addActionRow(
-                    pageButtons(event.user.id, 0, pages).takeIf { processes.size > 5 }
-                        ?: setOf(
-                            Button.primary("$name-${event.user.idLong}-kill", "Kill"),
-                            Button.danger("$name-${event.user.idLong}-exit", "Exit"),
-                        )
-                ).queue()
+                .setComponents(actionRows)
+                .queue()
         } else {
             val process = event.jda.getProcessById(input)
                 ?: throw CommandException("No process has been found by the provided ID!")
@@ -132,7 +112,7 @@ class ProcessesCommand : TextCommand {
             val processes = event.jda.processes
 
             when (type) {
-                "exit" -> event.message.delete().queue()
+                "exit" -> event.message.delete().queue(null) {}
                 "kill" -> {
                     val input = TextInput
                         .create("$name-pid", "Enter the Process ID:", TextInputStyle.SHORT)
@@ -186,95 +166,72 @@ class ProcessesCommand : TextCommand {
                 }
                 else -> {
                     val page = id[1].toInt()
+                    val pages = ceil(processes.size / 5.0).toInt()
+
+                    fun getUpdatedButtons(initialPage: Int): Set<ActionRow> {
+                        val actionRows = mutableSetOf<ActionRow>()
+
+                        actionRows += ActionRow.of(
+                            pageButtons(event.user.id, initialPage, pages).takeIf { processes.size > 5 }
+                                ?: setOf(
+                                    Button.primary("$name-${event.user.idLong}-kill", "Kill"),
+                                    Button.danger("$name-${event.user.idLong}-exit", "Exit"),
+                                )
+                        )
+
+                        if (processes.size > 5) {
+                            actionRows +=
+                                ActionRow.of(Button.danger("$name-${event.user.idLong}-exit", "Exit"))
+                        }
+
+                        return actionRows
+                    }
 
                     when (type) {
                         "first" -> {
-                            val pages = ceil(processes.size / 5.0).toInt()
-
                             event.editMessageEmbeds(processesListEmbed(processes, 0, event.jda, guild))
-                                .setActionRow(
-                                    pageButtons(id.first(), 0, pages).takeIf { processes.size > 5 }
-                                        ?: setOf(
-                                            Button.primary("$name-${id.first()}-kill", "Kill"),
-                                            Button.danger("$name-${id.first()}-exit", "Exit"),
-                                        )
-                                ).queue(null) {
+                                .setComponents(getUpdatedButtons(0))
+                                .queue(null) {
                                     event.message
                                         .editMessageEmbeds(processesListEmbed(processes, 0, event.jda, guild))
-                                        .setActionRow(
-                                            pageButtons(id.first(), 0, pages).takeIf { processes.size > 5 }
-                                                ?: setOf(
-                                                    Button.primary("$name-${id.first()}-kill", "Kill"),
-                                                    Button.danger("$name-${id.first()}-exit", "Exit"),
-                                                )
-                                        ).queue()
+                                        .setComponents(getUpdatedButtons(0))
+                                        .queue()
                                 }
                         }
                         "last" -> {
-                            val partition = Lists.partition(processes.toList(), 5)
-                            val lastPage = partition.lastIndex
+                            val lastPage = pages.dec()
 
                             event.editMessageEmbeds(processesListEmbed(processes, lastPage, event.jda, guild))
-                                .setActionRow(
-                                    pageButtons(id.first(), lastPage, partition.size).takeIf { processes.size > 5 }
-                                        ?: setOf(Button.danger("$name-${id.first()}-exit", "Exit"))
-                                ).queue(null) {
+                                .setComponents(getUpdatedButtons(lastPage))
+                                .queue(null) {
                                     event.message
                                         .editMessageEmbeds(processesListEmbed(processes, lastPage, event.jda, guild))
-                                        .setActionRow(
-                                            pageButtons(id.first(), lastPage, partition.size).takeIf { processes.size > 5 }
-                                                ?: setOf(
-                                                    Button.primary("$name-${id.first()}-kill", "Kill"),
-                                                    Button.danger("$name-${id.first()}-exit", "Exit"),
-                                                )
-                                        ).queue()
+                                        .setComponents(getUpdatedButtons(lastPage))
+                                        .queue()
                                 }
                         }
                         "back" -> {
                             val newPage = max(0, page.dec())
-                            val pages = ceil(processes.size / 5.0).toInt()
 
                             event.editMessageEmbeds(processesListEmbed(processes, newPage, event.jda, guild))
-                                .setActionRow(
-                                    pageButtons(id.first(), newPage, pages).takeIf { processes.size > 5 }
-                                        ?: setOf(
-                                            Button.primary("$name-${id.first()}-kill", "Kill"),
-                                            Button.danger("$name-${id.first()}-exit", "Exit"),
-                                        )
-                                ).queue(null) {
+                                .setComponents(getUpdatedButtons(newPage))
+                                .queue(null) {
                                     event.message
                                         .editMessageEmbeds(processesListEmbed(processes, newPage, event.jda, guild))
-                                        .setActionRow(
-                                            pageButtons(id.first(), newPage, pages).takeIf { processes.size > 5 }
-                                                ?: setOf(
-                                                    Button.primary("$name-${id.first()}-kill", "Kill"),
-                                                    Button.danger("$name-${id.first()}-exit", "Exit"),
-                                                )
-                                        ).queue()
+                                        .setComponents(getUpdatedButtons(newPage))
+                                        .queue()
                                 }
                         }
                         "next" -> {
-                            val partition = Lists.partition(processes.toList(), 5)
-                            val lastPage = partition.lastIndex
-                            val newPage = min(page.inc(), lastPage)
+                            val newPage = min(page.inc(), pages.dec())
 
                             event.editMessageEmbeds(processesListEmbed(processes, newPage, event.jda, guild))
-                                .setActionRow(
-                                    pageButtons(id.first(), newPage, partition.size).takeIf { processes.size > 5 }
-                                        ?: setOf(
-                                            Button.primary("$name-${id.first()}-kill", "Kill"),
-                                            Button.danger("$name-${id.first()}-exit", "Exit"),
-                                        )
-                                ).queue(null) {
+                                .setComponents(getUpdatedButtons(newPage))
+                                .queue(null) {
                                     event.message
                                         .editMessageEmbeds(processesListEmbed(processes, newPage, event.jda, guild))
-                                        .setActionRow(
-                                            pageButtons(id.first(), newPage, partition.size).takeIf { processes.size > 5 }
-                                                ?: setOf(
-                                                    Button.primary("$name-${id.first()}-kill", "Kill"),
-                                                    Button.danger("$name-${id.first()}-exit", "Exit"),
-                                                )
-                                        ).queue()
+                                        .setComponents(getUpdatedButtons(newPage))
+                                        .queue()
                                 }
                         }
                     }

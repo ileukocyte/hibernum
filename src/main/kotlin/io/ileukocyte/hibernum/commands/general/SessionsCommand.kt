@@ -29,6 +29,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.CommandAutoCompleteInteraction
 import net.dv8tion.jda.api.interactions.commands.OptionType.STRING
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.components.ActionRow
 import net.dv8tion.jda.api.interactions.components.Modal
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.text.TextInput
@@ -58,14 +59,23 @@ class SessionsCommand : SlashOnlyCommand {
         if (input === null) {
             val pages = ceil(sessions.size / 5.0).toInt()
 
+            val actionRows = mutableSetOf<ActionRow>()
+
+            actionRows += ActionRow.of(
+                pageButtons(event.user.id, 0, pages).takeIf { sessions.size > 5 }
+                    ?: setOf(
+                        Button.primary("$name-${event.user.idLong}-abort", "Abort"),
+                        Button.danger("$name-${event.user.idLong}-exit", "Exit"),
+                    )
+            )
+
+            if (sessions.size > 5) {
+                actionRows += ActionRow.of(Button.danger("$name-${event.user.idLong}-exit", "Exit"))
+            }
+
             event.replyEmbeds(sessionsListEmbed(sessions, 0, event.jda, event.guild ?: return))
-                .addActionRow(
-                    pageButtons(event.user.id, 0, pages).takeIf { sessions.size > 5 }
-                        ?: setOf(
-                            Button.primary("$name-${event.user.idLong}-abort", "Abort"),
-                            Button.danger("$name-${event.user.idLong}-exit", "Exit"),
-                        )
-                ).queue()
+                .setComponents(actionRows)
+                .queue()
         } else {
             val session = event.jda.getProcessById(input)
                 ?.takeIf { event.user.idLong in it.users && it.command !== null }
@@ -110,7 +120,7 @@ class SessionsCommand : SlashOnlyCommand {
                 ?: return
 
             when (type) {
-                "exit" -> event.message.delete().queue()
+                "exit" -> event.message.delete().queue(null) {}
                 "abort" -> {
                     val input = TextInput
                         .create("$name-id", "Enter the Session ID:", TextInputStyle.SHORT)
@@ -166,95 +176,72 @@ class SessionsCommand : SlashOnlyCommand {
                 }
                 else -> {
                     val page = id[1].toInt()
+                    val pages = ceil(sessions.size / 5.0).toInt()
+
+                    fun getUpdatedButtons(initialPage: Int): Set<ActionRow> {
+                        val actionRows = mutableSetOf<ActionRow>()
+
+                        actionRows += ActionRow.of(
+                            pageButtons(event.user.id, initialPage, pages).takeIf { sessions.size > 5 }
+                                ?: setOf(
+                                    Button.primary("$name-${event.user.idLong}-abort", "Abort"),
+                                    Button.danger("$name-${event.user.idLong}-exit", "Exit"),
+                                )
+                        )
+
+                        if (sessions.size > 5) {
+                            actionRows +=
+                                ActionRow.of(Button.danger("$name-${event.user.idLong}-exit", "Exit"))
+                        }
+
+                        return actionRows
+                    }
 
                     when (type) {
                         "first" -> {
-                            val pages = ceil(sessions.size / 5.0).toInt()
-
                             event.editMessageEmbeds(sessionsListEmbed(sessions, 0, event.jda, guild))
-                                .setActionRow(
-                                    pageButtons(id.first(), 0, pages).takeIf { sessions.size > 5 }
-                                        ?: setOf(
-                                            Button.primary("$name-${id.first()}-kill", "Kill"),
-                                            Button.danger("$name-${id.first()}-exit", "Exit"),
-                                        )
-                                ).queue(null) {
+                                .setComponents(getUpdatedButtons(0))
+                                .queue(null) {
                                     event.message
                                         .editMessageEmbeds(sessionsListEmbed(sessions, 0, event.jda, guild))
-                                        .setActionRow(
-                                            pageButtons(id.first(), 0, pages).takeIf { sessions.size > 5 }
-                                                ?: setOf(
-                                                    Button.primary("$name-${id.first()}-kill", "Kill"),
-                                                    Button.danger("$name-${id.first()}-exit", "Exit"),
-                                                )
-                                        ).queue()
+                                        .setComponents(getUpdatedButtons(0))
+                                        .queue()
                                 }
                         }
                         "last" -> {
-                            val partition = Lists.partition(sessions.toList(), 5)
-                            val lastPage = partition.lastIndex
+                            val lastPage = pages.dec()
 
                             event.editMessageEmbeds(sessionsListEmbed(sessions, lastPage, event.jda, guild))
-                                .setActionRow(
-                                    pageButtons(id.first(), lastPage, partition.size).takeIf { sessions.size > 5 }
-                                        ?: setOf(Button.danger("$name-${id.first()}-exit", "Close"))
-                                ).queue(null) {
+                                .setComponents(getUpdatedButtons(lastPage))
+                                .queue(null) {
                                     event.message
                                         .editMessageEmbeds(sessionsListEmbed(sessions, lastPage, event.jda, guild))
-                                        .setActionRow(
-                                            pageButtons(id.first(), lastPage, partition.size).takeIf { sessions.size > 5 }
-                                                ?: setOf(
-                                                    Button.primary("$name-${id.first()}-kill", "Kill"),
-                                                    Button.danger("$name-${id.first()}-exit", "Exit"),
-                                                )
-                                        ).queue()
+                                        .setComponents(getUpdatedButtons(lastPage))
+                                        .queue()
                                 }
                         }
                         "back" -> {
                             val newPage = max(0, page.dec())
-                            val pages = ceil(sessions.size / 5.0).toInt()
 
                             event.editMessageEmbeds(sessionsListEmbed(sessions, newPage, event.jda, guild))
-                                .setActionRow(
-                                    pageButtons(id.first(), newPage, pages).takeIf { sessions.size > 5 }
-                                        ?: setOf(
-                                            Button.primary("$name-${id.first()}-kill", "Kill"),
-                                            Button.danger("$name-${id.first()}-exit", "Exit"),
-                                        )
-                                ).queue(null) {
+                                .setComponents(getUpdatedButtons(newPage))
+                                .queue(null) {
                                     event.message
                                         .editMessageEmbeds(sessionsListEmbed(sessions, newPage, event.jda, guild))
-                                        .setActionRow(
-                                            pageButtons(id.first(), newPage, pages).takeIf { sessions.size > 5 }
-                                                ?: setOf(
-                                                    Button.primary("$name-${id.first()}-kill", "Kill"),
-                                                    Button.danger("$name-${id.first()}-exit", "Exit"),
-                                                )
-                                        ).queue()
+                                        .setComponents(getUpdatedButtons(newPage))
+                                        .queue()
                                 }
                         }
                         "next" -> {
-                            val partition = Lists.partition(sessions.toList(), 5)
-                            val lastPage = partition.lastIndex
-                            val newPage = min(page.inc(), lastPage)
+                            val newPage = min(page.inc(), pages.dec())
 
                             event.editMessageEmbeds(sessionsListEmbed(sessions, newPage, event.jda, guild))
-                                .setActionRow(
-                                    pageButtons(id.first(), newPage, partition.size).takeIf { sessions.size > 5 }
-                                        ?: setOf(
-                                            Button.primary("$name-${id.first()}-kill", "Kill"),
-                                            Button.danger("$name-${id.first()}-exit", "Exit"),
-                                        )
-                                ).queue(null) {
+                                .setComponents(getUpdatedButtons(newPage))
+                                .queue(null) {
                                     event.message
                                         .editMessageEmbeds(sessionsListEmbed(sessions, newPage, event.jda, guild))
-                                        .setActionRow(
-                                            pageButtons(id.first(), newPage, partition.size).takeIf { sessions.size > 5 }
-                                                ?: setOf(
-                                                    Button.primary("$name-${id.first()}-kill", "Kill"),
-                                                    Button.danger("$name-${id.first()}-exit", "Exit"),
-                                                )
-                                        ).queue()
+                                        .setComponents(getUpdatedButtons(newPage))
+                                        .queue()
                                 }
                         }
                     }

@@ -195,8 +195,7 @@ class QueueCommand : TextCommand {
                     }
                 }
                 "last" -> {
-                    val partition = Lists.partition(audioPlayer.scheduler.queue.toList(), 10)
-                    val lastPage = partition.lastIndex
+                    val lastPage = pagesCount.dec()
 
                     event.editMessageEmbeds(
                         queueEmbed(event.jda, audioPlayer, track, lastPage)
@@ -218,9 +217,7 @@ class QueueCommand : TextCommand {
                     }
                 }
                 "next" -> {
-                    val partition = Lists.partition(audioPlayer.scheduler.queue.toList(), 10)
-                    val lastPage = partition.lastIndex
-                    val newPage = min(pageNumber.inc(), lastPage)
+                    val newPage = min(pageNumber.inc(), pagesCount.dec())
 
                     event.editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, newPage))
                         .setComponents(getUpdatedButtons(newPage))
