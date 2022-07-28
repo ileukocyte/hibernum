@@ -216,24 +216,26 @@ class QueueCommand : TextCommand {
                 "last" -> {
                     val lastPage = pagesCount.dec()
 
-                    event.editMessageEmbeds(
-                        queueEmbed(event.jda, audioPlayer, track, lastPage)
-                    ).setComponents(getUpdatedButtons(lastPage)).queue(null) {
-                        event.message.editMessageEmbeds(
-                            queueEmbed(event.jda, audioPlayer, track, lastPage)
-                        ).setComponents(getUpdatedButtons(lastPage)).queue()
-                    }
+                    event.editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, lastPage))
+                        .setComponents(getUpdatedButtons(lastPage))
+                        .queue(null) {
+                            event.message
+                                .editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, lastPage))
+                                .setComponents(getUpdatedButtons(lastPage))
+                                .queue()
+                        }
                 }
                 "back" -> {
                     val newPage = min(max(0, pageNumber.dec()), pagesCount.dec())
 
-                    event.editMessageEmbeds(
-                        queueEmbed(event.jda, audioPlayer, track, newPage)
-                    ).setComponents(getUpdatedButtons(newPage)).queue(null) {
-                        event.message.editMessageEmbeds(
-                            queueEmbed(event.jda, audioPlayer, track, newPage)
-                        ).setComponents(getUpdatedButtons(newPage)).queue()
-                    }
+                    event.editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, newPage))
+                        .setComponents(getUpdatedButtons(newPage))
+                        .queue(null) {
+                            event.message
+                                .editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, newPage))
+                                .setComponents(getUpdatedButtons(newPage))
+                                .queue()
+                        }
                 }
                 "next" -> {
                     val newPage = min(pageNumber.inc(), pagesCount.dec())

@@ -27,10 +27,10 @@ import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 import net.dv8tion.jda.api.utils.FileUpload
 
 class TextToImageCommand : TextCommand, MessageContextOnlyCommand {
-    override val name = "tti"
+    override val name = "text-to-image"
     override val contextName = "Text to Image"
     override val description = "Creates an image containing the provided text"
-    override val aliases = setOf("text-to-image")
+    override val aliases = setOf("tti")
     override val usages = setOf(setOf("input".toClassicTextUsage()))
     override val cooldown = 5L
 
