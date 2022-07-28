@@ -10,9 +10,13 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
 import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.commands.music.LoopCommand.Companion.getButton
+import io.ileukocyte.hibernum.commands.music.LoopCommand.Companion.getNext
 import io.ileukocyte.hibernum.extensions.bold
 import io.ileukocyte.hibernum.extensions.limitTo
 import io.ileukocyte.hibernum.extensions.maskedLink
+import io.ileukocyte.hibernum.extensions.replyConfirmation
+import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asDuration
 
 import kotlin.math.ceil
@@ -23,11 +27,14 @@ import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.interactions.InteractionType
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.components.ActionRow
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 
 import org.jetbrains.kotlin.utils.addToStdlib.applyIf
+import org.jetbrains.kotlin.utils.addToStdlib.cast
 
 class QueueCommand : TextCommand {
     override val name = "queue"
@@ -35,7 +42,10 @@ class QueueCommand : TextCommand {
     override val aliases = setOf("q", "playlist")
     override val usages = setOf(setOf("page".toClassicTextUsage(true)))
     override val options = setOf(
-        OptionData(OptionType.INTEGER, "page", "Initial page number"))
+        OptionData(OptionType.INTEGER, "page", "Initial page number"),
+        OptionData(OptionType.BOOLEAN, "gui-player", "Whether the button player should " +
+                "be added to the queue message (default is true)"),
+    )
     override val staleInteractionHandling = StaleInteractionHandling.REMOVE_COMPONENTS
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
@@ -48,17 +58,41 @@ class QueueCommand : TextCommand {
             ?.dec()
             ?: 0
 
+        val actionRows = mutableSetOf<ActionRow>()
+
+        if (audioPlayer.scheduler.queue.size > 10) {
+            actionRows += ActionRow.of(pageButtons(event.author.id, initialPage, partitionSize, true))
+        }
+
+        val playerButtons = mutableSetOf(
+            Button.primary("$name-${event.author.idLong}-$initialPage-true-update", "Update"),
+            Button.secondary("$name-${event.author.idLong}-$initialPage-true-stop", "Stop"),
+            audioPlayer.scheduler.loopMode.getButton(name, "${event.author.id}-$initialPage-true"),
+        )
+
+        if (audioPlayer.scheduler.queue.isNotEmpty()) {
+            playerButtons +=
+                Button.secondary("$name-${event.author.idLong}-$initialPage-true-skip", "Skip")
+
+            if (audioPlayer.scheduler.queue.size > 1) {
+                playerButtons +=
+                    Button.secondary("$name-${event.author.idLong}-$initialPage-true-shuffle", "Shuffle")
+            }
+        }
+
+        actionRows += ActionRow.of(playerButtons)
+        actionRows += ActionRow.of(Button.danger("$name-${event.author.idLong}-exit", "Close"))
+
         event.channel.sendMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, initialPage))
-            .let {
-                it.applyIf(audioPlayer.scheduler.queue.size > 10) {
-                    setActionRow(pageButtons(event.author.id, initialPage, partitionSize))
-                }
-            }.queue()
+            .setComponents(actionRows)
+            .queue()
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val audioPlayer = event.guild?.audioPlayer ?: return
         val track = audioPlayer.player.playingTrack ?: throw CommandException("No track is currently playing!")
+
+        val addGui = event.getOption("gui-player")?.asBoolean ?: true
 
         val partitionSize = ceil(audioPlayer.scheduler.queue.size / 10.0).toInt()
 
@@ -67,29 +101,48 @@ class QueueCommand : TextCommand {
             ?.dec()
             ?: 0
 
-        event.replyEmbeds(queueEmbed(event.jda, audioPlayer, track, initialPage))
-            .let {
-                it.applyIf(audioPlayer.scheduler.queue.size > 10) {
-                    addActionRow(pageButtons(event.user.id, initialPage, partitionSize))
+        val actionRows = mutableSetOf<ActionRow>()
+
+        if (audioPlayer.scheduler.queue.size > 10) {
+            actionRows += ActionRow.of(pageButtons(event.user.id, initialPage, partitionSize, addGui))
+        }
+
+        if (addGui) {
+            val playerButtons = mutableSetOf(
+                Button.primary("$name-${event.user.idLong}-$initialPage-true-update", "Update"),
+                Button.secondary("$name-${event.user.idLong}-$initialPage-true-stop", "Stop"),
+                audioPlayer.scheduler.loopMode.getButton(name, "${event.user.id}-$initialPage-true"),
+            )
+
+            if (audioPlayer.scheduler.queue.isNotEmpty()) {
+                playerButtons +=
+                    Button.secondary("$name-${event.user.idLong}-$initialPage-true-skip", "Skip")
+
+                if (audioPlayer.scheduler.queue.size > 1) {
+                    playerButtons +=
+                        Button.secondary("$name-${event.user.idLong}-$initialPage-true-shuffle", "Shuffle")
                 }
-            }.queue()
+            }
+
+            actionRows += ActionRow.of(playerButtons)
+        }
+
+        actionRows += ActionRow.of(Button.danger("$name-${event.user.idLong}-exit", "Close"))
+
+        event.replyEmbeds(queueEmbed(event.jda, audioPlayer, track, initialPage))
+            .setComponents(actionRows)
+            .queue()
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
         val id = event.componentId.removePrefix("$name-").split("-")
 
         if (event.user.id == id.first()) {
-            if (id.last() == "exit") {
-                event.editComponents().queue()
-
-                return
-            }
-
             val audioPlayer = event.guild?.audioPlayer ?: return
             val track = audioPlayer.player.playingTrack
 
-            if (track === null) {
-                event.message.delete().queue()
+            if (id.last() == "exit" || track === null) {
+                event.editComponents().queue()
 
                 return
             }
@@ -97,22 +150,48 @@ class QueueCommand : TextCommand {
             val pageNumber = id[1].toInt()
             val pagesCount = ceil(audioPlayer.scheduler.queue.size / 10.0).toInt()
 
+            val addGui = id[2].toBooleanStrict()
+
+            fun getUpdatedButtons(initialPage: Int): Set<ActionRow> {
+                val actionRows = mutableSetOf<ActionRow>()
+
+                if (audioPlayer.scheduler.queue.size > 10) {
+                    actionRows += ActionRow.of(pageButtons(event.user.id, initialPage, pagesCount, addGui))
+                }
+
+                if (addGui) {
+                    val playerButtons = mutableSetOf(
+                        Button.primary("$name-${event.user.idLong}-$initialPage-true-update", "Update"),
+                        Button.secondary("$name-${event.user.idLong}-$initialPage-true-stop", "Stop"),
+                        audioPlayer.scheduler.loopMode.getButton(name, "${event.user.id}-$initialPage-true"),
+                    )
+
+                    if (audioPlayer.scheduler.queue.isNotEmpty()) {
+                        playerButtons +=
+                            Button.secondary("$name-${event.user.idLong}-$initialPage-true-skip", "Skip")
+
+                        if (audioPlayer.scheduler.queue.size > 1) {
+                            playerButtons += Button
+                                .secondary("$name-${event.user.idLong}-$initialPage-true-shuffle", "Shuffle")
+                        }
+                    }
+
+                    actionRows += ActionRow.of(playerButtons)
+                }
+
+                actionRows += ActionRow.of(Button.danger("$name-${event.user.idLong}-exit", "Close"))
+
+                return actionRows
+            }
+
             when (id.last()) {
                 "first" -> {
                     event.editMessageEmbeds(
                         queueEmbed(event.jda, audioPlayer, track, 0)
-                    ).setComponents(emptyList()).let {
-                        it.applyIf(audioPlayer.scheduler.queue.size > 10) {
-                            setActionRow(pageButtons(id.first(), 0, pagesCount))
-                        }
-                    }.queue(null) { _ ->
+                    ).setComponents(getUpdatedButtons(0)).queue(null) {
                         event.message.editMessageEmbeds(
                             queueEmbed(event.jda, audioPlayer, track, 0)
-                        ).setComponents(emptyList()).let {
-                            it.applyIf(audioPlayer.scheduler.queue.size > 10) {
-                                setActionRow(pageButtons(id.first(), 0, pagesCount))
-                            }
-                        }.queue()
+                        ).setComponents(getUpdatedButtons(0)).queue()
                     }
                 }
                 "last" -> {
@@ -121,18 +200,10 @@ class QueueCommand : TextCommand {
 
                     event.editMessageEmbeds(
                         queueEmbed(event.jda, audioPlayer, track, lastPage)
-                    ).setComponents(emptyList()).let {
-                        it.applyIf(audioPlayer.scheduler.queue.size > 10) {
-                            setActionRow(pageButtons(id.first(), lastPage, pagesCount))
-                        }
-                    }.queue(null) { _ ->
+                    ).setComponents(getUpdatedButtons(lastPage)).queue(null) {
                         event.message.editMessageEmbeds(
                             queueEmbed(event.jda, audioPlayer, track, lastPage)
-                        ).setComponents(emptyList()).let {
-                            it.applyIf(audioPlayer.scheduler.queue.size > 10) {
-                                setActionRow(pageButtons(id.first(), lastPage, pagesCount))
-                            }
-                        }.queue()
+                        ).setComponents(getUpdatedButtons(lastPage)).queue()
                     }
                 }
                 "back" -> {
@@ -140,18 +211,10 @@ class QueueCommand : TextCommand {
 
                     event.editMessageEmbeds(
                         queueEmbed(event.jda, audioPlayer, track, newPage)
-                    ).setComponents(emptyList()).let {
-                        it.applyIf(audioPlayer.scheduler.queue.size > 10) {
-                            setActionRow(pageButtons(id.first(), newPage, pagesCount))
-                        }
-                    }.queue(null) { _ ->
+                    ).setComponents(getUpdatedButtons(newPage)).queue(null) {
                         event.message.editMessageEmbeds(
                             queueEmbed(event.jda, audioPlayer, track, newPage)
-                        ).setComponents(emptyList()).let {
-                            it.applyIf(audioPlayer.scheduler.queue.size > 10) {
-                                setActionRow(pageButtons(id.first(), newPage, pagesCount))
-                            }
-                        }.queue()
+                        ).setComponents(getUpdatedButtons(newPage)).queue()
                     }
                 }
                 "next" -> {
@@ -160,21 +223,99 @@ class QueueCommand : TextCommand {
                     val newPage = min(pageNumber.inc(), lastPage)
 
                     event.editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, newPage))
-                        .setComponents(emptyList())
-                        .let {
-                            it.applyIf(audioPlayer.scheduler.queue.size > 10) {
-                                setActionRow(pageButtons(id.first(), newPage, pagesCount))
-                            }
-                        }.queue(null) { _ ->
+                        .setComponents(getUpdatedButtons(newPage))
+                        .queue(null) {
                             event.message
                                 .editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, newPage))
-                                .setComponents(emptyList())
-                                .let {
-                                    it.applyIf(audioPlayer.scheduler.queue.size > 10) {
-                                        setActionRow(pageButtons(id.first(), newPage, pagesCount))
-                                    }
-                                }.queue()
+                                .setComponents(getUpdatedButtons(newPage))
+                                .queue()
                         }
+                }
+                "update" -> {
+                    event.editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, pageNumber))
+                        .setComponents(getUpdatedButtons(pageNumber))
+                        .queue(null) {
+                            event.message
+                                .editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, pageNumber))
+                                .setComponents(getUpdatedButtons(pageNumber))
+                                .queue()
+                        }
+                }
+                else -> {
+                    if (event.member?.voiceState?.channel != event.guild?.selfMember?.voiceState?.channel) {
+                        throw CommandException("You are not connected to the required voice channel!")
+                    }
+
+                    when (id.last()) {
+                        "shuffle" -> {
+                            if (audioPlayer.scheduler.queue.isNotEmpty()) {
+                                audioPlayer.scheduler.shuffle()
+                            }
+
+                            event.editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, pageNumber))
+                                .setComponents(getUpdatedButtons(pageNumber))
+                                .queue(null) {
+                                    event.message
+                                        .editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, pageNumber))
+                                        .setComponents(getUpdatedButtons(pageNumber))
+                                        .queue()
+                                }
+                        }
+                        "loop" -> {
+                            audioPlayer.scheduler.loopMode = audioPlayer.scheduler.loopMode
+                                .getNext(audioPlayer.scheduler.queue.isEmpty())
+
+                            event.editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, pageNumber))
+                                .setComponents(getUpdatedButtons(pageNumber))
+                                .queue(null) {
+                                    event.message
+                                        .editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, pageNumber))
+                                        .setComponents(getUpdatedButtons(pageNumber))
+                                        .queue()
+                                }
+                        }
+                        "stop" -> {
+                            val stop = CommandHandler["stop"].cast<StopCommand>().name
+
+                            val description = "Are you sure you want the bot to stop playing music and clear the queue?"
+                            val buttons = setOf(
+                                Button.danger("$stop-${event.user.idLong}-${event.messageIdLong}-stop", "Yes"),
+                                Button.secondary("$stop-${event.user.idLong}-exit", "No"),
+                            )
+
+                            event.replyConfirmation(description).addActionRow(buttons).queue()
+                        }
+                        "skip" -> {
+                            if (audioPlayer.scheduler.queue.isNotEmpty()) {
+                                val announcement = audioPlayer.player.playingTrack.customUserData.announcement
+
+                                announcement?.takeUnless {
+                                    val interaction = it.interaction?.takeIf { i -> i.type == InteractionType.COMMAND }
+
+                                    interaction !== null && interaction.name != "skip"
+                                }?.delete()?.queue(null) {}
+
+                                audioPlayer.scheduler.nextTrack(newAnnouncementChannel = event.guildChannel)
+
+                                if (audioPlayer.player.playingTrack === null) {
+                                    event.editComponents().queue(null) {}
+
+                                    return
+                                }
+                            }
+
+                            val embed = queueEmbed(event.jda, audioPlayer, audioPlayer.player.playingTrack, pageNumber)
+
+                            event.editMessageEmbeds(embed)
+                                .setComponents(getUpdatedButtons(pageNumber))
+                                .queue(null) {
+                                    event.message
+                                        .editMessageEmbeds(embed)
+                                        .setComponents(getUpdatedButtons(pageNumber))
+                                        .queue()
+                                }
+                        }
+                    }
                 }
             }
         } else {
@@ -182,16 +323,15 @@ class QueueCommand : TextCommand {
         }
     }
 
-    private fun pageButtons(userId: String, page: Int, size: Int) = setOf(
-        Button.secondary("$name-$userId-$page-first", "First Page")
+    private fun pageButtons(userId: String, page: Int, size: Int, gui: Boolean) = setOf(
+        Button.secondary("$name-$userId-$page-$gui-first", "First Page")
             .applyIf(page == 0) { asDisabled() },
-        Button.secondary("$name-$userId-$page-back", "Back")
+        Button.secondary("$name-$userId-$page-$gui-back", "Back")
             .applyIf(page == 0) { asDisabled() },
-        Button.secondary("$name-$userId-$page-next", "Next")
+        Button.secondary("$name-$userId-$page-$gui-next", "Next")
             .applyIf(page == size.dec()) { asDisabled() },
-        Button.secondary("$name-$userId-$page-last", "Last Page")
+        Button.secondary("$name-$userId-$page-$gui-last", "Last Page")
             .applyIf(page == size.dec()) { asDisabled() },
-        Button.danger("$name-$userId-exit", "Close"),
     )
 
     private fun queueEmbed(

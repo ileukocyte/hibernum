@@ -8,6 +8,8 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
 import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.commands.music.LoopCommand.Companion.getButton
+import io.ileukocyte.hibernum.commands.music.LoopCommand.Companion.getNext
 import io.ileukocyte.hibernum.extensions.bold
 import io.ileukocyte.hibernum.extensions.maskedLink
 import io.ileukocyte.hibernum.extensions.replyConfirmation
@@ -15,8 +17,6 @@ import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asDuration
 
 import net.dv8tion.jda.api.JDA
-import net.dv8tion.jda.api.entities.User
-import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
@@ -50,7 +50,7 @@ class NowPlayingCommand : TextCommand {
                 "Pause".applyIf(audioPlayer.player.isPaused) { "Play" },
             ),
             Button.secondary("$name-${event.author.idLong}-stop", "Stop"),
-            audioPlayer.scheduler.loopMode.getButton(event.author),
+            audioPlayer.scheduler.loopMode.getButton(name, event.author.id),
         )
 
         if (audioPlayer.scheduler.queue.isNotEmpty()) {
@@ -78,7 +78,7 @@ class NowPlayingCommand : TextCommand {
                 "Pause".applyIf(audioPlayer.player.isPaused) { "Play" },
             ),
             Button.secondary("$name-${event.user.idLong}-stop", "Stop"),
-            audioPlayer.scheduler.loopMode.getButton(event.user),
+            audioPlayer.scheduler.loopMode.getButton(name, event.user.id),
         )
 
         if (audioPlayer.scheduler.queue.isNotEmpty()) {
@@ -115,7 +115,7 @@ class NowPlayingCommand : TextCommand {
                         "Pause".applyIf(audioPlayer.player.isPaused) { "Play" },
                     ),
                     Button.secondary("$name-${event.user.idLong}-stop", "Stop"),
-                    audioPlayer.scheduler.loopMode.getButton(event.user),
+                    audioPlayer.scheduler.loopMode.getButton(name, event.user.id),
                 )
 
                 if (audioPlayer.scheduler.queue.isNotEmpty()) {
@@ -239,23 +239,5 @@ class NowPlayingCommand : TextCommand {
             name = "HiberPlayer"
             iconUrl = jda.selfUser.effectiveAvatarUrl
         }
-    }
-
-    private fun LoopMode.getButton(user: User) = "${this@NowPlayingCommand.name}-${user.idLong}-loop".let {
-        when (this) {
-            LoopMode.SONG -> Button.secondary(it, Emoji.fromUnicode("\uD83D\uDD02"))
-            LoopMode.QUEUE -> Button.secondary(it, Emoji.fromUnicode("\uD83D\uDD01"))
-            LoopMode.DISABLED -> Button.secondary(it, "Repeat")
-        }
-    }
-
-    private fun LoopMode.getNext(isQueueEmpty: Boolean) = when (this) {
-        LoopMode.SONG -> if (isQueueEmpty) {
-            LoopMode.DISABLED
-        } else {
-            LoopMode.QUEUE
-        }
-        LoopMode.QUEUE -> LoopMode.DISABLED
-        LoopMode.DISABLED -> LoopMode.SONG
     }
 }

@@ -377,7 +377,7 @@ class ProcessesCommand : TextCommand {
         }
 
         if (partition.size > 1) {
-            footer { text = "Total processes: ${originalSet.size}" }
+            footer { text = "Total Processes: ${originalSet.size}" }
         }
     }
 

@@ -357,7 +357,7 @@ class SessionsCommand : SlashOnlyCommand {
         }
 
         if (partition.size > 1) {
-            footer { text = "Total sessions: ${originalSet.size}" }
+            footer { text = "Total Sessions: ${originalSet.size}" }
         }
     }
 

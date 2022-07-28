@@ -6,6 +6,7 @@ import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.extensions.*
 
+import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
@@ -120,6 +121,27 @@ class LoopCommand : TextCommand {
                 .queue(null) {
                     event.messageChannel.sendSuccess(description).queue()
                 }
+        }
+    }
+
+    companion object {
+        fun LoopMode.getButton(command: String, userId: String) =
+            "$command-$userId-loop".let {
+                when (this) {
+                    LoopMode.SONG -> Button.secondary(it, Emoji.fromUnicode("\uD83D\uDD02"))
+                    LoopMode.QUEUE -> Button.secondary(it, Emoji.fromUnicode("\uD83D\uDD01"))
+                    LoopMode.DISABLED -> Button.secondary(it, "Repeat")
+                }
+            }
+
+        fun LoopMode.getNext(isQueueEmpty: Boolean) = when (this) {
+            LoopMode.SONG -> if (isQueueEmpty) {
+                LoopMode.DISABLED
+            } else {
+                LoopMode.QUEUE
+            }
+            LoopMode.QUEUE -> LoopMode.DISABLED
+            LoopMode.DISABLED -> LoopMode.SONG
         }
     }
 }
