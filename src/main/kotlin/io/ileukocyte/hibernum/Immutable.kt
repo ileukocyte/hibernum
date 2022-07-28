@@ -17,9 +17,6 @@ object Immutable {
 
     const val DEFAULT_PREFIX = "&"
     const val GITHUB_REPOSITORY = "https://github.com/ileukocyte/hibernum"
-    const val INVITE_LINK_FORMAT = "https://discord.com/api/oauth2/authorize?client_id=%s" +
-            "&permissions=%d" +
-            "&scope=applications.commands%%20bot"
 
     @JvmField
     val LOGGER = KotlinLogging.logger("Hibernum")
