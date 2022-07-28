@@ -32,6 +32,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.OptionType
@@ -239,18 +240,30 @@ class AkinatorCommand : TextCommand {
 
                     event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda)
 
-                    event.replySuccess("The Akinator session has been finished!")
-                        .setEphemeral(true)
-                        .flatMap { event.message.delete() }
-                        .queue()
+                    event.editComponents().setSuccessEmbed("The Akinator session has been finished!") {
+                        text = "This message will self-delete in 5 seconds"
+                    }.queue({
+                        it.deleteOriginal().queueAfter(5, TimeUnit.SECONDS, null) {}
+                    }) { _ ->
+                        event.channel.sendSuccess("The Akinator session has been finished!") {
+                            text = "This message will self-delete in 5 seconds"
+                        }.queue({
+                            it.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
+                        }) {}
+                    }
                 }
                 "stay" -> {
-                    event.replySuccess("Let's go on!")
-                        .setEphemeral(true)
-                        .flatMap { event.message.delete() }
-                        .await()
+                    val message = try {
+                        event.editComponents()
+                            .setSuccessEmbed("The game session has been resumed!")
+                            .await()
+                            .retrieveOriginal()
+                            .await()
+                    } catch (_: ErrorResponseException) {
+                        event.channel.sendSuccess("The game session has been resumed!").await()
+                    }
 
-                    awaitAnswer(event.channel, event.user, akiwrapper, processId = id[1].toInt())
+                    awaitAnswer(event.channel, event.user, akiwrapper, message, id[1].toInt())
                 }
                 "guessYes", "finalGuessYes" -> {
                     AKIWRAPPERS -= event.user.idLong
@@ -287,21 +300,26 @@ class AkinatorCommand : TextCommand {
                         val nextQuestion = akiwrapper.answer(previousAnswer)
 
                         if (nextQuestion !== null) {
-                            event.replySuccess("Let's go on!")
-                                .setEphemeral(true)
-                                .flatMap { event.message.delete() }
-                                .await()
-
-                            event.channel.sendEmbed {
+                            val embed = buildEmbed {
                                 color = Immutable.SUCCESS
                                 description = nextQuestion.question
 
                                 footer { text = "Type in \"exit\" to finish the session!" }
 
                                 author { name = "Question #${nextQuestion.step.inc()}" }
-                            }.await()
+                            }
 
-                            awaitAnswer(event.channel, event.user, akiwrapper, processId = id[2].toInt())
+                            val message = try {
+                                event.editMessageEmbeds(embed)
+                                    .setComponents()
+                                    .await()
+                                    .retrieveOriginal()
+                                    .await()
+                            } catch (_: ErrorResponseException) {
+                                event.channel.sendMessageEmbeds(embed).await()
+                            }
+
+                            awaitAnswer(event.channel, event.user, akiwrapper, message, id[2].toInt())
                         } else {
                             akiwrapper.guesses // always empty for an unknown reason
                                 .firstOrNull { DECLINED_GUESSES[event.user.idLong]?.contains(it.idLong) == false }
@@ -350,7 +368,7 @@ class AkinatorCommand : TextCommand {
         channel: MessageChannel,
         player: User,
         akiwrapper: Akiwrapper,
-        invokingMessage: Message? = null,
+        invokingMessage: Message,
         processId: Int,
     ) {
         try {
@@ -359,7 +377,16 @@ class AkinatorCommand : TextCommand {
                 this,
                 invokingMessage,
                 processId = processId,
-            ) ?: return
+            ) {
+                it.message.contentRaw.lowercase() in setOf(
+                    "exit",
+                    "debug",
+                    "aliases",
+                    "help",
+                    "b",
+                    "back",
+                ) + POSSIBLE_ANSWERS.values.flatten()
+            } ?: return
 
             when (val content = message.contentRaw.lowercase()) {
                 "exit" -> {
@@ -437,80 +464,69 @@ class AkinatorCommand : TextCommand {
                     awaitAnswer(channel, player, akiwrapper, invoker, processId)
                 }
                 else -> {
-                    if (content in POSSIBLE_ANSWERS.values.flatten()) {
-                        val guess = akiwrapper.guesses
-                            .firstOrNull { it.probability >= PROBABILITY_THRESHOLD
-                                    && DECLINED_GUESSES[player.idLong]?.contains(it.idLong) == false }
+                    val guess = akiwrapper.guesses
+                        .firstOrNull { it.probability >= PROBABILITY_THRESHOLD
+                                && DECLINED_GUESSES[player.idLong]?.contains(it.idLong) == false }
 
-                        if (guess === null) {
-                            val answer = POSSIBLE_ANSWERS.keys.first { content in POSSIBLE_ANSWERS[it]!! }
-                            val nextQuestion = akiwrapper.answer(answer)
+                    if (guess === null) {
+                        val answer = POSSIBLE_ANSWERS.keys.first { content in POSSIBLE_ANSWERS[it]!! }
+                        val nextQuestion = akiwrapper.answer(answer)
 
-                            if (nextQuestion !== null) {
-                                val invoker = message.replyEmbed {
-                                    color = Immutable.SUCCESS
-                                    description = nextQuestion.question
+                        if (nextQuestion !== null) {
+                            val invoker = message.replyEmbed {
+                                color = Immutable.SUCCESS
+                                description = nextQuestion.question
 
-                                    author { name = "Question #${nextQuestion.step.inc()}" }
-                                    footer { text = "Type in \"exit\" to finish the session!" }
-                                }.await()
-
-                                awaitAnswer(channel, player, akiwrapper, invoker, processId)
-                            } else {
-                                akiwrapper.guesses // always empty for an unknown reason
-                                    .firstOrNull { DECLINED_GUESSES[player.idLong]?.contains(it.idLong) == false }
-                                    ?.let { finalGuess ->
-                                        val m = guessMessage(
-                                            finalGuess,
-                                            true,
-                                            player.idLong,
-                                            message.channel,
-                                            message.idLong,
-                                            processId = processId,
-                                        )
-
-                                        channel.jda.awaitEvent<ButtonInteractionEvent>(waiterProcess = waiterProcess {
-                                            this.channel = channel.idLong
-                                            users += player.idLong
-                                            command = this@AkinatorCommand
-                                            invoker = m.idLong
-                                            id = processId
-                                        }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
-                                    } ?: channel.let {
-                                        AKIWRAPPERS -= player.idLong
-                                        DECLINED_GUESSES -= player.idLong
-                                        GUESS_TYPES -= player.idLong
-
-                                        it.sendSuccess("Bravo! You have defeated me!").queue()
-                                    }
-                            }
-                        } else {
-                            val m = guessMessage(
-                                guess,
-                                false,
-                                player.idLong,
-                                message.channel,
-                                content = content,
-                                processId = processId,
-                            )
-
-                            channel.jda.awaitEvent<ButtonInteractionEvent>(waiterProcess = waiterProcess {
-                                this.channel = channel.idLong
-                                users += player.idLong
-                                command = this@AkinatorCommand
-                                invoker = m.idLong
-                                id = processId
-                            }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
-                        }
-                    } else {
-                        val incorrect =
-                            message.replyFailure("Incorrect answer! Use `help`/`aliases` to get documentation!") {
-                                text = "This message will self-delete in 5 seconds"
+                                author { name = "Question #${nextQuestion.step.inc()}" }
+                                footer { text = "Type in \"exit\" to finish the session!" }
                             }.await()
 
-                        incorrect.delete().queueAfter(5, TimeUnit.SECONDS, {}) {}
+                            awaitAnswer(channel, player, akiwrapper, invoker, processId)
+                        } else {
+                            akiwrapper.guesses // always empty for an unknown reason
+                                .firstOrNull { DECLINED_GUESSES[player.idLong]?.contains(it.idLong) == false }
+                                ?.let { finalGuess ->
+                                    val m = guessMessage(
+                                        finalGuess,
+                                        true,
+                                        player.idLong,
+                                        message.channel,
+                                        message.idLong,
+                                        processId = processId,
+                                    )
 
-                        awaitAnswer(channel, player, akiwrapper, invokingMessage, processId)
+                                    channel.jda.awaitEvent<ButtonInteractionEvent>(waiterProcess = waiterProcess {
+                                        this.channel = channel.idLong
+                                        users += player.idLong
+                                        command = this@AkinatorCommand
+                                        invoker = m.idLong
+                                        id = processId
+                                    }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
+                                } ?: channel.let {
+                                AKIWRAPPERS -= player.idLong
+                                DECLINED_GUESSES -= player.idLong
+                                GUESS_TYPES -= player.idLong
+
+                                it.sendSuccess("Bravo! You have defeated me!").queue()
+                            }
+                        }
+                    } else {
+                        val m = guessMessage(
+                            guess,
+                            false,
+                            player.idLong,
+                            message.channel,
+                            content = content,
+                            processId = processId,
+                        )
+
+                        channel.jda.awaitEvent<ButtonInteractionEvent>(waiterProcess = waiterProcess {
+                            this.channel = channel.idLong
+                            users += player.idLong
+                            command = this@AkinatorCommand
+                            invoker = m.idLong
+                            id = processId
+                        }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
                     }
                 }
             }

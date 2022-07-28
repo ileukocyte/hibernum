@@ -59,6 +59,8 @@ fun MessageChannel.sendActionRow(vararg components: ActionComponent) =
  * @param processId
  * A custom process ID in case it is necessary to preserve the same ID throughout
  * repetitive message awaiting sessions
+ * @param predicate
+ * The additional filter accepting only proper events while awaiting them
  *
  * @return a nullable (in case of the process being manually terminated) [Message][net.dv8tion.jda.api.entities.Message] entity
  * received via event awaiting
@@ -77,6 +79,7 @@ suspend inline fun MessageChannel.awaitMessage(
     delay: Long = 5,
     unit: TimeUnit = TimeUnit.MINUTES,
     processId: Int? = null,
+    noinline predicate: (MessageReceivedEvent) -> Boolean = { true },
 ) = jda.awaitEvent<MessageReceivedEvent>(
     delay = delay,
     unit = unit,
@@ -87,7 +90,7 @@ suspend inline fun MessageChannel.awaitMessage(
         invoker = invokingMessage?.idLong
         id = processId
     },
-) { it.author in authors && it.channel.idLong == idLong }?.message
+) { it.author in authors && it.channel.idLong == idLong && predicate(it) }?.message
 
 /**
  * The extension bringing a faster way to obtain an awaited message rather than using raw event receiving.
@@ -104,6 +107,8 @@ suspend inline fun MessageChannel.awaitMessage(
  * A period throughout which the message must be received
  * @param unit
  * A time unit for the aforementioned parameter
+ * @param predicate
+ * The additional filter accepting only proper events while awaiting them
  *
  * @return a nullable (in case of the process being manually terminated) [Message][net.dv8tion.jda.api.entities.Message] entity
  * received via event awaiting
@@ -122,4 +127,5 @@ suspend inline fun MessageChannel.awaitMessage(
     delay: Long = 5,
     unit: TimeUnit = TimeUnit.MINUTES,
     processId: Int? = null,
-) = awaitMessage(setOf(author), processCommand, invokingMessage, delay, unit, processId)
+    noinline predicate: (MessageReceivedEvent) -> Boolean = { true },
+) = awaitMessage(setOf(author), processCommand, invokingMessage, delay, unit, processId, predicate)

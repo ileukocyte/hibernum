@@ -139,11 +139,15 @@ class TicTacToeCommand : SlashOnlyCommand {
         processId: Int,
     ) {
         try {
-            val response = channel.awaitMessage(ttt.players, this, message, processId = processId)
-                ?: return
+            val response = channel.awaitMessage(ttt.players, this, message, processId = processId) {
+                val content = it.message.contentRaw.lowercase()
+
+                (content.isInt && content.toInt() in 1..9) || content == "exit"
+            } ?: return
+
             val content = response.contentRaw
 
-            if (content.isInt && content.toInt() in 1..9) {
+            if (content.isInt) {
                 if (response.author.idLong != ttt.currentTurn.idLong) {
                     response.replyFailure("It is currently not your turn!") {
                         text = "Type in \"exit\" to finish the session!"
@@ -201,64 +205,53 @@ class TicTacToeCommand : SlashOnlyCommand {
                     }
                 }
             } else {
-                if (content.lowercase() == "exit") {
-                    val confirmation = response.replyConfirmation("Are you sure you want to exit?")
-                        .setActionRow(
-                            Button.danger("$name-${response.author.idLong}-exit", "Yes"),
-                            Button.secondary("$name-${response.author.idLong}-stay", "No"),
-                        ).await()
+                val confirmation = response.replyConfirmation("Are you sure you want to exit?")
+                    .setActionRow(
+                        Button.danger("$name-${response.author.idLong}-exit", "Yes"),
+                        Button.secondary("$name-${response.author.idLong}-stay", "No"),
+                    ).await()
 
-                    try {
-                        val buttonEvent = response.jda
-                            .awaitEvent<ButtonInteractionEvent>(15, TimeUnit.MINUTES, waiterProcess = waiterProcess {
-                                this.channel = channel.idLong
-                                users += response.author.idLong
-                                command = this@TicTacToeCommand
-                                invoker = confirmation.idLong
-                                id = processId
-                            }) {
-                                it.user.idLong == response.author.idLong && it.message.idLong == confirmation.idLong
-                            } ?: return
+                try {
+                    val buttonEvent = response.jda
+                        .awaitEvent<ButtonInteractionEvent>(15, TimeUnit.MINUTES, waiterProcess = waiterProcess {
+                            this.channel = channel.idLong
+                            users += response.author.idLong
+                            command = this@TicTacToeCommand
+                            invoker = confirmation.idLong
+                            id = processId
+                        }) {
+                            it.user.idLong == response.author.idLong && it.message.idLong == confirmation.idLong
+                        } ?: return
 
-                        when (buttonEvent.componentId.split("-").last()) {
-                            "exit" -> {
-                                buttonEvent.editComponents().setEmbeds(
-                                    defaultEmbed(
-                                        "The game session has been terminated by ${buttonEvent.user.asMention}!",
-                                        EmbedType.SUCCESS,
-                                    )
-                                ).queue(null) {
-                                    channel.sendSuccess("The game session has been terminated by ${buttonEvent.user.asMention}!")
-                                        .queue()
-                                }
+                    when (buttonEvent.componentId.split("-").last()) {
+                        "exit" -> {
+                            buttonEvent.editComponents().setEmbeds(
+                                defaultEmbed(
+                                    "The game session has been terminated by ${buttonEvent.user.asMention}!",
+                                    EmbedType.SUCCESS,
+                                )
+                            ).queue(null) {
+                                channel.sendSuccess("The game session has been terminated by ${buttonEvent.user.asMention}!")
+                                    .queue()
                             }
-                            "stay" -> {
-                                buttonEvent.editComponents().setEmbeds(
-                                    defaultEmbed(
-                                        "The game session has been resumed!",
-                                        EmbedType.SUCCESS,
-                                    )
-                                ).queue(null) {
+                        }
+                        "stay" -> {
+                            buttonEvent.editComponents()
+                                .setSuccessEmbed("The game session has been resumed!")
+                                .queue(null) {
                                     channel.sendSuccess("The game session has been resumed!")
                                         .queue()
                                 }
 
-                                awaitTurn(ttt, channel, message, processId)
-                            }
-                        }
-                    } catch (_: TimeoutCancellationException) {
-                        confirmation.editMessageComponents().setEmbeds(
-                            defaultEmbed("Time is out!", EmbedType.FAILURE)
-                        ).setContent(EmbedBuilder.ZERO_WIDTH_SPACE).queue(null) {
-                            channel.sendFailure("Time is out!").queue()
+                            awaitTurn(ttt, channel, message, processId)
                         }
                     }
-                } else {
-                    response.replyFailure("The message is not of the expected turn format!") {
-                        text = "Type in \"exit\" to finish the session!"
-                    }.queue()
-
-                    awaitTurn(ttt, channel, message, processId)
+                } catch (_: TimeoutCancellationException) {
+                    confirmation.editMessageComponents().setEmbeds(
+                        defaultEmbed("Time is out!", EmbedType.FAILURE)
+                    ).setContent(EmbedBuilder.ZERO_WIDTH_SPACE).queue(null) {
+                        channel.sendFailure("Time is out!").queue()
+                    }
                 }
             }
         } catch (_: TimeoutCancellationException) {

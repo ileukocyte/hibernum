@@ -43,7 +43,7 @@ class ProcessesCommand : SlashOnlyCommand {
     override val name = "processes"
     override val description = "Sends a list of all the running processes or terminates the one provided by its ID"
     override val options = setOf(
-        OptionData(OptionType.STRING, "pid", "The ID of the process to kill")
+        OptionData(OptionType.STRING, "pid", "The ID of the process to terminate")
             .setAutoComplete(true))
     override val staleInteractionHandling = StaleInteractionHandling.REMOVE_COMPONENTS
 
@@ -60,7 +60,7 @@ class ProcessesCommand : SlashOnlyCommand {
             actionRows += ActionRow.of(
                 pageButtons(event.user.id, 0, pages).takeIf { processes.size > 5 }
                     ?: setOf(
-                        Button.primary("$name-${event.user.idLong}-kill", "Kill"),
+                        Button.primary("$name-${event.user.idLong}-kill", "Terminate"),
                         Button.danger("$name-${event.user.idLong}-exit", "Exit"),
                     )
             )
@@ -174,7 +174,7 @@ class ProcessesCommand : SlashOnlyCommand {
                         actionRows += ActionRow.of(
                             pageButtons(event.user.id, initialPage, pages).takeIf { processes.size > 5 }
                                 ?: setOf(
-                                    Button.primary("$name-${event.user.idLong}-kill", "Kill"),
+                                    Button.primary("$name-${event.user.idLong}-kill", "Terminate"),
                                     Button.danger("$name-${event.user.idLong}-exit", "Exit"),
                                 )
                         )
@@ -339,7 +339,7 @@ class ProcessesCommand : SlashOnlyCommand {
     }
 
     private fun pageButtons(userId: String, page: Int, size: Int) = setOf(
-        Button.primary("$name-$userId-kill", "Kill"),
+        Button.primary("$name-$userId-kill", "Terminate"),
         Button.secondary("$name-$userId-$page-first", "First Page")
             .applyIf(page == 0) { asDisabled() },
         Button.secondary("$name-$userId-$page-back", "Back")

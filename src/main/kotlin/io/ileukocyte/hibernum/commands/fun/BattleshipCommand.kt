@@ -233,38 +233,63 @@ class BattleshipCommand : SlashOnlyCommand {
                     this,
                     delay = 10,
                     processId = processId,
-                ) ?: return
+                ) { it.message.contentRaw.matches(Battleship.TURN_REGEX) } ?: return
 
-                if (!turnMessage.contentRaw.matches(Battleship.TURN_REGEX)) {
-                    turnMessage.channel.sendFailure(
-                        "The message does not match the valid turn format! " +
-                                "Try again!"
-                    ).queue()
+                val (columnLetter, rowChar) = turnMessage.contentRaw.toCharArray()
+
+                val row = rowChar.digitToInt()
+                val column = Battleship.letterToIndex(columnLetter.lowercaseChar()) ?: return
+
+                val turn = currentTurn.opponentBoard[row][column]
+
+                if (turn == Battleship.RED_SQUARE || turn == Battleship.YELLOW_CIRCLE) {
+                    turnMessage.channel.sendFailure("The gap is taken! Try again!").queue()
 
                     awaitTurn(battleship, guildMessage, guildChannel, processId)
                 } else {
-                    val (columnLetter, rowChar) = turnMessage.contentRaw.toCharArray()
+                    val opponent = battleship.players.first { it.user.idLong != currentTurn.user.idLong }
 
-                    val row = rowChar.digitToInt()
-                    val column = Battleship.letterToIndex(columnLetter.lowercaseChar()) ?: return
+                    if (opponent.ownBoard[row][column] == Battleship.WHITE_SQUARE) {
+                        opponent.ownBoard[row][column] = Battleship.YELLOW_CIRCLE
+                        currentTurn.opponentBoard[row][column] = Battleship.YELLOW_CIRCLE
 
-                    val turn = currentTurn.opponentBoard[row][column]
+                        turnMessage.replyEmbeds(
+                            defaultEmbed(
+                                "You have missed! It is ${opponent.user.asTag}'s turn!",
+                                EmbedType.WARNING
+                            ),
+                            currentTurn.getPrintableOwnBoard(),
+                            currentTurn.getPrintableOpponentBoard(),
+                        ).await()
 
-                    if (turn == Battleship.RED_SQUARE || turn == Battleship.YELLOW_CIRCLE) {
-                        turnMessage.channel.sendFailure("The gap is taken! Try again!").queue()
+                        opponent.dm.sendMessageEmbeds(
+                            defaultEmbed(
+                                "${currentTurn.user.asTag} has missed! It is your turn!",
+                                EmbedType.SUCCESS,
+                            ),
+                            opponent.getPrintableOwnBoard(),
+                            opponent.getPrintableOpponentBoard(),
+                        ).await()
+
+                        battleship.reverseTurn()
 
                         awaitTurn(battleship, guildMessage, guildChannel, processId)
                     } else {
-                        val opponent = battleship.players.first { it.user.idLong != currentTurn.user.idLong }
+                        opponent.ownBoard[row][column] = Battleship.RED_SQUARE
+                        currentTurn.opponentBoard[row][column] = Battleship.RED_SQUARE
 
-                        if (opponent.ownBoard[row][column] == Battleship.WHITE_SQUARE) {
-                            opponent.ownBoard[row][column] = Battleship.YELLOW_CIRCLE
-                            currentTurn.opponentBoard[row][column] = Battleship.YELLOW_CIRCLE
+                        if (!battleship.isOver) {
+                            val hitOrDestroyed =
+                                opponent.ownShips.firstOrNull { row to column in it.coords }?.let { ship ->
+                                    ship.coords.map { (r, c) -> opponent.ownBoard[r][c] }
+                                }?.takeUnless { it.none { c -> c == Battleship.BLUE_SQUARE } }
+                                    ?.let { "hit" }
+                                    ?: "destroyed"
 
                             turnMessage.replyEmbeds(
                                 defaultEmbed(
-                                    "You have missed! It is ${opponent.user.asTag}'s turn!",
-                                    EmbedType.WARNING
+                                    "You have $hitOrDestroyed your opponent's ship! It is your turn once again!",
+                                    EmbedType.SUCCESS,
                                 ),
                                 currentTurn.getPrintableOwnBoard(),
                                 currentTurn.getPrintableOpponentBoard(),
@@ -272,92 +297,58 @@ class BattleshipCommand : SlashOnlyCommand {
 
                             opponent.dm.sendMessageEmbeds(
                                 defaultEmbed(
-                                    "${currentTurn.user.asTag} has missed! It is your turn!",
-                                    EmbedType.SUCCESS,
+                                    "${currentTurn.user.asTag} has $hitOrDestroyed your ship! It is their turn once again!",
+                                    EmbedType.FAILURE,
                                 ),
                                 opponent.getPrintableOwnBoard(),
                                 opponent.getPrintableOpponentBoard(),
                             ).await()
 
-                            battleship.reverseTurn()
-
                             awaitTurn(battleship, guildMessage, guildChannel, processId)
                         } else {
-                            opponent.ownBoard[row][column] = Battleship.RED_SQUARE
-                            currentTurn.opponentBoard[row][column] = Battleship.RED_SQUARE
+                            val guildEmbed = buildEmbed {
+                                description = "${currentTurn.user.asMention} wins!"
+                                color = Immutable.SUCCESS
 
-                            if (!battleship.isOver) {
-                                val hitOrDestroyed =
-                                    opponent.ownShips.firstOrNull { row to column in it.coords }?.let { ship ->
-                                        ship.coords.map { (r, c) -> opponent.ownBoard[r][c] }
-                                    }?.takeUnless { it.none { c -> c == Battleship.BLUE_SQUARE } }
-                                        ?.let { "hit" }
-                                        ?: "destroyed"
+                                author {
+                                    name = "Congratulations!"
+                                    iconUrl = currentTurn.user.effectiveAvatarUrl
+                                }
+                            }
 
-                                turnMessage.replyEmbeds(
-                                    defaultEmbed(
-                                        "You have $hitOrDestroyed your opponent's ship! It is your turn once again!",
-                                        EmbedType.SUCCESS,
-                                    ),
-                                    currentTurn.getPrintableOwnBoard(),
-                                    currentTurn.getPrintableOpponentBoard(),
-                                ).await()
+                            guildMessage
+                                .editMessageComponents()
+                                .setEmbeds(guildEmbed)
+                                .queue(null) {}
 
-                                opponent.dm.sendMessageEmbeds(
-                                    defaultEmbed(
-                                        "${currentTurn.user.asTag} has $hitOrDestroyed your ship! It is their turn once again!",
-                                        EmbedType.FAILURE,
-                                    ),
-                                    opponent.getPrintableOwnBoard(),
-                                    opponent.getPrintableOpponentBoard(),
-                                ).await()
-
-                                awaitTurn(battleship, guildMessage, guildChannel, processId)
-                            } else {
-                                val guildEmbed = buildEmbed {
-                                    description = "${currentTurn.user.asMention} wins!"
+                            turnMessage.replyEmbeds(
+                                buildEmbed {
+                                    description = "You have destroyed all the opponent's ships!"
                                     color = Immutable.SUCCESS
 
                                     author {
                                         name = "Congratulations!"
                                         iconUrl = currentTurn.user.effectiveAvatarUrl
                                     }
-                                }
+                                },
+                                currentTurn.getPrintableOwnBoard(),
+                                currentTurn.getPrintableOpponentBoard(),
+                            ).await()
 
-                                guildMessage
-                                    .editMessageComponents()
-                                    .setEmbeds(guildEmbed)
-                                    .queue(null) {}
+                            opponent.dm.sendMessageEmbeds(
+                                buildEmbed {
+                                    description =
+                                        "${currentTurn.user.asTag} wins! All of your ships have been destroyed!"
+                                    color = Immutable.FAILURE
 
-                                turnMessage.replyEmbeds(
-                                    buildEmbed {
-                                        description = "You have destroyed all the opponent's ships!"
-                                        color = Immutable.SUCCESS
-
-                                        author {
-                                            name = "Congratulations!"
-                                            iconUrl = currentTurn.user.effectiveAvatarUrl
-                                        }
-                                    },
-                                    currentTurn.getPrintableOwnBoard(),
-                                    currentTurn.getPrintableOpponentBoard(),
-                                ).await()
-
-                                opponent.dm.sendMessageEmbeds(
-                                    buildEmbed {
-                                        description =
-                                            "${currentTurn.user.asTag} wins! All of your ships have been destroyed!"
-                                        color = Immutable.FAILURE
-
-                                        author {
-                                            name = "Game Over!"
-                                            iconUrl = currentTurn.user.effectiveAvatarUrl
-                                        }
-                                    },
-                                    opponent.getPrintableOwnBoard(),
-                                    currentTurn.getPrintableOwnBoard(isOwn = false),
-                                ).await()
-                            }
+                                    author {
+                                        name = "Game Over!"
+                                        iconUrl = currentTurn.user.effectiveAvatarUrl
+                                    }
+                                },
+                                opponent.getPrintableOwnBoard(),
+                                currentTurn.getPrintableOwnBoard(isOwn = false),
+                            ).await()
                         }
                     }
                 }

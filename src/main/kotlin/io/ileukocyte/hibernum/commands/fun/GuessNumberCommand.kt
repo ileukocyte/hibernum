@@ -18,6 +18,7 @@ import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.buttons.Button
@@ -27,17 +28,21 @@ class GuessNumberCommand : TextCommand {
     override val description = "Launches a game where the user is supposed to guess some number within the specified range"
     override val aliases = setOf("guess-number")
     override val options = setOf(
-        OptionData(OptionType.INTEGER, "min", "The beginning of the range (minimum: 1)", true)
-            .setMinValue(1)
+        OptionData(OptionType.INTEGER, "min", "The beginning of the range (minimum: 0)", true)
+            .setMinValue(0)
             .setMaxValue(499_995),
         OptionData(OptionType.INTEGER, "max", "The maximal value of the range (maximum: 500,000)", true)
-            .setMinValue(6)
+            .setMinValue(5)
             .setMaxValue(500_000),
     )
-    override val usages = setOf(setOf("min".toClassicTextUsage(), "max".toClassicTextUsage()))
+    override val usages = setOf(
+        setOf("min".toClassicTextUsage(), "max".toClassicTextUsage()),
+    )
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
-        val (min, max) = args?.split(" ")?.filter { it.toIntOrNull() !== null }?.take(2)
+        val (min, max) = args?.split("\\s+".toRegex())
+            ?.filter { it.toIntOrNull() !== null }
+            ?.take(2)
             ?.takeUnless { it.size != 2 }
             ?.map { it.toInt() }
             ?: throw NoArgumentsException
@@ -46,12 +51,13 @@ class GuessNumberCommand : TextCommand {
             throw CommandException("The minimal value cannot be greater than the maximum value!")
         }
 
-        if (min < 1 || max > 500_000) {
-            throw CommandException("The specified values are out of the possible range of 1 through 500,000!")
+        if (min !in 0..500_000) {
+            throw CommandException("The specified values are out of the possible range of 0 through 500,000!")
         }
 
         if ((max - min) < 5) {
-            throw CommandException("The difference between the maximal value and the minimal one must equal to or be greater than 5!")
+            throw CommandException("The difference between the maximal value and the minimal one " +
+                    "must equal to or be greater than 5!")
         }
 
         val range = min..max
@@ -89,7 +95,8 @@ class GuessNumberCommand : TextCommand {
         }
 
         if ((max - min) < 5) {
-            throw CommandException("The difference between the maximal value and the minimal one must equal to or be greater than 5!")
+            throw CommandException("The difference between the maximal value and the minimal one " +
+                    "must equal to or be greater than 5!")
         }
 
         val range = min..max
@@ -124,22 +131,34 @@ class GuessNumberCommand : TextCommand {
                 "exit" -> {
                     event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda)
 
-                    event.replySuccess("The game session has been finished!")
-                        .setEphemeral(true)
-                        .flatMap { event.message.delete() }
-                        .queue()
+                    event.editComponents().setSuccessEmbed("The game session has been finished!") {
+                        text = "This message will self-delete in 5 seconds"
+                    }.queue({
+                        it.deleteOriginal().queueAfter(5, TimeUnit.SECONDS, null) {}
+                    }) { _ ->
+                        event.channel.sendSuccess("The game session has been finished!") {
+                            text = "This message will self-delete in 5 seconds"
+                        }.queue({
+                            it.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
+                        }) {}
+                    }
                 }
                 "stay" -> {
-                    event.replySuccess("Let's go on!")
-                        .setEphemeral(true)
-                        .flatMap { event.message.delete() }
-                        .await()
+                    val message = try {
+                        event.editComponents()
+                            .setSuccessEmbed("The game session has been resumed!")
+                            .await()
+                            .retrieveOriginal()
+                            .await()
+                    } catch (_: ErrorResponseException) {
+                        event.channel.sendSuccess("The game session has been resumed!").await()
+                    }
 
                     awaitMessage(
                         id[1].toInt(),
                         id[2].toInt(),
                         event.channel,
-                        null,
+                        message,
                         event.user,
                         id[3].toInt(),
                     )
@@ -152,15 +171,16 @@ class GuessNumberCommand : TextCommand {
         _attempt: Int = 1,
         number: Int,
         channel: MessageChannel,
-        message: Message?,
+        message: Message,
         user: User,
         processId: Int,
     ) {
         var attempt = _attempt
 
         val received = try {
-            channel.awaitMessage(user, this, message, processId = processId)
-                ?: return
+            channel.awaitMessage(user, this, message, processId = processId) {
+                it.message.contentRaw.isInt || it.message.contentRaw.lowercase() == "exit"
+            } ?: return
         } catch (_: TimeoutCancellationException) {
             channel.jda.getProcessByEntities(user, channel)?.kill(channel.jda)
 
@@ -190,45 +210,35 @@ class GuessNumberCommand : TextCommand {
                 }) { it.user.idLong == user.idLong && it.message == m } // used to block other commands
             }
             else -> {
-                val asInt = content.toIntOrNull()
+                val asInt = content.toInt()
 
-                if (asInt !== null) {
-                    val (desc, embedType) = when {
-                        asInt > number -> {
-                            attempt++
+                val (desc, embedType) = when {
+                    asInt > number -> {
+                        attempt++
 
-                            "The answer is greater than the expected number!" to EmbedType.FAILURE
-                        }
-                        asInt < number -> {
-                            attempt++
-
-                            "The answer is lesser than the expected number!" to EmbedType.FAILURE
-                        }
-                        else ->
-                            "It took you $attempt ${"attempt".singularOrPlural(attempt)} to guess the number!" to EmbedType.SUCCESS
+                        "The answer is greater than the expected number!" to EmbedType.FAILURE
                     }
+                    asInt < number -> {
+                        attempt++
 
-                    if (embedType == EmbedType.SUCCESS) {
-                        received.replySuccess(desc).queue()
-                    } else {
-                        val m = received.replyEmbed {
-                            color = embedType.color
-                            description = desc
-
-                            author { name = "Attempt #$attempt" }
-                            footer { text = "Type in \"exit\" to finish the session!" }
-                        }.await()
-
-                        awaitMessage(attempt, number, channel, m, user, processId)
+                        "The answer is lesser than the expected number!" to EmbedType.FAILURE
                     }
+                    else ->
+                        "It took you $attempt ${"attempt".singularOrPlural(attempt)} to guess the number!" to EmbedType.SUCCESS
+                }
+
+                if (embedType == EmbedType.SUCCESS) {
+                    received.replySuccess(desc).queue()
                 } else {
-                    val incorrect = received.replyFailure("You have provided an invalid argument!") {
-                        text = "This message will self-delete in 5 seconds"
+                    val m = received.replyEmbed {
+                        color = embedType.color
+                        description = desc
+
+                        author { name = "Attempt #$attempt" }
+                        footer { text = "Type in \"exit\" to finish the session!" }
                     }.await()
 
-                    incorrect.delete().queueAfter(5, TimeUnit.SECONDS, {}) {}
-
-                    awaitMessage(attempt, number, channel, message, user, processId)
+                    awaitMessage(attempt, number, channel, m, user, processId)
                 }
             }
         }
