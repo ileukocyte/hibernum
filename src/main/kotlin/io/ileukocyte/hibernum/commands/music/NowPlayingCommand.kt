@@ -11,18 +11,23 @@ import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.bold
 import io.ileukocyte.hibernum.extensions.maskedLink
 import io.ileukocyte.hibernum.extensions.replyConfirmation
+import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asDuration
 
 import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.entities.User
+import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.InteractionType
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.components.ActionRow
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 
 import org.jetbrains.kotlin.utils.addToStdlib.applyIf
+import org.jetbrains.kotlin.utils.addToStdlib.cast
 
 class NowPlayingCommand : TextCommand {
     override val name = "nowplaying"
@@ -45,17 +50,18 @@ class NowPlayingCommand : TextCommand {
                 "Pause".applyIf(audioPlayer.player.isPaused) { "Play" },
             ),
             Button.secondary("$name-${event.author.idLong}-stop", "Stop"),
+            audioPlayer.scheduler.loopMode.getButton(event.author),
         )
 
         if (audioPlayer.scheduler.queue.isNotEmpty()) {
             buttons += Button.secondary("$name-${event.author.idLong}-skip", "Skip")
         }
 
-        buttons += Button.danger("$name-${event.author.idLong}-exit", "Close")
-
         event.channel.sendMessageEmbeds(playingEmbed(event.jda, audioPlayer, track))
-            .setActionRow(buttons)
-            .queue()
+            .setComponents(
+                ActionRow.of(buttons),
+                ActionRow.of(Button.danger("$name-${event.author.idLong}-exit", "Close")),
+            ).queue()
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
@@ -72,16 +78,20 @@ class NowPlayingCommand : TextCommand {
                 "Pause".applyIf(audioPlayer.player.isPaused) { "Play" },
             ),
             Button.secondary("$name-${event.user.idLong}-stop", "Stop"),
+            audioPlayer.scheduler.loopMode.getButton(event.user),
         )
 
         if (audioPlayer.scheduler.queue.isNotEmpty()) {
             buttons += Button.secondary("$name-${event.user.idLong}-skip", "Skip")
         }
 
-        buttons += Button.danger("$name-${event.user.idLong}-exit", "Close")
+        val actionRows = setOf(
+            ActionRow.of(buttons),
+            ActionRow.of(Button.danger("$name-${event.user.idLong}-exit", "Close")),
+        )
 
         event.replyEmbeds(playingEmbed(event.jda, audioPlayer, track))
-            .applyIf(gui) { addActionRow(buttons) }
+            .applyIf(gui) { setComponents(actionRows) }
             .queue()
     }
 
@@ -105,16 +115,20 @@ class NowPlayingCommand : TextCommand {
                         "Pause".applyIf(audioPlayer.player.isPaused) { "Play" },
                     ),
                     Button.secondary("$name-${event.user.idLong}-stop", "Stop"),
+                    audioPlayer.scheduler.loopMode.getButton(event.user),
                 )
 
                 if (audioPlayer.scheduler.queue.isNotEmpty()) {
                     buttons += Button.secondary("$name-${event.user.idLong}-skip", "Skip")
                 }
 
-                buttons += Button.danger("$name-${event.user.idLong}-exit", "Close")
+                val actionRows = setOf(
+                    ActionRow.of(buttons),
+                    ActionRow.of(Button.danger("$name-${event.user.idLong}-exit", "Close")),
+                )
 
                 event.editMessageEmbeds(playingEmbed(event.jda, audioPlayer, audioPlayer.player.playingTrack))
-                    .setActionRow(buttons)
+                    .setComponents(actionRows)
                     .queue(null) {}
             }
 
@@ -131,13 +145,21 @@ class NowPlayingCommand : TextCommand {
                     updatePlayer()
                 }
                 "stop" -> {
+                    val stop = CommandHandler["stop"].cast<StopCommand>().name
+
                     val description = "Are you sure you want the bot to stop playing music and clear the queue?"
                     val buttons = setOf(
-                        Button.danger("stop-${event.user.idLong}-${event.messageIdLong}-stop", "Yes"),
-                        Button.secondary("stop-${event.user.idLong}-exit", "No"),
+                        Button.danger("$stop-${event.user.idLong}-${event.messageIdLong}-stop", "Yes"),
+                        Button.secondary("$stop-${event.user.idLong}-exit", "No"),
                     )
 
                     event.replyConfirmation(description).addActionRow(buttons).queue()
+                }
+                "loop" -> {
+                    audioPlayer.scheduler.loopMode = audioPlayer.scheduler.loopMode
+                        .getNext(audioPlayer.scheduler.queue.isEmpty())
+
+                    updatePlayer()
                 }
                 "skip" -> {
                     if (audioPlayer.scheduler.queue.isNotEmpty()) {
@@ -217,5 +239,23 @@ class NowPlayingCommand : TextCommand {
             name = "HiberPlayer"
             iconUrl = jda.selfUser.effectiveAvatarUrl
         }
+    }
+
+    private fun LoopMode.getButton(user: User) = "${this@NowPlayingCommand.name}-${user.idLong}-loop".let {
+        when (this) {
+            LoopMode.SONG -> Button.secondary(it, Emoji.fromUnicode("\uD83D\uDD02"))
+            LoopMode.QUEUE -> Button.secondary(it, Emoji.fromUnicode("\uD83D\uDD01"))
+            LoopMode.DISABLED -> Button.secondary(it, "Repeat")
+        }
+    }
+
+    private fun LoopMode.getNext(isQueueEmpty: Boolean) = when (this) {
+        LoopMode.SONG -> if (isQueueEmpty) {
+            LoopMode.DISABLED
+        } else {
+            LoopMode.QUEUE
+        }
+        LoopMode.QUEUE -> LoopMode.DISABLED
+        LoopMode.DISABLED -> LoopMode.SONG
     }
 }
