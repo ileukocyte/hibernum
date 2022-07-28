@@ -5,14 +5,28 @@ import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.limitTo
+import io.ileukocyte.hibernum.extensions.remove
 import io.ileukocyte.hibernum.extensions.sendEmbed
+import io.ileukocyte.hibernum.utils.awaitEvent
+import io.ileukocyte.hibernum.utils.waiterProcess
 
+import java.util.concurrent.TimeUnit
+
+import kotlinx.coroutines.TimeoutCancellationException
+
+import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.components.Modal
+import net.dv8tion.jda.api.interactions.components.text.TextInput
+import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 import net.dv8tion.jda.api.utils.FileUpload
+
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
 
 class SayCommand : TextCommand {
     override val name = "say"
@@ -24,7 +38,17 @@ class SayCommand : TextCommand {
     )
     override val options = setOf(
         OptionData(OptionType.STRING, "text", "The text to send on behalf of the bot"),
-        OptionData(OptionType.ATTACHMENT, "attachment", "The attachment to send on behalf of the bot"),
+        OptionData(OptionType.ATTACHMENT, "image", "The image to send on behalf of the bot"),
+        OptionData(
+            OptionType.BOOLEAN,
+            "modal",
+            "Whether to get text input from a modal window which allows multi-line input, but disallows mentions",
+        ),
+        OptionData(
+            OptionType.STRING,
+            "non-embed",
+            "The text to include outside of the embed message (e.g. mentions)",
+        ),
     )
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
@@ -59,34 +83,97 @@ class SayCommand : TextCommand {
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val text = event.getOption("text")?.asString
-        val attachment = event.getOption("attachment")
+        val image = event.getOption("image")
             ?.asAttachment
             ?.takeIf { it.isImage }
             ?.let { it.fileName to it.proxy.download().await() }
 
-        if (text === null && attachment === null) {
-            throw NoArgumentsException
-        }
-
-        event.deferReply().queue { it.deleteOriginal().queue(null) {} }
-
-        val restAction = event.channel.sendEmbed {
-            color = Immutable.SUCCESS
-            description = text?.limitTo(MessageEmbed.DESCRIPTION_MAX_LENGTH)
-            image = attachment?.first?.let { "attachment://$it" }
-
-            author {
-                name = event.user.asTag
-                iconUrl = event.user.effectiveAvatarUrl
+        val nonEmbed = event.getOption("non-embed")?.asString?.let {
+            event.guild?.let { guild ->
+                if (guild.publicRole.asMention in it
+                        && event.member?.hasPermission(Permission.MESSAGE_MENTION_EVERYONE) == false) {
+                    it.remove(guild.publicRole.asMention).remove("@here")
+                } else {
+                    it
+                }
             }
-        }
+        }?.trim()
 
-        attachment?.second?.let {
-            val file = FileUpload.fromData(it, attachment.first)
+        val isModal = event.getOption("modal")?.asBoolean ?: false
 
-            restAction.setFiles(file).queue(null) {
-                file.close()
+        if (!isModal) {
+            if (text === null && image === null) {
+                throw NoArgumentsException
             }
-        } ?: restAction.queue()
+
+            event.deferReply().queue { it.deleteOriginal().queue(null) {} }
+
+            val restAction = event.channel.sendEmbed {
+                color = Immutable.SUCCESS
+                description = text?.limitTo(MessageEmbed.DESCRIPTION_MAX_LENGTH)
+                this.image = image?.first?.let { "attachment://$it" }
+
+                author {
+                    name = event.user.asTag
+                    iconUrl = event.user.effectiveAvatarUrl
+                }
+            }.applyIf(nonEmbed !== null) {
+                addContent(nonEmbed ?: return)
+            }
+
+            image?.second?.let {
+                val file = FileUpload.fromData(it, image.first)
+
+                restAction.setFiles(file).queue(null) {
+                    file.close()
+                }
+            } ?: restAction.queue()
+        } else {
+            val input = TextInput
+                .create("$name-input", "Enter Your Text:", TextInputStyle.PARAGRAPH)
+                .setValue(text)
+                .build()
+            val modal = Modal
+                .create("$name-modal", "Embed Announcement")
+                .addActionRow(input)
+                .build()
+
+            event.replyModal(modal).await()
+
+            try {
+                val modalEvent = event.jda.awaitEvent<ModalInteractionEvent>(15, TimeUnit.MINUTES, waiterProcess {
+                    users += event.user.idLong
+                    channel = event.channel.idLong
+                    command = this@SayCommand
+                }) {
+                    it.modalId == "$name-modal" && it.user == event.user && it.channel == event.channel
+                } ?: return
+
+                val content = modalEvent.getValue("$name-input")?.asString ?: return
+
+                modalEvent.deferReply().queue { it.deleteOriginal().queue(null) {} }
+
+                val restAction = event.channel.sendEmbed {
+                    color = Immutable.SUCCESS
+                    description = content.limitTo(MessageEmbed.DESCRIPTION_MAX_LENGTH)
+                    this.image = image?.first?.let { "attachment://$it" }
+
+                    author {
+                        name = event.user.asTag
+                        iconUrl = event.user.effectiveAvatarUrl
+                    }
+                }.applyIf(nonEmbed !== null) {
+                    addContent(nonEmbed ?: return)
+                }
+
+                image?.second?.let {
+                    val file = FileUpload.fromData(it, image.first)
+
+                    restAction.setFiles(file).queue(null) {
+                        file.close()
+                    }
+                } ?: restAction.queue()
+            } catch (_: TimeoutCancellationException) {}
+        }
     }
 }
