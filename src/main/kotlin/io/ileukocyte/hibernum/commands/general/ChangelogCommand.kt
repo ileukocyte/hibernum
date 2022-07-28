@@ -10,6 +10,8 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.serialization.kotlinx.json.json
 
+import java.time.OffsetDateTime
+
 import kotlinx.serialization.json.*
 
 import net.dv8tion.jda.api.entities.MessageEmbed
@@ -41,6 +43,7 @@ class ChangelogCommand : TextCommand {
         val releaseUrl = release["html_url"]?.jsonPrimitive?.content ?: return
         val version = release["name"]?.jsonPrimitive?.content ?: return
         val body = release["body"]?.jsonPrimitive?.content ?: return
+        val releaseDate = release["published_at"]?.jsonPrimitive?.content
 
         val changelog = "(#{2}\\s)((.*)([\\s\\S]+?)((?=#{2})))".toRegex()
             .findAll("$body##")
@@ -71,6 +74,12 @@ class ChangelogCommand : TextCommand {
                 url = releaseUrl
                 iconUrl = event.jda.selfUser.effectiveAvatarUrl
             }
+
+            releaseDate?.let {
+                timestamp = OffsetDateTime.parse(it)
+
+                footer { text = "Release Date" }
+            }
         }.setActionRow(Button.link(Immutable.GITHUB_REPOSITORY, "GitHub Repository")).queue()
     }
 
@@ -87,6 +96,7 @@ class ChangelogCommand : TextCommand {
         val releaseUrl = release["html_url"]?.jsonPrimitive?.content ?: return
         val version = release["name"]?.jsonPrimitive?.content ?: return
         val body = release["body"]?.jsonPrimitive?.content ?: return
+        val releaseDate = release["published_at"]?.jsonPrimitive?.content
 
         val changelog = "(#{2}\\s)((.*)([\\s\\S]+?)((?=#{2})))".toRegex()
             .findAll("$body##")
@@ -117,6 +127,12 @@ class ChangelogCommand : TextCommand {
                 name = version
                 url = releaseUrl
                 iconUrl = event.jda.selfUser.effectiveAvatarUrl
+            }
+
+            releaseDate?.let {
+                timestamp = OffsetDateTime.parse(it)
+
+                footer { text = "Release Date" }
             }
         }
 
