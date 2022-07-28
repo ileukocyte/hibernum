@@ -129,7 +129,12 @@ object CommandHandler : MutableSet<GenericCommand> {
      * @author Alexander Oksanich
      */
     internal operator fun invoke(event: MessageReceivedEvent) {
-        if (!event.author.isBot && !event.author.isSystem && event.message.type == MessageType.DEFAULT && event.isFromGuild) {
+        val allowedTypes = setOf(MessageType.DEFAULT, MessageType.INLINE_REPLY)
+
+        if (!event.author.isBot
+                && !event.author.isSystem
+                && event.message.type in allowedTypes
+                && event.isFromGuild) {
             if (event.message.contentRaw.trim().startsWith(Immutable.DEFAULT_PREFIX)) {
                 val args = event.message.contentRaw.split(Regex("\\s+"), 2)
 

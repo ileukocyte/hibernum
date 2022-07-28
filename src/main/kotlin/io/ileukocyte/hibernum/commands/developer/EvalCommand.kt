@@ -39,8 +39,11 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
             "Whether the input should be backed up to the designated text channel (default is false)",
         ),
     )
-    override val aliases = setOf("exec", "execute", "kotlin")
-    override val usages = setOf(setOf("Kotlin code".toClassicTextUsage()))
+    override val aliases = setOf("exec", "execute", "kotlin", "kt")
+    override val usages = setOf(
+        setOf("Kotlin code".toClassicTextUsage()),
+        setOf("reply to a message with Kotlin code".toClassicTextUsage()),
+    )
 
     private val packages get() = buildString {
         for ((key, value) in IMPORTS) {
@@ -66,7 +69,20 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
                 .removePrefix("kts\n")
                 .removePrefix("kt\n")
                 .removePrefix("kotlin\n")
-        } ?: throw NoArgumentsException
+        } ?: event.message.messageReference?.resolve()?.await()?.contentRaw?.let {
+            var content = it
+
+            for (prefix in aliases.plus(name).map { n -> "${Immutable.DEFAULT_PREFIX}$n" }) {
+                content = content.removePrefix(prefix)
+            }
+
+            content.trim().applyIf(it.startsWith("```")) {
+                removeSurrounding("```")
+                    .removePrefix("kts\n")
+                    .removePrefix("kt\n")
+                    .removePrefix("kotlin\n")
+            }
+        }?.takeUnless { it.isEmpty() } ?: throw NoArgumentsException
 
         try {
             val engine = Immutable.EVAL_KOTLIN_ENGINE
@@ -218,16 +234,20 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
     }
 
     override suspend fun invoke(event: MessageContextInteractionEvent) {
-        val code = event.target.contentRaw.takeUnless { it.isEmpty() }
-            ?.removePrefix("${Immutable.DEFAULT_PREFIX}$name ")
-            ?.let { code ->
-                code.applyIf(code.startsWith("```")) {
-                    removeSurrounding("```")
-                        .removePrefix("kts\n")
-                        .removePrefix("kt\n")
-                        .removePrefix("kotlin\n")
-                }
-            } ?: throw CommandException("No Kotlin code has been provided in the message!")
+        val code = event.target.contentRaw.takeUnless { it.isEmpty() }?.let { code ->
+            var content = code
+
+            for (prefix in aliases.plus(name).map { n -> "${Immutable.DEFAULT_PREFIX}$n" }) {
+                content = content.removePrefix(prefix)
+            }
+
+            content.trim().applyIf(content.startsWith("```")) {
+                removeSurrounding("```")
+                    .removePrefix("kts\n")
+                    .removePrefix("kt\n")
+                    .removePrefix("kotlin\n")
+            }
+        } ?: throw CommandException("No Kotlin code has been provided in the message!")
 
         val deferred = event.deferReply().await()
 

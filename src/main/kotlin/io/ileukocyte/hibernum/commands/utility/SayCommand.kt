@@ -1,6 +1,7 @@
 package io.ileukocyte.hibernum.commands.utility
 
 import io.ileukocyte.hibernum.Immutable
+import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.await
@@ -19,6 +20,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.Modal
@@ -56,12 +58,17 @@ class SayCommand : TextCommand {
             throw NoArgumentsException
         }
 
-        val (imageName, imageStream) = event.message.attachments.firstOrNull { it.isImage }
-            .let { it?.fileName to it?.proxy?.download()?.await() }
+        val reference = event.message.messageReference?.resolve()?.await()
 
-        event.message.delete().queue()
+        val (imageName, imageStream) = event.message.attachments.firstOrNull {
+            it.isImage && it.size <= event.guild.maxFileSize
+        }.let { it?.fileName to it?.proxy?.download()?.await() }
 
-        val restAction = event.channel.sendEmbed {
+        try {
+            event.message.delete().await()
+        } catch (_: ErrorResponseException) {}
+
+        val embed = buildEmbed {
             color = Immutable.SUCCESS
             description = args?.limitTo(MessageEmbed.DESCRIPTION_MAX_LENGTH)
             image = imageStream?.let { "attachment://$imageName" }
@@ -71,6 +78,9 @@ class SayCommand : TextCommand {
                 iconUrl = event.author.effectiveAvatarUrl
             }
         }
+
+        val restAction = reference?.replyEmbeds(embed)
+            ?: event.channel.sendMessageEmbeds(embed)
 
         imageStream?.let {
             val file = FileUpload.fromData(it, imageName.orEmpty())
@@ -82,20 +92,20 @@ class SayCommand : TextCommand {
     }
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
+        val guild = event.guild ?: return
+
         val text = event.getOption("text")?.asString
         val image = event.getOption("image")
             ?.asAttachment
-            ?.takeIf { it.isImage }
+            ?.takeIf { it.isImage && it.size <= guild.maxFileSize }
             ?.let { it.fileName to it.proxy.download().await() }
 
         val nonEmbed = event.getOption("non-embed")?.asString?.let {
-            event.guild?.let { guild ->
-                if (guild.publicRole.asMention in it
-                        && event.member?.hasPermission(Permission.MESSAGE_MENTION_EVERYONE) == false) {
-                    it.remove(guild.publicRole.asMention).remove("@here")
-                } else {
-                    it
-                }
+            if (guild.publicRole.asMention in it
+                && event.member?.hasPermission(Permission.MESSAGE_MENTION_EVERYONE) == false) {
+                it.remove(guild.publicRole.asMention).remove("@here")
+            } else {
+                it
             }
         }?.trim()
 
@@ -106,7 +116,11 @@ class SayCommand : TextCommand {
                 throw NoArgumentsException
             }
 
-            event.deferReply().queue { it.deleteOriginal().queue(null) {} }
+            try {
+                event.deferReply().await()
+                    .deleteOriginal()
+                    .await()
+            } catch (_: ErrorResponseException) {}
 
             val restAction = event.channel.sendEmbed {
                 color = Immutable.SUCCESS
@@ -151,7 +165,11 @@ class SayCommand : TextCommand {
 
                 val content = modalEvent.getValue("$name-input")?.asString ?: return
 
-                modalEvent.deferReply().queue { it.deleteOriginal().queue(null) {} }
+                try {
+                    modalEvent.deferReply().await()
+                        .deleteOriginal()
+                        .await()
+                } catch (_: ErrorResponseException) {}
 
                 val restAction = event.channel.sendEmbed {
                     color = Immutable.SUCCESS

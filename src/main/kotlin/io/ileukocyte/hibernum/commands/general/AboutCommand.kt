@@ -42,10 +42,7 @@ class AboutCommand : TextCommand {
         val appInfo = event.jda.retrieveApplicationInfo().await()
         val buttons = setOf(
             Button.primary("$name-${event.author.idLong}-update", "Update"),
-            Button.link(
-                Immutable.INVITE_LINK_FORMAT.format(event.jda.selfUser.id, appInfo.permissionsRaw),
-                "Invite Link",
-            ),
+            Button.link(event.jda.getInviteUrl(appInfo.permissions), "Invite Link"),
             Button.link(Immutable.GITHUB_REPOSITORY, "GitHub Repository"),
         )
 
@@ -62,10 +59,7 @@ class AboutCommand : TextCommand {
         val appInfo = event.jda.retrieveApplicationInfo().await()
         val buttons = listOf(
             Button.primary("$name-${event.user.idLong}-update", "Update"),
-            Button.link(
-                Immutable.INVITE_LINK_FORMAT.format(event.jda.selfUser.id, appInfo.permissionsRaw),
-                "Invite Link",
-            ),
+            Button.link(event.jda.getInviteUrl(appInfo.permissions), "Invite Link"),
             Button.link(Immutable.GITHUB_REPOSITORY, "GitHub Repository"),
         ).applyIf(isEphemeral) { subList(1, size) }
 

@@ -39,10 +39,7 @@ class HelpCommand : TextCommand {
                 event.channel.sendMessageEmbeds(it.getHelp(event.jda)).queue()
             } ?: throw CommandException("The provided command name is invalid!")
         } else {
-            val inviteLink = Immutable.INVITE_LINK_FORMAT.format(
-                event.jda.selfUser.id,
-                event.jda.retrieveApplicationInfo().await().permissionsRaw,
-            )
+            val inviteLink = event.jda.getInviteUrl(event.jda.retrieveApplicationInfo().await().permissions)
 
             val buttons = setOf(
                 Button.link(inviteLink, "Invite Link"),
@@ -74,10 +71,7 @@ class HelpCommand : TextCommand {
                 event.replyEmbeds(it.getHelp(event.jda)).setEphemeral(true).queue()
             } ?: throw CommandException("The provided command name is invalid!")
         } else {
-            val inviteLink = Immutable.INVITE_LINK_FORMAT.format(
-                event.jda.selfUser.id,
-                event.jda.retrieveApplicationInfo().await().permissionsRaw,
-            )
+            val inviteLink = event.jda.getInviteUrl(event.jda.retrieveApplicationInfo().await().permissions)
 
             val buttons = setOf(
                 Button.link(inviteLink, "Invite Link"),

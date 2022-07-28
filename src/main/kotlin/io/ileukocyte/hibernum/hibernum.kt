@@ -44,7 +44,7 @@ suspend fun main() = coroutineScope {
             name = "loading\u2026"
             type = ActivityType.WATCHING
         }
-    }
+    }.apply { setRequiredScopes("applications.commands") }
 
     LOGGER.info("JDA has been successfully initialized!")
 
