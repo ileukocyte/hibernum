@@ -59,7 +59,7 @@ class PlayCommand : TextCommand {
 
                             track.userData = TrackUserData(
                                 event.author,
-                                event.channel,
+                                event.guildChannel,
                                 thumbnail,
                                 announceQueueing = musicManager.player.playingTrack !== null,
                                 isFirstToPlay = musicManager.player.playingTrack === null,
@@ -83,7 +83,7 @@ class PlayCommand : TextCommand {
 
                                 track.userData = TrackUserData(
                                     event.author,
-                                    event.channel,
+                                    event.guildChannel,
                                     thumbnail,
                                     isFirstToPlay = musicManager.player.playingTrack === null,
                                 )
@@ -131,7 +131,7 @@ class PlayCommand : TextCommand {
 
                         track.userData = TrackUserData(
                             event.user,
-                            event.channel,
+                            event.guildChannel,
                             thumbnail,
                             announceQueueing = musicManager.player.playingTrack !== null,
                             isFirstToPlay = musicManager.player.playingTrack === null,
@@ -165,7 +165,7 @@ class PlayCommand : TextCommand {
 
                             track.userData = TrackUserData(
                                 event.user,
-                                event.channel,
+                                event.guildChannel,
                                 thumbnail,
                                 isFirstToPlay = musicManager.player.playingTrack === null,
                             )

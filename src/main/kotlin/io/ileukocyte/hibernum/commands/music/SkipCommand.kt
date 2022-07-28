@@ -27,7 +27,7 @@ class SkipCommand : TextCommand {
                     interaction !== null && interaction.name != "skip"
                 }?.delete()?.queue(null) {}
 
-                audioPlayer.scheduler.nextTrack(newAnnouncementChannel = event.channel)
+                audioPlayer.scheduler.nextTrack(newAnnouncementChannel = event.guildChannel)
 
                 val description = "The playback has been stopped!"
                     .takeIf { audioPlayer.player.playingTrack === null }
@@ -57,7 +57,7 @@ class SkipCommand : TextCommand {
                     interaction !== null && interaction.name != "skip"
                 }?.delete()?.queue(null) {}
 
-                audioPlayer.scheduler.nextTrack(deferred, event.channel)
+                audioPlayer.scheduler.nextTrack(deferred, event.guildChannel)
 
                 val description = "The playback has been stopped!"
                     .takeIf { audioPlayer.player.playingTrack === null }

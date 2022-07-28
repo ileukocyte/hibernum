@@ -13,8 +13,8 @@ import kotlinx.coroutines.asCoroutineDispatcher
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.GuildMessageChannel
 import net.dv8tion.jda.api.entities.Message
-import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.InteractionType
@@ -38,7 +38,7 @@ val Guild.audioPlayer: GuildMusicManager?
     get() {
         val manager = MUSIC_MANAGERS[idLong]
 
-        audioManager.sendingHandler = manager?.sendHandler
+        audioManager.sendingHandler = manager?.sendingHandler
 
         return manager
     }
@@ -85,7 +85,7 @@ val AudioTrack.customUserData: TrackUserData
 
 data class TrackUserData(
     val user: User,
-    val channel: MessageChannel,
+    val channel: GuildMessageChannel,
     val thumbnail: String? = null,
     val announcement: Message? = null,
     val announceQueueing: Boolean = false,

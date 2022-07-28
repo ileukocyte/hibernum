@@ -149,7 +149,7 @@ class NowPlayingCommand : TextCommand {
                             interaction !== null && interaction.name != "skip"
                         }?.delete()?.queue(null) {}
 
-                        audioPlayer.scheduler.nextTrack(newAnnouncementChannel = event.channel)
+                        audioPlayer.scheduler.nextTrack(newAnnouncementChannel = event.guildChannel)
 
                         if (audioPlayer.player.playingTrack === null) {
                             event.editComponents().queue(null) {}

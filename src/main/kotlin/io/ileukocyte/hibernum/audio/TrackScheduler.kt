@@ -10,9 +10,14 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.extensions.*
 
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.TimeUnit
 
+import kotlin.time.Duration.Companion.minutes
+
+import kotlinx.coroutines.*
+
+import net.dv8tion.jda.api.entities.GuildMessageChannel
 import net.dv8tion.jda.api.entities.Message
-import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.InteractionType
 
@@ -44,7 +49,7 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
 
     fun nextTrack(
         ifFromSlashCommand: InteractionHook? = null,
-        newAnnouncementChannel: MessageChannel? = null,
+        newAnnouncementChannel: GuildMessageChannel? = null,
     ) {
         if (queue.isNotEmpty()) {
             val next = queue.poll()
@@ -94,11 +99,11 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
     }
 
     override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
+        val data = track.customUserData
+
         if (endReason.mayStartNext) {
             when (loopMode) {
                 LoopMode.SONG -> {
-                    val data = track.customUserData
-
                     data.announcement?.takeIf {
                         it.interaction?.takeIf { i -> i.type == InteractionType.COMMAND } === null
                     }?.delete()?.queue(null) {}
@@ -108,22 +113,52 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
                 LoopMode.QUEUE -> {
                     queue.offer(track.makeClone().apply { userData = track.userData })
 
-                    val userData = track.customUserData
-
-                    userData.announcement?.takeIf {
+                    data.announcement?.takeIf {
                         it.interaction?.takeIf { i -> i.type == InteractionType.COMMAND } === null
                     }?.delete()?.queue(null) {}
 
                     nextTrack()
                 }
                 else -> {
-                    val userData = track.customUserData
-
-                    userData.announcement?.takeIf {
+                    data.announcement?.takeIf {
                         it.interaction?.takeIf { i -> i.type == InteractionType.COMMAND } === null
                     }?.delete()?.queue(null) {}
 
                     nextTrack()
+                }
+            }
+        }
+
+        if (data.channel.guild.selfMember.voiceState?.inAudioChannel() == true) {
+            if (player.playingTrack === null) {
+                CoroutineScope(MusicContext).launch {
+                    val deferred = CompletableDeferred<Unit>()
+
+                    val listener = object : AudioEventAdapter() {
+                        override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {
+                            player.removeListener(this)
+
+                            deferred.complete(Unit)
+                        }
+                    }
+
+                    player.addListener(listener)
+
+                    try {
+                        withTimeout((10).minutes) { deferred.await() }
+                    } catch (_: TimeoutCancellationException) {
+                        player.removeListener(listener)
+
+                        data.channel.guild.audioPlayer?.stop()
+                        data.channel.guild.audioManager.closeAudioConnection()
+
+                        data.channel.sendWarning(
+                            "${data.channel.jda.selfUser.name} has been inactive " +
+                                    "for too long to stay in the voice channel! The bot has left!"
+                        ) { text = "This message will self-delete in a minute" }.queue({
+                            it.delete().queueAfter(1, TimeUnit.MINUTES, null) {}
+                        }) {}
+                    }
                 }
             }
         }

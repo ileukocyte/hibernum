@@ -35,8 +35,8 @@ class LeaveCommand : TextCommand {
 
                         event.channel.sendSuccess("Left the voice channel!") {
                             text = "This message will self-delete in 5 seconds"
-                        }.queue {
-                            it.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
+                        }.queue { r ->
+                            r.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
                         }
                     }
                 } else {
