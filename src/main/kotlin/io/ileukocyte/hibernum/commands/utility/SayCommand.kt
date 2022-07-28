@@ -39,7 +39,11 @@ class SayCommand : TextCommand {
         setOf("image file".toClassicTextUsage()),
     )
     override val options = setOf(
-        OptionData(OptionType.STRING, "text", "The text to send on behalf of the bot"),
+        OptionData(
+            OptionType.STRING,
+            "text",
+            "The text to send on behalf of the bot (multi-line input can only be sent from mobile Discord now)",
+        ),
         OptionData(OptionType.ATTACHMENT, "image", "The image to send on behalf of the bot"),
         OptionData(
             OptionType.BOOLEAN,
