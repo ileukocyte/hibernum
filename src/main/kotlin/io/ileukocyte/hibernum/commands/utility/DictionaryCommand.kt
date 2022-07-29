@@ -236,7 +236,7 @@ class DictionaryCommand : TextCommand {
         }
 
         if (total > 1) {
-            footer { text = "Definition #${current.inc()} \u2022 Total: $total" }
+            footer { text = "Definition #${current.inc()} \u2022 Total: ${total.toDecimalFormat("#,###")}" }
         }
     }
 

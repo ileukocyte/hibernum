@@ -10,10 +10,13 @@ import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.*
 
+import java.time.Instant
+
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 import net.dv8tion.jda.api.entities.MessageChannel
+import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.MessageEmbed.DESCRIPTION_MAX_LENGTH
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.entities.emoji.Emoji
@@ -39,7 +42,7 @@ class YouTubeCommand : TextCommand {
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         if ((args ?: throw NoArgumentsException) matches YOUTUBE_LINK_REGEX) {
             val video = suspendCoroutine<Video?> {
-                val list = YOUTUBE.videos().list(listOf("id", "snippet", "contentDetails"))
+                val list = YOUTUBE.videos().list(listOf("id", "snippet", "contentDetails", "statistics"))
 
                 list.id = listOf(YOUTUBE_LINK_REGEX.find(args)?.groups?.get(3)?.value)
                 list.key = Immutable.YOUTUBE_API_KEY
@@ -60,7 +63,7 @@ class YouTubeCommand : TextCommand {
 
         if (query matches YOUTUBE_LINK_REGEX) {
             val video = suspendCoroutine {
-                val list = YOUTUBE.videos().list(listOf("id", "snippet", "contentDetails"))
+                val list = YOUTUBE.videos().list(listOf("id", "snippet", "contentDetails", "statistics"))
 
                 list.id = listOf(YOUTUBE_LINK_REGEX.find(query)?.groups?.get(3)?.value)
                 list.key = Immutable.YOUTUBE_API_KEY
@@ -102,7 +105,7 @@ class YouTubeCommand : TextCommand {
 
             if (id.last() == "videos") {
                 val video = suspendCoroutine<Video?> {
-                    val list = YOUTUBE.videos().list(listOf("id", "snippet", "contentDetails"))
+                    val list = YOUTUBE.videos().list(listOf("id", "snippet", "contentDetails", "statistics"))
 
                     list.id = listOf(event.selectedOptions.firstOrNull()?.value ?: return@suspendCoroutine)
                     list.key = Immutable.YOUTUBE_API_KEY
@@ -153,8 +156,34 @@ class YouTubeCommand : TextCommand {
             ?: "No description provided"
 
         title {
-            title = video.snippet.title
+            title = video.snippet.title.limitTo(MessageEmbed.TITLE_MAX_LENGTH)
             url = "https://youtu.be/${video.id}"
+        }
+
+        video.statistics?.let { stats ->
+            field {
+                title = "Views"
+                description = stats.viewCount?.toLong()?.toDecimalFormat("#,###")?.let {
+                    "\uD83D\uDC41 \u2014 $it"
+                } ?: "Unavailable"
+                isInline = true
+            }
+
+            field {
+                title = "Likes"
+                description = stats.likeCount?.toLong()?.toDecimalFormat("#,###")?.let {
+                    "\uD83D\uDC4D \u2014 $it"
+                } ?: "Unavailable"
+                isInline = true
+            }
+
+            field {
+                title = "Comments"
+                description = stats.commentCount?.toLong()?.toDecimalFormat("#,###")?.let {
+                    "\uD83D\uDCAC \u2014 $it"
+                } ?: "Unavailable"
+                isInline = true
+            }
         }
 
         field {
@@ -168,6 +197,10 @@ class YouTubeCommand : TextCommand {
             iconUrl = pfp
             url = "https://www.youtube.com/channel/${video.snippet.channelId}"
         }
+
+        timestamp = Instant.ofEpochMilli(video.snippet.publishedAt.value)
+
+        footer { text = "Upload Date" }
     }
 
     private suspend fun sendMenu(

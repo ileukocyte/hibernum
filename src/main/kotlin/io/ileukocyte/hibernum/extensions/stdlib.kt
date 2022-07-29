@@ -1,6 +1,7 @@
 @file:JvmName("StandardLibraryExtensions")
 package io.ileukocyte.hibernum.extensions
 
+import java.text.DecimalFormat
 import java.util.SortedSet
 import java.util.concurrent.CompletableFuture
 
@@ -37,6 +38,10 @@ fun Int.toChars(): CharArray = Character.toChars(this)
 // kotlin.Iterable
 inline fun <T, R : Comparable<R>> Iterable<T>.toSetSortedBy(crossinline selector: (T) -> R?): SortedSet<T> =
     toSortedSet(compareBy(selector))
+
+// kotlin.Number
+fun <N : Number> N.toDecimalFormat(format: String): String =
+    DecimalFormat(format).format(this)
 
 // kotlin.String
 val String.isByte get() = toByteOrNull() !== null

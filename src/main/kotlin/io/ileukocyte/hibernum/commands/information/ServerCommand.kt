@@ -156,13 +156,14 @@ class ServerCommand : TextCommand {
         members.count { it.user.isBot }.let { bots ->
             field {
                 title = "Humans"
-                description = "${members.size() - bots}/${members.size()}"
+                description = "${(members.size() - bots).toDecimalFormat("#,###")}/" +
+                        members.size().toDecimalFormat("#,###")
                 isInline = true
             }
 
             field {
                 title = "Bots"
-                description = "$bots/${members.size()}"
+                description = "${bots.toDecimalFormat("#,###")}/${members.size().toDecimalFormat("#,###")}"
                 isInline = true
             }
         }
@@ -207,7 +208,7 @@ class ServerCommand : TextCommand {
 
         field {
             title = "Roles"
-            description = "${guild.roleCache.size()}"
+            description = "${guild.roleCache.size().toDecimalFormat("#,###")}"
             isInline = true
         }
 

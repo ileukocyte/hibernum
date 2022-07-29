@@ -12,10 +12,7 @@ import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.commands.music.LoopCommand.Companion.getButton
 import io.ileukocyte.hibernum.commands.music.LoopCommand.Companion.getNext
-import io.ileukocyte.hibernum.extensions.bold
-import io.ileukocyte.hibernum.extensions.limitTo
-import io.ileukocyte.hibernum.extensions.maskedLink
-import io.ileukocyte.hibernum.extensions.replyConfirmation
+import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asDuration
 
@@ -410,13 +407,15 @@ class QueueCommand : TextCommand {
                         asDuration(t.duration)
                     }
 
-                    appendLine("${i.inc() + page * 10}. $trackTitle ($trackDuration, ${userData.user.asMention})")
+                    appendLine("${(i.inc() + page * 10).toDecimalFormat("#,###")}. " +
+                            "$trackTitle ($trackDuration, ${userData.user.asMention})")
                 }
             }
 
             footer {
-                text = "Total Songs: ${musicManager.scheduler.queue.size.inc()}" +
-                        " \u2022 Page: ${page.inc()}/${partition.size}".takeIf { partition.size > 1 }.orEmpty()
+                text = "Total Songs: ${musicManager.scheduler.queue.size.inc().toDecimalFormat("#,###")}" +
+                        " \u2022 Page: ${page.inc().toDecimalFormat("#,###")}/${partition.size.toDecimalFormat("#,###")}"
+                            .takeIf { partition.size > 1 }.orEmpty()
             }
         }
 

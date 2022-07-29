@@ -24,6 +24,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 
 import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.channel.attribute.IAgeRestrictedChannel
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
@@ -206,10 +207,10 @@ class UrbanCommand : TextCommand {
 
         field {
             title = "Definition"
-            description = term.definition.limitTo(1024)
+            description = term.definition.limitTo(MessageEmbed.VALUE_MAX_LENGTH)
         }
 
-        term.example.limitTo(1024).takeUnless { it.isEmpty() }?.let {
+        term.example.limitTo(MessageEmbed.VALUE_MAX_LENGTH).takeUnless { it.isEmpty() }?.let {
             field {
                 title = "Example"
                 description = it
@@ -223,12 +224,12 @@ class UrbanCommand : TextCommand {
 
         field {
             title = "Likes"
-            description = "\uD83D\uDC4D \u2014 ${term.likes}"
+            description = "\uD83D\uDC4D \u2014 ${term.likes.toDecimalFormat("#,###")}"
         }
 
         field {
             title = "Dislikes"
-            description = "\uD83D\uDC4E \u2014 ${term.dislikes}"
+            description = "\uD83D\uDC4E \u2014 ${term.dislikes.toDecimalFormat("#,###")}"
         }
     }
 

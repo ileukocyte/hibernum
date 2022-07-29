@@ -11,7 +11,6 @@ import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asText
 
 import java.lang.management.ManagementFactory
-import java.text.DecimalFormat
 
 import kotlin.math.max
 
@@ -122,8 +121,10 @@ class AboutCommand : TextCommand {
             )
             appendLine()
             appendLine(musicStreamingServersCount.takeIf { it > 0 }
-                ?.let { "Music is currently being streamed via the bot on **$it ${"server".singularOrPlural(it)}**" }
-                ?: "No music is currently being streamed via the bot on any of all the servers"
+                ?.let {
+                    "Music is currently being streamed via the bot on " +
+                            "${it.toDecimalFormat("#,###")} ${"server".singularOrPlural(it)}".bold()
+                } ?: "No music is currently being streamed via the bot on any of all the servers"
             )
             appendLine()
             appendLine("**Developer**: ${
@@ -154,7 +155,7 @@ class AboutCommand : TextCommand {
                     appendLine("**Slash Commands**: ${discordCommands.count { it.type == Type.SLASH }}")
                     appendLine("**Message Context Commands**: ${discordCommands.count { it.type == Type.MESSAGE }}")
                     appendLine("**User Context Commands**: ${discordCommands.count { it.type == Type.USER }}")
-                    append("**Servers**: ${jda.guildCache.size()}")
+                    append("**Servers**: ${jda.guildCache.size().toDecimalFormat("#,###")}")
 
                     if (jda.unavailableGuilds.isNotEmpty()) {
                         append(" (${jda.unavailableGuilds.size} servers are unavailable)")
@@ -167,8 +168,8 @@ class AboutCommand : TextCommand {
                 description = buildString {
                     appendLine("**Uptime**: ${asText(jda.uptime)}")
                     appendLine("**Active Threads**: ${Thread.activeCount()}")
-                    appendLine("**JVM CPU Usage**: ${DecimalFormat("###.##%")
-                        .format(max(0.0001, os.processCpuLoad))}")
+                    appendLine("**JVM CPU Usage**: ${max(0.0001, os.processCpuLoad)
+                        .toDecimalFormat("###.##%")}")
                     appendLine("**CPU Cores**: ${os.availableProcessors}")
                     appendLine("**Operating System**: ${os.name} (${os.arch}, ${os.version})")
                 }
@@ -177,8 +178,8 @@ class AboutCommand : TextCommand {
             field {
                 title = "Latency Statistics"
                 description = buildString {
-                    appendLine("**Rest Ping**: $restPing ms")
-                    appendLine("**Gateway Ping**: ${jda.gatewayPing} ms")
+                    appendLine("**Rest Ping**: ${restPing.toDecimalFormat("#,###")} ms")
+                    appendLine("**Gateway Ping**: ${jda.gatewayPing.toDecimalFormat("#,###")} ms")
                 }
             }
         }

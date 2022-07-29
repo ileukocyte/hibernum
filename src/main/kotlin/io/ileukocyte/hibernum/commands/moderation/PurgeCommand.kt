@@ -252,7 +252,7 @@ class PurgeCommand : SlashOnlyCommand {
         textFilter: String?,
         mention: IMentionable?,
     ) = buildString {
-        append("Deleted $deletedMessages ")
+        append("Deleted ${deletedMessages.toDecimalFormat("#,###")} ")
 
         if (filter?.contains("embeds") == true) {
             append("embed ")

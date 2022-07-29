@@ -31,7 +31,7 @@ suspend fun searchVideos(query: String, maxResults: Long = 15): List<Video> = su
     search.fields = "items(id/kind,id/videoId,snippet/title,snippet/thumbnails/default/url)"
     search.type = listOf("video")
 
-    val videos = YOUTUBE.videos().list(listOf("id", "snippet", "contentDetails"))
+    val videos = YOUTUBE.videos().list(listOf("id", "snippet", "contentDetails", "statistics"))
 
     videos.key = search.key
     videos.id = listOf(search.execute().items.joinToString(",") { v -> v.id.videoId })

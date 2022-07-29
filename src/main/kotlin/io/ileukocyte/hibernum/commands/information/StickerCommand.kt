@@ -17,6 +17,8 @@ import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionE
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
 
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
+
 class StickerCommand : ClassicTextOnlyCommand, MessageContextOnlyCommand {
     override val name = "sticker"
     override val contextName = "Sticker Information"
@@ -28,15 +30,11 @@ class StickerCommand : ClassicTextOnlyCommand, MessageContextOnlyCommand {
         val sticker = event.message.stickers.firstOrNull()
             ?: throw CommandException("No sticker has been provided!")
 
-        val response = stickerEmbed(sticker, event.jda).let {
-            if (it.color === null) {
-                EmbedBuilder(it).setColor(Immutable.SUCCESS).build()
-            } else {
-                it
-            }
-        }
+        val response = stickerEmbed(sticker, event.jda)
 
-        event.channel.sendMessageEmbeds(response).queue()
+        event.channel.sendMessageEmbeds(response.applyIf(response.color === null) {
+            EmbedBuilder(response).setColor(Immutable.SUCCESS).build()
+        }).queue()
     }
 
     override suspend fun invoke(event: MessageContextInteractionEvent) {
@@ -46,25 +44,17 @@ class StickerCommand : ClassicTextOnlyCommand, MessageContextOnlyCommand {
         try {
             val deferred = event.deferReply().await()
 
-            val response = stickerEmbed(sticker, event.jda).let {
-                if (it.color === null) {
-                    EmbedBuilder(it).setColor(Immutable.SUCCESS).build()
-                } else {
-                    it
-                }
-            }
+            val response = stickerEmbed(sticker, event.jda)
 
-            deferred.editOriginalEmbeds(response).await()
+            deferred.editOriginalEmbeds(response.applyIf(response.color === null) {
+                EmbedBuilder(response).setColor(Immutable.SUCCESS).build()
+            }).await()
         } catch (_: ErrorResponseException) {
-            val response = stickerEmbed(sticker, event.jda).let {
-                if (it.color === null) {
-                    EmbedBuilder(it).setColor(Immutable.SUCCESS).build()
-                } else {
-                    it
-                }
-            }
+            val response = stickerEmbed(sticker, event.jda)
 
-            event.messageChannel.sendMessageEmbeds(response).queue()
+            event.messageChannel.sendMessageEmbeds(response.applyIf(response.color === null) {
+                EmbedBuilder(response).setColor(Immutable.SUCCESS).build()
+            }).queue()
         }
     }
 

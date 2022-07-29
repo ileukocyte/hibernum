@@ -7,13 +7,13 @@ import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.setFailureEmbed
+import io.ileukocyte.hibernum.extensions.toDecimalFormat
 import io.ileukocyte.openweather.Forecast
 import io.ileukocyte.openweather.Units
 import io.ileukocyte.openweather.entities.Temperature.TemperatureUnit
 import io.ileukocyte.openweather.extensions.convertUnitsTo
 import io.ileukocyte.openweather.openWeatherApi
 
-import java.text.DecimalFormat
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -98,7 +98,7 @@ class WeatherCommand : TextCommand {
 
         field {
             title = "Pressure"
-            description = "${DecimalFormat("#,###").format(forecast.pressure.pressure.toInt())} mbar"
+            description = "${forecast.pressure.pressure.toInt().toDecimalFormat("#,###")} mbar"
             isInline = true
         }
 
@@ -124,7 +124,7 @@ class WeatherCommand : TextCommand {
         }
 
         author {
-            name = "Weather \u2022 $location"
+            name = location
             url = link
             iconUrl = jda.selfUser.effectiveAvatarUrl
         }

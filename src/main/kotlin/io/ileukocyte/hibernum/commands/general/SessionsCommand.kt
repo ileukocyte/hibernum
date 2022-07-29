@@ -328,7 +328,7 @@ class SessionsCommand : SlashOnlyCommand {
             }
 
             field {
-                title = "Session #${index.inc() + page * 5}"
+                title = "Session #${(index.inc() + page * 5).toDecimalFormat("#,###")}"
                 description = """**Command**: ${session.command?.getEffectiveContextName() ?: "Unknown"}
                     **Session ID**: ${session.id}
                     **Users**: $users
@@ -344,7 +344,7 @@ class SessionsCommand : SlashOnlyCommand {
         }
 
         if (partition.size > 1) {
-            footer { text = "Total Sessions: ${originalSet.size}" }
+            footer { text = "Total Sessions: ${originalSet.size.toDecimalFormat("#,###")}" }
         }
     }
 

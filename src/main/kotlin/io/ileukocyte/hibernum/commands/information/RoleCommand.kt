@@ -182,13 +182,13 @@ class RoleCommand : TextCommand {
 
         field {
             title = "Members"
-            description = "${role.guild.getMembersWithRoles(role).size}"
+            description = role.guild.getMembersWithRoles(role).size.toDecimalFormat("#,###")
             isInline = true
         }
 
         field {
             title = "Position"
-            description = "#${role.guild.roleCache.indexOf(role).inc()}"
+            description = "#${role.guild.roleCache.indexOf(role).inc().toDecimalFormat("#,###")}"
             isInline = true
         }
 

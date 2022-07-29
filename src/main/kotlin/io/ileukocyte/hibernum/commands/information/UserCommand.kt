@@ -343,7 +343,7 @@ class UserCommand : TextCommand, UserContextOnlyCommand {
                 description = roles.takeUnless { it.isEmpty() }
                     ?.joinToString { it.name }
                     ?.escapeMarkdown()
-                    ?.limitTo(1024)
+                    ?.limitTo(MessageEmbed.VALUE_MAX_LENGTH)
                     ?: "None"
                 isInline = roles.isEmpty()
             }

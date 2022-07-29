@@ -7,7 +7,6 @@ import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.*
 
-import java.text.DecimalFormat
 import java.util.concurrent.TimeUnit
 
 import kotlinx.coroutines.TimeoutCancellationException
@@ -67,9 +66,8 @@ class GuessNumberCommand : TextCommand {
 
         val message = event.channel.sendEmbed {
             color = Immutable.SUCCESS
-            description = "Now try to guess the number between ${DecimalFormat("#,###").format(min)} and ${
-                DecimalFormat("#,###").format(max)
-            }!"
+            description = "Now try to guess the number between" +
+                    "${min.toDecimalFormat("#,###")} and ${max.toDecimalFormat("#,###")}!"
 
             author { name = "Attempt #1" }
             footer { text = "Type in \"exit\" to finish the session!" }
@@ -106,9 +104,8 @@ class GuessNumberCommand : TextCommand {
 
         val message = event.replyEmbed {
             color = Immutable.SUCCESS
-            description = "Now try to guess the number between ${DecimalFormat("#,###").format(min)} and ${
-                DecimalFormat("#,###").format(max)
-            }!"
+            description = "Now try to guess the number between" +
+                    "${min.toDecimalFormat("#,###")} and ${max.toDecimalFormat("#,###")}!"
 
             author { name = "Attempt #1" }
             footer { text = "Type in \"exit\" to finish the session!" }
@@ -184,11 +181,11 @@ class GuessNumberCommand : TextCommand {
         } catch (_: TimeoutCancellationException) {
             channel.jda.getProcessByEntities(user, channel)?.kill(channel.jda)
 
-            message?.editMessageEmbeds(
+            message.editMessageEmbeds(
                 defaultEmbed("Time is out!", EmbedType.FAILURE)
-            )?.queue(null) {
+            ).queue(null) {
                 channel.sendFailure("Time is out!").queue()
-            } ?: channel.sendFailure("Time is out!").queue()
+            }
 
             return
         }
@@ -234,7 +231,7 @@ class GuessNumberCommand : TextCommand {
                         color = embedType.color
                         description = desc
 
-                        author { name = "Attempt #$attempt" }
+                        author { name = "Attempt #${attempt.toDecimalFormat("#,###")}" }
                         footer { text = "Type in \"exit\" to finish the session!" }
                     }.await()
 

@@ -317,7 +317,7 @@ class ProcessesCommand : SlashOnlyCommand {
             }
 
             field {
-                title = "Process #${index.inc() + page * 5}"
+                title = "Process #${(index.inc() + page * 5).toDecimalFormat("#,###")}"
                 description = """**Command**: ${process.command?.getEffectiveContextName() ?: "Unknown"}
                     **Event**: ${process.eventType?.simpleName ?: "Unknown"}
                     **Process ID**: ${process.id}
@@ -334,7 +334,7 @@ class ProcessesCommand : SlashOnlyCommand {
         }
 
         if (partition.size > 1) {
-            footer { text = "Total Processes: ${originalSet.size}" }
+            footer { text = "Total Processes: ${originalSet.size.toDecimalFormat("#,###")}" }
         }
     }
 
