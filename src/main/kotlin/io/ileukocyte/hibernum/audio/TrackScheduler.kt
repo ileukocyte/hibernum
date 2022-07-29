@@ -150,14 +150,17 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
                         player.removeListener(listener)
 
                         data.channel.guild.audioPlayer?.stop()
-                        data.channel.guild.audioManager.closeAudioConnection()
 
-                        data.channel.sendWarning(
-                            "${data.channel.jda.selfUser.name} has been inactive " +
-                                    "for too long to stay in the voice channel! The bot has left!"
-                        ) { text = "This message will self-delete in a minute" }.queue({
-                            it.delete().queueAfter(1, TimeUnit.MINUTES, null) {}
-                        }) {}
+                        if (data.channel.guild.selfMember.voiceState?.inAudioChannel() == true) {
+                            data.channel.guild.audioManager.closeAudioConnection()
+
+                            data.channel.sendWarning(
+                                "${data.channel.jda.selfUser.name} has been inactive " +
+                                        "for too long to stay in the voice channel! The bot has left!"
+                            ) { text = "This message will self-delete in a minute" }.queue({
+                                it.delete().queueAfter(1, TimeUnit.MINUTES, null) {}
+                            }) {}
+                        }
                     }
                 }
             }
