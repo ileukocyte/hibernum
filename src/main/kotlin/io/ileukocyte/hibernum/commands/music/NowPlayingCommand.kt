@@ -45,23 +45,23 @@ class NowPlayingCommand : TextCommand {
 
         val buttons = mutableSetOf(
             Button.secondary(
-                "$name-${event.author.idLong}-true-playpause",
+                "$interactionName-${event.author.idLong}-true-playpause",
                 "Pause".applyIf(audioPlayer.player.isPaused) { "Play" },
             ),
-            Button.secondary("$name-${event.author.idLong}-true-stop", "Stop"),
-            audioPlayer.scheduler.loopMode.getButton(name, "${event.author.id}-true"),
+            Button.secondary("$interactionName-${event.author.idLong}-true-stop", "Stop"),
+            audioPlayer.scheduler.loopMode.getButton(interactionName, "${event.author.id}-true"),
         )
 
         if (audioPlayer.scheduler.queue.isNotEmpty()) {
-            buttons += Button.secondary("$name-${event.author.idLong}-true-skip", "Skip")
+            buttons += Button.secondary("$interactionName-${event.author.idLong}-true-skip", "Skip")
         }
 
         event.channel.sendMessageEmbeds(playingEmbed(event.jda, audioPlayer, track))
             .setComponents(
                 ActionRow.of(buttons),
                 ActionRow.of(
-                    Button.primary("$name-${event.author.idLong}-true-update", "Update"),
-                    Button.danger("$name-${event.author.idLong}-true-exit", "Close"),
+                    Button.primary("$interactionName-${event.author.idLong}-true-update", "Update"),
+                    Button.danger("$interactionName-${event.author.idLong}-true-exit", "Close"),
                 ),
             ).queue()
     }
@@ -78,23 +78,23 @@ class NowPlayingCommand : TextCommand {
         if (addGui) {
             val buttons = mutableSetOf(
                 Button.secondary(
-                    "$name-${event.user.idLong}-true-playpause",
+                    "$interactionName-${event.user.idLong}-true-playpause",
                     "Pause".applyIf(audioPlayer.player.isPaused) { "Play" },
                 ),
-                Button.secondary("$name-${event.user.idLong}-true-stop", "Stop"),
-                audioPlayer.scheduler.loopMode.getButton(name, "${event.user.id}-true"),
+                Button.secondary("$interactionName-${event.user.idLong}-true-stop", "Stop"),
+                audioPlayer.scheduler.loopMode.getButton(interactionName, "${event.user.id}-true"),
             )
 
             if (audioPlayer.scheduler.queue.isNotEmpty()) {
-                buttons += Button.secondary("$name-${event.user.idLong}-true-skip", "Skip")
+                buttons += Button.secondary("$interactionName-${event.user.idLong}-true-skip", "Skip")
             }
 
             actionRows += ActionRow.of(buttons)
         }
 
         actionRows += ActionRow.of(
-            Button.primary("$name-${event.user.idLong}-$addGui-update", "Update"),
-            Button.danger("$name-${event.user.idLong}-exit", "Close"),
+            Button.primary("$interactionName-${event.user.idLong}-$addGui-update", "Update"),
+            Button.danger("$interactionName-${event.user.idLong}-exit", "Close"),
         )
 
         event.replyEmbeds(playingEmbed(event.jda, audioPlayer, track))
@@ -103,7 +103,7 @@ class NowPlayingCommand : TextCommand {
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
 
         if (event.user.id == id.first()) {
             val audioPlayer = event.guild?.audioPlayer
@@ -122,23 +122,23 @@ class NowPlayingCommand : TextCommand {
                 if (addGui) {
                     val buttons = mutableSetOf(
                         Button.secondary(
-                            "$name-${event.user.idLong}-true-playpause",
+                            "$interactionName-${event.user.idLong}-true-playpause",
                             "Pause".applyIf(audioPlayer.player.isPaused) { "Play" },
                         ),
-                        Button.secondary("$name-${event.user.idLong}-true-stop", "Stop"),
-                        audioPlayer.scheduler.loopMode.getButton(name, "${event.user.id}-true"),
+                        Button.secondary("$interactionName-${event.user.idLong}-true-stop", "Stop"),
+                        audioPlayer.scheduler.loopMode.getButton(interactionName, "${event.user.id}-true"),
                     )
 
                     if (audioPlayer.scheduler.queue.isNotEmpty()) {
-                        buttons += Button.secondary("$name-${event.user.idLong}-true-skip", "Skip")
+                        buttons += Button.secondary("$interactionName-${event.user.idLong}-true-skip", "Skip")
                     }
 
                     actionRows += ActionRow.of(buttons)
                 }
 
                 actionRows += ActionRow.of(
-                    Button.primary("$name-${event.user.idLong}-$addGui-update", "Update"),
-                    Button.danger("$name-${event.user.idLong}-exit", "Close"),
+                    Button.primary("$interactionName-${event.user.idLong}-$addGui-update", "Update"),
+                    Button.danger("$interactionName-${event.user.idLong}-exit", "Close"),
                 )
 
                 event.editMessageEmbeds(playingEmbed(event.jda, audioPlayer, audioPlayer.player.playingTrack))
@@ -159,7 +159,7 @@ class NowPlayingCommand : TextCommand {
                     updatePlayer()
                 }
                 "stop" -> {
-                    val stop = CommandHandler["stop"].cast<StopCommand>().name
+                    val stop = CommandHandler["stop"].cast<StopCommand>().interactionName
 
                     val description = "Are you sure you want the bot to stop playing music and clear the queue?"
                     val buttons = setOf(

@@ -148,11 +148,11 @@ class SayCommand : TextCommand {
             } ?: restAction.queue()
         } else {
             val input = TextInput
-                .create("$name-input", "Enter Your Text:", TextInputStyle.PARAGRAPH)
+                .create("$interactionName-input", "Enter Your Text:", TextInputStyle.PARAGRAPH)
                 .setValue(text)
                 .build()
             val modal = Modal
-                .create("$name-modal", "Embed Announcement")
+                .create("$interactionName-modal", "Embed Announcement")
                 .addActionRow(input)
                 .build()
 
@@ -164,10 +164,10 @@ class SayCommand : TextCommand {
                     channel = event.channel.idLong
                     command = this@SayCommand
                 }) {
-                    it.modalId == "$name-modal" && it.user == event.user && it.channel == event.channel
+                    it.modalId == "$interactionName-modal" && it.user == event.user && it.channel == event.channel
                 } ?: return
 
-                val content = modalEvent.getValue("$name-input")?.asString ?: return
+                val content = modalEvent.getValue("$interactionName-input")?.asString ?: return
 
                 try {
                     modalEvent.deferReply().await()

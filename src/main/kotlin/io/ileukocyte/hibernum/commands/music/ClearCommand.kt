@@ -19,8 +19,8 @@ class ClearCommand : TextCommand {
         if (event.guild.audioPlayer?.scheduler?.queue?.isEmpty() == false) {
             if (event.member?.voiceState?.channel == event.guild.selfMember.voiceState?.channel) {
                 val buttons = setOf(
-                    Button.danger("$name-${event.author.idLong}-clear", "Yes"),
-                    Button.secondary("$name-${event.author.idLong}-exit", "No"),
+                    Button.danger("$interactionName-${event.author.idLong}-clear", "Yes"),
+                    Button.secondary("$interactionName-${event.author.idLong}-exit", "No"),
                 )
 
                 event.channel.sendConfirmation("Are you sure you want the bot to clear the queue?")
@@ -38,8 +38,8 @@ class ClearCommand : TextCommand {
         if (event.guild?.audioPlayer?.scheduler?.queue?.isEmpty() == false) {
             if (event.member?.voiceState?.channel == event.guild?.selfMember?.voiceState?.channel) {
                 val buttons = setOf(
-                    Button.danger("$name-${event.user.idLong}-clear", "Yes"),
-                    Button.secondary("$name-${event.user.idLong}-exit", "No"),
+                    Button.danger("$interactionName-${event.user.idLong}-clear", "Yes"),
+                    Button.secondary("$interactionName-${event.user.idLong}-exit", "No"),
                 )
 
                 event.replyConfirmation("Are you sure you want the bot to clear the queue?")
@@ -54,7 +54,7 @@ class ClearCommand : TextCommand {
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
 
         if (event.user.id == id.first()) {
             when (id.last()) {

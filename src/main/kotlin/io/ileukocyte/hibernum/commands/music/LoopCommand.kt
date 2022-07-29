@@ -37,7 +37,7 @@ class LoopCommand : TextCommand {
                     .filter { it != audioPlayer.scheduler.loopMode }
                     .map {
                         Button.secondary(
-                            "$name-${event.author.idLong}-${it.name}",
+                            "$interactionName-${event.author.idLong}-${it.name}",
                             it.toString().removeSuffix("d"),
                         )
                     }
@@ -45,7 +45,7 @@ class LoopCommand : TextCommand {
                 event.channel.sendConfirmation("Choose a repeating mode to set!")
                     .setActionRow(
                         *buttons.toTypedArray(),
-                        Button.danger("$name-${event.author.idLong}-exit", "Exit"),
+                        Button.danger("$interactionName-${event.author.idLong}-exit", "Exit"),
                     ).queue()
             } else {
                 throw CommandException("You are not connected to the required voice channel!")
@@ -79,7 +79,7 @@ class LoopCommand : TextCommand {
                         .filter { it != audioPlayer.scheduler.loopMode }
                         .map {
                             Button.secondary(
-                                "$name-${event.user.idLong}-${it.name}",
+                                "$interactionName-${event.user.idLong}-${it.name}",
                                 it.toString().removeSuffix("d"),
                             )
                         }
@@ -87,7 +87,7 @@ class LoopCommand : TextCommand {
                     event.replyConfirmation("Choose a repeating mode to set!")
                         .addActionRow(
                             *buttons.toTypedArray(),
-                            Button.danger("$name-${event.user.idLong}-exit", "Exit"),
+                            Button.danger("$interactionName-${event.user.idLong}-exit", "Exit"),
                         ).queue()
                 }
             } else {
@@ -99,7 +99,7 @@ class LoopCommand : TextCommand {
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
 
         if (event.user.id == id.first()) {
             if (id.last() == "exit") {

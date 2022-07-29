@@ -64,13 +64,13 @@ class SessionsCommand : SlashOnlyCommand {
             actionRows += ActionRow.of(
                 pageButtons(event.user.id, 0, pages).takeIf { sessions.size > 5 }
                     ?: setOf(
-                        Button.primary("$name-${event.user.idLong}-abort", "Abort"),
-                        Button.danger("$name-${event.user.idLong}-exit", "Exit"),
+                        Button.primary("$interactionName-${event.user.idLong}-abort", "Abort"),
+                        Button.danger("$interactionName-${event.user.idLong}-exit", "Exit"),
                     )
             )
 
             if (sessions.size > 5) {
-                actionRows += ActionRow.of(Button.danger("$name-${event.user.idLong}-exit", "Exit"))
+                actionRows += ActionRow.of(Button.danger("$interactionName-${event.user.idLong}-exit", "Exit"))
             }
 
             event.replyEmbeds(sessionsListEmbed(sessions, 0, event.jda, event.guild ?: return))
@@ -83,8 +83,8 @@ class SessionsCommand : SlashOnlyCommand {
 
             event.replyConfirmation("Are you sure you want to abort the session?")
                 .addActionRow(
-                    Button.danger("$name-${event.user.idLong}-${session.id}-abortc", "Yes"),
-                    Button.secondary("$name-${event.user.idLong}-exit", "No"),
+                    Button.danger("$interactionName-${event.user.idLong}-${session.id}-abortc", "Yes"),
+                    Button.secondary("$interactionName-${event.user.idLong}-exit", "No"),
                 ).queue()
         }
     }
@@ -109,7 +109,7 @@ class SessionsCommand : SlashOnlyCommand {
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
         val guild = event.guild ?: return
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
 
         if (event.user.id == id.first()) {
             val type = id.last()
@@ -122,11 +122,11 @@ class SessionsCommand : SlashOnlyCommand {
                 "exit" -> event.message.delete().queue(null) {}
                 "abort" -> {
                     val input = TextInput
-                        .create("$name-id", "Enter the Session ID:", TextInputStyle.SHORT)
+                        .create("$interactionName-id", "Enter the Session ID:", TextInputStyle.SHORT)
                         .setMaxLength(4)
                         .build()
                     val modal = Modal
-                        .create("$name-modal", "Session Abortion")
+                        .create("$interactionName-modal", "Session Abortion")
                         .addActionRow(input)
                         .build()
 
@@ -183,14 +183,14 @@ class SessionsCommand : SlashOnlyCommand {
                         actionRows += ActionRow.of(
                             pageButtons(event.user.id, initialPage, pages).takeIf { sessions.size > 5 }
                                 ?: setOf(
-                                    Button.primary("$name-${event.user.idLong}-abort", "Abort"),
-                                    Button.danger("$name-${event.user.idLong}-exit", "Exit"),
+                                    Button.primary("$interactionName-${event.user.idLong}-abort", "Abort"),
+                                    Button.danger("$interactionName-${event.user.idLong}-exit", "Exit"),
                                 )
                         )
 
                         if (sessions.size > 5) {
                             actionRows +=
-                                ActionRow.of(Button.danger("$name-${event.user.idLong}-exit", "Exit"))
+                                ActionRow.of(Button.danger("$interactionName-${event.user.idLong}-exit", "Exit"))
                         }
 
                         return actionRows
@@ -252,7 +252,7 @@ class SessionsCommand : SlashOnlyCommand {
     }
 
     override suspend fun invoke(event: ModalInteractionEvent) {
-        val id = event.getValue("$name-id")?.asString ?: return
+        val id = event.getValue("$interactionName-id")?.asString ?: return
         val sessions = event.jda.getProcessById(id)
             ?.takeIf { event.user.idLong in it.users && it.command !== null }
             ?: throw CommandException("No session of yours has been found by the provided ID!")
@@ -348,14 +348,14 @@ class SessionsCommand : SlashOnlyCommand {
     }
 
     private fun pageButtons(userId: String, page: Int, size: Int) = setOf(
-        Button.primary("$name-$userId-abort", "Abort"),
-        Button.secondary("$name-$userId-$page-first", "First Page")
+        Button.primary("$interactionName-$userId-abort", "Abort"),
+        Button.secondary("$interactionName-$userId-$page-first", "First Page")
             .applyIf(page == 0) { asDisabled() },
-        Button.secondary("$name-$userId-$page-back", "Back")
+        Button.secondary("$interactionName-$userId-$page-back", "Back")
             .applyIf(page == 0) { asDisabled() },
-        Button.secondary("$name-$userId-$page-next", "Next")
+        Button.secondary("$interactionName-$userId-$page-next", "Next")
             .applyIf(page == size.dec()) { asDisabled() },
-        Button.secondary("$name-$userId-$page-last", "Last Page")
+        Button.secondary("$interactionName-$userId-$page-last", "Last Page")
             .applyIf(page == size.dec()) { asDisabled() },
     )
 }

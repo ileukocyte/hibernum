@@ -46,8 +46,11 @@ class BattleshipCommand : SlashOnlyCommand {
         val hook = event.replyConfirmation("Do you want to play the sea battle against ${event.user.asMention}?")
             .setContent(opponent.asMention)
             .addActionRow(
-                Button.secondary("$name-${opponent.idLong}-${event.user.idLong}-$staticProcessId-play", "Yes"),
-                Button.danger("$name-${opponent.idLong}-${event.user.idLong}-deny", "No"),
+                Button.secondary(
+                    "$interactionName-${opponent.idLong}-${event.user.idLong}-$staticProcessId-play",
+                    "Yes",
+                ),
+                Button.danger("$interactionName-${opponent.idLong}-${event.user.idLong}-deny", "No"),
             ).await()
         val message = hook.retrieveOriginal().await()
 
@@ -61,7 +64,7 @@ class BattleshipCommand : SlashOnlyCommand {
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
 
         if (event.user.id in id.first().split("|")) {
             when (id.last()) {
@@ -131,7 +134,7 @@ class BattleshipCommand : SlashOnlyCommand {
                         ).await()
 
                         val termination = Button.danger(
-                            "$name-${starter.user.idLong}|${opponent.user.idLong}-$staticProcessId-exit",
+                            "$interactionName-${starter.user.idLong}|${opponent.user.idLong}-$staticProcessId-exit",
                             "Terminate",
                         )
 

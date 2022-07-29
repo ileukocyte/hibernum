@@ -64,7 +64,7 @@ class YouTubePlayCommand : TextCommand {
     }
 
     override suspend fun invoke(event: SelectMenuInteractionEvent) {
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
 
         if (event.user.id == id.first()) {
             val deferred = event.deferEdit().await()
@@ -148,7 +148,7 @@ class YouTubePlayCommand : TextCommand {
                         )
                     }
 
-                    SelectMenu.create("$name-${member.user.idLong}-videos")
+                    SelectMenu.create("$interactionName-${member.user.idLong}-videos")
                         .addOptions(
                             *options.toTypedArray(),
                             SelectOption.of("Exit", "exit")
@@ -197,7 +197,7 @@ class YouTubePlayCommand : TextCommand {
                         )
                     }
 
-                    SelectMenu.create("$name-${member.user.idLong}-playlists")
+                    SelectMenu.create("$interactionName-${member.user.idLong}-playlists")
                         .addOptions(
                             *options.toTypedArray(),
                             SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),

@@ -73,7 +73,7 @@ class SpotifyCommand : TextCommand {
                 SelectOption.of("$artist - $title - $album".limitTo(SelectOption.LABEL_MAX_LENGTH), it.id)
             }
 
-            SelectMenu.create("$name-${event.author.idLong}-spotify")
+            SelectMenu.create("$interactionName-${event.author.idLong}-spotify")
                 .addOptions(
                     *options.toTypedArray(),
                     SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),
@@ -153,7 +153,7 @@ class SpotifyCommand : TextCommand {
                 SelectOption.of("$artist - $title - $album".limitTo(SelectOption.LABEL_MAX_LENGTH), it.id)
             }
 
-            SelectMenu.create("$name-${event.user.idLong}-spotify")
+            SelectMenu.create("$interactionName-${event.user.idLong}-spotify")
                 .addOptions(
                     *options.toTypedArray(),
                     SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),
@@ -173,7 +173,7 @@ class SpotifyCommand : TextCommand {
     }
 
     override suspend fun invoke(event: SelectMenuInteractionEvent) {
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
 
         if (event.user.id == id.first()) {
             val deferred = event.deferEdit().await()

@@ -129,10 +129,10 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
         val backup = event.getOption("backup")?.asBoolean ?: false
 
         val input = TextInput
-            .create("$name-code", "Enter Your Kotlin Code:", TextInputStyle.PARAGRAPH)
+            .create("$interactionName-code", "Enter Your Kotlin Code:", TextInputStyle.PARAGRAPH)
             .build()
         val modal = Modal
-            .create("$name-$backup", "Kotlin Code Execution")
+            .create("$interactionName-$backup", "Kotlin Code Execution")
             .addActionRow(input)
             .build()
 
@@ -140,7 +140,7 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
     }
 
     override suspend fun invoke(event: ModalInteractionEvent) {
-        val code = event.getValue("$name-code")?.asString ?: return
+        val code = event.getValue("$interactionName-code")?.asString ?: return
         val deferred = event.deferReply().await()
 
         Immutable.EVAL_MODAL_INPUT_BACKUP_CHANNEL_ID?.let { backup ->

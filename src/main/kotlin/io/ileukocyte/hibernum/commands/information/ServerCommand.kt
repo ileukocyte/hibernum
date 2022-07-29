@@ -26,10 +26,10 @@ class ServerCommand : TextCommand {
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val buttons by lazy {
-            val info = Button.secondary("$name-${event.author.idLong}-info", "Information")
-            val icon = Button.secondary("$name-${event.author.idLong}-icon", "Server Icon")
+            val info = Button.secondary("$interactionName-${event.author.idLong}-info", "Information")
+            val icon = Button.secondary("$interactionName-${event.author.idLong}-icon", "Server Icon")
                 .takeUnless { event.guild.iconUrl === null }
-            val emotes = Button.secondary("$name-${event.author.idLong}-emotes", "Custom Emojis")
+            val emotes = Button.secondary("$interactionName-${event.author.idLong}-emotes", "Custom Emojis")
                 .takeUnless { event.guild.emojiCache.isEmpty }
 
             setOfNotNull(info, icon, emotes)
@@ -46,7 +46,7 @@ class ServerCommand : TextCommand {
         event.channel.sendConfirmation("Choose the type of information that you want to check!")
             .setActionRow(
                 *buttons.toTypedArray(),
-                Button.danger("$name-${event.author.idLong}-exit", "Exit"),
+                Button.danger("$interactionName-${event.author.idLong}-exit", "Exit"),
             ).queue()
     }
 
@@ -54,10 +54,10 @@ class ServerCommand : TextCommand {
         val guild = event.guild ?: return
 
         val buttons by lazy {
-            val info = Button.secondary("$name-${event.user.idLong}-info", "Information")
-            val icon = Button.secondary("$name-${event.user.idLong}-icon", "Server Icon")
+            val info = Button.secondary("$interactionName-${event.user.idLong}-info", "Information")
+            val icon = Button.secondary("$interactionName-${event.user.idLong}-icon", "Server Icon")
                 .takeUnless { guild.iconUrl === null }
-            val emotes = Button.secondary("$name-${event.user.idLong}-emotes", "Custom Emojis")
+            val emotes = Button.secondary("$interactionName-${event.user.idLong}-emotes", "Custom Emojis")
                 .takeUnless { guild.emojiCache.isEmpty }
 
             setOfNotNull(info, icon, emotes)
@@ -76,12 +76,12 @@ class ServerCommand : TextCommand {
         event.replyConfirmation("Choose the type of information that you want to check!")
             .addActionRow(
                 *buttons.toTypedArray(),
-                Button.danger("$name-${event.user.idLong}-exit", "Exit"),
+                Button.danger("$interactionName-${event.user.idLong}-exit", "Exit"),
             ).queue()
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
 
         if (event.user.id == id.first()) {
             val type = id.last()
@@ -208,7 +208,7 @@ class ServerCommand : TextCommand {
 
         field {
             title = "Roles"
-            description = "${guild.roleCache.size().toDecimalFormat("#,###")}"
+            description = guild.roleCache.size().toDecimalFormat("#,###")
             isInline = true
         }
 

@@ -71,8 +71,8 @@ class TimeoutCommand : SlashOnlyCommand, SubcommandHolder, UserContextOnlyComman
         } ?: throw CommandException("The timeout period cannot exceed ${Member.MAX_TIME_OUT_LENGTH} days!")
 
         val buttons = setOf(
-            Button.danger("$name-timeout", "Yes"),
-            Button.secondary("$name-exit", "No"),
+            Button.danger("$interactionName-timeout", "Yes"),
+            Button.secondary("$interactionName-exit", "No"),
         )
 
         val hook = event
@@ -95,7 +95,7 @@ class TimeoutCommand : SlashOnlyCommand, SubcommandHolder, UserContextOnlyComman
             ) {
                 val cmdName = it.componentId.split("-").first()
 
-                it.message.idLong == hook.idLong && it.user.idLong == event.user.idLong && cmdName == name
+                it.message.idLong == hook.idLong && it.user.idLong == event.user.idLong && cmdName == interactionName
             } ?: return
 
             val deferred = buttonEvent.deferEdit().await()
@@ -183,7 +183,7 @@ class TimeoutCommand : SlashOnlyCommand, SubcommandHolder, UserContextOnlyComman
             .create("period", "Specify the Timeout Period (e.g. 5h34m55s):", TextInputStyle.SHORT)
             .build()
         val modal = Modal
-            .create("$name-${event.target.idLong}-time", "Member Timeout")
+            .create("$interactionName-${event.target.idLong}-time", "Member Timeout")
             .addActionRow(period)
             .build()
 
@@ -197,7 +197,7 @@ class TimeoutCommand : SlashOnlyCommand, SubcommandHolder, UserContextOnlyComman
     }
 
     override suspend fun invoke(event: ModalInteractionEvent) {
-        val id = event.modalId.removePrefix("$name-").split("-")
+        val id = event.modalId.removePrefix("$interactionName-").split("-")
 
         val member = event.guild?.getMemberById(id.first())
             ?: throw CommandException("The member is not available for the bot!")
@@ -213,8 +213,8 @@ class TimeoutCommand : SlashOnlyCommand, SubcommandHolder, UserContextOnlyComman
                 } ?: throw CommandException("The timeout period cannot exceed ${Member.MAX_TIME_OUT_LENGTH} days!")
 
                 val buttons = setOf(
-                    Button.success("$name-reason", "Yes"),
-                    Button.secondary("$name-timeout", "No"),
+                    Button.success("$interactionName-reason", "Yes"),
+                    Button.secondary("$interactionName-timeout", "No"),
                 )
 
                 val hook = event
@@ -237,7 +237,7 @@ class TimeoutCommand : SlashOnlyCommand, SubcommandHolder, UserContextOnlyComman
                     ) {
                         val cmdName = it.componentId.split("-").first()
 
-                        it.message.idLong == hook.idLong && it.user.idLong == event.user.idLong && cmdName == name
+                        it.message.idLong == hook.idLong && it.user.idLong == event.user.idLong && cmdName == interactionName
                     } ?: return
 
                     val args = buttonEvent.componentId.split("-")
@@ -250,7 +250,7 @@ class TimeoutCommand : SlashOnlyCommand, SubcommandHolder, UserContextOnlyComman
                                 .setMaxLength(512 - "Timed out by ${event.user.asTag}: ".length)
                                 .build()
                             val modal = Modal
-                                .create("$name-${member.idLong}-$millis-reason", "Member Timeout")
+                                .create("$interactionName-${member.idLong}-$millis-reason", "Member Timeout")
                                 .addActionRow(reason)
                                 .build()
 

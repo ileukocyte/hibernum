@@ -18,8 +18,8 @@ class ShutdownCommand : TextCommand {
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val description = "Are you sure you want to shut the bot down?"
         val buttons = setOf(
-            Button.danger("$name-${event.author.idLong}-shut", "Yes"),
-            Button.secondary("$name-${event.author.idLong}-exit", "No"),
+            Button.danger("$interactionName-${event.author.idLong}-shut", "Yes"),
+            Button.secondary("$interactionName-${event.author.idLong}-exit", "No"),
         )
 
         event.channel.sendConfirmation(description).setActionRow(buttons).queue()
@@ -27,12 +27,12 @@ class ShutdownCommand : TextCommand {
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) =
         event.replyConfirmation("Are you sure you want to shut the bot down?")
-            .addActionRow(Button.danger("$name-${event.user.idLong}-shut", "Yes"))
+            .addActionRow(Button.danger("$interactionName-${event.user.idLong}-shut", "Yes"))
             .setEphemeral(true)
             .queue()
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
 
         if (event.user.id == id.first()) {
             when (id.last()) {

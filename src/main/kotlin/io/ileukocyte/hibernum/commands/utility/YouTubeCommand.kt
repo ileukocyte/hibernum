@@ -92,7 +92,7 @@ class YouTubeCommand : TextCommand {
     }
 
     override suspend fun invoke(event: SelectMenuInteractionEvent) {
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
 
         if (event.user.id == id.first()) {
             val deferred = event.deferEdit().await()
@@ -236,7 +236,7 @@ class YouTubeCommand : TextCommand {
                 )
             }
 
-            SelectMenu.create("$name-${author.idLong}-videos")
+            SelectMenu.create("$interactionName-${author.idLong}-videos")
                 .addOptions(
                     *options.toTypedArray(),
                     SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),

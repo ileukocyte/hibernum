@@ -60,13 +60,14 @@ class ProcessesCommand : SlashOnlyCommand {
             actionRows += ActionRow.of(
                 pageButtons(event.user.id, 0, pages).takeIf { processes.size > 5 }
                     ?: setOf(
-                        Button.primary("$name-${event.user.idLong}-kill", "Terminate"),
-                        Button.danger("$name-${event.user.idLong}-exit", "Exit"),
+                        Button.primary("$interactionName-${event.user.idLong}-kill", "Terminate"),
+                        Button.danger("$interactionName-${event.user.idLong}-exit", "Exit"),
                     )
             )
 
             if (processes.size > 5) {
-                actionRows += ActionRow.of(Button.danger("$name-${event.user.idLong}-exit", "Exit"))
+                actionRows +=
+                    ActionRow.of(Button.danger("$interactionName-${event.user.idLong}-exit", "Exit"))
             }
 
             event.replyEmbeds(processesListEmbed(processes, 0, event.jda, event.guild ?: return))
@@ -78,8 +79,8 @@ class ProcessesCommand : SlashOnlyCommand {
 
             event.replyConfirmation("Are you sure you want to terminate the process?")
                 .addActionRow(
-                    Button.danger("$name-${event.user.idLong}-${process.id}-killc", "Yes"),
-                    Button.secondary("$name-${event.user.idLong}-exit", "No"),
+                    Button.danger("$interactionName-${event.user.idLong}-${process.id}-killc", "Yes"),
+                    Button.secondary("$interactionName-${event.user.idLong}-exit", "No"),
                 ).queue()
         }
     }
@@ -104,7 +105,7 @@ class ProcessesCommand : SlashOnlyCommand {
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
         val guild = event.guild ?: return
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
 
         if (event.user.id == id.first()) {
             val type = id.last()
@@ -114,11 +115,11 @@ class ProcessesCommand : SlashOnlyCommand {
                 "exit" -> event.message.delete().queue(null) {}
                 "kill" -> {
                     val input = TextInput
-                        .create("$name-pid", "Enter the Process ID:", TextInputStyle.SHORT)
+                        .create("$interactionName-pid", "Enter the Process ID:", TextInputStyle.SHORT)
                         .setMaxLength(4)
                         .build()
                     val modal = Modal
-                        .create("$name-modal", "Process Termination")
+                        .create("$interactionName-modal", "Process Termination")
                         .addActionRow(input)
                         .build()
 
@@ -173,14 +174,14 @@ class ProcessesCommand : SlashOnlyCommand {
                         actionRows += ActionRow.of(
                             pageButtons(event.user.id, initialPage, pages).takeIf { processes.size > 5 }
                                 ?: setOf(
-                                    Button.primary("$name-${event.user.idLong}-kill", "Terminate"),
-                                    Button.danger("$name-${event.user.idLong}-exit", "Exit"),
+                                    Button.primary("$interactionName-${event.user.idLong}-kill", "Terminate"),
+                                    Button.danger("$interactionName-${event.user.idLong}-exit", "Exit"),
                                 )
                         )
 
                         if (processes.size > 5) {
                             actionRows +=
-                                ActionRow.of(Button.danger("$name-${event.user.idLong}-exit", "Exit"))
+                                ActionRow.of(Button.danger("$interactionName-${event.user.idLong}-exit", "Exit"))
                         }
 
                         return actionRows
@@ -242,7 +243,7 @@ class ProcessesCommand : SlashOnlyCommand {
     }
 
     override suspend fun invoke(event: ModalInteractionEvent) {
-        val pid = event.getValue("$name-pid")?.asString ?: return
+        val pid = event.getValue("$interactionName-pid")?.asString ?: return
         val process = event.jda.getProcessById(pid)
             ?: throw CommandException("No process has been found by the provided ID!")
 
@@ -338,14 +339,14 @@ class ProcessesCommand : SlashOnlyCommand {
     }
 
     private fun pageButtons(userId: String, page: Int, size: Int) = setOf(
-        Button.primary("$name-$userId-kill", "Terminate"),
-        Button.secondary("$name-$userId-$page-first", "First Page")
+        Button.primary("$interactionName-$userId-kill", "Terminate"),
+        Button.secondary("$interactionName-$userId-$page-first", "First Page")
             .applyIf(page == 0) { asDisabled() },
-        Button.secondary("$name-$userId-$page-back", "Back")
+        Button.secondary("$interactionName-$userId-$page-back", "Back")
             .applyIf(page == 0) { asDisabled() },
-        Button.secondary("$name-$userId-$page-next", "Next")
+        Button.secondary("$interactionName-$userId-$page-next", "Next")
             .applyIf(page == size.dec()) { asDisabled() },
-        Button.secondary("$name-$userId-$page-last", "Last Page")
+        Button.secondary("$interactionName-$userId-$page-last", "Last Page")
             .applyIf(page == size.dec()) { asDisabled() },
     )
 }

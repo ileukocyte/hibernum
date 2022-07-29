@@ -134,7 +134,7 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
             .create("input", "Enter Your Text:", TextInputStyle.PARAGRAPH)
             .build()
         val modal = Modal
-            .create("$name-modal", "Generate QR Code")
+            .create("$interactionName-modal", "Generate QR Code")
             .addActionRow(input)
             .build()
 
@@ -275,9 +275,9 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
                 }
             } else {
                 val buttons = setOf(
-                    Button.secondary("$name-gen", "Generate"),
-                    Button.secondary("$name-read", "Read"),
-                    Button.danger("$name-exit", "Exit"),
+                    Button.secondary("$interactionName-gen", "Generate"),
+                    Button.secondary("$interactionName-read", "Read"),
+                    Button.danger("$interactionName-exit", "Exit"),
                 )
 
                 val hook = event.replyConfirmation("The message has both image attachment and text content.\n" +
@@ -300,7 +300,7 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
                     ) {
                         val cmdName = it.componentId.split("-").first()
 
-                        it.message.idLong == hook.idLong && it.user.idLong == event.user.idLong && cmdName == name
+                        it.message.idLong == hook.idLong && it.user.idLong == event.user.idLong && cmdName == interactionName
                     } ?: return
 
                     when (buttonEvent.componentId.split("-").last()) {

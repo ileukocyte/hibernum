@@ -95,7 +95,7 @@ class RoleCommand : TextCommand {
                 }
 
                 val menu = SelectMenu
-                    .create("$name-${event.author.idLong}-search")
+                    .create("$interactionName-${event.author.idLong}-search")
                     .addOptions(
                         *results.take(10).map { SelectOption.of(it.name, it.id) }.toTypedArray(),
                         SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),
@@ -128,7 +128,7 @@ class RoleCommand : TextCommand {
     }
 
     override suspend fun invoke(event: SelectMenuInteractionEvent) {
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
 
         if (event.user.id == id.first()) {
             val value = event.selectedOptions.firstOrNull()?.value ?: return

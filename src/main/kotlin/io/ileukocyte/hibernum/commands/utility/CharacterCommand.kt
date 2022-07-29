@@ -57,7 +57,7 @@ class CharacterCommand : TextCommand {
                 .create("input", "Enter Your Text (up to 25 unique characters):", TextInputStyle.PARAGRAPH)
                 .build()
             val modal = Modal
-                .create("$name-modal", "Character Information")
+                .create("$interactionName-modal", "Character Information")
                 .addActionRow(modalInput)
                 .build()
 

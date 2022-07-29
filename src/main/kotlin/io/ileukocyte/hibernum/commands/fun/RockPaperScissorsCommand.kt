@@ -35,13 +35,13 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
         event.replyConfirmation("Do you want to play rock paper scissors against ${event.user.asMention}?")
             .setContent(opponent.asMention)
             .addActionRow(
-                Button.secondary("$name-${opponent.idLong}-${event.user.idLong}-play", "Yes"),
-                Button.danger("$name-${opponent.idLong}-${event.user.idLong}-exit", "No"),
+                Button.secondary("$interactionName-${opponent.idLong}-${event.user.idLong}-play", "Yes"),
+                Button.danger("$interactionName-${opponent.idLong}-${event.user.idLong}-exit", "No"),
             ).queue()
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
 
         if (event.user.id in id.first().split("|")) {
             when (val last = id.last()) {
@@ -65,18 +65,18 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
 
                         val buttons = setOf(
                             Button.secondary(
-                                "$name-${starter.idLong}-${opponent.idLong}-1-rock",
+                                "$interactionName-${starter.idLong}-${opponent.idLong}-1-rock",
                                 Emoji.fromUnicode(RPSTurn.ROCK.sign),
                             ),
                             Button.secondary(
-                                "$name-${starter.idLong}-${opponent.idLong}-1-paper",
+                                "$interactionName-${starter.idLong}-${opponent.idLong}-1-paper",
                                 Emoji.fromUnicode(RPSTurn.PAPER.sign),
                             ),
                             Button.secondary(
-                                "$name-${starter.idLong}-${opponent.idLong}-1-scissors",
+                                "$interactionName-${starter.idLong}-${opponent.idLong}-1-scissors",
                                 Emoji.fromUnicode(RPSTurn.SCISSORS.sign),
                             ),
-                            Button.danger("$name-${starter.idLong}|${opponent.idLong}-stop", "Exit"),
+                            Button.danger("$interactionName-${starter.idLong}|${opponent.idLong}-stop", "Exit"),
                         )
 
                         try {
@@ -126,18 +126,18 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
 
                         val buttons = setOf(
                             Button.secondary(
-                                "$name-${opponent.idLong}-${starter.idLong}-$roundNumber-$starterTurn-nextrock",
+                                "$interactionName-${opponent.idLong}-${starter.idLong}-$roundNumber-$starterTurn-nextrock",
                                 Emoji.fromUnicode(RPSTurn.ROCK.sign),
                             ),
                             Button.secondary(
-                                "$name-${opponent.idLong}-${starter.idLong}-$roundNumber-$starterTurn-nextpaper",
+                                "$interactionName-${opponent.idLong}-${starter.idLong}-$roundNumber-$starterTurn-nextpaper",
                                 Emoji.fromUnicode(RPSTurn.PAPER.sign),
                             ),
                             Button.secondary(
-                                "$name-${opponent.idLong}-${starter.idLong}-$roundNumber-$starterTurn-nextscissors",
+                                "$interactionName-${opponent.idLong}-${starter.idLong}-$roundNumber-$starterTurn-nextscissors",
                                 Emoji.fromUnicode(RPSTurn.SCISSORS.sign),
                             ),
-                            Button.danger("$name-${starter.idLong}|${opponent.idLong}-stop", "Exit"),
+                            Button.danger("$interactionName-${starter.idLong}|${opponent.idLong}-stop", "Exit"),
                         )
 
                         try {
@@ -189,18 +189,18 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
 
                             val buttons = setOf(
                                 Button.secondary(
-                                    "$name-${starter.idLong}-${opponent.idLong}-$roundNumber-rock",
+                                    "$interactionName-${starter.idLong}-${opponent.idLong}-$roundNumber-rock",
                                     Emoji.fromUnicode(RPSTurn.ROCK.sign),
                                 ),
                                 Button.secondary(
-                                    "$name-${starter.idLong}-${opponent.idLong}-$roundNumber-paper",
+                                    "$interactionName-${starter.idLong}-${opponent.idLong}-$roundNumber-paper",
                                     Emoji.fromUnicode(RPSTurn.PAPER.sign),
                                 ),
                                 Button.secondary(
-                                    "$name-${starter.idLong}-${opponent.idLong}-$roundNumber-scissors",
+                                    "$interactionName-${starter.idLong}-${opponent.idLong}-$roundNumber-scissors",
                                     Emoji.fromUnicode(RPSTurn.SCISSORS.sign),
                                 ),
-                                Button.danger("$name-${starter.idLong}|${opponent.idLong}-stop", "Exit"),
+                                Button.danger("$interactionName-${starter.idLong}|${opponent.idLong}-stop", "Exit"),
                             )
 
                             try {

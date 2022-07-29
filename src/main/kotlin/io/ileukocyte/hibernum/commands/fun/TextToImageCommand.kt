@@ -29,6 +29,7 @@ import net.dv8tion.jda.api.utils.FileUpload
 class TextToImageCommand : TextCommand, MessageContextOnlyCommand {
     override val name = "text-to-image"
     override val contextName = "Text to Image"
+    override val interactionName = "tti"
     override val description = "Creates an image containing the provided text"
     override val aliases = setOf("tti")
     override val usages = setOf(setOf("input".toClassicTextUsage()))
@@ -53,7 +54,7 @@ class TextToImageCommand : TextCommand, MessageContextOnlyCommand {
             .create("input", "Enter Your Text:", TextInputStyle.PARAGRAPH)
             .build()
         val modal = Modal
-            .create("$name-modal", "Text to Image")
+            .create("$interactionName-modal", "Text to Image")
             .addActionRow(input)
             .build()
 

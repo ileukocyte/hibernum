@@ -121,7 +121,7 @@ class GuessNumberCommand : TextCommand {
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
 
         if (event.user.id == id.first()) {
             when (id.last()) {
@@ -194,8 +194,8 @@ class GuessNumberCommand : TextCommand {
             "exit" -> {
                 val m = received.replyConfirmation("Are you sure you want to exit?")
                     .setActionRow(
-                        Button.danger("$name-${user.idLong}-exit", "Yes"),
-                        Button.secondary("$name-${user.idLong}-$attempt-$number-$processId-stay", "No"),
+                        Button.danger("$interactionName-${user.idLong}-exit", "Yes"),
+                        Button.secondary("$interactionName-${user.idLong}-$attempt-$number-$processId-stay", "No"),
                     ).await()
 
                 channel.jda.awaitEvent<ButtonInteractionEvent>(15, TimeUnit.MINUTES, waiterProcess = waiterProcess {

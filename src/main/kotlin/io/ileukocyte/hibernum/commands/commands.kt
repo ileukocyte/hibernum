@@ -47,6 +47,14 @@ interface GenericCommand : Comparable<GenericCommand> {
             ?: CommandCategory.UNKNOWN
 
     /**
+     * Used in case the command's actual name cannot be used to identify the command's interactions
+     *
+     * **Note**: the interaction name must not contain any hyphens!
+     */
+    val interactionName: String
+        get() = name
+
+    /**
      * Used for the help command if the main description is too long for slash command limits
      */
     val fullDescription: String

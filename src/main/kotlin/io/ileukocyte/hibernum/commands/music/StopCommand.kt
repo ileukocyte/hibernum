@@ -22,8 +22,8 @@ class StopCommand : TextCommand {
             if (event.member?.voiceState?.channel == event.guild.selfMember.voiceState?.channel) {
                 val description = "Are you sure you want the bot to stop playing music and clear the queue?"
                 val buttons = setOf(
-                    Button.danger("$name-${event.author.idLong}-stop", "Yes"),
-                    Button.secondary("$name-${event.author.idLong}-exit", "No"),
+                    Button.danger("$interactionName-${event.author.idLong}-stop", "Yes"),
+                    Button.secondary("$interactionName-${event.author.idLong}-exit", "No"),
                 )
 
                 event.channel.sendConfirmation(description).setActionRow(buttons).queue()
@@ -40,8 +40,8 @@ class StopCommand : TextCommand {
             if (event.member?.voiceState?.channel == event.guild?.selfMember?.voiceState?.channel) {
                 val description = "Are you sure you want the bot to stop playing music and clear the queue?"
                 val buttons = setOf(
-                    Button.danger("$name-${event.user.idLong}-stop", "Yes"),
-                    Button.secondary("$name-${event.user.idLong}-exit", "No"),
+                    Button.danger("$interactionName-${event.user.idLong}-stop", "Yes"),
+                    Button.secondary("$interactionName-${event.user.idLong}-exit", "No"),
                 )
 
                 event.replyConfirmation(description).addActionRow(buttons).queue()
@@ -54,7 +54,7 @@ class StopCommand : TextCommand {
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
 
         if (event.user.id == id.first()) {
             when (id.last()) {

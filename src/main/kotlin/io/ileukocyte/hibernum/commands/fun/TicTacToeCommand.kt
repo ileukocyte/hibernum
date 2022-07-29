@@ -23,14 +23,15 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 
 class TicTacToeCommand : SlashOnlyCommand {
-    override val name = "tictactoe"
+    override val name = "tic-tac-toe"
+    override val interactionName = "tictactoe"
     override val description = "Starts the tic-tac-toe game against the specified user"
     override val options = setOf(
         OptionData(OptionType.USER, "opponent", "The user to play tic-tac-toe against", true))
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
         if (event.user.processes.any { it.command is TicTacToeCommand }) {
-            throw CommandException("You have another TicTacToe command running somewhere else! " +
+            throw CommandException("You have another Tic-Tac-Toe command running somewhere else! " +
                     "Finish the process first!")
         }
 
@@ -43,8 +44,11 @@ class TicTacToeCommand : SlashOnlyCommand {
         val hook = event.replyConfirmation("Do you want to play tic-tac-toe against ${event.user.asMention}?")
             .setContent(opponent.asMention)
             .addActionRow(
-                Button.secondary("$name-${opponent.idLong}-${event.user.idLong}-$staticProcessId-play", "Yes"),
-                Button.danger("$name-${opponent.idLong}-${event.user.idLong}-deny", "No"),
+                Button.secondary(
+                    "$interactionName-${opponent.idLong}-${event.user.idLong}-$staticProcessId-play",
+                    "Yes",
+                ),
+                Button.danger("$interactionName-${opponent.idLong}-${event.user.idLong}-deny", "No"),
             ).await()
         val message = hook.retrieveOriginal().await()
 
@@ -58,7 +62,7 @@ class TicTacToeCommand : SlashOnlyCommand {
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
 
         if (event.user.id == id.first()) {
             when (id.last()) {
@@ -207,8 +211,8 @@ class TicTacToeCommand : SlashOnlyCommand {
             } else {
                 val confirmation = response.replyConfirmation("Are you sure you want to exit?")
                     .setActionRow(
-                        Button.danger("$name-${response.author.idLong}-exit", "Yes"),
-                        Button.secondary("$name-${response.author.idLong}-stay", "No"),
+                        Button.danger("$interactionName-${response.author.idLong}-exit", "Yes"),
+                        Button.secondary("$interactionName-${response.author.idLong}-stay", "No"),
                     ).await()
 
                 try {

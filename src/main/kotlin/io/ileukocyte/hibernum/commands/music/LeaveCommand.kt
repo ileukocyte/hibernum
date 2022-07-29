@@ -24,8 +24,8 @@ class LeaveCommand : TextCommand {
                     if (event.guild.audioPlayer?.player?.playingTrack !== null) {
                         val description = "Are you sure you want the bot to stop playing music and leave the channel?"
                         val buttons = setOf(
-                            Button.danger("$name-${event.author.idLong}-leave", "Yes"),
-                            Button.secondary("$name-${event.author.idLong}-exit", "No"),
+                            Button.danger("$interactionName-${event.author.idLong}-leave", "Yes"),
+                            Button.secondary("$interactionName-${event.author.idLong}-exit", "No"),
                         )
 
                         event.channel.sendConfirmation(description).setActionRow(buttons).queue()
@@ -53,8 +53,8 @@ class LeaveCommand : TextCommand {
                     if (event.guild?.audioPlayer?.player?.playingTrack !== null) {
                         val description = "Are you sure you want the bot to stop playing music and leave the channel?"
                         val buttons = setOf(
-                            Button.danger("$name-${event.user.idLong}-leave", "Yes"),
-                            Button.secondary("$name-${event.user.idLong}-exit", "No"),
+                            Button.danger("$interactionName-${event.user.idLong}-leave", "Yes"),
+                            Button.secondary("$interactionName-${event.user.idLong}-exit", "No"),
                         )
 
                         event.replyConfirmation(description).addActionRow(buttons).queue()
@@ -74,7 +74,7 @@ class LeaveCommand : TextCommand {
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
 
         if (event.user.id == id.first()) {
             when (id.last()) {

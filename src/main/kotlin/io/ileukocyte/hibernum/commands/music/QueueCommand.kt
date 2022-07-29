@@ -63,27 +63,27 @@ class QueueCommand : TextCommand {
 
         val playerButtons = mutableSetOf(
             Button.secondary(
-                "$name-${event.author.idLong}-$initialPage-true-playpause",
+                "$interactionName-${event.author.idLong}-$initialPage-true-playpause",
                 "Pause".applyIf(audioPlayer.player.isPaused) { "Play" },
             ),
-            Button.secondary("$name-${event.author.idLong}-$initialPage-true-stop", "Stop"),
-            audioPlayer.scheduler.loopMode.getButton(name, "${event.author.id}-$initialPage-true"),
+            Button.secondary("$interactionName-${event.author.idLong}-$initialPage-true-stop", "Stop"),
+            audioPlayer.scheduler.loopMode.getButton(interactionName, "${event.author.id}-$initialPage-true"),
         )
 
         if (audioPlayer.scheduler.queue.isNotEmpty()) {
             playerButtons +=
-                Button.secondary("$name-${event.author.idLong}-$initialPage-true-skip", "Skip")
+                Button.secondary("$interactionName-${event.author.idLong}-$initialPage-true-skip", "Skip")
 
             if (audioPlayer.scheduler.queue.size > 1) {
                 playerButtons +=
-                    Button.secondary("$name-${event.author.idLong}-$initialPage-true-shuffle", "Shuffle")
+                    Button.secondary("$interactionName-${event.author.idLong}-$initialPage-true-shuffle", "Shuffle")
             }
         }
 
         actionRows += ActionRow.of(playerButtons)
         actionRows += ActionRow.of(
-            Button.primary("$name-${event.author.idLong}-$initialPage-true-update", "Update"),
-            Button.danger("$name-${event.author.idLong}-exit", "Close"),
+            Button.primary("$interactionName-${event.author.idLong}-$initialPage-true-update", "Update"),
+            Button.danger("$interactionName-${event.author.idLong}-exit", "Close"),
         )
 
         event.channel.sendMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, initialPage))
@@ -113,20 +113,20 @@ class QueueCommand : TextCommand {
         if (addGui) {
             val playerButtons = mutableSetOf(
                 Button.secondary(
-                    "$name-${event.user.idLong}-$initialPage-true-playpause",
+                    "$interactionName-${event.user.idLong}-$initialPage-true-playpause",
                     "Pause".applyIf(audioPlayer.player.isPaused) { "Play" },
                 ),
-                Button.secondary("$name-${event.user.idLong}-$initialPage-true-stop", "Stop"),
-                audioPlayer.scheduler.loopMode.getButton(name, "${event.user.id}-$initialPage-true"),
+                Button.secondary("$interactionName-${event.user.idLong}-$initialPage-true-stop", "Stop"),
+                audioPlayer.scheduler.loopMode.getButton(interactionName, "${event.user.id}-$initialPage-true"),
             )
 
             if (audioPlayer.scheduler.queue.isNotEmpty()) {
                 playerButtons +=
-                    Button.secondary("$name-${event.user.idLong}-$initialPage-true-skip", "Skip")
+                    Button.secondary("$interactionName-${event.user.idLong}-$initialPage-true-skip", "Skip")
 
                 if (audioPlayer.scheduler.queue.size > 1) {
                     playerButtons +=
-                        Button.secondary("$name-${event.user.idLong}-$initialPage-true-shuffle", "Shuffle")
+                        Button.secondary("$interactionName-${event.user.idLong}-$initialPage-true-shuffle", "Shuffle")
                 }
             }
 
@@ -134,8 +134,8 @@ class QueueCommand : TextCommand {
         }
 
         actionRows += ActionRow.of(
-            Button.primary("$name-${event.user.idLong}-$initialPage-$addGui-update", "Update"),
-            Button.danger("$name-${event.user.idLong}-exit", "Close"),
+            Button.primary("$interactionName-${event.user.idLong}-$initialPage-$addGui-update", "Update"),
+            Button.danger("$interactionName-${event.user.idLong}-exit", "Close"),
         )
 
         event.replyEmbeds(queueEmbed(event.jda, audioPlayer, track, initialPage))
@@ -144,7 +144,7 @@ class QueueCommand : TextCommand {
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
 
         if (event.user.id == id.first()) {
             val audioPlayer = event.guild?.audioPlayer ?: return
@@ -171,20 +171,20 @@ class QueueCommand : TextCommand {
                 if (addGui) {
                     val playerButtons = mutableSetOf(
                         Button.secondary(
-                            "$name-${event.user.idLong}-$initialPage-true-playpause",
+                            "$interactionName-${event.user.idLong}-$initialPage-true-playpause",
                             "Pause".applyIf(audioPlayer.player.isPaused) { "Play" },
                         ),
-                        Button.secondary("$name-${event.user.idLong}-$initialPage-true-stop", "Stop"),
-                        audioPlayer.scheduler.loopMode.getButton(name, "${event.user.id}-$initialPage-true"),
+                        Button.secondary("$interactionName-${event.user.idLong}-$initialPage-true-stop", "Stop"),
+                        audioPlayer.scheduler.loopMode.getButton(interactionName, "${event.user.id}-$initialPage-true"),
                     )
 
                     if (audioPlayer.scheduler.queue.isNotEmpty()) {
                         playerButtons +=
-                            Button.secondary("$name-${event.user.idLong}-$initialPage-true-skip", "Skip")
+                            Button.secondary("$interactionName-${event.user.idLong}-$initialPage-true-skip", "Skip")
 
                         if (audioPlayer.scheduler.queue.size > 1) {
                             playerButtons += Button
-                                .secondary("$name-${event.user.idLong}-$initialPage-true-shuffle", "Shuffle")
+                                .secondary("$interactionName-${event.user.idLong}-$initialPage-true-shuffle", "Shuffle")
                         }
                     }
 
@@ -192,8 +192,8 @@ class QueueCommand : TextCommand {
                 }
 
                 actionRows += ActionRow.of(
-                    Button.primary("$name-${event.user.idLong}-$initialPage-$addGui-update", "Update"),
-                    Button.danger("$name-${event.user.idLong}-exit", "Close"),
+                    Button.primary("$interactionName-${event.user.idLong}-$initialPage-$addGui-update", "Update"),
+                    Button.danger("$interactionName-${event.user.idLong}-exit", "Close"),
                 )
 
                 return actionRows
@@ -310,7 +310,7 @@ class QueueCommand : TextCommand {
                                 }
                         }
                         "stop" -> {
-                            val stop = CommandHandler["stop"].cast<StopCommand>().name
+                            val stop = CommandHandler["stop"].cast<StopCommand>().interactionName
 
                             val description = "Are you sure you want the bot to stop playing music and clear the queue?"
                             val buttons = setOf(
@@ -362,13 +362,13 @@ class QueueCommand : TextCommand {
     }
 
     private fun pageButtons(userId: String, page: Int, size: Int, gui: Boolean) = setOf(
-        Button.secondary("$name-$userId-$page-$gui-first", "First Page")
+        Button.secondary("$interactionName-$userId-$page-$gui-first", "First Page")
             .applyIf(page == 0) { asDisabled() },
-        Button.secondary("$name-$userId-$page-$gui-back", "Back")
+        Button.secondary("$interactionName-$userId-$page-$gui-back", "Back")
             .applyIf(page == 0) { asDisabled() },
-        Button.secondary("$name-$userId-$page-$gui-next", "Next")
+        Button.secondary("$interactionName-$userId-$page-$gui-next", "Next")
             .applyIf(page == size.dec()) { asDisabled() },
-        Button.secondary("$name-$userId-$page-$gui-last", "Last Page")
+        Button.secondary("$interactionName-$userId-$page-$gui-last", "Last Page")
             .applyIf(page == size.dec()) { asDisabled() },
     )
 

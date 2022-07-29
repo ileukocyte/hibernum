@@ -41,6 +41,8 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
+
 class AkinatorCommand : TextCommand {
     override val name = "akinator"
     override val description = "Launches a new Akinator game session"
@@ -115,7 +117,7 @@ class AkinatorCommand : TextCommand {
     }
 
     override suspend fun invoke(event: SelectMenuInteractionEvent) {
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
         val optionValue = event.selectedOptions.firstOrNull()?.value
 
         if (event.user.id == id.first()) {
@@ -227,7 +229,7 @@ class AkinatorCommand : TextCommand {
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
 
         if (event.user.id == id.first()) {
             val akiwrapper = AKIWRAPPERS[event.user.idLong] ?: return
@@ -392,8 +394,8 @@ class AkinatorCommand : TextCommand {
                 "exit" -> {
                     val m = message.replyConfirmation("Are you sure you want to exit?")
                         .setActionRow(
-                            Button.danger("$name-${player.idLong}-exit", "Yes"),
-                            Button.secondary("$name-${player.idLong}-$processId-stay", "No"),
+                            Button.danger("$interactionName-${player.idLong}-exit", "Yes"),
+                            Button.secondary("$interactionName-${player.idLong}-$processId-stay", "No"),
                         ).await()
 
                     channel.jda.awaitEvent<ButtonInteractionEvent>(waiterProcess = waiterProcess {
@@ -503,12 +505,12 @@ class AkinatorCommand : TextCommand {
                                         id = processId
                                     }) { it.user.idLong == player.idLong && it.message == m } // used to block other commands
                                 } ?: channel.let {
-                                AKIWRAPPERS -= player.idLong
-                                DECLINED_GUESSES -= player.idLong
-                                GUESS_TYPES -= player.idLong
+                                    AKIWRAPPERS -= player.idLong
+                                    DECLINED_GUESSES -= player.idLong
+                                    GUESS_TYPES -= player.idLong
 
-                                it.sendSuccess("Bravo! You have defeated me!").queue()
-                            }
+                                    it.sendSuccess("Bravo! You have defeated me!").queue()
+                                }
                         }
                     } else {
                         val m = guessMessage(
@@ -561,7 +563,7 @@ class AkinatorCommand : TextCommand {
         }
 
         val menu = SelectMenu
-            .create("$name-$playerId-$processId-type")
+            .create("$interactionName-$playerId-$processId-type")
             .addOptions(
                 *GuessType.values()
                     .sortedBy { it.name }
@@ -623,7 +625,7 @@ class AkinatorCommand : TextCommand {
         val availableLanguages = LANGUAGES_AVAILABLE_FOR_TYPES[type] ?: Language.values().toSortedSet()
 
         val menu = SelectMenu
-            .create("$name-${callback.user.idLong}-$processId-lang")
+            .create("$interactionName-${callback.user.idLong}-$processId-lang")
             .addOptions(
                 *availableLanguages.map { SelectOption.of(it.name.capitalizeAll(), it.name) }.toTypedArray(),
                 SelectOption.of("Return", "return").withEmoji(Emoji.fromUnicode("\u25C0\uFE0F")),
@@ -660,11 +662,11 @@ class AkinatorCommand : TextCommand {
         content: String? = null,
         processId: Int,
     ): Message {
-        val prefix = "g".let { if (isFinal) "final" + it.uppercase() else it } + "uess"
+        val prefix = "g".applyIf(isFinal) { "final" + uppercase() } + "uess"
         val buttons = setOf(
-            Button.primary("$name-$playerId-${prefix}Yes", "Yes"),
+            Button.primary("$interactionName-$playerId-${prefix}Yes", "Yes"),
             Button.danger(buildString {
-                append("$name-$playerId-")
+                append("$interactionName-$playerId-")
 
                 if (!isFinal) {
                     append("$content-$processId-")

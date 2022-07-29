@@ -69,7 +69,7 @@ class UserCommand : TextCommand, UserContextOnlyCommand {
                     }
 
                     val menu = SelectMenu
-                        .create("$name-${event.author.idLong}-search")
+                        .create("$interactionName-${event.author.idLong}-search")
                         .addOptions(
                             *results.filter { !it.user.isBot }.take(10).map { SelectOption.of(it.user.asTag, it.user.id) }.toTypedArray(),
                             SelectOption.of("Exit", "exit").withEmoji(Emoji.fromUnicode("\u274C")),
@@ -97,7 +97,7 @@ class UserCommand : TextCommand, UserContextOnlyCommand {
         chooseUserInfoOrPfp(event.targetMember!!, event.user, event, event.guild)
 
     override suspend fun invoke(event: SelectMenuInteractionEvent) {
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
 
         if (event.user.id == id.first()) {
             event.message.delete().queue()
@@ -113,7 +113,7 @@ class UserCommand : TextCommand, UserContextOnlyCommand {
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
-        val id = event.componentId.removePrefix("$name-").split("-")
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
 
         if (event.user.id == id.first()) {
             val type = id.last()
@@ -175,9 +175,9 @@ class UserCommand : TextCommand, UserContextOnlyCommand {
             return
         }
 
-        val info = Button.secondary("$name-${author.idLong}-${user.idLong}-info", "Information")
-        val pfp = Button.secondary("$name-${author.idLong}-${user.idLong}-pfp", "Profile Picture")
-        val exit = Button.danger("$name-${author.idLong}-exit", "Exit")
+        val info = Button.secondary("$interactionName-${author.idLong}-${user.idLong}-info", "Information")
+        val pfp = Button.secondary("$interactionName-${author.idLong}-${user.idLong}-pfp", "Profile Picture")
+        val exit = Button.danger("$interactionName-${author.idLong}-exit", "Exit")
 
         when (event) {
             is MessageReceivedEvent ->

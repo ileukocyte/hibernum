@@ -84,6 +84,17 @@ object CommandHandler : MutableSet<GenericCommand> {
     }
 
     /**
+     * A function that looks for a [GenericCommand] by its interaction name provided
+     *
+     * @param interactionName
+     * The interaction name of the command to search
+     *
+     * @return A [GenericCommand] having the same interaction name as the provided query
+     */
+    fun getByInteractionName(interactionName: String) =
+        firstOrNull { it.interactionName == interactionName }
+
+    /**
      * A function that specifically looks for a [ContextCommand] by its name and context type provided
      *
      * @param name
@@ -320,7 +331,7 @@ object CommandHandler : MutableSet<GenericCommand> {
      */
     internal operator fun invoke(event: ButtonInteractionEvent) {
         if (event.isFromGuild && event.message.author == event.jda.selfUser) {
-            this[event.componentId.split("-").first()]?.let { command ->
+            getByInteractionName(event.componentId.split("-").first())?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     if (event.message.timeCreated.isBefore(event.jda.startDate)) {
                         when (command.staleInteractionHandling) {
@@ -404,7 +415,7 @@ object CommandHandler : MutableSet<GenericCommand> {
      */
     internal operator fun invoke(event: SelectMenuInteractionEvent) {
         if (event.isFromGuild && event.message.author == event.jda.selfUser) {
-            this[event.componentId.split("-").first()]?.let { command ->
+            getByInteractionName(event.componentId.split("-").first())?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     if (event.message.timeCreated.isBefore(event.jda.startDate)) {
                         when (command.staleInteractionHandling) {
@@ -488,7 +499,7 @@ object CommandHandler : MutableSet<GenericCommand> {
      */
     internal operator fun invoke(event: ModalInteractionEvent) {
         if (event.isFromGuild) {
-            this[event.modalId.split("-").first()]?.let { command ->
+            getByInteractionName(event.modalId.split("-").first())?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     try {
                         command(event)

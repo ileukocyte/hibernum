@@ -128,7 +128,7 @@ class DictionaryCommand : TextCommand {
             message
         }
 
-        when (event.componentId.removePrefix("$name-")) {
+        when (event.componentId.removePrefix("$interactionName-")) {
             "exit" -> deferred.editMessageComponents().queue()
             "first" -> {
                 deferred
@@ -267,15 +267,15 @@ class DictionaryCommand : TextCommand {
 
     private fun pageButtons(page: Int, size: Int) = setOf(
         ActionRow.of(
-            Button.secondary("$name-first", "First Page")
+            Button.secondary("$interactionName-first", "First Page")
                 .applyIf(page == 0) { asDisabled() },
-            Button.secondary("$name-back", "Back")
+            Button.secondary("$interactionName-back", "Back")
                 .applyIf(page == 0) { asDisabled() },
-            Button.secondary("$name-next", "Next")
+            Button.secondary("$interactionName-next", "Next")
                 .applyIf(page == size.dec()) { asDisabled() },
-            Button.secondary("$name-last", "Last Page")
+            Button.secondary("$interactionName-last", "Last Page")
                 .applyIf(page == size.dec()) { asDisabled() },
         ),
-        ActionRow.of(Button.danger("$name-exit", "Close")),
+        ActionRow.of(Button.danger("$interactionName-exit", "Close")),
     )
 }
