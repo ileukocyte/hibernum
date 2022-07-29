@@ -32,10 +32,10 @@ fun IReplyCallback.replyWarning(desc: String, footer: (KEmbedBuilder.Footer.() -
 fun IReplyCallback.replyActionRow(vararg components: ActionComponent) =
     reply(ZERO_WIDTH_SPACE).addActionRow(*components)
 
-fun InteractionHook.editOriginal(block: KMessageBuilder.() -> Unit) =
+inline fun InteractionHook.editOriginal(block: KMessageBuilder.() -> Unit) =
     editOriginal(KMessageBuilder().apply(block)().toEditData())
 
-fun InteractionHook.editOriginalEmbed(block: KEmbedBuilder.() -> Unit) =
+inline fun InteractionHook.editOriginalEmbed(block: KEmbedBuilder.() -> Unit) =
     editOriginalEmbeds(buildEmbed(block))
 
 fun InteractionHook.setSuccessEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =

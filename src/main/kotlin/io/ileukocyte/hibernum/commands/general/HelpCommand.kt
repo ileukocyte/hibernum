@@ -92,7 +92,7 @@ class HelpCommand : TextCommand {
             val query = option.asString
 
             if (query.isNotEmpty()) {
-                searchCommandNames(query).takeUnless { it.isEmpty() }?.let {
+                searchCommandNames(query).let {
                     val commands = it.mapNotNull { name -> CommandHandler[name] }.distinct()
                         .take(OptionData.MAX_CHOICES)
 

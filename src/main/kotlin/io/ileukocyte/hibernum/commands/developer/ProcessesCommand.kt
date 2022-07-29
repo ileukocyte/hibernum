@@ -93,8 +93,7 @@ class ProcessesCommand : SlashOnlyCommand {
             if (query.isNotEmpty()) {
                 event.jda.processes
                     .filter { it.id.startsWith(query) }
-                    .takeUnless { it.isEmpty() }
-                    ?.let { wp ->
+                    .let { wp ->
                         event.replyChoiceStrings(wp.map { it.id }).queue()
                     }
             } else {

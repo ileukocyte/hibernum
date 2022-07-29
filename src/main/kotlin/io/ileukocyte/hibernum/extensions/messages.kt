@@ -93,10 +93,10 @@ fun Message.toEditData() = MessageEditData.fromMessage(this)
 
 fun MessageCreateData.toEditData() = MessageEditData.fromCreateData(this)
 
-fun Message.editMessage(block: KMessageBuilder.() -> Unit) =
+inline fun Message.editMessage(block: KMessageBuilder.() -> Unit) =
     editMessage(KMessageBuilder().apply(block)().toEditData())
 
-fun Message.editMessageEmbed(block: KEmbedBuilder.() -> Unit) =
+inline fun Message.editMessageEmbed(block: KEmbedBuilder.() -> Unit) =
     editMessageEmbeds(KEmbedBuilder().apply(block)())
 
 fun Message.setSuccessEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
@@ -111,7 +111,7 @@ fun Message.setConfirmationEmbed(desc: String, footer: (KEmbedBuilder.Footer.() 
 fun Message.setWarningEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
     editMessageEmbeds(defaultEmbed(desc, EmbedType.WARNING, footer))
 
-fun MessageEditAction.setEmbed(block: KEmbedBuilder.() -> Unit) =
+inline fun MessageEditAction.setEmbed(block: KEmbedBuilder.() -> Unit) =
     setEmbeds(KEmbedBuilder().apply(block)())
 
 fun MessageEditAction.setSuccessEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
@@ -125,6 +125,9 @@ fun MessageEditAction.setConfirmationEmbed(desc: String, footer: (KEmbedBuilder.
 
 fun MessageEditAction.setWarningEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
     setEmbeds(defaultEmbed(desc, EmbedType.WARNING, footer))
+
+inline fun MessageEditCallbackAction.setEmbed(block: KEmbedBuilder.() -> Unit) =
+    setEmbeds(KEmbedBuilder().apply(block)())
 
 fun MessageEditCallbackAction.setSuccessEmbed(desc: String, footer: (KEmbedBuilder.Footer.() -> Unit)? = null) =
     setEmbeds(defaultEmbed(desc, EmbedType.SUCCESS, footer))

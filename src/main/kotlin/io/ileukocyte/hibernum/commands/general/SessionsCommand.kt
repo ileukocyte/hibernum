@@ -98,8 +98,7 @@ class SessionsCommand : SlashOnlyCommand {
             if (query.isNotEmpty()) {
                 event.user.processes
                     .filter { it.id.startsWith(query) && it.command !== null }
-                    .takeUnless { it.isEmpty() }
-                    ?.let { wp ->
+                    .let { wp ->
                         event.replyChoiceStrings(wp.map { it.id }).queue()
                     }
             } else {
