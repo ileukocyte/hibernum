@@ -89,7 +89,7 @@ class WikipediaCommand : SlashOnlyCommand {
 
             author {
                 name = article.title.limitTo(MessageEmbed.AUTHOR_MAX_LENGTH)
-                url = "https://en.wikipedia.org/?curid=$id"
+                url = "https://en.wikipedia.org/?curid=${article.id}"
                 iconUrl = authorIcon
             }
         }

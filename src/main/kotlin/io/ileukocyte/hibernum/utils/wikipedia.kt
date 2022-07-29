@@ -54,6 +54,7 @@ suspend fun getArticleInfo(id: Int): WikipediaArticle? {
         parameter("prop", "extracts|pageprops")
         parameter("exintro", true)
         parameter("explaintext", true)
+        parameter("redirects", true)
         parameter("format", "json")
     }
 
@@ -67,6 +68,7 @@ suspend fun getArticleInfo(id: Int): WikipediaArticle? {
 
             val pageTitle = pageJson["title"]?.jsonPrimitive?.content.orEmpty()
             val pageDescription = pageJson["extract"]?.jsonPrimitive?.content.orEmpty()
+            val pageId = pageJson["pageid"]?.jsonPrimitive?.int ?: -1
             val pageThumbnailName = pageJson["pageprops"]?.jsonObject?.let { props ->
                 props["page_image"]?.jsonPrimitive?.content
                     ?: props["page_image_free"]?.jsonPrimitive?.content
@@ -90,7 +92,7 @@ suspend fun getArticleInfo(id: Int): WikipediaArticle? {
                     ?.content
             }
 
-            WikipediaArticle(pageTitle, pageDescription, pageThumbnail)
+            WikipediaArticle(pageTitle, pageDescription, pageThumbnail, pageId)
         }
 
     return pages?.firstOrNull()
@@ -100,4 +102,5 @@ data class WikipediaArticle(
     val title: String,
     val description: String,
     val thumbnail: String? = null,
+    val id: Int,
 )
