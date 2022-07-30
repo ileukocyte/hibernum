@@ -8,6 +8,7 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
 import io.ileukocyte.hibernum.commands.`fun`.AkinatorCommand
+import io.ileukocyte.hibernum.commands.`fun`.ChomskyCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.extensions.EmbedType.SUCCESS
 import io.ileukocyte.hibernum.extensions.EmbedType.WARNING
@@ -147,6 +148,12 @@ class SessionsCommand : SlashOnlyCommand {
                         }
                     }
 
+                    if (session.command is ChomskyCommand) {
+                        for (userId in session.users) {
+                            ChomskyCommand.CHATTER_BOT_SESSIONS -= userId
+                        }
+                    }
+
                     event.editMessageEmbeds(defaultEmbed("The session has been aborted!", SUCCESS))
                         .setComponents(emptyList())
                         .queue(null) {
@@ -253,17 +260,23 @@ class SessionsCommand : SlashOnlyCommand {
 
     override suspend fun invoke(event: ModalInteractionEvent) {
         val id = event.getValue("$interactionName-id")?.asString ?: return
-        val sessions = event.jda.getProcessById(id)
+        val session = event.jda.getProcessById(id)
             ?.takeIf { event.user.idLong in it.users && it.command !== null }
             ?: throw CommandException("No session of yours has been found by the provided ID!")
 
-        sessions.kill(event.jda)
+        session.kill(event.jda)
 
-        if (sessions.command is AkinatorCommand) {
-            for (userId in sessions.users) {
+        if (session.command is AkinatorCommand) {
+            for (userId in session.users) {
                 AkinatorCommand.AKIWRAPPERS -= userId
                 AkinatorCommand.DECLINED_GUESSES -= userId
                 AkinatorCommand.GUESS_TYPES -= userId
+            }
+        }
+
+        if (session.command is ChomskyCommand) {
+            for (userId in session.users) {
+                ChomskyCommand.CHATTER_BOT_SESSIONS -= userId
             }
         }
 
@@ -274,11 +287,11 @@ class SessionsCommand : SlashOnlyCommand {
             }
 
         val description =
-            "The ${sessions.command?.let { it::class.simpleName } ?: event.jda.selfUser.name} session " +
+            "The ${session.command?.let { it::class.simpleName } ?: event.jda.selfUser.name} session " +
                     "running in this channel has been aborted!"
 
-        event.jda.getChannelById(GuildMessageChannel::class.java, sessions.channel)?.let { channel ->
-            sessions.invoker?.let {
+        event.jda.getChannelById(GuildMessageChannel::class.java, session.channel)?.let { channel ->
+            session.invoker?.let {
                 channel.retrieveMessageById(it).await().delete().queue(null) {}
             }
 
@@ -287,7 +300,7 @@ class SessionsCommand : SlashOnlyCommand {
                     text = "This message will self-delete in 5 seconds"
                 }
 
-                sessions.users.mapNotNull { event.jda.getUserById(it)?.asMention }.joinToString()
+                session.users.mapNotNull { event.jda.getUserById(it)?.asMention }.joinToString()
                     .takeUnless { it.isEmpty() }
                     ?.let { content += it }
             }.queue({ it.delete().queueAfter(5, TimeUnit.SECONDS, null) {} }) {}

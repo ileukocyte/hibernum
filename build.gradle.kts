@@ -60,6 +60,7 @@ dependencies {
     implementation(group = "org.ocpsoft.prettytime", name = "prettytime", version = "5.0.3.Final")
     implementation(group = "io.arrow-kt", name = "arrow-fx-coroutines", version = "1.1.2")
     implementation(group = "org.sejda.imageio", name = "webp-imageio", version = "0.1.6")
+    implementation(group = "ca.pjer", name = "chatter-bot-api", version = "2.0.1")
 
     // Kotlin
     implementation(kotlin("stdlib", kotlinVersion))

@@ -2,6 +2,7 @@ package io.ileukocyte.hibernum.handlers
 
 import io.ileukocyte.hibernum.audio.*
 import io.ileukocyte.hibernum.commands.`fun`.AkinatorCommand
+import io.ileukocyte.hibernum.commands.`fun`.ChomskyCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.WaiterContext
 import io.ileukocyte.hibernum.utils.awaitEvent
@@ -29,8 +30,6 @@ import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEve
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
-
-import org.jetbrains.kotlin.utils.addToStdlib.cast
 
 object EventHandler : ListenerAdapter() {
     override fun onMessageReceived(event: MessageReceivedEvent) =
@@ -210,6 +209,12 @@ object EventHandler : ListenerAdapter() {
                     AkinatorCommand.AKIWRAPPERS -= id
                     AkinatorCommand.DECLINED_GUESSES -= id
                     AkinatorCommand.GUESS_TYPES -= id
+                }
+            }
+
+            if (process.command is ChomskyCommand) {
+                for (userId in process.users) {
+                    ChomskyCommand.CHATTER_BOT_SESSIONS -= userId
                 }
             }
 

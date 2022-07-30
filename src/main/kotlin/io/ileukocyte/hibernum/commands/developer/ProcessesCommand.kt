@@ -8,6 +8,7 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
 import io.ileukocyte.hibernum.commands.`fun`.AkinatorCommand
+import io.ileukocyte.hibernum.commands.`fun`.ChomskyCommand
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.WaiterProcess
 import io.ileukocyte.hibernum.utils.getProcessById
@@ -138,6 +139,12 @@ class ProcessesCommand : SlashOnlyCommand {
                         }
                     }
 
+                    if (process.command is ChomskyCommand) {
+                        for (userId in process.users) {
+                            ChomskyCommand.CHATTER_BOT_SESSIONS -= userId
+                        }
+                    }
+
                     event.editMessageEmbeds(defaultEmbed("The process has been terminated!", EmbedType.SUCCESS))
                         .setComponents(emptyList())
                         .queue(null) {
@@ -254,6 +261,12 @@ class ProcessesCommand : SlashOnlyCommand {
                 AkinatorCommand.AKIWRAPPERS -= userId
                 AkinatorCommand.DECLINED_GUESSES -= userId
                 AkinatorCommand.GUESS_TYPES -= userId
+            }
+        }
+
+        if (process.command is ChomskyCommand) {
+            for (userId in process.users) {
+                ChomskyCommand.CHATTER_BOT_SESSIONS -= userId
             }
         }
 

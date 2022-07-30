@@ -1,5 +1,5 @@
 # hibernum
-**Hibernum** is a non-commercial modern Discord multi-purpose 100% [Kotlin](https://kotlinlang.org/)-coded bot that relies on its musical functionality, utility commands, and fun module.
+**Hibernum** is a modern Discord multi-purpose 100% [Kotlin](https://kotlinlang.org/)-coded bot that relies on its musical functionality, utility commands, and fun module.
 
 ## Libraries and APIs used:
 * [Kotlin programming language](https://github.com/JetBrains/kotlin)
@@ -29,3 +29,4 @@
 * [logback-classic](http://logback.qos.ch/)
 * [kotlin-logging](https://github.com/MicroUtils/kotlin-logging)
 * [webp-imageio](https://github.com/sejda-pdf/webp-imageio)
+* [chatter-bot-api](https://github.com/pierredavidbelanger/chatter-bot-api)
