@@ -49,9 +49,10 @@ class HelpCommand : TextCommand {
             try {
                 val dm = event.author.openPrivateChannel().await()
 
-                dm.sendMessageEmbeds(getCommandList(event.jda, event.author, false))
-                    .setActionRow(buttons)
-                    .await()
+                dm.sendMessageEmbeds(getCommandList(event.jda, event.author,
+                    isFromSlashCommand = false,
+                    isInDm = true,
+                )).setActionRow(buttons).await()
 
                 event.message.addReaction(Emoji.fromUnicode("\u2705")).queue(null) {}
             } catch (_: ErrorResponseException) {
@@ -78,10 +79,10 @@ class HelpCommand : TextCommand {
                 Button.link(Immutable.GITHUB_REPOSITORY, "GitHub Repository"),
             )
 
-            event.replyEmbeds(getCommandList(event.jda, event.user, true, isInDm = false))
-                .addActionRow(buttons)
-                .setEphemeral(true)
-                .queue()
+            event.replyEmbeds(getCommandList(event.jda, event.user,
+                isFromSlashCommand = true,
+                isInDm = false,
+            )).addActionRow(buttons).setEphemeral(true).queue()
         }
     }
 
@@ -248,11 +249,11 @@ class HelpCommand : TextCommand {
         }
     }
 
-    private fun getCommandList(
+    internal fun getCommandList(
         jda: JDA,
         author: User,
         isFromSlashCommand: Boolean,
-        isInDm: Boolean = true,
+        isInDm: Boolean,
     ) = buildEmbed {
         color = Immutable.SUCCESS
 

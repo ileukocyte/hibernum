@@ -3,6 +3,7 @@ package io.ileukocyte.hibernum.commands.general
 import com.sun.management.OperatingSystemMXBean
 
 import io.ileukocyte.hibernum.Immutable
+import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.*
 import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
@@ -25,9 +26,11 @@ import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.commands.Command.Type
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import net.dv8tion.jda.api.interactions.components.ActionRow
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 
 import org.jetbrains.kotlin.utils.addToStdlib.applyIf
+import org.jetbrains.kotlin.utils.addToStdlib.cast
 
 class AboutCommand : TextCommand {
     override val name = "about"
@@ -39,14 +42,18 @@ class AboutCommand : TextCommand {
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val appInfo = event.jda.retrieveApplicationInfo().await()
-        val buttons = setOf(
+
+        val actionButtons = ActionRow.of(
             Button.primary("$interactionName-${event.author.idLong}-update", "Update"),
+            Button.success("$interactionName-${event.author.idLong}-help", "Command Help"),
+        )
+        val linkButtons = ActionRow.of(
             Button.link(event.jda.getInviteUrl(appInfo.permissions), "Invite Link"),
             Button.link(Immutable.GITHUB_REPOSITORY, "GitHub Repository"),
         )
 
         event.channel.sendMessageEmbeds(statsEmbed(event.jda, appInfo, event.guild))
-            .setActionRow(buttons)
+            .setComponents(actionButtons, linkButtons)
             .queue()
     }
 
@@ -56,25 +63,46 @@ class AboutCommand : TextCommand {
         val deferred = event.deferReply().setEphemeral(isEphemeral).await()
 
         val appInfo = event.jda.retrieveApplicationInfo().await()
-        val buttons = listOf(
+
+        val actionButtons = listOf(
             Button.primary("$interactionName-${event.user.idLong}-update", "Update"),
+            Button.success("$interactionName-${event.user.idLong}-help", "Command Help"),
+        ).applyIf(isEphemeral) { subList(1, size) }.let { ActionRow.of(it) }
+
+        val linkButtons = ActionRow.of(
             Button.link(event.jda.getInviteUrl(appInfo.permissions), "Invite Link"),
             Button.link(Immutable.GITHUB_REPOSITORY, "GitHub Repository"),
-        ).applyIf(isEphemeral) { subList(1, size) }
+        )
 
         val embed = statsEmbed(event.jda, appInfo, event.guild ?: return)
 
         deferred.editOriginalEmbeds(embed)
-            .setActionRow(buttons)
+            .setComponents(actionButtons, linkButtons)
             .queue(null) {
                 event.channel.sendMessageEmbeds(embed)
-                    .setActionRow(buttons)
+                    .setComponents(actionButtons, linkButtons)
                     .queue()
             }
     }
 
     override suspend fun invoke(event: ButtonInteractionEvent) {
-        if (event.componentId.split("-")[1] == event.user.id) {
+        val id = event.componentId.removePrefix("$interactionName-").split("-")
+
+        if (id.last() == "help") {
+            val help = CommandHandler["help"].cast<HelpCommand>()
+            val embed = help.getCommandList(
+                jda = event.jda,
+                author = event.user,
+                isFromSlashCommand = true,
+                isInDm = false,
+            )
+
+            event.replyEmbeds(embed).setEphemeral(true).queue()
+
+            return
+        }
+
+        if (id.first() == event.user.id) {
             val deferred = event.deferEdit().await()
             val appInfo = event.jda.retrieveApplicationInfo().await()
 
@@ -101,8 +129,6 @@ class AboutCommand : TextCommand {
 
         description = buildString {
             val restPing = jda.restPing.await()
-            val musicStreamingServersCount = jda.guildCache
-                .count { it.selfMember.voiceState?.inAudioChannel() == true }
             val owner = appInfo.owner
             val commandCount = setOf(
                 CommandHandler.count { it is ClassicTextOnlyCommand }.takeIf { it > 0 }
@@ -114,6 +140,11 @@ class AboutCommand : TextCommand {
             )
             val discordCommands = jda.retrieveCommands().await()
             val os = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean::class.java)
+
+            val musicStreamingServersCount = jda.guildCache.count {
+                it.selfMember.voiceState?.inAudioChannel() == true
+                        && it.audioPlayer?.player?.playingTrack !== null
+            }
 
             appendLine(appInfo.description
                 .replace("Kotlin", "[Kotlin](https://kotlinlang.org/)")
