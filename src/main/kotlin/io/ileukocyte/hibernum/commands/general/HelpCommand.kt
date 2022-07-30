@@ -54,7 +54,7 @@ class HelpCommand : TextCommand {
                     isInDm = true,
                 )).setActionRow(buttons).await()
 
-                event.message.addReaction(Emoji.fromUnicode("\u2705")).queue(null) {}
+                event.message.addReaction(Emoji.fromUnicode("\u2611")).queue(null) {}
             } catch (_: ErrorResponseException) {
                 event.channel.sendMessageEmbeds(getCommandList(event.jda, event.author,
                     isFromSlashCommand = false,
