@@ -66,7 +66,7 @@ class AboutCommand : TextCommand {
 
         val actionButtons = listOf(
             Button.primary("$interactionName-${event.user.idLong}-update", "Update"),
-            Button.success("$interactionName-${event.user.idLong}-help", "Command Help"),
+            Button.success("$interactionName-help", "Command Help"),
         ).applyIf(isEphemeral) { subList(1, size) }.let { ActionRow.of(it) }
 
         val linkButtons = ActionRow.of(
@@ -97,7 +97,7 @@ class AboutCommand : TextCommand {
                 isInDm = false,
             )
 
-            event.replyEmbeds(embed).setEphemeral(true).queue()
+            event.replyEmbeds(embed).setEphemeral(true).queue(null) {}
 
             return
         }

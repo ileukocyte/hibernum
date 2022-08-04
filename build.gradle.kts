@@ -8,8 +8,8 @@ val ktorVersion: String by project
 plugins {
     java
 
-    kotlin("jvm") version "1.7.10"
-    kotlin("plugin.serialization") version "1.7.10"
+    kotlin("jvm") version "1.7.20-Beta"
+    kotlin("plugin.serialization") version "1.7.20-Beta"
 
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("com.github.ben-manes.versions") version "0.42.0"
@@ -34,7 +34,7 @@ repositories {
 
 dependencies {
     // Discord
-    implementation(group = "com.github.DV8FromtheWorld", name = "JDA", version = "bc379eaf12") {
+    implementation(group = "com.github.DV8FromtheWorld", name = "JDA", version = "269abfb9e1") {
         exclude(module = "opus-java")
     }
     implementation(group = "com.sedmelluq", name = "lavaplayer", version = "1.3.78")
@@ -117,7 +117,7 @@ tasks.withType<ShadowJar> {
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "17"
-    //kotlinOptions.freeCompilerArgs += setOf("-Xuse-k2")
+    //kotlinOptions.freeCompilerArgs += setOf("-Xuse-k2", "-XXLanguage:+RangeUntilOperator")
 }
 
 tasks.getByName<Test>("test") {

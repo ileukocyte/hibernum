@@ -211,7 +211,7 @@ class QueueCommand : TextCommand {
                         }
                 }
                 "last" -> {
-                    val lastPage = pagesCount.dec()
+                    val lastPage = max(0, pagesCount.dec())
 
                     event.editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, lastPage))
                         .setComponents(getUpdatedButtons(lastPage))
@@ -223,7 +223,7 @@ class QueueCommand : TextCommand {
                         }
                 }
                 "back" -> {
-                    val newPage = min(max(0, pageNumber.dec()), pagesCount.dec())
+                    val newPage = min(max(0, pageNumber.dec()), max(0, pagesCount.dec()))
 
                     event.editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, newPage))
                         .setComponents(getUpdatedButtons(newPage))
@@ -235,7 +235,7 @@ class QueueCommand : TextCommand {
                         }
                 }
                 "next" -> {
-                    val newPage = min(pageNumber.inc(), pagesCount.dec())
+                    val newPage = min(pageNumber.inc(), max(0, pagesCount.dec()))
 
                     event.editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, newPage))
                         .setComponents(getUpdatedButtons(newPage))
@@ -247,7 +247,7 @@ class QueueCommand : TextCommand {
                         }
                 }
                 "update" -> {
-                    val page = min(pageNumber, pagesCount.dec())
+                    val page = min(pageNumber, max(0, pagesCount.dec()))
 
                     event.editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, page))
                         .setComponents(getUpdatedButtons(page))
@@ -267,7 +267,7 @@ class QueueCommand : TextCommand {
                         "playpause" -> {
                             audioPlayer.player.isPaused = !audioPlayer.player.isPaused
 
-                            val page = min(pageNumber, pagesCount.dec())
+                            val page = min(pageNumber, max(0, pagesCount.dec()))
 
                             event.editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, page))
                                 .setComponents(getUpdatedButtons(page))
@@ -283,7 +283,7 @@ class QueueCommand : TextCommand {
                                 audioPlayer.scheduler.shuffle()
                             }
 
-                            val page = min(pageNumber, pagesCount.dec())
+                            val page = min(pageNumber, max(0, pagesCount.dec()))
 
                             event.editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, page))
                                 .setComponents(getUpdatedButtons(page))
@@ -298,7 +298,7 @@ class QueueCommand : TextCommand {
                             audioPlayer.scheduler.loopMode = audioPlayer.scheduler.loopMode
                                 .getNext(audioPlayer.scheduler.queue.isEmpty())
 
-                            val page = min(pageNumber, pagesCount.dec())
+                            val page = min(pageNumber, max(0, pagesCount.dec()))
 
                             event.editMessageEmbeds(queueEmbed(event.jda, audioPlayer, track, page))
                                 .setComponents(getUpdatedButtons(page))
@@ -339,7 +339,7 @@ class QueueCommand : TextCommand {
                                 }
                             }
 
-                            val page = min(pageNumber, pagesCount.dec())
+                            val page = min(pageNumber, max(0, pagesCount.dec()))
 
                             val embed =
                                 queueEmbed(event.jda, audioPlayer, audioPlayer.player.playingTrack, page)
