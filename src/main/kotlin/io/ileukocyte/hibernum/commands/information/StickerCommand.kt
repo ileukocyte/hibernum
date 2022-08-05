@@ -11,6 +11,7 @@ import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.sticker.Sticker.StickerFormat
 import net.dv8tion.jda.api.entities.sticker.StickerItem
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
@@ -24,13 +25,20 @@ class StickerCommand : ClassicTextOnlyCommand, MessageContextOnlyCommand {
     override val contextName = "Sticker Information"
     override val description = "Sends the available information about the provided sticker"
     override val aliases = setOf("sticker-info")
-    override val usages = setOf(setOf("sticker".toClassicTextUsage()))
+    override val usages = setOf(
+        setOf("sticker".toClassicTextUsage()),
+        setOf("reply to a sticker message".toClassicTextUsage()),
+    )
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
-        val sticker = event.message.stickers.firstOrNull()
-            ?: throw CommandException("No sticker has been provided!")
+        val sticker = event.message.let {
+            it.stickers.firstOrNull() ?: it.messageReference?.resolve()
+                ?.await()
+                ?.stickers
+                ?.firstOrNull()
+        } ?: throw CommandException("No sticker has been provided!")
 
-        val response = stickerEmbed(sticker, event.jda)
+        val response = stickerEmbed(sticker, event.jda, event.guild)
 
         event.channel.sendMessageEmbeds(response.applyIf(response.color === null) {
             EmbedBuilder(response).setColor(Immutable.SUCCESS).build()
@@ -44,13 +52,13 @@ class StickerCommand : ClassicTextOnlyCommand, MessageContextOnlyCommand {
         try {
             val deferred = event.deferReply().await()
 
-            val response = stickerEmbed(sticker, event.jda)
+            val response = stickerEmbed(sticker, event.jda, event.guild ?: return)
 
             deferred.editOriginalEmbeds(response.applyIf(response.color === null) {
                 EmbedBuilder(response).setColor(Immutable.SUCCESS).build()
             }).await()
         } catch (_: ErrorResponseException) {
-            val response = stickerEmbed(sticker, event.jda)
+            val response = stickerEmbed(sticker, event.jda, event.guild ?: return)
 
             event.messageChannel.sendMessageEmbeds(response.applyIf(response.color === null) {
                 EmbedBuilder(response).setColor(Immutable.SUCCESS).build()
@@ -58,7 +66,11 @@ class StickerCommand : ClassicTextOnlyCommand, MessageContextOnlyCommand {
         }
     }
 
-    private suspend fun stickerEmbed(sticker: StickerItem, jda: JDA) = buildEmbed {
+    private suspend fun stickerEmbed(
+        sticker: StickerItem,
+        jda: JDA,
+        currentGuild: Guild,
+    ) = buildEmbed {
         val icon = sticker.iconUrl.takeUnless { sticker.formatType == StickerFormat.LOTTIE }
         val richSticker = jda.retrieveSticker(sticker).await()
 
@@ -100,6 +112,22 @@ class StickerCommand : ClassicTextOnlyCommand, MessageContextOnlyCommand {
             field {
                 title = "Server"
                 description = gs.guild?.name?.escapeMarkdown() ?: "Unknown"
+                isInline = true
+            }
+
+            field {
+                title = "Uploader"
+                description = gs.retrieveOwner().await().let {
+                    if (it !== null) {
+                        if (currentGuild.isMember(it)) {
+                            it.asMention
+                        } else {
+                            it.asTag
+                        }
+                    } else {
+                        "Unknown"
+                    }
+                }
                 isInline = true
             }
 

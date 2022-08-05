@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit
 import javax.imageio.ImageIO
 
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.future.await
 
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent

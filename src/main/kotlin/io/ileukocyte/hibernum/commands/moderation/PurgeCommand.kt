@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.seconds
 
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.future.await
 
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.EmbedType as JDAEmbedType

@@ -7,7 +7,11 @@ import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.asDuration
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
 
+import java.text.SimpleDateFormat
+
 import kotlin.math.round
+
+import kotlinx.coroutines.future.await
 
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -18,6 +22,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
+import net.dv8tion.jda.api.utils.TimeFormat
 
 import se.michaelthelin.spotify.SpotifyApi
 import se.michaelthelin.spotify.exceptions.detailed.BadRequestException
@@ -26,13 +31,21 @@ import se.michaelthelin.spotify.model_objects.specification.Track
 class SpotifyCommand : TextCommand {
     override val name = "spotify"
     override val description = "Searches a Spotify track by the provided query and sends some information about one"
-    override val usages = setOf(setOf("query".toClassicTextUsage()))
+    override val usages = setOf(
+        setOf("search term".toClassicTextUsage()),
+        setOf("link".toClassicTextUsage()),
+        setOf("reply to a Spotify track link message".toClassicTextUsage()),
+    )
     override val options = setOf(
-        OptionData(OptionType.STRING, "query", "A search term", true))
+        OptionData(OptionType.STRING, "query", "A search term or a link", true))
     override val cooldown = 5L
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
-        val query = args ?: throw NoArgumentsException
+        val query = args ?: event.message.messageReference?.resolve()?.await()
+            ?.contentRaw
+            ?.takeIf { SPOTIFY_TRACK_URL_REGEX.containsMatchIn(it) }
+            ?: throw NoArgumentsException
+
         val api = SPOTIFY_API.apply {
             accessToken = clientCredentials().build().executeAsync().await().accessToken
         }
@@ -236,8 +249,9 @@ class SpotifyCommand : TextCommand {
         if (track.artists.size > 1) {
             field {
                 title = "Featured Artists"
-                description =
-                    track.artists.filter { it.id != artist.id }.joinToString { "[${it.name}](${it.externalUrls.get("spotify")})" }
+                description = track.artists.filter { it.id != artist.id }
+                    .joinToString { "[${it.name}](${it.externalUrls.get("spotify")})" }
+                isInline = track.artists.size <= 3
             }
         }
 
@@ -250,8 +264,11 @@ class SpotifyCommand : TextCommand {
         }
 
         field {
+            val format = SimpleDateFormat("yyyy-MM-dd")
+            val millis = format.parse(album.releaseDate).time
+
             title = "Release Date"
-            description = album.releaseDate
+            description = TimeFormat.DATE_LONG.format(millis)
             isInline = true
         }
 
@@ -263,17 +280,45 @@ class SpotifyCommand : TextCommand {
 
         field {
             title = "Popularity"
-            description = track.popularity?.takeUnless { it == 0 }?.let { "${it / 10f}/10" } ?: "N/A"
+            description = track.popularity
+                ?.takeUnless { it == 0 }
+                ?.let { "${it / 10f}/10" }
+                ?: "N/A"
             isInline = true
+        }
+
+        artist.genres.takeUnless { it.isEmpty() }?.let {
+            field {
+                title = "Artist Genres"
+                description = it.joinToString(transform = String::capitalizeAll)
+                isInline = true
+            }
         }
 
         features?.let {
             field {
+                fun Int?.pitchClassToKey() = when (this) {
+                    0 -> "C"
+                    1 -> "C#"
+                    2 -> "D"
+                    3 -> "D#"
+                    4 -> "E"
+                    5 -> "F"
+                    6 -> "F#"
+                    7 -> "G"
+                    8 -> "G#"
+                    9 -> "A"
+                    10 -> "A#"
+                    11 -> "B"
+                    else -> "Unknown"
+                }
+
                 title = "Audio Features"
                 description = """**Acousticness**: ${features.acousticness?.times(100)?.run { "${round(this).toInt()}%" } ?: "N/A"}
                     |**Danceability**: ${features.danceability?.times(100)?.run { "${round(this).toInt()}%" } ?: "N/A"}
                     |**Energy**: ${features.energy?.times(100)?.run { "${round(this).toInt()}%" } ?: "N/A"}
                     |**Instrumentalness**: ${features.instrumentalness?.times(100)?.run { "${round(this).toInt()}%" } ?: "N/A"}
+                    |**Key**: ${features.key.pitchClassToKey()}
                     |**Liveness**: ${features.liveness?.times(100)?.run { "${round(this).toInt()}%" } ?: "N/A"}
                     |**Speechiness**: ${features.speechiness?.times(100)?.run { "${round(this).toInt()}%" } ?: "N/A"}
                     |**Tempo**: ${features.tempo?.toInt()?.run { "$this BPM" } ?: "N/A"}

@@ -14,6 +14,7 @@ import io.ileukocyte.hibernum.utils.waiterProcess
 import java.util.concurrent.TimeUnit
 
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.future.await as futureAwait
 
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.MessageEmbed
@@ -66,7 +67,7 @@ class SayCommand : TextCommand {
 
         val (imageName, imageStream) = event.message.attachments.firstOrNull {
             it.isImage && it.size <= event.guild.maxFileSize
-        }.let { it?.fileName to it?.proxy?.download()?.await() }
+        }.let { it?.fileName to it?.proxy?.download()?.futureAwait() }
 
         try {
             event.message.delete().await()
@@ -102,7 +103,7 @@ class SayCommand : TextCommand {
         val image = event.getOption("image")
             ?.asAttachment
             ?.takeIf { it.isImage && it.size <= guild.maxFileSize }
-            ?.let { it.fileName to it.proxy.download().await() }
+            ?.let { it.fileName to it.proxy.download().futureAwait() }
 
         val nonEmbed = event.getOption("non-embed")?.asString?.let {
             if (guild.publicRole.asMention in it

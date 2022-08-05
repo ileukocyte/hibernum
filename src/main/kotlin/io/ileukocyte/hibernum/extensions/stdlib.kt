@@ -3,24 +3,8 @@ package io.ileukocyte.hibernum.extensions
 
 import java.text.DecimalFormat
 import java.util.SortedSet
-import java.util.concurrent.CompletableFuture
-
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlinx.coroutines.suspendCancellableCoroutine
 
 import org.jetbrains.kotlin.utils.addToStdlib.applyIf
-
-// Java concurrency
-suspend fun <T> CompletableFuture<T>.await() = suspendCancellableCoroutine<T> { continuation ->
-    continuation.invokeOnCancellation {
-        cancel(true)
-    }
-
-    whenComplete { r, e ->
-        e?.let { continuation.resumeWithException(it) } ?: continuation.resume(r)
-    }
-}
 
 // kotlin.Boolean
 val Boolean.asWord get() = if (this) {

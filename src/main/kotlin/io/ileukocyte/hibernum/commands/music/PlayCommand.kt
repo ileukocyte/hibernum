@@ -25,7 +25,7 @@ import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstance
 
 class PlayCommand : TextCommand {
     override val name = "play"
-    override val description = "Plays the specified media in a voice channel"
+    override val description = "Plays the provided media in a voice channel"
     override val fullDescription = description +
             "\n\n**Available search prefixes**:" +
             "\n\u2022 `ytsearch:` (YouTube)" +

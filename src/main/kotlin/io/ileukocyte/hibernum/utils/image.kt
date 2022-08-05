@@ -4,7 +4,6 @@ package io.ileukocyte.hibernum.utils
 import de.androidpit.colorthief.ColorThief
 
 import io.ileukocyte.hibernum.Immutable
-import io.ileukocyte.hibernum.extensions.await
 
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -18,6 +17,7 @@ import javax.imageio.ImageIO
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.future.await
 
 import net.dv8tion.jda.api.utils.ImageProxy
 
