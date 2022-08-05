@@ -191,13 +191,9 @@ class BattleshipCommand : SlashOnlyCommand {
                     event.jda.getProcessById(processId)?.kill(event.jda)
 
                     event.editComponents()
-                        .setEmbeds(
-                            defaultEmbed(
-                                "The session has been terminated by ${event.user.asMention}!",
-                                EmbedType.SUCCESS,
-                            )
-                        ).queue(null) {
-                            event.messageChannel.sendSuccess(
+                        .setWarningEmbed("The session has been terminated by ${event.user.asMention}!")
+                        .queue(null) {
+                            event.messageChannel.sendWarning(
                                 "The session has been terminated by ${event.user.asMention}!").queue()
                         }
 
@@ -245,7 +241,7 @@ class BattleshipCommand : SlashOnlyCommand {
 
                 val turn = currentTurn.opponentBoard[row][column]
 
-                if (turn == Battleship.RED_SQUARE || turn == Battleship.YELLOW_CIRCLE) {
+                if (turn == Battleship.RED_SQUARE || turn == Battleship.YELLOW_SQUARE) {
                     turnMessage.channel.sendFailure("The gap is taken! Try again!").queue()
 
                     awaitTurn(battleship, guildMessage, guildChannel, processId)
@@ -253,8 +249,8 @@ class BattleshipCommand : SlashOnlyCommand {
                     val opponent = battleship.players.first { it.user.idLong != currentTurn.user.idLong }
 
                     if (opponent.ownBoard[row][column] == Battleship.WHITE_SQUARE) {
-                        opponent.ownBoard[row][column] = Battleship.YELLOW_CIRCLE
-                        currentTurn.opponentBoard[row][column] = Battleship.YELLOW_CIRCLE
+                        opponent.ownBoard[row][column] = Battleship.YELLOW_SQUARE
+                        currentTurn.opponentBoard[row][column] = Battleship.YELLOW_SQUARE
 
                         turnMessage.replyEmbeds(
                             defaultEmbed(
@@ -826,7 +822,7 @@ class BattleshipCommand : SlashOnlyCommand {
             const val WHITE_SQUARE = "\u2B1C"
             const val BLUE_SQUARE = "\uD83D\uDFE6"
             const val RED_SQUARE = "\uD83D\uDFE5"
-            const val YELLOW_CIRCLE = "\uD83D\uDFE1"
+            const val YELLOW_SQUARE = "\uD83D\uDFE8"
 
             @JvmField
             val TURN_REGEX = Regex("([A-Ja-j])(\\d)")
