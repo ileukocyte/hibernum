@@ -48,18 +48,32 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
     private val packages get() = buildString {
         for ((key, value) in IMPORTS) {
             if (value.isNotEmpty()) {
-                for (`package` in value) {
-                    append("import $key.")
+                for (`import` in value.sortedBy { it.name }) {
+                    append("import $key")
 
-                    if (`package`.isNotEmpty()) {
-                        append("$`package`.")
+                    if (`import` is Entity) {
+                        append(".${`import`.name}")
+
+                        `import`.altName?.let {
+                            append(" as $it")
+                        }
+
+                        appendLine()
+                    } else {
+                        append(".")
+
+                        if (`import`.name.isNotEmpty()) {
+                            append("${`import`.name}.")
+                        }
+
+                        appendLine("*")
                     }
-
-                    appendLine("*")
                 }
             } else {
                 appendLine("import $key.*")
             }
+
+            appendLine()
         }
     }
 
@@ -95,11 +109,7 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
 
             engine.put("event", event)
 
-            val result: Any? = engine.eval("""
-                        |$packages
-                        |
-                        |$code
-                    """.trimMargin())
+            val result: Any? = engine.eval(packages + code)
 
             if (result !== null) {
                 when (result) {
@@ -176,11 +186,7 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
 
             engine.put("event", event)
 
-            val result: Any? = engine.eval("""
-                        |$packages
-                        |
-                        |$code
-                    """.trimMargin())
+            val result: Any? = engine.eval(packages + code)
 
             if (result !== null) {
                 when (result) {
@@ -270,11 +276,7 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
 
             engine.put("event", event)
 
-            val result: Any? = engine.eval("""
-                        |$packages
-                        |
-                        |$code
-                    """.trimMargin())
+            val result: Any? = engine.eval(packages + code)
 
             if (result !== null) {
                 when (result) {
@@ -329,100 +331,110 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
 
     companion object {
         @JvmField
-        val IMPORTS = mutableMapOf(
+        val IMPORTS: MutableMap<String, Set<Import>> = mutableMapOf(
             "io.ileukocyte" to setOf(
-                "hibernum",
-                "hibernum.audio",
-                "hibernum.builders",
-                "hibernum.commands",
-                "hibernum.commands.developer",
-                "hibernum.commands.`fun`",
-                "hibernum.commands.general",
-                "hibernum.commands.moderation",
-                "hibernum.commands.music",
-                "hibernum.commands.utility",
-                "hibernum.extensions",
-                "hibernum.handlers",
-                "hibernum.utils",
-                "openweather",
-                "openweather.entities",
-                "openweather.extensions",
+                Package("hibernum"),
+                Package("hibernum.audio"),
+                Package("hibernum.builders"),
+                Package("hibernum.commands"),
+                Package("hibernum.commands.developer"),
+                Package("hibernum.commands.`fun`"),
+                Package("hibernum.commands.general"),
+                Package("hibernum.commands.moderation"),
+                Package("hibernum.commands.music"),
+                Package("hibernum.commands.utility"),
+                Package("hibernum.extensions"),
+                Package("hibernum.handlers"),
+                Package("hibernum.utils"),
+                Package("openweather"),
+                Package("openweather.entities"),
+                Package("openweather.extensions"),
             ),
             "net.dv8tion.jda.api" to setOf(
-                "",
-                "audit",
-                "entities",
-                "entities.emoji",
-                "entities.sticker",
-                "events",
-                "events.guild",
-                "events.guild.voice",
-                "events.interaction",
-                "events.interaction.command",
-                "events.interaction.component",
-                "events.message",
-                "events.message",
-                "events.message.react",
-                "exceptions",
-                "hooks",
-                "interactions",
-                "interactions.commands",
-                "interactions.commands.build",
-                "interactions.components",
-                "interactions.components.buttons",
-                "interactions.components.selections",
-                "interactions.components.text",
-                "managers",
-                "requests",
-                "requests.restaction",
-                "requests.restaction.order",
-                "requests.restaction.pagination",
-                "utils",
-                "utils.cache",
-                "utils.messages",
+                Package(),
+                Package("audit"),
+                Package("entities"),
+                Package("entities.emoji"),
+                Package("entities.sticker"),
+                Package("events"),
+                Package("events.guild"),
+                Package("events.guild.voice"),
+                Package("events.interaction"),
+                Package("events.interaction.command"),
+                Package("events.interaction.component"),
+                Package("events.message"),
+                Package("events.message.react"),
+                Package("exceptions"),
+                Package("hooks"),
+                Package("interactions"),
+                Package("interactions.commands"),
+                Package("interactions.commands.build"),
+                Package("interactions.components"),
+                Package("interactions.components.buttons"),
+                Package("interactions.components.selections"),
+                Package("interactions.components.text"),
+                Package("managers"),
+                Package("requests"),
+                Package("requests.restaction"),
+                Package("requests.restaction.order"),
+                Package("requests.restaction.pagination"),
+                Package("utils"),
+                Package("utils.cache"),
+                Package("utils.messages"),
+                Entity("entities.EmbedType", altName = "JDAEmbedType"),
             ),
             "java" to setOf(
-                "io",
-                "lang.management",
-                "net",
-                "text",
-                "time",
-                "time.format",
-                "time.temporal",
-                "util.concurrent",
+                Package("io"),
+                Package("lang.management"),
+                Package("net"),
+                Package("text"),
+                Package("time"),
+                Package("time.format"),
+                Package("time.temporal"),
+                Package("util.concurrent"),
+                Package("util.concurrent.atomic"),
+                Entity("util.Base64"),
+                Entity("util.Date"),
+                Entity("util.EnumSet"),
+                Entity("util.Queue"),
             ),
             "kotlin" to setOf(
-                "concurrent",
-                "coroutines",
-                "experimental",
-                "properties",
-                "random",
-                "reflect",
-                "reflect.full",
-                "reflect.jvm",
-                "system",
+                Package("concurrent"),
+                Package("coroutines"),
+                Package("experimental"),
+                Package("properties"),
+                Package("random"),
+                Package("reflect"),
+                Package("reflect.full"),
+                Package("reflect.jvm"),
+                Package("system"),
             ),
             "kotlinx" to setOf(
-                "coroutines",
-                "serialization",
-                "serialization.json",
+                Package("coroutines"),
+                Package("coroutines.future"),
+                Package("serialization"),
+                Package("serialization.json"),
             ),
             "io.ktor" to setOf(
-                "client",
-                "client.call",
-                "client.plugins.contentnegotiation",
-                "client.request",
-                "http",
-                "serialization.kotlinx.json",
+                Package("client"),
+                Package("client.call"),
+                Package("client.plugins.contentnegotiation"),
+                Package("client.request"),
+                Package("http"),
+                Package("serialization.kotlinx.json"),
             ),
             "org" to setOf(
-                "jetbrains.kotlin.util.collectionUtils",
-                "jetbrains.kotlin.utils.addToStdlib",
-                "json",
-                "jsoup",
-                "reflections",
+                Package("jetbrains.kotlin.util.collectionUtils"),
+                Package("jetbrains.kotlin.utils.addToStdlib"),
+                Package("json"),
+                Package("jsoup"),
+                Package("reflections"),
             ),
             "mu" to emptySet(),
         )
     }
+
+    sealed class Import(val name: String)
+    class Package(name: String = ""): Import(name)
+    class Entity(name: String, val altName: String? = null): Import(name)
 }

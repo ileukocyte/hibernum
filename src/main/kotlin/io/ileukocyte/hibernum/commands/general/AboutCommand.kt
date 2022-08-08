@@ -170,8 +170,9 @@ class AboutCommand : TextCommand {
                 title = "Version Information"
                 description = buildString {
                     appendLine("**Bot Version**: ${Immutable.VERSION}")
-                    appendLine("**JDA Version**: ${JDAInfo.VERSION}")
                     appendLine("**Discord Rest API Version**: ${JDAInfo.DISCORD_REST_VERSION}")
+                    appendLine("**Discord Gateway Version**: ${JDAInfo.DISCORD_GATEWAY_VERSION}")
+                    appendLine("**JDA Version**: ${JDAInfo.VERSION}")
                     appendLine("**Kotlin Version**: ${KotlinVersion.CURRENT}")
                     appendLine("**Java Version**: ${System.getProperty("java.version") ?: "Unknown"}")
                 }

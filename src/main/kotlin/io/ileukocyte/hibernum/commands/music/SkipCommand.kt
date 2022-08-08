@@ -12,10 +12,10 @@ import net.dv8tion.jda.api.interactions.InteractionType
 
 class SkipCommand : TextCommand {
     override val name = "skip"
-    override val description = "Skips to the next song in the queue"
+    override val description = "Skips the current song in the queue"
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
-        val audioPlayer = event.guild.audioPlayer ?: throw CommandException()
+        val audioPlayer = event.guild.audioPlayer ?: return
 
         if (audioPlayer.player.playingTrack !== null) {
             if (event.member?.voiceState?.channel == event.guild.selfMember.voiceState?.channel) {
