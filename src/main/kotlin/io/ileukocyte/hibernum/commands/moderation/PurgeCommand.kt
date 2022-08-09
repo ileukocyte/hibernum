@@ -8,8 +8,10 @@ import java.util.concurrent.TimeUnit
 
 import kotlin.time.Duration.Companion.seconds
 
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.withTimeout
 
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.EmbedType as JDAEmbedType
@@ -124,16 +126,11 @@ class PurgeCommand : SlashOnlyCommand {
 
         val deferred = event.deferReply().setEphemeral(true).await()
 
-        var counter = 0
         val filtered = mutableListOf<Message>()
-
-        var gottenAllMessages = false
 
         withTimeoutOrNull((15).seconds) {
             event.channel.iterableHistory.forEachAsync { message ->
-                if (counter == count) {
-                    gottenAllMessages = true
-
+                if (filtered.size == count) {
                     return@forEachAsync false
                 }
 
@@ -170,7 +167,6 @@ class PurgeCommand : SlashOnlyCommand {
                         "stickers" -> message.stickers.isNotEmpty()
                         "system-messages" -> message.type.isSystem && message.type.canDelete()
                         "unpinned-messages" -> !message.isPinned
-                        "users-aside-from" -> true
                         "video-attachments" -> message.attachments.any { a -> a.isVideo }
                         "webhook-messages" -> message.isWebhookMessage
                         else -> true
@@ -209,8 +205,6 @@ class PurgeCommand : SlashOnlyCommand {
                 val predicate = userFilter && filter && textFilter
 
                 if (predicate) {
-                    counter++
-
                     filtered += message
                 }
 
@@ -224,26 +218,52 @@ class PurgeCommand : SlashOnlyCommand {
             return
         }
 
-        val response = getResponse(
-            filtered.size,
-            event.getOption("user")?.asUser,
-            event.getOption("filter")?.asString,
-            event.getOption("text-filter")?.asString,
-            event.getOption("mention")?.asMentionable,
-        )
+        var purgeCount = 0
 
-        event.guildChannel.purgeMessages(filtered).forEach { it.await() }
+        val deletion = event.guildChannel.purgeMessages(filtered)
 
-        deferred.setSuccessEmbed(response) {
-            if (!gottenAllMessages) {
-                text = "The bot has been unable to get all the messages " +
-                        "since iterating the history was taking longer than 15 seconds!"
+        try {
+            withTimeout((90).seconds) {
+                deletion.forEach {
+                    it.await()
+
+                    purgeCount++
+                }
+
+                val response = getResponse(
+                    filtered.size,
+                    event.getOption("user")?.asUser,
+                    event.getOption("filter")?.asString,
+                    event.getOption("text-filter")?.asString,
+                    event.getOption("mention")?.asMentionable,
+                )
+
+                deferred.setSuccessEmbed(response).queue()
             }
-        }.queue()
+        } catch (_: TimeoutCancellationException) {
+            deletion.forEach {
+                if (!it.isDone) {
+                    it.cancel(true)
+                }
+            }
 
-        event.channel.sendWarning("${event.user.asMention} has used the `$name` command!") {
-            text = "This message will self-delete in 5 seconds"
-        }.queue { it.delete().queueAfter(5, TimeUnit.SECONDS, null) {} }
+            val response = getResponse(
+                purgeCount,
+                event.getOption("user")?.asUser,
+                event.getOption("filter")?.asString,
+                event.getOption("text-filter")?.asString,
+                event.getOption("mention")?.asMentionable,
+            )
+
+            deferred.setWarningEmbed(response) {
+                text = "The bot has been unable to delete all the messages since the procedure " +
+                        "was taking longer than 90 seconds!"
+            }.queue()
+        } finally {
+            event.channel.sendWarning("${event.user.asMention} has used the `$name` command!") {
+                text = "This message will self-delete in 5 seconds"
+            }.queue { it.delete().queueAfter(5, TimeUnit.SECONDS, null) {} }
+        }
     }
 
     private fun getResponse(
