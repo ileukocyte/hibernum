@@ -402,7 +402,7 @@ class QueueCommand : TextCommand {
                     )
 
                     val trackDuration = if (t.info.isStream) {
-                        "(LIVE)"
+                        "LIVE"
                     } else {
                         asDuration(t.duration)
                     }
@@ -439,8 +439,10 @@ class QueueCommand : TextCommand {
 
         if (queueIsNotEmpty) {
             field {
+                val tracks = musicManager.scheduler.queue + track
+
                 title = "Total Duration"
-                description = asDuration(track.duration + musicManager.scheduler.queue.sumOf { it.duration })
+                description = asDuration(tracks.filter { !it.info.isStream }.sumOf { it.duration })
                 isInline = true
             }
         }
