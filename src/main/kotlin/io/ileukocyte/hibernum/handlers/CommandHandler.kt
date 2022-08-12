@@ -2,7 +2,7 @@ package io.ileukocyte.hibernum.handlers
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.commands.*
-import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
+import io.ileukocyte.hibernum.commands.GenericCommand.StaleComponentHandling
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.asText
 import io.ileukocyte.hibernum.utils.getProcessByEntities
@@ -333,8 +333,8 @@ object CommandHandler : MutableSet<GenericCommand> {
             getByInteractionName(event.componentId.split("-").first())?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     if (event.message.timeCreated.isBefore(event.jda.startDate)) {
-                        when (command.staleInteractionHandling) {
-                            StaleInteractionHandling.DELETE_ORIGINAL -> {
+                        when (command.staleComponentHandling) {
+                            StaleComponentHandling.DELETE_ORIGINAL -> {
                                 try {
                                     event.message.delete().queue(null) {}
                                 } catch (_: IllegalStateException) {}
@@ -350,7 +350,7 @@ object CommandHandler : MutableSet<GenericCommand> {
 
                                 return@launch
                             }
-                            StaleInteractionHandling.REMOVE_COMPONENTS -> {
+                            StaleComponentHandling.REMOVE_COMPONENTS -> {
                                 event.message.editMessageComponents().queue(null) {}
 
                                 return@launch
@@ -417,8 +417,8 @@ object CommandHandler : MutableSet<GenericCommand> {
             getByInteractionName(event.componentId.split("-").first())?.let { command ->
                 CoroutineScope(CommandContext).launch {
                     if (event.message.timeCreated.isBefore(event.jda.startDate)) {
-                        when (command.staleInteractionHandling) {
-                            StaleInteractionHandling.DELETE_ORIGINAL -> {
+                        when (command.staleComponentHandling) {
+                            StaleComponentHandling.DELETE_ORIGINAL -> {
                                 try {
                                     event.message.delete().queue(null) {}
                                 } catch (_: IllegalStateException) {}
@@ -434,7 +434,7 @@ object CommandHandler : MutableSet<GenericCommand> {
 
                                 return@launch
                             }
-                            StaleInteractionHandling.REMOVE_COMPONENTS -> {
+                            StaleComponentHandling.REMOVE_COMPONENTS -> {
                                 event.message.editMessageComponents().queue(null) {}
 
                                 return@launch

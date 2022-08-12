@@ -3,7 +3,7 @@ package io.ileukocyte.hibernum.commands.utility
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
+import io.ileukocyte.hibernum.commands.GenericCommand.StaleComponentHandling
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.commands.usageGroupOf
@@ -49,7 +49,7 @@ class DictionaryCommand : TextCommand {
         OptionData(OptionType.STRING, "term", "The term to define", true))
     override val usages = setOf(usageGroupOf("term".toClassicTextUsage()))
     override val cooldown = 5L
-    override val staleInteractionHandling = StaleInteractionHandling.REMOVE_COMPONENTS
+    override val staleComponentHandling = StaleComponentHandling.REMOVE_COMPONENTS
 
     private val jsonSerializer = Json { ignoreUnknownKeys = true }
     private val client = Immutable.HTTP_CLIENT.config {

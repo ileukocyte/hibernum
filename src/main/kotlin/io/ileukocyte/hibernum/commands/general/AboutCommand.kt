@@ -6,7 +6,7 @@ import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.*
-import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
+import io.ileukocyte.hibernum.commands.GenericCommand.StaleComponentHandling
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asText
@@ -38,7 +38,7 @@ class AboutCommand : TextCommand {
     override val options = setOf(
         OptionData(OptionType.BOOLEAN, "ephemeral", "Whether the response should be invisible to other users"))
     override val aliases = setOf("bot-info", "info", "stats")
-    override val staleInteractionHandling = StaleInteractionHandling.EXECUTE_COMMAND
+    override val staleComponentHandling = StaleComponentHandling.EXECUTE_COMMAND
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val appInfo = event.jda.retrieveApplicationInfo().await()

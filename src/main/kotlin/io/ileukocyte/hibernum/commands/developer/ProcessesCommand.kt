@@ -5,7 +5,7 @@ import com.google.common.collect.Lists
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
+import io.ileukocyte.hibernum.commands.GenericCommand.StaleComponentHandling
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
 import io.ileukocyte.hibernum.commands.`fun`.AkinatorCommand
 import io.ileukocyte.hibernum.commands.`fun`.ChomskyCommand
@@ -45,7 +45,7 @@ class ProcessesCommand : SlashOnlyCommand {
     override val options = setOf(
         OptionData(OptionType.STRING, "pid", "The ID of the process to terminate")
             .setAutoComplete(true))
-    override val staleInteractionHandling = StaleInteractionHandling.REMOVE_COMPONENTS
+    override val staleComponentHandling = StaleComponentHandling.REMOVE_COMPONENTS
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
         val processes = event.jda.processes.takeUnless { it.isEmpty() }

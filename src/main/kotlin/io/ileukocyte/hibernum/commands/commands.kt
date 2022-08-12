@@ -39,11 +39,21 @@ import org.jetbrains.kotlin.utils.addToStdlib.applyIf
  */
 interface GenericCommand : Comparable<GenericCommand> {
     /**
+     * A property that provides the main name of the command
+     *
      * **Note**: the property is always mandatory to override unless the command is a context-menu one;
      * therefore, do not forget to override it yourself in case the command is not context menu only!
      */
     val name: String
+
+    /**
+     * A property that provides the main description of the command
+     */
     val description: String
+
+    /**
+     * A property that provides the functional category of the command
+     */
     val category: CommandCategory
         get() = javaClass.`package`.name.let { CommandCategory[it.split(".").last()] }
             ?: CommandCategory.UNKNOWN
@@ -69,12 +79,15 @@ interface GenericCommand : Comparable<GenericCommand> {
         get() = category == CommandCategory.DEVELOPER
 
     /**
-     * Used for a few commands that can be used in spite of some other command processes
+     * Used for a few commands that can be used in spite of any other command processes
      * running in the background
      */
     val neglectProcessBlock: Boolean
         get() = isDeveloper
 
+    /**
+     * A property that provides all the ways the current command can be used by a user
+     */
     val inputTypes: Set<InputType>
         get() {
             val inputTypes = mutableSetOf<InputType>()
@@ -102,19 +115,33 @@ interface GenericCommand : Comparable<GenericCommand> {
             return inputTypes
         }
 
+    /**
+     * A property that provides the minimum length of time that a user will need to wait after using the command
+     * before it can be used again
+     */
     val cooldown: Long
         get() = 0
 
     /**
-     * A property that shows whether the command's expired interactions should
+     * A property that shows whether the command's expired components should
      * trigger an explicit failure response, silent deletion of the command's
      * components (i.e. buttons and selection menus), or normal execution of the command
+     *
+     * **Note**: A component is considered expired within the project if it was sent by the bot
+     * before the latest reboot
      */
-    val staleInteractionHandling: StaleInteractionHandling
-        get() = StaleInteractionHandling.DELETE_ORIGINAL
+    val staleComponentHandling: StaleComponentHandling
+        get() = StaleComponentHandling.DELETE_ORIGINAL
 
+    /**
+     * A property that provides a set of the permissions that the bot is required to have to execute the command
+     */
     val botPermissions: Set<Permission>
         get() = emptySet()
+
+    /**
+     * A property that provides a set of the permissions that the user is required to have to execute the command
+     */
     val memberPermissions: Set<Permission>
         get() = emptySet()
 
@@ -158,7 +185,7 @@ interface GenericCommand : Comparable<GenericCommand> {
         }
     }
 
-    enum class StaleInteractionHandling {
+    enum class StaleComponentHandling {
         DELETE_ORIGINAL,
         REMOVE_COMPONENTS,
         EXECUTE_COMMAND,
@@ -335,7 +362,14 @@ interface ContextCommand : GenericCommand {
     override val name: String
         get() = contextName
 
+    /**
+     * A property that provides the context-menu name of the command
+     */
     val contextName: String
+
+    /**
+     * A property that provides a set of context menus a user is able to invoke the command from
+     */
     val contextTypes: Set<ContextType>
         get() = setOf(ContextType.MESSAGE, ContextType.USER)
 

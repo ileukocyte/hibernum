@@ -8,7 +8,7 @@ import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.audio.*
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
+import io.ileukocyte.hibernum.commands.GenericCommand.StaleComponentHandling
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.commands.music.LoopCommand.Companion.getButton
 import io.ileukocyte.hibernum.commands.music.LoopCommand.Companion.getNext
@@ -44,7 +44,7 @@ class QueueCommand : TextCommand {
         OptionData(OptionType.BOOLEAN, "gui-player", "Whether the button player should " +
                 "be added to the queue message (default is true)"),
     )
-    override val staleInteractionHandling = StaleInteractionHandling.REMOVE_COMPONENTS
+    override val staleComponentHandling = StaleComponentHandling.REMOVE_COMPONENTS
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val audioPlayer = event.guild.audioPlayer ?: return

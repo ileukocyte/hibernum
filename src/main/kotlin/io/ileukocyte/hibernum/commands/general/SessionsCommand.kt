@@ -5,7 +5,7 @@ import com.google.common.collect.Lists
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
+import io.ileukocyte.hibernum.commands.GenericCommand.StaleComponentHandling
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
 import io.ileukocyte.hibernum.commands.`fun`.AkinatorCommand
 import io.ileukocyte.hibernum.commands.`fun`.ChomskyCommand
@@ -45,7 +45,7 @@ class SessionsCommand : SlashOnlyCommand {
     override val options = setOf(
         OptionData(STRING, "id", "The ID of the session to abort")
             .setAutoComplete(true))
-    override val staleInteractionHandling = StaleInteractionHandling.REMOVE_COMPONENTS
+    override val staleComponentHandling = StaleComponentHandling.REMOVE_COMPONENTS
     override val neglectProcessBlock = true
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
