@@ -7,6 +7,7 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.commands.usageGroupOf
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.*
 
@@ -36,7 +37,7 @@ class YouTubeCommand : TextCommand {
     override val aliases = setOf("yt", "yts", "ytsearch")
     override val options = setOf(
         OptionData(OptionType.STRING, "query", "A link or a search term", true))
-    override val usages = setOf(setOf("query".toClassicTextUsage()))
+    override val usages = setOf(usageGroupOf("query".toClassicTextUsage()))
     override val cooldown = 5L
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {

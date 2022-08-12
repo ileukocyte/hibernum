@@ -9,10 +9,7 @@ import com.google.zxing.common.HybridBinarizer
 
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
-import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.commands.MessageContextOnlyCommand
-import io.ileukocyte.hibernum.commands.SubcommandHolder
-import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.commands.*
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.awaitEvent
 import io.ileukocyte.hibernum.utils.waiterProcess
@@ -54,8 +51,8 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
             .addOption(OptionType.ATTACHMENT, "image", "The image to read a QR code from", true) to ::read,
     )
     override val usages = setOf(
-        setOf("text input".toClassicTextUsage()),
-        setOf("image".toClassicTextUsage()),
+        usageGroupOf("text input".toClassicTextUsage()),
+        usageGroupOf("image".toClassicTextUsage()),
     )
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {

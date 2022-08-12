@@ -4,6 +4,7 @@ import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.audio.customUserData
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.commands.usageGroupOf
 import io.ileukocyte.hibernum.extensions.await
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -15,7 +16,7 @@ class RequeueCommand : TextCommand {
     override val name = "requeue"
     override val description = "Adds the specified (or currently playing) song to the end of the queue"
     override val aliases = setOf("re-add", "readd", "re-queue")
-    override val usages = setOf(setOf("song".toClassicTextUsage()))
+    override val usages = setOf(usageGroupOf("song".toClassicTextUsage()))
     override val options = setOf(
         OptionData(OptionType.INTEGER, "song", "The number of the song to readd"))
 

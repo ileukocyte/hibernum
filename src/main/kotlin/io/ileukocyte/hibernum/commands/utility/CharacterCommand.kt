@@ -5,6 +5,7 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.commands.usageGroupOf
 import io.ileukocyte.hibernum.extensions.*
 
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
@@ -23,7 +24,7 @@ class CharacterCommand : TextCommand {
     override val aliases = setOf("character")
     override val options = setOf(
         OptionData(OptionType.STRING, "input", "The characters provided"))
-    override val usages = setOf(setOf("input".toClassicTextUsage()))
+    override val usages = setOf(usageGroupOf("input".toClassicTextUsage()))
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val input = args

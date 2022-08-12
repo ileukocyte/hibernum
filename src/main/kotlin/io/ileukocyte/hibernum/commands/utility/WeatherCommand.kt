@@ -5,6 +5,7 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.commands.usageGroupOf
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.setFailureEmbed
 import io.ileukocyte.hibernum.extensions.toDecimalFormat
@@ -28,7 +29,7 @@ class WeatherCommand : TextCommand {
     override val name = "weather"
     override val description = "Sends the weather in the specified location"
     override val cooldown = 3L
-    override val usages = setOf(setOf("location".toClassicTextUsage()))
+    override val usages = setOf(usageGroupOf("location".toClassicTextUsage()))
     override val options = setOf(
         OptionData(OptionType.STRING, "location", "The location to get the weather for", true))
 

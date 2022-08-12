@@ -4,6 +4,7 @@ import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.commands.usageGroupOf
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.limitTo
 import io.ileukocyte.hibernum.extensions.remove
@@ -36,8 +37,8 @@ class SayCommand : TextCommand {
     override val description = "Sends your message on behalf of the bot as an embed message"
     override val aliases = setOf("announce")
     override val usages = setOf(
-        setOf("text input".toClassicTextUsage()),
-        setOf("image file".toClassicTextUsage()),
+        usageGroupOf("text input".toClassicTextUsage()),
+        usageGroupOf("image file".toClassicTextUsage()),
     )
     override val options = setOf(
         OptionData(

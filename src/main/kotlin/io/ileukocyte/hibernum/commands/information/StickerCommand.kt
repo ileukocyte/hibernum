@@ -5,6 +5,7 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.ClassicTextOnlyCommand
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.MessageContextOnlyCommand
+import io.ileukocyte.hibernum.commands.usageGroupOf
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.escapeMarkdown
 import io.ileukocyte.hibernum.utils.getDominantColorByImageUrl
@@ -26,8 +27,8 @@ class StickerCommand : ClassicTextOnlyCommand, MessageContextOnlyCommand {
     override val description = "Sends the available information about the provided sticker"
     override val aliases = setOf("sticker-info")
     override val usages = setOf(
-        setOf("sticker".toClassicTextUsage()),
-        setOf("reply to a sticker message".toClassicTextUsage()),
+        usageGroupOf("sticker".toClassicTextUsage()),
+        usageGroupOf("reply to a sticker message".toClassicTextUsage()),
     )
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {

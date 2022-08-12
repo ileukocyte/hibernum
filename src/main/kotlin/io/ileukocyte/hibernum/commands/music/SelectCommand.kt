@@ -5,6 +5,7 @@ import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.audio.customUserData
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.commands.usageGroupOf
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.setFailureEmbed
 
@@ -22,7 +23,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 class SelectCommand : TextCommand {
     override val name = "select"
     override val description = "Selects another track from the queue and plays it"
-    override val usages = setOf(setOf("song".toClassicTextUsage()))
+    override val usages = setOf(usageGroupOf("song".toClassicTextUsage()))
     override val options = setOf(
         OptionData(OptionType.INTEGER, "song", "The number of the song to play", true))
 

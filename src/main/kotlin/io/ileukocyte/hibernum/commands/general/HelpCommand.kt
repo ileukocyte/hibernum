@@ -28,7 +28,7 @@ import org.jetbrains.kotlin.utils.addToStdlib.cast
 class HelpCommand : TextCommand {
     override val name = "help"
     override val description = "Sends a list of all the bot's commands and provides the user with the documentation"
-    override val usages = setOf(setOf("command name".toClassicTextUsage(true)))
+    override val usages = setOf(usageGroupOf("command name".toClassicTextUsage(true)))
     override val options = setOf(
         OptionData(OptionType.STRING, "command", "The command to provide help for")
             .setAutoComplete(true))
@@ -155,7 +155,7 @@ class HelpCommand : TextCommand {
                 field {
                     title = "Classic Text Usages"
                     description = usages.joinToString("\n") { group ->
-                        "$prefix$name ${group.joinToString(" ") { usage ->
+                        "$prefix$name ${group.group.joinToString(" ") { usage ->
                             usage.toString()
                                 .applyIf(usage.isOptional) { "$this (optional)" }
                                 .applyIf(usage.applyDefaultAffixes) { surroundWith("<", ">") }

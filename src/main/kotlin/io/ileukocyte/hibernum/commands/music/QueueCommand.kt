@@ -12,6 +12,7 @@ import io.ileukocyte.hibernum.commands.GenericCommand.StaleInteractionHandling
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.commands.music.LoopCommand.Companion.getButton
 import io.ileukocyte.hibernum.commands.music.LoopCommand.Companion.getNext
+import io.ileukocyte.hibernum.commands.usageGroupOf
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asDuration
@@ -37,7 +38,7 @@ class QueueCommand : TextCommand {
     override val name = "queue"
     override val description = "Shows the current playlist"
     override val aliases = setOf("q", "playlist")
-    override val usages = setOf(setOf("page".toClassicTextUsage(true)))
+    override val usages = setOf(usageGroupOf("page".toClassicTextUsage(true)))
     override val options = setOf(
         OptionData(OptionType.INTEGER, "page", "Initial page number"),
         OptionData(OptionType.BOOLEAN, "gui-player", "Whether the button player should " +

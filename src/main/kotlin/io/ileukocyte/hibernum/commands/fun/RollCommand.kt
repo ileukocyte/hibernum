@@ -3,6 +3,7 @@ package io.ileukocyte.hibernum.commands.`fun`
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.commands.usageGroupOf
 import io.ileukocyte.hibernum.extensions.monospace
 import io.ileukocyte.hibernum.extensions.replyEmbed
 import io.ileukocyte.hibernum.extensions.sendEmbed
@@ -27,7 +28,7 @@ class RollCommand : TextCommand {
             .setMaxValue(25),
     )
     override val usages = setOf(
-        setOf("<number of dice (optional, 1–25)>d<number of sides (2–250)>"
+        usageGroupOf("<number of dice (optional, 1–25)>d<number of sides (2–250)>"
             .toClassicTextUsage(applyDefaultAffixes = false))
     )
 

@@ -1,6 +1,8 @@
 @file:JvmName("Commands")
 package io.ileukocyte.hibernum.commands
 
+import io.ileukocyte.hibernum.commands.TextCommand.ClassicTextUsage
+import io.ileukocyte.hibernum.commands.TextCommand.ClassicTextUsageGroup
 import io.ileukocyte.hibernum.extensions.capitalizeAll
 
 import net.dv8tion.jda.api.Permission
@@ -242,13 +244,16 @@ interface TextCommand : GenericCommand {
         override fun toString() = option
     }
 
+    @JvmInline
+    value class ClassicTextUsageGroup(val group: Collection<ClassicTextUsage>)
+
     fun String.toClassicTextUsage(
         isOptional: Boolean = false,
         applyDefaultAffixes: Boolean = true,
     ) = ClassicTextUsage(this, isOptional, applyDefaultAffixes)
 }
 
-typealias ClassicTextUsageGroup = Collection<TextCommand.ClassicTextUsage>
+fun usageGroupOf(vararg usages: ClassicTextUsage) = ClassicTextUsageGroup(usages.toList())
 
 /**
  * A type of command that can be used as a classic text command exclusively

@@ -1,9 +1,6 @@
 package io.ileukocyte.hibernum.commands.`fun`
 
-import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.commands.MessageContextOnlyCommand
-import io.ileukocyte.hibernum.commands.NoArgumentsException
-import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.commands.*
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.limitTo
 
@@ -32,7 +29,7 @@ class TextToImageCommand : TextCommand, MessageContextOnlyCommand {
     override val interactionName = "tti"
     override val description = "Creates an image containing the provided text"
     override val aliases = setOf("tti")
-    override val usages = setOf(setOf("input".toClassicTextUsage()))
+    override val usages = setOf(usageGroupOf("input".toClassicTextUsage()))
     override val cooldown = 5L
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {

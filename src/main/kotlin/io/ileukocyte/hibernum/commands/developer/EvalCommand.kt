@@ -1,10 +1,7 @@
 package io.ileukocyte.hibernum.commands.developer
 
 import io.ileukocyte.hibernum.Immutable
-import io.ileukocyte.hibernum.commands.CommandException
-import io.ileukocyte.hibernum.commands.MessageContextOnlyCommand
-import io.ileukocyte.hibernum.commands.NoArgumentsException
-import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.commands.*
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.openweather.Forecast
 import io.ileukocyte.openweather.OpenWeatherApi
@@ -41,8 +38,8 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
     )
     override val aliases = setOf("exec", "execute", "kotlin", "kt")
     override val usages = setOf(
-        setOf("Kotlin code".toClassicTextUsage()),
-        setOf("reply to a message with Kotlin code".toClassicTextUsage()),
+        usageGroupOf("Kotlin code".toClassicTextUsage()),
+        usageGroupOf("reply to a message with Kotlin code".toClassicTextUsage()),
     )
 
     private val packages get() = buildString {

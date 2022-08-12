@@ -5,6 +5,7 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.commands.usageGroupOf
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.RequiredAttributes
 import io.ileukocyte.hibernum.utils.getPerspectiveApiProbability
@@ -36,7 +37,7 @@ class UrbanCommand : TextCommand {
     override val description = "Sends an Urban Dictionary definition of the specified term (executes faster in a NSFW channel)"
     override val aliases = setOf("ud", "urbandictionary")
     override val cooldown = 5L
-    override val usages = setOf(setOf("term".toClassicTextUsage()))
+    override val usages = setOf(usageGroupOf("term".toClassicTextUsage()))
     override val options = setOf(
         OptionData(OptionType.STRING, "term", "A word or a phrase to define", true))
 

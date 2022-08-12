@@ -12,6 +12,7 @@ import io.ileukocyte.hibernum.audio.canJoinFromAnother
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.commands.usageGroupOf
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.YOUTUBE_LINK_REGEX
@@ -36,8 +37,8 @@ class PlayCommand : TextCommand {
         OptionData(OptionType.ATTACHMENT, "attachment", "The media file to play"),
     )
     override val usages = setOf(
-        setOf("query".toClassicTextUsage()),
-        setOf("file".toClassicTextUsage()),
+        usageGroupOf("query".toClassicTextUsage()),
+        usageGroupOf("file".toClassicTextUsage()),
     )
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {

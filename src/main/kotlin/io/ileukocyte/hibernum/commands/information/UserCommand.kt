@@ -5,6 +5,7 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.commands.UserContextOnlyCommand
+import io.ileukocyte.hibernum.commands.usageGroupOf
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.getDominantColorByImageProxy
 
@@ -35,9 +36,9 @@ class UserCommand : TextCommand, UserContextOnlyCommand {
     override val description = "Sends either detailed information about the specified user's account or their profile picture"
     override val aliases = setOf("member", "member-info", "user-info")
     override val usages = setOf(
-        setOf("user name".toClassicTextUsage(true)),
-        setOf("user mention".toClassicTextUsage(true)),
-        setOf("user ID".toClassicTextUsage(true)),
+        usageGroupOf("user name".toClassicTextUsage(true)),
+        usageGroupOf("user mention".toClassicTextUsage(true)),
+        usageGroupOf("user ID".toClassicTextUsage(true)),
     )
     override val options = setOf(
         OptionData(OptionType.USER, "user", "The user to check information about"))

@@ -4,6 +4,7 @@ import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
+import io.ileukocyte.hibernum.commands.`fun`.BattleshipCommand.Battleship.Coordinate
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.extensions.EmbedType
 import io.ileukocyte.hibernum.utils.*
@@ -232,14 +233,14 @@ class BattleshipCommand : SlashOnlyCommand {
                     this,
                     delay = 10,
                     processId = processId,
-                ) { it.message.contentRaw.matches(Battleship.TURN_REGEX) } ?: return
+                ) { it.message.contentRaw matches Battleship.TURN_REGEX } ?: return
 
                 val (columnLetter, rowChar) = turnMessage.contentRaw.toCharArray()
 
                 val row = rowChar.digitToInt()
                 val column = Battleship.letterToIndex(columnLetter.lowercaseChar()) ?: return
 
-                val turn = currentTurn.opponentBoard[row][column]
+                val turn = currentTurn.opponentBoard.board[row][column]
 
                 if (turn == Battleship.RED_SQUARE || turn == Battleship.YELLOW_SQUARE) {
                     turnMessage.channel.sendFailure("The gap is taken! Try again!").queue()
@@ -248,9 +249,9 @@ class BattleshipCommand : SlashOnlyCommand {
                 } else {
                     val opponent = battleship.players.first { it.user.idLong != currentTurn.user.idLong }
 
-                    if (opponent.ownBoard[row][column] == Battleship.WHITE_SQUARE) {
-                        opponent.ownBoard[row][column] = Battleship.YELLOW_SQUARE
-                        currentTurn.opponentBoard[row][column] = Battleship.YELLOW_SQUARE
+                    if (opponent.ownBoard.board[row][column] == Battleship.WHITE_SQUARE) {
+                        opponent.ownBoard.board[row][column] = Battleship.YELLOW_SQUARE
+                        currentTurn.opponentBoard.board[row][column] = Battleship.YELLOW_SQUARE
 
                         turnMessage.replyEmbeds(
                             defaultEmbed(
@@ -274,13 +275,15 @@ class BattleshipCommand : SlashOnlyCommand {
 
                         awaitTurn(battleship, guildMessage, guildChannel, processId)
                     } else {
-                        opponent.ownBoard[row][column] = Battleship.RED_SQUARE
-                        currentTurn.opponentBoard[row][column] = Battleship.RED_SQUARE
+                        opponent.ownBoard.board[row][column] = Battleship.RED_SQUARE
+                        currentTurn.opponentBoard.board[row][column] = Battleship.RED_SQUARE
 
                         if (!battleship.isOver) {
                             val hitOrDestroyed =
-                                opponent.ownShips.firstOrNull { row to column in it.coords }?.let { ship ->
-                                    ship.coords.map { (r, c) -> opponent.ownBoard[r][c] }
+                                opponent.ownShips.firstOrNull {
+                                    Coordinate(row to column) in it.coords
+                                }?.let { ship ->
+                                    ship.coords.map { opponent.ownBoard.board[it.coords.first][it.coords.second] }
                                 }?.takeUnless { it.none { c -> c == Battleship.BLUE_SQUARE } }
                                     ?.let { "hit" }
                                     ?: "destroyed"
@@ -381,8 +384,8 @@ class BattleshipCommand : SlashOnlyCommand {
             get() = setOf(starter, opponent)
 
         data class BattleshipPlayer(val user: User, val dm: PrivateChannel, val opponent: User) {
-            var ownBoard = Array(10) { Array(10) { WHITE_SQUARE } }
-            val opponentBoard = Array(10) { Array(10) { WHITE_SQUARE } }
+            var ownBoard = Board(Array(10) { Array(10) { WHITE_SQUARE } })
+            val opponentBoard = Board(Array(10) { Array(10) { WHITE_SQUARE } })
 
             val ownShips = mutableSetOf<Ship>()
 
@@ -390,7 +393,7 @@ class BattleshipCommand : SlashOnlyCommand {
                 ownBoard = ownBoard.generateBoard()
             }
 
-            private fun BattleshipBoard.generateBoard(): BattleshipBoard {
+            private fun Board.generateBoard(): Board {
                 val range = 0..9
 
                 repeat(4) {
@@ -400,9 +403,9 @@ class BattleshipCommand : SlashOnlyCommand {
                         val row = range.random()
                         val column = range.random()
 
-                        if (this[row][column] != BLUE_SQUARE) {
+                        if (board[row][column] != BLUE_SQUARE) {
                             if (getPossiblyUnavailableGaps(row, column).none { it == BLUE_SQUARE }) {
-                                this[row][column] = BLUE_SQUARE
+                                board[row][column] = BLUE_SQUARE
 
                                 coord = row to column
 
@@ -411,18 +414,18 @@ class BattleshipCommand : SlashOnlyCommand {
                         }
                     }
 
-                    ownShips += SingleCellShip(coord)
+                    ownShips += SingleCellShip(Coordinate(coord))
                 }
 
                 repeat(3) {
-                    val coord1: BattleshipCoordinate
-                    val coord2: BattleshipCoordinate
+                    val coord1: Coordinate
+                    val coord2: Coordinate
 
                     while (true) {
                         val row = range.random()
                         val column = range.random()
 
-                        if (this[row][column] != BLUE_SQUARE) {
+                        if (board[row][column] != BLUE_SQUARE) {
                             if (getPossiblyUnavailableGaps(row, column).none { it == BLUE_SQUARE }) {
                                 val first = row.inc() to column
                                 val second = row.dec() to column
@@ -431,7 +434,7 @@ class BattleshipCommand : SlashOnlyCommand {
 
 
                                 val nearbyPossiblyUnavailableGaps = listOf(first, second, third, fourth)
-                                    .associateWith { getPossiblyUnavailableGaps(it) }
+                                    .associateWith { getPossiblyUnavailableGaps(Coordinate(it)) }
 
                                 val filtered = nearbyPossiblyUnavailableGaps.filter { (coord, npug) ->
                                     coord.first in 0..9
@@ -442,11 +445,11 @@ class BattleshipCommand : SlashOnlyCommand {
                                 if (filtered.isNotEmpty()) {
                                     val (nextRow, nextColumn) = filtered.keys.random()
 
-                                    this[row][column] = BLUE_SQUARE
-                                    this[nextRow][nextColumn] = BLUE_SQUARE
+                                    board[row][column] = BLUE_SQUARE
+                                    board[nextRow][nextColumn] = BLUE_SQUARE
 
-                                    coord1 = row to column
-                                    coord2 = nextRow to nextColumn
+                                    coord1 = Coordinate(row to column)
+                                    coord2 = Coordinate(nextRow to nextColumn)
 
                                     break
                                 }
@@ -458,15 +461,15 @@ class BattleshipCommand : SlashOnlyCommand {
                 }
 
                 repeat(2) {
-                    val coord1: BattleshipCoordinate
-                    val coord2: BattleshipCoordinate
-                    val coord3: BattleshipCoordinate
+                    val coord1: Coordinate
+                    val coord2: Coordinate
+                    val coord3: Coordinate
 
                     while (true) {
                         val row = range.random()
                         val column = range.random()
 
-                        if (this[row][column] != BLUE_SQUARE) {
+                        if (board[row][column] != BLUE_SQUARE) {
                             if (getPossiblyUnavailableGaps(row, column).none { it == BLUE_SQUARE }) {
                                 val first = row.inc() to column
                                 val second = row.dec() to column
@@ -474,7 +477,7 @@ class BattleshipCommand : SlashOnlyCommand {
                                 val fourth = row to column.dec()
 
                                 val nearbyPossiblyUnavailableGaps = listOf(first, second, third, fourth)
-                                    .associateWith { getPossiblyUnavailableGaps(it) }
+                                    .associateWith { getPossiblyUnavailableGaps(Coordinate(it)) }
 
                                 val filtered = nearbyPossiblyUnavailableGaps.filter { (coord, npug) ->
                                     coord.first in 0..9
@@ -487,66 +490,66 @@ class BattleshipCommand : SlashOnlyCommand {
 
                                     if (nextRow == row) {
                                         val nextNextColumn = if (nextColumn == column.inc()) {
-                                            this[row].getOrNull(nextColumn.inc())
+                                            board[row].getOrNull(nextColumn.inc())
                                                 ?.takeUnless { it == BLUE_SQUARE }
                                                 ?.let { nextColumn.inc() }
-                                                ?: this[row].getOrNull(column.dec())
+                                                ?: board[row].getOrNull(column.dec())
                                                     ?.takeUnless { it == BLUE_SQUARE }
                                                     ?.let { column.dec() }
                                         } else {
-                                            this[row].getOrNull(nextColumn.dec())
+                                            board[row].getOrNull(nextColumn.dec())
                                                 ?.takeUnless { it == BLUE_SQUARE }
                                                 ?.let { nextColumn.dec() }
-                                                ?: this[row].getOrNull(column.inc())
+                                                ?: board[row].getOrNull(column.inc())
                                                     ?.takeUnless { it == BLUE_SQUARE }
                                                     ?.let { column.inc() }
                                         }
 
                                         if (nextNextColumn !== null) {
-                                            if (getPossiblyUnavailableGaps(row to nextNextColumn)
+                                            if (getPossiblyUnavailableGaps(Coordinate(row to nextNextColumn))
                                                     .none { it == BLUE_SQUARE }) {
-                                                coord1 = row to column
-                                                coord2 = row to nextColumn
-                                                coord3 = row to nextNextColumn
+                                                coord1 = Coordinate(row to column)
+                                                coord2 = Coordinate(row to nextColumn)
+                                                coord3 = Coordinate(row to nextNextColumn)
 
-                                                this[row][column] = BLUE_SQUARE
-                                                this[row][nextColumn] = BLUE_SQUARE
-                                                this[row][nextNextColumn] = BLUE_SQUARE
+                                                board[row][column] = BLUE_SQUARE
+                                                board[row][nextColumn] = BLUE_SQUARE
+                                                board[row][nextNextColumn] = BLUE_SQUARE
 
                                                 break
                                             }
                                         }
                                     } else {
                                         val nextNextRow = if (nextRow == row.inc()) {
-                                            getOrNull(nextRow.inc())
+                                            board.getOrNull(nextRow.inc())
                                                 ?.get(column)
                                                 ?.takeUnless { it == BLUE_SQUARE }
                                                 ?.let { nextRow.inc() }
-                                                ?: getOrNull(row.dec())
+                                                ?: board.getOrNull(row.dec())
                                                     ?.get(column)
                                                     ?.takeUnless { it == BLUE_SQUARE }
                                                     ?.let { row.dec() }
                                         } else {
-                                            getOrNull(nextRow.dec())
+                                            board.getOrNull(nextRow.dec())
                                                 ?.get(column)
                                                 ?.takeUnless { it == BLUE_SQUARE }
                                                 ?.let { nextRow.dec() }
-                                                ?: getOrNull(row.inc())
+                                                ?: board.getOrNull(row.inc())
                                                     ?.get(column)
                                                     ?.takeUnless { it == BLUE_SQUARE }
                                                     ?.let { row.inc() }
                                         }
 
                                         if (nextNextRow !== null) {
-                                            if (getPossiblyUnavailableGaps(nextNextRow to column)
+                                            if (getPossiblyUnavailableGaps(Coordinate(nextNextRow to column))
                                                     .none { it == BLUE_SQUARE }) {
-                                                coord1 = row to column
-                                                coord2 = nextRow to column
-                                                coord3 = nextNextRow to column
+                                                coord1 = Coordinate(row to column)
+                                                coord2 = Coordinate(nextRow to column)
+                                                coord3 = Coordinate(nextNextRow to column)
 
-                                                this[row][column] = BLUE_SQUARE
-                                                this[nextRow][column] = BLUE_SQUARE
-                                                this[nextNextRow][column] = BLUE_SQUARE
+                                                board[row][column] = BLUE_SQUARE
+                                                board[nextRow][column] = BLUE_SQUARE
+                                                board[nextNextRow][column] = BLUE_SQUARE
 
                                                 break
                                             }
@@ -561,16 +564,16 @@ class BattleshipCommand : SlashOnlyCommand {
                 }
 
                 run {
-                    val firstCell: BattleshipCoordinate
-                    val secondCell: BattleshipCoordinate
-                    val thirdCell: BattleshipCoordinate
-                    val fourthCell: BattleshipCoordinate
+                    val firstCell: Coordinate
+                    val secondCell: Coordinate
+                    val thirdCell: Coordinate
+                    val fourthCell: Coordinate
 
                     while (true) {
                         val row = range.random()
                         val column = range.random()
 
-                        if (this[row][column] != BLUE_SQUARE) {
+                        if (board[row][column] != BLUE_SQUARE) {
                             if (getPossiblyUnavailableGaps(row, column).none { it == BLUE_SQUARE }) {
                                 val first = row.inc() to column
                                 val second = row.dec() to column
@@ -578,7 +581,7 @@ class BattleshipCommand : SlashOnlyCommand {
                                 val fourth = row to column.dec()
 
                                 val nearbyPossiblyUnavailableGaps = listOf(first, second, third, fourth)
-                                    .associateWith { getPossiblyUnavailableGaps(it) }
+                                    .associateWith { getPossiblyUnavailableGaps(Coordinate(it)) }
 
                                 val filtered = nearbyPossiblyUnavailableGaps.filter { (coord, npug) ->
                                     coord.first in 0..9
@@ -591,43 +594,43 @@ class BattleshipCommand : SlashOnlyCommand {
 
                                     if (secondCellRow == row) {
                                         val thirdCellColumn = if (secondCellColumn == column.inc()) {
-                                            this[row].getOrNull(secondCellColumn.inc())
+                                            board[row].getOrNull(secondCellColumn.inc())
                                                 ?.takeUnless { it == BLUE_SQUARE }
                                                 ?.let { secondCellColumn.inc() }
-                                                ?: this[row].getOrNull(column.dec())
+                                                ?: board[row].getOrNull(column.dec())
                                                     ?.takeUnless { it == BLUE_SQUARE }
                                                     ?.let { column.dec() }
                                         } else {
-                                            this[row].getOrNull(secondCellColumn.dec())
+                                            board[row].getOrNull(secondCellColumn.dec())
                                                 ?.takeUnless { it == BLUE_SQUARE }
                                                 ?.let { secondCellColumn.dec() }
-                                                ?: this[row].getOrNull(column.inc())
+                                                ?: board[row].getOrNull(column.inc())
                                                     ?.takeUnless { it == BLUE_SQUARE }
                                                     ?.let { column.inc() }
                                         }
 
                                         if (thirdCellColumn !== null) {
-                                            if (getPossiblyUnavailableGaps(row to thirdCellColumn)
+                                            if (getPossiblyUnavailableGaps(Coordinate(row to thirdCellColumn))
                                                     .none { it == BLUE_SQUARE }) {
                                                 val columns = sortedSetOf(column, secondCellColumn, thirdCellColumn)
 
                                                 val fourthCellColumn = columns.min().dec()
-                                                    .takeIf { it in range && this[row][it] != BLUE_SQUARE }
+                                                    .takeIf { it in range && board[row][it] != BLUE_SQUARE }
                                                     ?: columns.max().inc()
-                                                        .takeIf { it in range && this[row][it] != BLUE_SQUARE }
+                                                        .takeIf { it in range && board[row][it] != BLUE_SQUARE }
 
                                                 if (fourthCellColumn !== null) {
-                                                    if (getPossiblyUnavailableGaps(row to fourthCellColumn)
+                                                    if (getPossiblyUnavailableGaps(Coordinate(row to fourthCellColumn))
                                                             .none { it == BLUE_SQUARE }) {
-                                                        firstCell = row to column
-                                                        secondCell = row to secondCellColumn
-                                                        thirdCell = row to thirdCellColumn
-                                                        fourthCell = row to fourthCellColumn
+                                                        firstCell = Coordinate(row to column)
+                                                        secondCell = Coordinate(row to secondCellColumn)
+                                                        thirdCell = Coordinate(row to thirdCellColumn)
+                                                        fourthCell = Coordinate(row to fourthCellColumn)
 
-                                                        this[row][column] = BLUE_SQUARE
-                                                        this[row][secondCellColumn] = BLUE_SQUARE
-                                                        this[row][thirdCellColumn] = BLUE_SQUARE
-                                                        this[row][fourthCellColumn] = BLUE_SQUARE
+                                                        board[row][column] = BLUE_SQUARE
+                                                        board[row][secondCellColumn] = BLUE_SQUARE
+                                                        board[row][thirdCellColumn] = BLUE_SQUARE
+                                                        board[row][fourthCellColumn] = BLUE_SQUARE
 
                                                         break
                                                     }
@@ -636,47 +639,47 @@ class BattleshipCommand : SlashOnlyCommand {
                                         }
                                     } else {
                                         val thirdCellRow = if (secondCellRow == row.inc()) {
-                                            getOrNull(secondCellRow.inc())
+                                            board.getOrNull(secondCellRow.inc())
                                                 ?.get(column)
                                                 ?.takeUnless { it == BLUE_SQUARE }
                                                 ?.let { secondCellRow.inc() }
-                                                ?: getOrNull(row.dec())
+                                                ?: board.getOrNull(row.dec())
                                                     ?.get(column)
                                                     ?.takeUnless { it == BLUE_SQUARE }
                                                     ?.let { row.dec() }
                                         } else {
-                                            getOrNull(secondCellRow.dec())
+                                            board.getOrNull(secondCellRow.dec())
                                                 ?.get(column)
                                                 ?.takeUnless { it == BLUE_SQUARE }
                                                 ?.let { secondCellRow.dec() }
-                                                ?: getOrNull(row.inc())
+                                                ?: board.getOrNull(row.inc())
                                                     ?.get(column)
                                                     ?.takeUnless { it == BLUE_SQUARE }
                                                     ?.let { row.inc() }
                                         }
 
                                         if (thirdCellRow !== null) {
-                                            if (getPossiblyUnavailableGaps(thirdCellRow to column)
+                                            if (getPossiblyUnavailableGaps(Coordinate(thirdCellRow to column))
                                                     .none { it == BLUE_SQUARE }) {
                                                 val rows = sortedSetOf(row, secondCellRow, thirdCellRow)
 
                                                 val fourthCellRow = rows.min().dec()
-                                                    .takeIf { it in range && this[it][column] != BLUE_SQUARE }
+                                                    .takeIf { it in range && board[it][column] != BLUE_SQUARE }
                                                     ?: rows.max().inc()
-                                                        .takeIf { it in range && this[it][column] != BLUE_SQUARE }
+                                                        .takeIf { it in range && board[it][column] != BLUE_SQUARE }
 
                                                 if (fourthCellRow !== null) {
-                                                    if (getPossiblyUnavailableGaps(fourthCellRow to column)
+                                                    if (getPossiblyUnavailableGaps(Coordinate(fourthCellRow to column))
                                                             .none { it == BLUE_SQUARE }) {
-                                                        firstCell = row to column
-                                                        secondCell = secondCellRow to column
-                                                        thirdCell = thirdCellRow to column
-                                                        fourthCell = fourthCellRow to column
+                                                        firstCell = Coordinate(row to column)
+                                                        secondCell = Coordinate(secondCellRow to column)
+                                                        thirdCell = Coordinate(thirdCellRow to column)
+                                                        fourthCell = Coordinate(fourthCellRow to column)
 
-                                                        this[row][column] = BLUE_SQUARE
-                                                        this[secondCellRow][column] = BLUE_SQUARE
-                                                        this[thirdCellRow][column] = BLUE_SQUARE
-                                                        this[fourthCellRow][column] = BLUE_SQUARE
+                                                        board[row][column] = BLUE_SQUARE
+                                                        board[secondCellRow][column] = BLUE_SQUARE
+                                                        board[thirdCellRow][column] = BLUE_SQUARE
+                                                        board[fourthCellRow][column] = BLUE_SQUARE
 
                                                         break
                                                     }
@@ -695,21 +698,21 @@ class BattleshipCommand : SlashOnlyCommand {
                 return this
             }
 
-            private fun BattleshipBoard.getPossiblyUnavailableGaps(pair: BattleshipCoordinate) =
-                getPossiblyUnavailableGaps(pair.first, pair.second)
+            private fun Board.getPossiblyUnavailableGaps(coord: Coordinate) =
+                getPossiblyUnavailableGaps(coord.coords.first, coord.coords.second)
 
-            private fun BattleshipBoard.getPossiblyUnavailableGaps(
+            private fun Board.getPossiblyUnavailableGaps(
                 row: Int,
                 column: Int,
             ) = listOf(
-                getOrNull(row.inc())?.getOrNull(column),
-                getOrNull(row.dec())?.getOrNull(column),
-                getOrNull(row)?.getOrNull(column.inc()),
-                getOrNull(row)?.getOrNull(column.dec()),
-                getOrNull(row.inc())?.getOrNull(column.inc()),
-                getOrNull(row.inc())?.getOrNull(column.dec()),
-                getOrNull(row.dec())?.getOrNull(column.inc()),
-                getOrNull(row.dec())?.getOrNull(column.dec()),
+                board.getOrNull(row.inc())?.getOrNull(column),
+                board.getOrNull(row.dec())?.getOrNull(column),
+                board.getOrNull(row)?.getOrNull(column.inc()),
+                board.getOrNull(row)?.getOrNull(column.dec()),
+                board.getOrNull(row.inc())?.getOrNull(column.inc()),
+                board.getOrNull(row.inc())?.getOrNull(column.dec()),
+                board.getOrNull(row.dec())?.getOrNull(column.inc()),
+                board.getOrNull(row.dec())?.getOrNull(column.dec()),
             )
 
             fun getPrintableOwnBoard(
@@ -724,7 +727,7 @@ class BattleshipCommand : SlashOnlyCommand {
 
                 appendLine()
 
-                for ((index, row) in ownBoard.withIndex()) {
+                for ((index, row) in ownBoard.board.withIndex()) {
                     append("${'0' + index}\u20E3")
                     appendLine(row.joinToString(""))
                 }
@@ -757,7 +760,7 @@ class BattleshipCommand : SlashOnlyCommand {
 
                 appendLine()
 
-                for ((index, row) in opponentBoard.withIndex()) {
+                for ((index, row) in opponentBoard.board.withIndex()) {
                     append("${'0' + index}\u20E3")
                     appendLine(row.joinToString(""))
                 }
@@ -778,7 +781,7 @@ class BattleshipCommand : SlashOnlyCommand {
         }
 
         val isOver: Boolean
-            get() = players.map { it.ownBoard }.any { it.flatten().none { gap -> gap == BLUE_SQUARE } }
+            get() = players.map { it.ownBoard.board }.any { it.flatten().none { gap -> gap == BLUE_SQUARE } }
 
         fun reverseTurn() = if (currentTurn.user == starter.user) {
             currentTurn = opponent
@@ -787,36 +790,42 @@ class BattleshipCommand : SlashOnlyCommand {
         }
 
         interface Ship {
-            val coords: Set<BattleshipCoordinate>
+            val coords: Set<Coordinate>
         }
 
-        data class SingleCellShip(val cell: BattleshipCoordinate) : Ship {
+        data class SingleCellShip(val cell: Coordinate) : Ship {
             override val coords = setOf(cell)
         }
 
         data class DoubleCellShip(
-            val firstCell: BattleshipCoordinate,
-            val secondCell: BattleshipCoordinate,
+            val firstCell: Coordinate,
+            val secondCell: Coordinate,
         ) : Ship {
             override val coords = setOf(firstCell, secondCell)
         }
 
         data class TripleCellShip(
-            val firstCell: BattleshipCoordinate,
-            val secondCell: BattleshipCoordinate,
-            val thirdCell: BattleshipCoordinate,
+            val firstCell: Coordinate,
+            val secondCell: Coordinate,
+            val thirdCell: Coordinate,
         ) : Ship {
             override val coords = setOf(firstCell, secondCell, thirdCell)
         }
 
         data class QuadrupleCellShip(
-            val firstCell: BattleshipCoordinate,
-            val secondCell: BattleshipCoordinate,
-            val thirdCell: BattleshipCoordinate,
-            val fourthCell: BattleshipCoordinate,
+            val firstCell: Coordinate,
+            val secondCell: Coordinate,
+            val thirdCell: Coordinate,
+            val fourthCell: Coordinate,
         ) : Ship {
             override val coords = setOf(firstCell, secondCell, thirdCell, fourthCell)
         }
+
+        @JvmInline
+        value class Board(val board: Array<Array<String>>)
+
+        @JvmInline
+        value class Coordinate(val coords: Pair<Int, Int>)
 
         companion object {
             const val WHITE_SQUARE = "\u2B1C"
@@ -833,6 +842,3 @@ class BattleshipCommand : SlashOnlyCommand {
         }
     }
 }
-
-private typealias BattleshipBoard = Array<Array<String>>
-private typealias BattleshipCoordinate = Pair<Int, Int>

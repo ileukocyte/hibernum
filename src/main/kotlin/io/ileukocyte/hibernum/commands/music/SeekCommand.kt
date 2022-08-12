@@ -4,6 +4,7 @@ import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.commands.usageGroupOf
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendSuccess
 import io.ileukocyte.hibernum.utils.TIME_CODE_REGEX
@@ -22,7 +23,7 @@ class SeekCommand : TextCommand {
     override val name = "seek"
     override val description = "Jumps to the specified time while playing the track"
     override val aliases = setOf("jump")
-    override val usages = setOf(setOf("[r(ewind):/f(ast-forward):]time code".toClassicTextUsage()))
+    override val usages = setOf(usageGroupOf("[r(ewind):/f(ast-forward):]time code".toClassicTextUsage()))
     override val options = setOf(
         OptionData(
             OptionType.STRING,
