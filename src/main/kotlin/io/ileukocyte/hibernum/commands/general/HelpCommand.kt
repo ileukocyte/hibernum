@@ -13,11 +13,10 @@ import java.util.concurrent.TimeUnit
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.entities.emoji.Emoji
-import net.dv8tion.jda.api.events.interaction.GenericAutoCompleteInteractionEvent
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
-import net.dv8tion.jda.api.interactions.commands.CommandAutoCompleteInteraction
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.buttons.Button
@@ -86,10 +85,8 @@ class HelpCommand : TextCommand {
         }
     }
 
-    override suspend fun invoke(event: GenericAutoCompleteInteractionEvent) {
-        val interaction = event.interaction as CommandAutoCompleteInteraction
-
-        interaction.getOption("command") { option ->
+    override suspend fun invoke(event: CommandAutoCompleteInteractionEvent) {
+        event.getOption("command") { option ->
             val query = option.asString
 
             if (query.isNotEmpty()) {

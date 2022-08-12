@@ -24,11 +24,10 @@ import kotlin.math.min
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.GuildMessageChannel
-import net.dv8tion.jda.api.events.interaction.GenericAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
-import net.dv8tion.jda.api.interactions.commands.CommandAutoCompleteInteraction
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.components.ActionRow
@@ -86,10 +85,8 @@ class ProcessesCommand : SlashOnlyCommand {
         }
     }
 
-    override suspend fun invoke(event: GenericAutoCompleteInteractionEvent) {
-        val interaction = event.interaction as CommandAutoCompleteInteraction
-
-        interaction.getOption("pid") { option ->
+    override suspend fun invoke(event: CommandAutoCompleteInteractionEvent) {
+        event.getOption("pid") { option ->
             val query = option.asString
 
             if (query.isNotEmpty()) {

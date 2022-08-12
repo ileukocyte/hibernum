@@ -19,8 +19,8 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 
 import net.dv8tion.jda.api.entities.MessageType
-import net.dv8tion.jda.api.events.interaction.GenericAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent
@@ -28,7 +28,6 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException
-import net.dv8tion.jda.api.interactions.commands.CommandAutoCompleteInteraction
 
 import org.jetbrains.kotlin.util.collectionUtils.filterIsInstanceAnd
 import org.jetbrains.kotlin.utils.addToStdlib.applyIf
@@ -489,7 +488,7 @@ object CommandHandler : MutableSet<GenericCommand> {
     }
 
     /**
-     * A function that handles [ButtonInteractionEvent] that occurs when
+     * A function that handles [ModalInteractionEvent] that occurs when
      * a user responds to a command's modal
      *
      * @param event
@@ -546,19 +545,17 @@ object CommandHandler : MutableSet<GenericCommand> {
     }
 
     /**
-     * A function that handles [ButtonInteractionEvent] that occurs when
+     * A function that handles [CommandAutoCompleteInteractionEvent] that occurs when
      * the slash command's option with auto-completion enabled is triggered
      *
      * @param event
-     * [ModalInteractionEvent] occurring once the option is triggered
+     * [CommandAutoCompleteInteractionEvent] occurring once the option is triggered
      *
      * @author Alexander Oksanich
      */
-    internal operator fun invoke(event: GenericAutoCompleteInteractionEvent) {
+    internal operator fun invoke(event: CommandAutoCompleteInteractionEvent) {
         if (event.isFromGuild) {
-            val interaction = event.interaction as CommandAutoCompleteInteraction
-
-            this[interaction.name]?.let { it as? TextCommand }
+            this[event.name]?.let { it as? TextCommand }
                 ?.takeUnless { it is ClassicTextOnlyCommand }
                 ?.let { command ->
                     CoroutineScope(CommandContext).launch {

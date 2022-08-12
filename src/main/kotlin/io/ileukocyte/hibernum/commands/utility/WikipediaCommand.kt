@@ -9,11 +9,10 @@ import io.ileukocyte.hibernum.utils.*
 
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.channel.attribute.IAgeRestrictedChannel
-import net.dv8tion.jda.api.events.interaction.GenericAutoCompleteInteractionEvent
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.commands.Command
-import net.dv8tion.jda.api.interactions.commands.CommandAutoCompleteInteraction
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 
@@ -82,7 +81,8 @@ class WikipediaCommand : SlashOnlyCommand {
                 image = it
             }
 
-            description = article.description.ifEmpty { "No description provided" }
+            description = article.description
+                .ifEmpty { "No description provided" }
                 .limitTo(MessageEmbed.DESCRIPTION_MAX_LENGTH)
 
             color = embedColor
@@ -99,10 +99,8 @@ class WikipediaCommand : SlashOnlyCommand {
         }
     }
 
-    override suspend fun invoke(event: GenericAutoCompleteInteractionEvent) {
-        val interaction = event.interaction as CommandAutoCompleteInteraction
-
-        interaction.getOption("query")?.asString?.let { query ->
+    override suspend fun invoke(event: CommandAutoCompleteInteractionEvent) {
+        event.getOption("query")?.asString?.let { query ->
             if (query.isNotEmpty()) {
                 searchArticles(query, 10).let {
                     event.replyChoices(it.map { (t, i) ->
