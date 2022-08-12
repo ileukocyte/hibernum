@@ -51,7 +51,7 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
                     if (`import` is Entity) {
                         append(".${`import`.name}")
 
-                        `import`.altName?.let {
+                        `import`.alternativeName?.let {
                             append(" as $it")
                         }
 
@@ -378,7 +378,7 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
                 Package("utils"),
                 Package("utils.cache"),
                 Package("utils.messages"),
-                Entity("entities.EmbedType", altName = "JDAEmbedType"),
+                Entity("entities.EmbedType", alternativeName = "JDAEmbedType"),
             ),
             "java" to setOf(
                 Package("io"),
@@ -405,6 +405,14 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
                 Package("reflect.full"),
                 Package("reflect.jvm"),
                 Package("system"),
+                Package("time"),
+                Entity("time.Duration.Companion.days"),
+                Entity("time.Duration.Companion.hours"),
+                Entity("time.Duration.Companion.microseconds"),
+                Entity("time.Duration.Companion.milliseconds"),
+                Entity("time.Duration.Companion.minutes"),
+                Entity("time.Duration.Companion.nanoseconds"),
+                Entity("time.Duration.Companion.seconds"),
             ),
             "kotlinx" to setOf(
                 Package("coroutines"),
@@ -433,5 +441,5 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
 
     sealed class Import(val name: String)
     class Package(name: String = ""): Import(name)
-    class Entity(name: String, val altName: String? = null): Import(name)
+    class Entity(name: String, val alternativeName: String? = null): Import(name)
 }

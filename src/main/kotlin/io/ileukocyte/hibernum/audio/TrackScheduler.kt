@@ -145,7 +145,7 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
                     player.addListener(listener)
 
                     try {
-                        withTimeout((10).minutes) { deferred.await() }
+                        withTimeout((5).minutes) { deferred.await() }
                     } catch (_: TimeoutCancellationException) {
                         player.removeListener(listener)
 

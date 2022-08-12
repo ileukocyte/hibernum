@@ -11,6 +11,8 @@ import io.ileukocyte.hibernum.utils.kill
 
 import java.util.concurrent.TimeUnit
 
+import kotlin.time.Duration.Companion.minutes
+
 import kotlinx.coroutines.*
 import kotlinx.coroutines.selects.select
 
@@ -99,7 +101,7 @@ object EventHandler : ListenerAdapter() {
                                     }
                                 }
 
-                                onTimeout(90000) {
+                                onTimeout((5).minutes.inWholeMilliseconds) {
                                     eventsAwaited.forEach {
                                         if (it.isActive) {
                                             it.cancelAndJoin()
@@ -173,7 +175,7 @@ object EventHandler : ListenerAdapter() {
                                 }
                             }
 
-                            onTimeout(90000) {
+                            onTimeout((5).minutes.inWholeMilliseconds) {
                                 eventsAwaited.forEach {
                                     if (it.isActive) {
                                         it.cancelAndJoin()
