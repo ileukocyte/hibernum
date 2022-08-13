@@ -390,6 +390,7 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
                 Package("time.temporal"),
                 Package("util.concurrent"),
                 Package("util.concurrent.atomic"),
+                Entity("awt.Color"),
                 Entity("util.Base64"),
                 Entity("util.Date"),
                 Entity("util.EnumSet"),

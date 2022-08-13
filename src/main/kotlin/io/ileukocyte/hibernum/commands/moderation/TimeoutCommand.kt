@@ -182,9 +182,15 @@ class TimeoutCommand : SlashOnlyCommand, SubcommandHolder, UserContextOnlyComman
         val period = TextInput
             .create("period", "Specify the Timeout Period (e.g. 5h34m55s):", TextInputStyle.SHORT)
             .build()
+        val reason = TextInput
+            .create("reason", "Specify the Reason if You Want to:", TextInputStyle.PARAGRAPH)
+            .setRequired(false)
+            .setMaxLength(512 - "Timed out by ${event.user.asTag}: ".length)
+            .build()
         val modal = Modal
-            .create("$interactionName-${event.target.idLong}-time", "Member Timeout")
+            .create("$interactionName-${event.target.idLong}-timeout", "Member Timeout")
             .addActionRow(period)
+            .addActionRow(reason)
             .build()
 
         try {
@@ -202,132 +208,34 @@ class TimeoutCommand : SlashOnlyCommand, SubcommandHolder, UserContextOnlyComman
         val member = event.guild?.getMemberById(id.first())
             ?: throw CommandException("The member is not available for the bot!")
 
-        when (id.last()) {
-            "time" -> {
-                val time = event.getValue("period")?.asString?.takeIf {
-                    DURATION_REGEX.containsMatchIn(it)
-                } ?: throw CommandException("The provided time format is invalid!")
+        val time = event.getValue("period")?.asString?.takeIf {
+            DURATION_REGEX.containsMatchIn(it)
+        } ?: throw CommandException("The provided time format is invalid!")
 
-                val millis = durationToMillis(time).takeUnless {
-                    it > TimeUnit.DAYS.toMillis(Member.MAX_TIME_OUT_LENGTH.toLong())
-                } ?: throw CommandException("The timeout period cannot exceed ${Member.MAX_TIME_OUT_LENGTH} days!")
+        val millis = durationToMillis(time).takeUnless {
+            it > TimeUnit.DAYS.toMillis(Member.MAX_TIME_OUT_LENGTH.toLong())
+        } ?: throw CommandException("The timeout period cannot exceed ${Member.MAX_TIME_OUT_LENGTH} days!")
 
-                val buttons = setOf(
-                    Button.success("$interactionName-reason", "Yes"),
-                    Button.secondary("$interactionName-timeout", "No"),
-                )
+        val reason = event.getValue("reason")?.asString
+            ?.takeUnless { it.isEmpty() }
+            ?.let { ": $it" }
+            .orEmpty()
 
-                val hook = event
-                    .replyConfirmation("Would you like to specify the timeout reason?")
-                    .addActionRow(buttons)
-                    .await()
-                    .retrieveOriginal()
-                    .await()
+        member.timeoutFor(millis, TimeUnit.MILLISECONDS)
+            .reason("Timed out by ${event.user.asTag}" + reason)
+            .queue({
+                val success = "${member.user.asMention} has been successfully timed out for ${asText(millis)} " +
+                        "by ${event.user.asMention}!"
 
-                try {
-                    val buttonEvent = event.jda.awaitEvent<ButtonInteractionEvent>(
-                        15,
-                        TimeUnit.MINUTES,
-                        waiterProcess {
-                            users += event.user.idLong
-                            channel = event.messageChannel.idLong
-                            command = this@TimeoutCommand
-                            invoker = hook.idLong
-                        },
-                    ) {
-                        val cmdName = it.componentId.split("-").first()
+                event.editComponents().setSuccessEmbed(success).queue(null) {
+                    event.messageChannel.sendSuccess(success).queue()
+                }
+            }) {
+                val error = "Something went wrong: ${it.message}".limitTo(MessageEmbed.DESCRIPTION_MAX_LENGTH)
 
-                        it.message.idLong == hook.idLong && it.user.idLong == event.user.idLong && cmdName == interactionName
-                    } ?: return
-
-                    val args = buttonEvent.componentId.split("-")
-
-                    when (args.last()) {
-                        "reason" -> {
-                            val reason = TextInput
-                                .create("reason", "Specify the Reason if You Want to:", TextInputStyle.PARAGRAPH)
-                                .setRequired(false)
-                                .setMaxLength(512 - "Timed out by ${event.user.asTag}: ".length)
-                                .build()
-                            val modal = Modal
-                                .create("$interactionName-${member.idLong}-$millis-reason", "Member Timeout")
-                                .addActionRow(reason)
-                                .build()
-
-                            try {
-                                buttonEvent.replyModal(modal).await()
-                            } catch (e: Exception) {
-                                event.messageChannel.sendFailure("Something unknown went wrong!").queue()
-
-                                e.printStackTrace()
-                            }
-                        }
-                        "timeout" -> {
-                            val deferred = buttonEvent.deferEdit().await()
-
-                            member.timeoutFor(millis, TimeUnit.MILLISECONDS)
-                                .reason("Timed out by ${event.user.asTag}")
-                                .queue({
-                                    val embed = defaultEmbed(
-                                        "${member.user.asMention} has been successfully timed out for ${asText(millis)}!",
-                                        EmbedType.SUCCESS,
-                                    )
-
-                                    deferred.editOriginalComponents().setEmbeds(embed).queue(null) {
-                                        event.messageChannel.sendMessageEmbeds(embed).queue()
-                                    }
-                                }) {
-                                    val embed = defaultEmbed(
-                                        "Something went wrong: ${it.message}".limitTo(MessageEmbed.DESCRIPTION_MAX_LENGTH),
-                                        EmbedType.FAILURE,
-                                    )
-
-                                    deferred.editOriginalComponents().setEmbeds(embed).queue(null) {
-                                        event.messageChannel.sendMessageEmbeds(embed).queue()
-                                    }
-                                }
-                        }
-                    }
-                } catch (_: TimeoutCancellationException) {
-                    val embed = defaultEmbed("Time is out!", EmbedType.FAILURE) {
-                        text = "This message will self-delete in 5 seconds"
-                    }
-
-                    hook.editMessageComponents().setEmbeds(embed).queue({
-                        it.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
-                    }) {
-                        event.messageChannel.sendMessageEmbeds(embed).queue { m ->
-                            m.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
-                        }
-                    }
+                event.editComponents().setFailureEmbed(error).queue(null) {
+                    event.messageChannel.sendFailure(error).queue()
                 }
             }
-            "reason" -> {
-                val time = id[1].toLongOrNull() ?: return
-                val reason = event.getValue("reason")?.asString?.let { ": $it" }.orEmpty()
-
-                member.timeoutFor(time, TimeUnit.MILLISECONDS)
-                    .reason("Timed out by ${event.user.asTag}" + reason)
-                    .queue({
-                        val embed = defaultEmbed(
-                            "${member.user.asMention} has been successfully timed out for ${asText(time)}!",
-                            EmbedType.SUCCESS,
-                        )
-
-                        event.editComponents().setEmbeds(embed).queue(null) {
-                            event.messageChannel.sendMessageEmbeds(embed).queue()
-                        }
-                    }) {
-                        val embed = defaultEmbed(
-                            "Something went wrong: ${it.message}".limitTo(MessageEmbed.DESCRIPTION_MAX_LENGTH),
-                            EmbedType.FAILURE,
-                        )
-
-                        event.editComponents().setEmbeds(embed).queue(null) {
-                            event.messageChannel.sendMessageEmbeds(embed).queue()
-                        }
-                    }
-            }
-        }
     }
 }
