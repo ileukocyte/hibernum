@@ -5,8 +5,8 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
+import io.ileukocyte.hibernum.commands.defaultUsageGroupOf
 import io.ileukocyte.hibernum.commands.information.UserCommand.Companion.FEATURED_PERMISSIONS
-import io.ileukocyte.hibernum.commands.usageGroupOf
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.getImageBytes
 
@@ -28,9 +28,9 @@ class RoleCommand : TextCommand {
     override val description = "Sends the available information about the specified role"
     override val aliases = setOf("role-info")
     override val usages = setOf(
-        usageGroupOf("role name".toClassicTextUsage()),
-        usageGroupOf("role mention".toClassicTextUsage()),
-        usageGroupOf("role ID".toClassicTextUsage()),
+        defaultUsageGroupOf("role name"),
+        defaultUsageGroupOf("role mention"),
+        defaultUsageGroupOf("role ID"),
     )
     override val options = setOf(
         OptionData(OptionType.ROLE, "role", "The role to check information about", true))

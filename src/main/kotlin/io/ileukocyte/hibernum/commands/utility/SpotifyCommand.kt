@@ -32,9 +32,9 @@ class SpotifyCommand : TextCommand {
     override val name = "spotify"
     override val description = "Searches a Spotify track by the provided query and sends some information about one"
     override val usages = setOf(
-        usageGroupOf("search term".toClassicTextUsage()),
-        usageGroupOf("link".toClassicTextUsage()),
-        usageGroupOf("reply to a Spotify track link message".toClassicTextUsage()),
+        defaultUsageGroupOf("search term"),
+        defaultUsageGroupOf("link"),
+        defaultUsageGroupOf("reply to a Spotify track link message"),
     )
     override val options = setOf(
         OptionData(OptionType.STRING, "query", "A search term or a link", true))

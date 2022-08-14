@@ -38,8 +38,8 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
     )
     override val aliases = setOf("exec", "execute", "kotlin", "kt")
     override val usages = setOf(
-        usageGroupOf("Kotlin code".toClassicTextUsage()),
-        usageGroupOf("reply to a message with Kotlin code".toClassicTextUsage()),
+        defaultUsageGroupOf("Kotlin code"),
+        defaultUsageGroupOf("reply to a message with Kotlin code"),
     )
 
     private val packages get() = buildString {

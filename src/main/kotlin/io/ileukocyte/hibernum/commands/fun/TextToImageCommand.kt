@@ -29,7 +29,7 @@ class TextToImageCommand : TextCommand, MessageContextOnlyCommand {
     override val interactionName = "tti"
     override val description = "Creates an image containing the provided text"
     override val aliases = setOf("tti")
-    override val usages = setOf(usageGroupOf("input".toClassicTextUsage()))
+    override val usages = setOf(defaultUsageGroupOf("input"))
     override val cooldown = 5L
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {

@@ -3,7 +3,7 @@ package io.ileukocyte.hibernum.commands.information
 import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.TextCommand
-import io.ileukocyte.hibernum.commands.usageGroupOf
+import io.ileukocyte.hibernum.commands.defaultUsageGroupOf
 import io.ileukocyte.hibernum.extensions.asWord
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.extensions.escapeMarkdown
@@ -26,7 +26,7 @@ class EmoteCommand : TextCommand {
     override val aliases = setOf("emoji", "emoji-info", "emote-info")
     override val options = setOf(
         OptionData(OptionType.STRING, "emote", "The custom emoji to check information about", true))
-    override val usages = setOf(usageGroupOf("custom emoji".toClassicTextUsage()))
+    override val usages = setOf(defaultUsageGroupOf("custom emoji"))
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val emote = event.message.mentions.customEmojis.firstOrNull()

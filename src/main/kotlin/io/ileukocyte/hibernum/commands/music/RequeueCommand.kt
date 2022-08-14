@@ -16,7 +16,7 @@ class RequeueCommand : TextCommand {
     override val name = "requeue"
     override val description = "Adds the specified (or currently playing) song to the end of the queue"
     override val aliases = setOf("re-add", "readd", "re-queue")
-    override val usages = setOf(usageGroupOf("song".toClassicTextUsage()))
+    override val usages = setOf(usageGroupOf("song".toClassicTextUsage(true)))
     override val options = setOf(
         OptionData(OptionType.INTEGER, "song", "The number of the song to readd"))
 

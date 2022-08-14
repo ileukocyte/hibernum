@@ -5,7 +5,7 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
-import io.ileukocyte.hibernum.commands.usageGroupOf
+import io.ileukocyte.hibernum.commands.defaultUsageGroupOf
 import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.utils.getImageBytes
 
@@ -31,7 +31,7 @@ class ColorCommand : TextCommand {
     override val name = "color"
     override val description = "Sends brief information about the color provided by its hexadecimal representation"
     override val aliases = setOf("color-info", "colour", "colour-info")
-    override val usages = setOf(usageGroupOf("hex".toClassicTextUsage()))
+    override val usages = setOf(defaultUsageGroupOf("hex"))
     override val options = setOf(
         OptionData(OptionType.STRING, "hex", "The color's hexadecimal representation", true))
     override val cooldown = 3L

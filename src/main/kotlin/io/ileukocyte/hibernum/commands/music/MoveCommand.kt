@@ -4,7 +4,7 @@ import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
-import io.ileukocyte.hibernum.commands.usageGroupOf
+import io.ileukocyte.hibernum.commands.defaultUsageGroupOf
 import io.ileukocyte.hibernum.extensions.isInt
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendSuccess
@@ -22,7 +22,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 class MoveCommand : TextCommand {
     override val name = "move"
     override val description = "Moves the selected track in the queue to the specified position"
-    override val usages = setOf(usageGroupOf("song".toClassicTextUsage(), "index".toClassicTextUsage()))
+    override val usages = setOf(defaultUsageGroupOf("song", "index"))
     override val options = setOf(
         OptionData(OptionType.INTEGER, "song", "The index of the song to move", true),
         OptionData(OptionType.INTEGER, "index", "The index to move the song to", true),

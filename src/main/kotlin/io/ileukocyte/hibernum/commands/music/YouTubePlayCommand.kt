@@ -10,7 +10,7 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
-import io.ileukocyte.hibernum.commands.usageGroupOf
+import io.ileukocyte.hibernum.commands.defaultUsageGroupOf
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.extensions.EmbedType
 import io.ileukocyte.hibernum.utils.*
@@ -41,7 +41,7 @@ class YouTubePlayCommand : TextCommand {
             .addChoice("Videos", "videos")
             .addChoice("Playlists", "playlists"),
     )
-    override val usages = setOf(usageGroupOf("query".toClassicTextUsage()))
+    override val usages = setOf(defaultUsageGroupOf("query"))
     override val cooldown = 5L
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {

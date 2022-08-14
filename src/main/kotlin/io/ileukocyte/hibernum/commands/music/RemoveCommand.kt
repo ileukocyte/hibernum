@@ -3,7 +3,7 @@ package io.ileukocyte.hibernum.commands.music
 import io.ileukocyte.hibernum.audio.audioPlayer
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.TextCommand
-import io.ileukocyte.hibernum.commands.usageGroupOf
+import io.ileukocyte.hibernum.commands.defaultUsageGroupOf
 import io.ileukocyte.hibernum.extensions.replySuccess
 import io.ileukocyte.hibernum.extensions.sendSuccess
 
@@ -15,7 +15,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 class RemoveCommand : TextCommand {
     override val name = "remove"
     override val description = "Removes the selected track from the queue"
-    override val usages = setOf(usageGroupOf("song".toClassicTextUsage()))
+    override val usages = setOf(defaultUsageGroupOf("song"))
     override val options = setOf(
         OptionData(OptionType.INTEGER, "song", "The number of the song to remove", true))
 

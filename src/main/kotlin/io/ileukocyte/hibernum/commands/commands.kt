@@ -282,6 +282,8 @@ interface TextCommand : GenericCommand {
 
 fun usageGroupOf(vararg usages: ClassicTextUsage) = ClassicTextUsageGroup(usages.toList())
 
+fun defaultUsageGroupOf(vararg usages: String) = ClassicTextUsageGroup(usages.map { ClassicTextUsage(it) })
+
 /**
  * A type of command that can be used as a classic text command exclusively
  *

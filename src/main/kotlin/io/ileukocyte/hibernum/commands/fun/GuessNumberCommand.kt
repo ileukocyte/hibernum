@@ -4,7 +4,7 @@ import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
-import io.ileukocyte.hibernum.commands.usageGroupOf
+import io.ileukocyte.hibernum.commands.defaultUsageGroupOf
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.*
 
@@ -35,9 +35,7 @@ class GuessNumberCommand : TextCommand {
             .setMinValue(5)
             .setMaxValue(500_000),
     )
-    override val usages = setOf(
-        usageGroupOf("min".toClassicTextUsage(), "max".toClassicTextUsage()),
-    )
+    override val usages = setOf(defaultUsageGroupOf("min", "max"))
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val (min, max) = args?.split("\\s+".toRegex())

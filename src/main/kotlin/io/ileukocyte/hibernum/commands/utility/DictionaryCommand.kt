@@ -6,7 +6,7 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.GenericCommand.StaleComponentHandling
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
-import io.ileukocyte.hibernum.commands.usageGroupOf
+import io.ileukocyte.hibernum.commands.defaultUsageGroupOf
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.utils.awaitEvent
 
@@ -47,7 +47,7 @@ class DictionaryCommand : TextCommand {
     override val aliases = setOf("define", "definition", "dict", "merriam-webster", "mw")
     override val options = setOf(
         OptionData(OptionType.STRING, "term", "The term to define", true))
-    override val usages = setOf(usageGroupOf("term".toClassicTextUsage()))
+    override val usages = setOf(defaultUsageGroupOf("term"))
     override val cooldown = 5L
     override val staleComponentHandling = StaleComponentHandling.REMOVE_COMPONENTS
 

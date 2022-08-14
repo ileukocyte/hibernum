@@ -51,8 +51,8 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
             .addOption(OptionType.ATTACHMENT, "image", "The image to read a QR code from", true) to ::read,
     )
     override val usages = setOf(
-        usageGroupOf("text input".toClassicTextUsage()),
-        usageGroupOf("image".toClassicTextUsage()),
+        defaultUsageGroupOf("text input"),
+        defaultUsageGroupOf("image"),
     )
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {

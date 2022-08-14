@@ -3,7 +3,7 @@ package io.ileukocyte.hibernum.commands.`fun`
 import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
-import io.ileukocyte.hibernum.commands.usageGroupOf
+import io.ileukocyte.hibernum.commands.defaultUsageGroupOf
 import io.ileukocyte.hibernum.extensions.replyEmbed
 import io.ileukocyte.hibernum.extensions.sendEmbed
 
@@ -16,7 +16,7 @@ class EightBallCommand : TextCommand {
     override val name = "8ball"
     override val description = "Asks your question of the Magic 8 Ball"
     override val aliases = setOf("eightball", "eight-ball")
-    override val usages = setOf(usageGroupOf("question".toClassicTextUsage()))
+    override val usages = setOf(defaultUsageGroupOf("question"))
     override val options = setOf(
         OptionData(OptionType.STRING, "question", "The question to ask of the Magic 8 Ball", true))
 
