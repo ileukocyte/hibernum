@@ -114,7 +114,10 @@ data class TrackUserData(
     val playCount: Int = 0,
 )
 
-fun GuildMusicManager.exportQueueAsJson(includeInternalData: Boolean): JsonObject {
+fun GuildMusicManager.exportQueueAsJson(
+    includeInternalData: Boolean,
+    includePlayerVolume: Boolean = false,
+): JsonObject {
     fun AudioTrack.exportTrackAsJson(isCurrent: Boolean): JsonObject {
         val uri = info.uri
         val title = info.title
@@ -132,15 +135,15 @@ fun GuildMusicManager.exportQueueAsJson(includeInternalData: Boolean): JsonObjec
             "title" to JsonPrimitive(title),
             "url" to JsonPrimitive(uri),
             "requester_id" to JsonPrimitive(requester),
-            "channel_id" to JsonPrimitive(channel),
             "thumbnail" to JsonPrimitive(thumbnail),
-            "play_count" to JsonPrimitive(playCount),
         )
 
         if (includeInternalData) {
             map["first_to_play"] = JsonPrimitive(isFirstToPlay)
             map["announce_queueing"] = JsonPrimitive(announceQueueing)
             map["announcement_id"] = JsonPrimitive(announcement)
+            map["play_count"] = JsonPrimitive(playCount)
+            map["channel_id"] = JsonPrimitive(channel)
 
             if (isCurrent) {
                 map["position_millis"] = JsonPrimitive(position)
@@ -150,11 +153,14 @@ fun GuildMusicManager.exportQueueAsJson(includeInternalData: Boolean): JsonObjec
         return JsonObject(map)
     }
 
-    fun exportPlayerAsJson() = JsonObject(mapOf(
+    fun exportPlayerAsJson() = JsonObject(mutableMapOf(
         "is_paused" to JsonPrimitive(player.isPaused),
-        "volume" to JsonPrimitive(player.volume),
         "looping_mode" to JsonPrimitive(scheduler.loopMode.name.lowercase()),
-    ))
+    ).apply {
+        if (includePlayerVolume) {
+            this["volume"] = JsonPrimitive(player.volume)
+        }
+    })
 
     return JsonObject(player.playingTrack?.exportTrackAsJson(true)?.let { current ->
         mapOf(

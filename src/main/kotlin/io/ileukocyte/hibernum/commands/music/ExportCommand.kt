@@ -32,7 +32,7 @@ class ExportCommand : TextCommand {
         val queue = audioPlayer.exportQueueAsJson(false)
         val file = FileUpload.fromData(
             json.encodeToString(serializer(), queue).toByteArray(),
-            "queue.json",
+            "queue-${System.currentTimeMillis()}.json",
         )
 
         val embed = defaultEmbed("The queue has been exported as a file!", EmbedType.SUCCESS)
@@ -50,7 +50,7 @@ class ExportCommand : TextCommand {
         val queue = audioPlayer.exportQueueAsJson(false)
         val file = FileUpload.fromData(
             json.encodeToString(serializer(), queue).toByteArray(),
-            "queue.json",
+            "queue-${System.currentTimeMillis()}.json",
         )
 
         val embed = defaultEmbed("The queue has been exported as a file!", EmbedType.SUCCESS)
