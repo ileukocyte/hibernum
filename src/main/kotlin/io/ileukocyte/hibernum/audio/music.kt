@@ -114,8 +114,7 @@ data class TrackUserData(
     val playCount: Int = 0,
 )
 
-@Suppress("UNUSED")
-fun GuildMusicManager.exportQueueAsJson(): JsonObject {
+fun GuildMusicManager.exportQueueAsJson(includeInternalData: Boolean): JsonObject {
     fun AudioTrack.exportTrackAsJson(isCurrent: Boolean): JsonObject {
         val uri = info.uri
         val title = info.title
@@ -135,14 +134,17 @@ fun GuildMusicManager.exportQueueAsJson(): JsonObject {
             "requester_id" to JsonPrimitive(requester),
             "channel_id" to JsonPrimitive(channel),
             "thumbnail" to JsonPrimitive(thumbnail),
-            "announce_queueing" to JsonPrimitive(announceQueueing),
-            "first_to_play" to JsonPrimitive(isFirstToPlay),
             "play_count" to JsonPrimitive(playCount),
         )
 
-        if (isCurrent) {
-            map["position_millis"] = JsonPrimitive(position)
+        if (includeInternalData) {
+            map["first_to_play"] = JsonPrimitive(isFirstToPlay)
+            map["announce_queueing"] = JsonPrimitive(announceQueueing)
             map["announcement_id"] = JsonPrimitive(announcement)
+
+            if (isCurrent) {
+                map["position_millis"] = JsonPrimitive(position)
+            }
         }
 
         return JsonObject(map)
