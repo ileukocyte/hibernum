@@ -1,13 +1,20 @@
 package io.ileukocyte.hibernum.audio
 
+import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager
+import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
+import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 
 import java.util.concurrent.Executors
 
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.serialization.json.*
@@ -154,4 +161,24 @@ fun GuildMusicManager.exportQueueAsJson(): JsonObject {
             "player" to exportPlayerAsJson(),
         )
     } ?: emptyMap())
+}
+
+suspend fun AudioPlayerManager.loadItemAsync(orderingKey: Any, identifier: String) = suspendCoroutine {
+    loadItemOrdered(orderingKey, identifier, object : AudioLoadResultHandler {
+        override fun trackLoaded(track: AudioTrack) {
+            it.resume(track)
+        }
+
+        override fun playlistLoaded(playlist: AudioPlaylist) {
+            it.resume(playlist)
+        }
+
+        override fun noMatches() {
+            it.resume(null)
+        }
+
+        override fun loadFailed(exception: FriendlyException) {
+            it.resumeWithException(exception)
+        }
+    })
 }

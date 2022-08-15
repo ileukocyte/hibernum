@@ -1,6 +1,5 @@
 package io.ileukocyte.hibernum.commands.music
 
-import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.*
 
@@ -227,7 +226,7 @@ class YouTubePlayCommand : TextCommand {
         } ?: throw CommandException("You are not connected to a voice channel!")
     }
 
-    private fun play(
+    private suspend fun play(
         query: String,
         channel: GuildMessageChannel,
         user: User,
@@ -236,14 +235,15 @@ class YouTubePlayCommand : TextCommand {
     ) {
         val musicManager = channel.guild.audioPlayer ?: return
 
-        PLAYER_MANAGER.loadItemOrdered(
-            musicManager,
-            "https://www.youtube.com/watch?v=".takeIf { isId }.orEmpty() + query,
-            object : AudioLoadResultHandler {
-                override fun trackLoaded(track: AudioTrack) {
+        try {
+            when (val item = PLAYER_MANAGER.loadItemAsync(
+                musicManager,
+                "https://www.youtube.com/watch?v=".takeIf { isId }.orEmpty() + query,
+            )) {
+                is AudioTrack -> {
                     val id = YOUTUBE_LINK_REGEX.find(query)?.groups?.get(3)?.value ?: query
 
-                    track.userData = TrackUserData(
+                    item.userData = TrackUserData(
                         user,
                         channel,
                         "https://i3.ytimg.com/vi/$id/hqdefault.jpg",
@@ -252,22 +252,16 @@ class YouTubePlayCommand : TextCommand {
                         ifFromSlashCommand = ifFromSlashCommand,
                     )
 
-                    musicManager.scheduler += track
+                    musicManager.scheduler += item
                 }
+                is AudioPlaylist -> {
+                    for (track in item.tracks) {
+                        if (channel.guild.selfMember.voiceState?.inAudioChannel() == false) {
+                            musicManager.stop()
 
-                override fun playlistLoaded(playlist: AudioPlaylist) {
-                    val embed = defaultEmbed(
-                        desc = "The [${playlist.name}]($query) playlist has been added to the queue!",
-                        type = EmbedType.SUCCESS,
-                    )
-
-                    ifFromSlashCommand?.let {
-                        it.editOriginalComponents().setEmbeds(embed).queue(null) {
-                            channel.sendMessageEmbeds(embed).queue()
+                            return
                         }
-                    } ?: channel.sendMessageEmbeds(embed).queue()
 
-                    for (track in playlist.tracks) {
                         val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
                             ?.let { "https://i3.ytimg.com/vi/$it/hqdefault.jpg" }
 
@@ -280,9 +274,19 @@ class YouTubePlayCommand : TextCommand {
 
                         musicManager.scheduler += track
                     }
-                }
 
-                override fun noMatches() {
+                    val embed = defaultEmbed(
+                        desc = "The [${item.name}]($query) playlist has been added to the queue!",
+                        type = EmbedType.SUCCESS,
+                    )
+
+                    ifFromSlashCommand?.let {
+                        it.editOriginalComponents().setEmbeds(embed).queue(null) {
+                            channel.sendMessageEmbeds(embed).queue()
+                        }
+                    } ?: channel.sendMessageEmbeds(embed).queue()
+                }
+                null -> {
                     val embed = defaultEmbed(
                         desc = "No results have been found by the query!",
                         type = EmbedType.FAILURE,
@@ -294,20 +298,18 @@ class YouTubePlayCommand : TextCommand {
                         }
                     } ?: channel.sendMessageEmbeds(embed).queue()
                 }
-
-                override fun loadFailed(exception: FriendlyException) {
-                    val embed = defaultEmbed(
-                        desc = "The track cannot be played!",
-                        type = EmbedType.FAILURE,
-                    )
-
-                    ifFromSlashCommand?.let {
-                        it.editOriginalComponents().setEmbeds(embed).queue(null) {
-                            channel.sendMessageEmbeds(embed).queue()
-                        }
-                    } ?: channel.sendMessageEmbeds(embed).queue()
-                }
             }
-        )
+        } catch (_: FriendlyException) {
+            val embed = defaultEmbed(
+                desc = "The track cannot be played!",
+                type = EmbedType.FAILURE,
+            )
+
+            ifFromSlashCommand?.let {
+                it.editOriginalComponents().setEmbeds(embed).queue(null) {
+                    channel.sendMessageEmbeds(embed).queue()
+                }
+            } ?: channel.sendMessageEmbeds(embed).queue()
+        }
     }
 }

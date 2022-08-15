@@ -1,14 +1,11 @@
 package io.ileukocyte.hibernum.commands.music
 
-import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
+import com.sedmelluq.discord.lavaplayer.track.BasicAudioPlaylist
 
-import io.ileukocyte.hibernum.audio.PLAYER_MANAGER
-import io.ileukocyte.hibernum.audio.TrackUserData
-import io.ileukocyte.hibernum.audio.audioPlayer
-import io.ileukocyte.hibernum.audio.canJoinFromAnother
+import io.ileukocyte.hibernum.audio.*
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
 import io.ileukocyte.hibernum.commands.TextCommand
@@ -59,58 +56,105 @@ class PlayCommand : TextCommand {
 
                 channel?.let { event.guild.audioManager.openAudioConnection(channel) }
 
-                for (url in urls) {
-                    PLAYER_MANAGER.loadItemOrdered(musicManager, url, object : AudioLoadResultHandler {
-                        override fun trackLoaded(track: AudioTrack) {
-                            val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
-                                ?.let { id -> "https://i3.ytimg.com/vi/$id/hqdefault.jpg" }
+                if (urls.size > 1) {
+                    val items = urls.mapNotNull { url ->
+                        try {
+                            PLAYER_MANAGER.loadItemAsync(musicManager, url)
+                        } catch (_: FriendlyException) {
+                            null
+                        }
+                    }.takeUnless { l -> l.isEmpty() } ?: throw CommandException("No track cannot be loaded!")
 
-                            track.userData = TrackUserData(
-                                event.author,
-                                event.guildChannel,
-                                thumbnail,
-                                announceQueueing = musicManager.player.playingTrack !== null,
-                                isFirstToPlay = musicManager.player.playingTrack === null,
-                            )
+                    val tracks = items.filterIsInstance<AudioTrack>()
+                    val playlist = BasicAudioPlaylist(
+                        "Custom Playlist",
+                        tracks,
+                        tracks.first(),
+                        false,
+                    )
 
-                            musicManager.scheduler += track
+                    for (track in playlist.tracks) {
+                        if (event.guild.selfMember.voiceState?.inAudioChannel() == false) {
+                            musicManager.stop()
+
+                            return
                         }
 
-                        override fun playlistLoaded(playlist: AudioPlaylist) {
-                            val playlistName = if (!playlist.isSearchResult) {
-                                url.maskedLink(playlist.name
-                                    .replace('[', '(')
-                                    .replace(']', ')'))
-                            } else {
-                                playlist.name.surroundWith('"')
-                            }
+                        val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
+                            ?.let { id -> "https://i3.ytimg.com/vi/$id/hqdefault.jpg" }
 
-                            for (track in playlist.tracks) {
-                                val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
+                        track.userData = TrackUserData(
+                            event.author,
+                            event.guildChannel,
+                            thumbnail,
+                            isFirstToPlay = musicManager.player.playingTrack === null,
+                        )
+
+                        musicManager.scheduler += track
+                    }
+
+                    event.channel.sendSuccess("The custom playlist has been added to the queue!")
+                        .queue()
+                } else {
+                    try {
+                        when (val item = PLAYER_MANAGER.loadItemAsync(musicManager, urls.first())) {
+                            is AudioTrack -> {
+                                val thumbnail = YOUTUBE_LINK_REGEX.find(item.info.uri)?.groups?.get(3)?.value
                                     ?.let { id -> "https://i3.ytimg.com/vi/$id/hqdefault.jpg" }
 
-                                track.userData = TrackUserData(
+                                item.userData = TrackUserData(
                                     event.author,
                                     event.guildChannel,
                                     thumbnail,
+                                    announceQueueing = musicManager.player.playingTrack !== null,
                                     isFirstToPlay = musicManager.player.playingTrack === null,
                                 )
 
-                                musicManager.scheduler += track
+                                musicManager.scheduler += item
                             }
+                            is AudioPlaylist -> {
+                                val playlistName = if (!item.isSearchResult) {
+                                    urls.first().maskedLink(
+                                        item.name
+                                            .replace('[', '(')
+                                            .replace(']', ')')
+                                    )
+                                } else {
+                                    item.name.surroundWith('"')
+                                }
 
-                            event.channel.sendSuccess("The $playlistName playlist " +
-                                    "has been added to the queue!").queue()
-                        }
+                                for (track in item.tracks) {
+                                    if (event.guild.selfMember.voiceState?.inAudioChannel() == false) {
+                                        musicManager.stop()
 
-                        override fun noMatches() =
-                            event.channel.sendFailure("No results have been found by the query!") {
+                                        return
+                                    }
+
+                                    val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
+                                        ?.let { id -> "https://i3.ytimg.com/vi/$id/hqdefault.jpg" }
+
+                                    track.userData = TrackUserData(
+                                        event.author,
+                                        event.guildChannel,
+                                        thumbnail,
+                                        isFirstToPlay = musicManager.player.playingTrack === null,
+                                    )
+
+                                    musicManager.scheduler += track
+                                }
+
+                                event.channel.sendSuccess(
+                                    "The $playlistName playlist " +
+                                            "has been added to the queue!"
+                                ).queue()
+                            }
+                            null -> event.channel.sendFailure("No results have been found by the query!") {
                                 text = "Try using the \"$ytplay\" command instead!"
                             }.queue()
-
-                        override fun loadFailed(exception: FriendlyException) =
-                            event.channel.sendFailure("The track cannot be played!").queue()
-                    })
+                        }
+                    } catch (_: FriendlyException) {
+                        event.channel.sendFailure("The track cannot be played!").queue()
+                    }
                 }
             }
         } ?: throw CommandException("You are not connected to a voice channel!")
@@ -138,70 +182,74 @@ class PlayCommand : TextCommand {
 
                 channel?.let { guild.audioManager.openAudioConnection(channel) }
 
-                PLAYER_MANAGER.loadItemOrdered(musicManager, url, object : AudioLoadResultHandler {
-                    override fun trackLoaded(track: AudioTrack) {
-                        val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
-                            ?.let { id -> "https://i3.ytimg.com/vi/$id/hqdefault.jpg" }
-
-                        track.userData = TrackUserData(
-                            event.user,
-                            event.guildChannel,
-                            thumbnail,
-                            announceQueueing = musicManager.player.playingTrack !== null,
-                            isFirstToPlay = musicManager.player.playingTrack === null,
-                            ifFromSlashCommand = deferred,
-                        )
-
-                        musicManager.scheduler += track
-                    }
-
-                    override fun playlistLoaded(playlist: AudioPlaylist) {
-                        val playlistName = if (!playlist.isSearchResult) {
-                            url.maskedLink(playlist.name
-                                .replace('[', '(')
-                                .replace(']', ')'))
-                        } else {
-                            playlist.name.surroundWith('"')
-                        }
-
-                        val embed = defaultEmbed(
-                            desc = "The $playlistName playlist has been added to the queue!",
-                            type = EmbedType.SUCCESS,
-                        )
-
-                        deferred.editOriginalEmbeds(embed).queue(null) {
-                            event.channel.sendMessageEmbeds(embed).queue()
-                        }
-
-                        for (track in playlist.tracks) {
-                            val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
+                try {
+                    when (val item = PLAYER_MANAGER.loadItemAsync(musicManager, url)) {
+                        is AudioTrack -> {
+                            val thumbnail = YOUTUBE_LINK_REGEX.find(item.info.uri)?.groups?.get(3)?.value
                                 ?.let { id -> "https://i3.ytimg.com/vi/$id/hqdefault.jpg" }
 
-                            track.userData = TrackUserData(
+                            item.userData = TrackUserData(
                                 event.user,
                                 event.guildChannel,
                                 thumbnail,
+                                announceQueueing = musicManager.player.playingTrack !== null,
                                 isFirstToPlay = musicManager.player.playingTrack === null,
+                                ifFromSlashCommand = deferred,
                             )
 
-                            musicManager.scheduler += track
+                            musicManager.scheduler += item
                         }
-                    }
+                        is AudioPlaylist -> {
+                            val playlistName = if (!item.isSearchResult) {
+                                url.maskedLink(item.name
+                                    .replace('[', '(')
+                                    .replace(']', ')'))
+                            } else {
+                                item.name.surroundWith('"')
+                            }
 
-                    override fun noMatches() =
-                        deferred.setFailureEmbed("No results have been found by the query!") {
+                            val embed = defaultEmbed(
+                                desc = "The $playlistName playlist has been added to the queue!",
+                                type = EmbedType.SUCCESS,
+                            )
+
+                            deferred.editOriginalEmbeds(embed).queue(null) {
+                                event.channel.sendMessageEmbeds(embed).queue()
+                            }
+
+                            for (track in item.tracks) {
+                                if (guild.selfMember.voiceState?.inAudioChannel() == false) {
+                                    musicManager.stop()
+
+                                    return
+                                }
+
+                                val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
+                                    ?.let { id -> "https://i3.ytimg.com/vi/$id/hqdefault.jpg" }
+
+                                track.userData = TrackUserData(
+                                    event.user,
+                                    event.guildChannel,
+                                    thumbnail,
+                                    isFirstToPlay = musicManager.player.playingTrack === null,
+                                )
+
+                                musicManager.scheduler += track
+                            }
+                        }
+                        null -> deferred.setFailureEmbed("No results have been found by the query!") {
                             text = "Try using the \"$ytplay\" command instead!"
                         }.queue(null) {
                             event.channel.sendFailure("No results have been found by the query!") {
                                 text = "Try using the \"$ytplay\" command instead!"
                             }.queue()
                         }
-
-                    override fun loadFailed(exception: FriendlyException) =
-                        deferred.setFailureEmbed("The track cannot be played!").queue(null) {
-                            event.channel.sendFailure("The track cannot be played!").queue()
-                        }
-                })
+                    }
+                } catch (_: FriendlyException) {
+                    deferred.setFailureEmbed("The track cannot be played!").queue(null) {
+                        event.channel.sendFailure("The track cannot be played!").queue()
+                    }
+                }
             }
         } ?: throw CommandException("You are not connected to a voice channel!")
     }
