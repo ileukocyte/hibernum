@@ -37,7 +37,7 @@ class RequeueCommand : TextCommand {
                 audioPlayer.scheduler += track.makeClone().apply {
                     userData = track.customUserData.copy(
                         announceQueueing = true,
-                        user = event.author,
+                        requester = event.author,
                     )
                 }
             } else {
@@ -62,7 +62,7 @@ class RequeueCommand : TextCommand {
                     userData = track.customUserData.copy(
                         announceQueueing = true,
                         ifFromSlashCommand = event.deferReply().await(),
-                        user = event.user,
+                        requester = event.user,
                     )
                 }
             } else {

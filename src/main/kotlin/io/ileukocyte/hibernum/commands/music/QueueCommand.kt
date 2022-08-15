@@ -409,7 +409,7 @@ class QueueCommand : TextCommand {
                     }
 
                     appendLine("${(i.inc() + page * 10).toDecimalFormat("#,###")}. " +
-                            "$trackTitle ($trackDuration, ${userData.user.asMention})")
+                            "$trackTitle ($trackDuration, ${userData.requester?.asMention ?: "unknown requester"})")
                 }
             }
 
@@ -433,7 +433,7 @@ class QueueCommand : TextCommand {
                 track.info.title
                     .replace('[', '(')
                     .replace(']', ')')
-            ).bold()} (${userData.user.asMention})\n" +
+            ).bold()} (${userData.requester?.asMention ?: "unknown requester"})\n" +
                     "$timeline " + ("(${asDuration(track.position)}/${asDuration(track.duration)})"
                 .takeUnless { track.info.isStream } ?: "(LIVE)")
         }

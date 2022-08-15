@@ -223,7 +223,7 @@ class NowPlayingCommand : TextCommand {
 
         field {
             title = "Track Requester"
-            description = trackData.user.asMention
+            description = trackData.requester?.asMention ?: "Unknown"
         }
 
         field {

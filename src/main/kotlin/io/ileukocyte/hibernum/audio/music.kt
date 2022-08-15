@@ -10,6 +10,7 @@ import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
 
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.serialization.json.*
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.Permission
@@ -96,8 +97,8 @@ val AudioTrack.customUserData: TrackUserData
     get() = userData.cast()
 
 data class TrackUserData(
-    val user: User,
-    val channel: GuildMessageChannel,
+    val requester: User?,
+    val channel: GuildMessageChannel?,
     val thumbnail: String? = null,
     val announcement: Message? = null,
     val announceQueueing: Boolean = false,
@@ -105,3 +106,52 @@ data class TrackUserData(
     val ifFromSlashCommand: InteractionHook? = null,
     val playCount: Int = 0,
 )
+
+@Suppress("UNUSED")
+fun GuildMusicManager.exportQueueAsJson(): JsonObject {
+    fun AudioTrack.exportTrackAsJson(isCurrent: Boolean): JsonObject {
+        val uri = info.uri
+        val title = info.title
+
+        val data = customUserData
+        val requester = data.requester?.idLong
+        val channel = data.channel?.idLong
+        val thumbnail = data.thumbnail
+        val announcement = data.announcement?.idLong
+        val announceQueueing = data.announceQueueing
+        val isFirstToPlay = data.isFirstToPlay
+        val playCount = data.playCount
+
+        val map = mutableMapOf(
+            "title" to JsonPrimitive(title),
+            "url" to JsonPrimitive(uri),
+            "requester_id" to JsonPrimitive(requester),
+            "channel_id" to JsonPrimitive(channel),
+            "thumbnail" to JsonPrimitive(thumbnail),
+            "announce_queueing" to JsonPrimitive(announceQueueing),
+            "first_to_play" to JsonPrimitive(isFirstToPlay),
+            "play_count" to JsonPrimitive(playCount),
+        )
+
+        if (isCurrent) {
+            map["position_millis"] = JsonPrimitive(position)
+            map["announcement_id"] = JsonPrimitive(announcement)
+        }
+
+        return JsonObject(map)
+    }
+
+    fun exportPlayerAsJson() = JsonObject(mapOf(
+        "is_paused" to JsonPrimitive(player.isPaused),
+        "volume" to JsonPrimitive(player.volume),
+        "looping_mode" to JsonPrimitive(scheduler.loopMode.name.lowercase()),
+    ))
+
+    return JsonObject(player.playingTrack?.exportTrackAsJson(true)?.let { current ->
+        mapOf(
+            "current_track" to current,
+            "queue" to JsonArray(scheduler.queue.map { it.exportTrackAsJson(false) }),
+            "player" to exportPlayerAsJson(),
+        )
+    } ?: emptyMap())
+}

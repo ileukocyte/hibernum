@@ -38,9 +38,9 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
 
                 userData.ifFromSlashCommand?.let {
                     it.editOriginalComponents().setEmbeds(embed).queue(null) {
-                        userData.channel.sendMessageEmbeds(embed).queue()
+                        userData.channel?.sendMessageEmbeds(embed)?.queue()
                     }
-                } ?: userData.channel.sendMessageEmbeds(embed).queue()
+                } ?: userData.channel?.sendMessageEmbeds(embed)?.queue()
             }
 
             queue.offer(track)
@@ -93,9 +93,9 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
 
         userData.ifFromSlashCommand?.let {
             it.editOriginalComponents().setEmbeds(embed).queue(consumer) {
-                userData.channel.sendMessageEmbeds(embed).queue(consumer)
+                userData.channel?.sendMessageEmbeds(embed)?.queue(consumer)
             }
-        } ?: userData.channel.sendMessageEmbeds(embed).queue(consumer)
+        } ?: userData.channel?.sendMessageEmbeds(embed)?.queue(consumer)
     }
 
     override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
@@ -129,7 +129,7 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
             }
         }
 
-        if (data.channel.guild.selfMember.voiceState?.inAudioChannel() == true) {
+        if (data.channel?.guild?.selfMember?.voiceState?.inAudioChannel() == true) {
             if (player.playingTrack === null) {
                 CoroutineScope(MusicContext).launch {
                     val deferred = CompletableDeferred<Unit>()
