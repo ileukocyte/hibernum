@@ -1,6 +1,5 @@
 package io.ileukocyte.hibernum.commands.`fun`
 
-import com.google.code.chatterbotapi.ChatterBot
 import com.google.code.chatterbotapi.ChatterBotFactory
 import com.google.code.chatterbotapi.ChatterBotSession
 import com.google.code.chatterbotapi.ChatterBotType
@@ -13,6 +12,7 @@ import io.ileukocyte.hibernum.utils.*
 
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 import net.dv8tion.jda.api.entities.GuildMessageChannel
 import net.dv8tion.jda.api.entities.Message
@@ -46,19 +46,20 @@ class ChomskyCommand : TextCommand {
                     "Finish the process first!")
         }
 
-        val session = CHATTER_BOT?.createSession() ?: run {
-            CHATTER_BOT = try {
+        val session = CHATTER_BOT.get()?.createSession() ?: run {
+            CHATTER_BOT.set(try {
                 ChatterBotFactory().create(ChatterBotType.PANDORABOTS, CHOMSKY_ID)
             } catch (_: Exception) {
                 null
-            }
+            })
 
             throw CommandException("The bot failed to create a chat session!")
         }
 
         val staticProcessId = generateStaticProcessId(event.jda)
 
-        event.channel.sendSuccess("The chat session has started! Say anything to the bot!") {
+        event.channel.sendSuccess("The chat session has started! Say anything to the bot!\n\n" +
+                "If you want the bot to ignore your message, prefix it with \">>\"!".italics()) {
             text = "Type in \"exit\" to finish the session!"
         }.await().let {
             CHATTER_BOT_SESSIONS[event.author.idLong] = session
@@ -73,19 +74,20 @@ class ChomskyCommand : TextCommand {
                     "Finish the process first!")
         }
 
-        val session = CHATTER_BOT?.createSession() ?: run {
-            CHATTER_BOT = try {
+        val session = CHATTER_BOT.get()?.createSession() ?: run {
+            CHATTER_BOT.set(try {
                 ChatterBotFactory().create(ChatterBotType.PANDORABOTS, CHOMSKY_ID)
             } catch (_: Exception) {
                 null
-            }
+            })
 
             throw CommandException("The bot failed to create a chat session!")
         }
 
         val staticProcessId = generateStaticProcessId(event.jda)
 
-        event.replySuccess("The chat session has started! Say anything to the bot!") {
+        event.replySuccess("The chat session has started! Say anything to the bot!\n\n" +
+                "If you want the bot to ignore your message, prefix it with \">>\"!".italics()) {
             text = "Type in \"exit\" to finish the session!"
         }.await().retrieveOriginal().await().let {
             CHATTER_BOT_SESSIONS[event.user.idLong] = session
@@ -144,8 +146,9 @@ class ChomskyCommand : TextCommand {
         session: ChatterBotSession,
         processId: Int,
     ) {
-        val reply = channel.awaitMessage(user, this, message, processId = processId)
-            ?: return
+        val reply = channel.awaitMessage(user, this, message, processId = processId) {
+            it.message.contentRaw.let { c -> c.startsWith(">>>") || !c.startsWith(">>") }
+        } ?: return
 
         if (reply.contentRaw.lowercase() == "exit") {
             val confirmation = reply.replyConfirmation("Are you sure you want to exit?")
@@ -163,22 +166,28 @@ class ChomskyCommand : TextCommand {
             }) { it.user.idLong == user.idLong && it.message == confirmation } // used to block other commands
         } else {
             val botReply = reply.replyEmbed {
-                var response = session.think(reply.contentStripped).takeUnless { it.isEmpty() } ?: "\u2026"
-                val links = Jsoup.parse(response).getElementsByTag("a")
+                try {
+                    var response = session.think(reply.contentStripped).takeUnless { it.isEmpty() } ?: "\u2026"
 
-                for (link in links) {
-                    val url = link.attr("abs:href")
+                    val links = Jsoup.parse(response).getElementsByTag("a")
 
-                    response = response.replace(
-                        link.html(),
-                        link.text().applyIf(UrlValidator.getInstance().isValid(url)) {
-                            url.maskedLink(this)
-                        },
-                    )
+                    for (link in links) {
+                        val url = link.attr("abs:href")
+
+                        response = response.replace(
+                            link.html(),
+                            link.text().applyIf(UrlValidator.getInstance().isValid(url)) {
+                                url.maskedLink(this)
+                            },
+                        )
+                    }
+
+                    description = Jsoup.parse(response).text()
+                    color = Immutable.SUCCESS
+                } catch (_: Exception) {
+                    description = "The bot cannot answer your message due to an error!"
+                    color = Immutable.FAILURE
                 }
-
-                description = Jsoup.parse(response).text()
-                color = Immutable.SUCCESS
             }.await()
 
             awaitReply(user, channel, botReply, session, processId)
@@ -189,11 +198,11 @@ class ChomskyCommand : TextCommand {
         private const val CHOMSKY_ID = "b0dafd24ee35a477"
 
         @JvmField
-        internal var CHATTER_BOT: ChatterBot? = try {
+        internal val CHATTER_BOT = AtomicReference(try {
             ChatterBotFactory().create(ChatterBotType.PANDORABOTS, CHOMSKY_ID)
         } catch (_: Exception) {
             null
-        }
+        })
 
         @JvmField
         val CHATTER_BOT_SESSIONS = ConcurrentHashMap<Long, ChatterBotSession>()
