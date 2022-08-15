@@ -43,11 +43,16 @@ interface GenericCommand : Comparable<GenericCommand> {
      *
      * **Note**: the property is always mandatory to override unless the command is a context-menu one;
      * therefore, do not forget to override it yourself in case the command is not context menu only!
+     *
+     * @see interactionName
+     * @see [ContextCommand.contextName]
      */
     val name: String
 
     /**
      * A property that provides the main description of the command
+     *
+     * @see fullDescription
      */
     val description: String
 
@@ -62,31 +67,45 @@ interface GenericCommand : Comparable<GenericCommand> {
      * Used in case the command's actual name cannot be used to identify the command's interactions
      *
      * **Note**: the interaction name must not contain any hyphens!
+     *
+     * It is also highly recommended to override the property in favor of
+     * something more compact and concise in case the command is context menu only!
+     *
+     * @see name
+     * @see [ContextCommand.contextName]
      */
     val interactionName: String
         get() = name
 
     /**
-     * Used for the help command if the main description is too long for slash command limits
+     * Used for the command's help message if the main description is too long for slash command limits
+     *
+     * @see description
      */
     val fullDescription: String
         get() = description
 
     /**
      * A property that shows whether the command can only be used by a developer of the bot
+     *
+     * @see neglectProcessBlock
      */
     val isDeveloper: Boolean
         get() = category == CommandCategory.DEVELOPER
 
     /**
-     * Used for a few commands that can be used in spite of any other command processes
-     * running in the background
+     * Used for a few commands that can be used in spite of any other
+     * command processes running in the background
+     *
+     * @see isDeveloper
      */
     val neglectProcessBlock: Boolean
         get() = isDeveloper
 
     /**
      * A property that provides all the ways the current command can be used by a user
+     *
+     * @see InputType
      */
     val inputTypes: Set<InputType>
         get() {
@@ -129,18 +148,22 @@ interface GenericCommand : Comparable<GenericCommand> {
      *
      * **Note**: A component is considered expired within the project if it was sent by the bot
      * before the latest reboot
+     *
+     * @see StaleComponentHandling
      */
     val staleComponentHandling: StaleComponentHandling
         get() = StaleComponentHandling.DELETE_ORIGINAL
 
     /**
-     * A property that provides a set of the permissions that the bot is required to have to execute the command
+     * A property that provides a set of the permissions that the bot is required to have
+     * in order to execute the command
      */
     val botPermissions: Set<Permission>
         get() = emptySet()
 
     /**
-     * A property that provides a set of the permissions that the user is required to have to execute the command
+     * A property that provides a set of the permissions that the user is required to have
+     * in order to run the command
      */
     val memberPermissions: Set<Permission>
         get() = emptySet()
@@ -171,7 +194,15 @@ interface GenericCommand : Comparable<GenericCommand> {
 
     override fun compareTo(other: GenericCommand) = name.compareTo(other.name)
 
+    /**
+     * A type that represents all the ways a command can be used by a user
+     *
+     * @see inputTypes
+     */
     enum class InputType {
+        /**
+         * A normal Discord message starting with the pre-defined bot prefix
+         */
         CLASSIC_TEXT_INPUT,
         SLASH_COMMAND_MENU,
         MESSAGE_CONTEXT_MENU,
@@ -185,6 +216,14 @@ interface GenericCommand : Comparable<GenericCommand> {
         }
     }
 
+    /**
+     * A type that represents the type of reaction triggered by a command's expired components being used
+     *
+     * **Note**: A component is considered expired within the project if it was sent by the bot
+     * before the latest reboot
+     *
+     * @see staleComponentHandling
+     */
     enum class StaleComponentHandling {
         DELETE_ORIGINAL,
         REMOVE_COMPONENTS,
@@ -213,6 +252,12 @@ interface TextCommand : GenericCommand {
     /**
      * A property containing a set of possible classic text usage groups that is
      * used for providing help for the command
+     *
+     * @see ClassicTextUsage
+     * @see ClassicTextUsageGroup
+     * @see toClassicTextUsage
+     * @see defaultUsageGroupOf
+     * @see usageGroupOf
      */
     val usages: Set<ClassicTextUsageGroup>
         get() = emptySet()
@@ -263,6 +308,24 @@ interface TextCommand : GenericCommand {
      */
     suspend operator fun invoke(event: CommandAutoCompleteInteractionEvent) {}
 
+    /**
+     * A type that represents a possible classic text usage and is
+     * used for providing help for a text command
+     *
+     * @param option
+     * The option's name
+     * @param isOptional
+     * Whether the option should be marked as optional
+     * @param applyDefaultAffixes
+     * Whether the option should be surrounded by the default affixes (i.e. brackets)
+     * in the command's help message
+     *
+     * @see usages
+     * @see ClassicTextUsageGroup
+     * @see toClassicTextUsage
+     * @see defaultUsageGroupOf
+     * @see usageGroupOf
+     */
     data class ClassicTextUsage(
         val option: String,
         val isOptional: Boolean = false,
@@ -282,6 +345,10 @@ interface TextCommand : GenericCommand {
 
 fun usageGroupOf(vararg usages: ClassicTextUsage) = ClassicTextUsageGroup(usages.toList())
 
+/**
+ * A shortcut function for [usageGroupOf] that automatically converts the provided strings
+ * to [ClassicTextUsage] instances with the default parameters
+ */
 fun defaultUsageGroupOf(vararg usages: String) = ClassicTextUsageGroup(usages.map { ClassicTextUsage(it) })
 
 /**
@@ -366,11 +433,19 @@ interface ContextCommand : GenericCommand {
 
     /**
      * A property that provides the context-menu name of the command
+     *
+     * **Note**: it is also highly recommended to override the [interactionName] in favor of
+     * something more compact and concise in case the command is context menu only!
+     *
+     * @see name
+     * @see interactionName
      */
     val contextName: String
 
     /**
      * A property that provides a set of context menus a user is able to invoke the command from
+     *
+     * @see ContextType
      */
     val contextTypes: Set<ContextType>
         get() = setOf(ContextType.MESSAGE, ContextType.USER)
@@ -400,6 +475,11 @@ interface ContextCommand : GenericCommand {
      */
     suspend operator fun invoke(event: UserContextInteractionEvent)
 
+    /**
+     * A type that represents context menus a user is able to invoke a command from
+     *
+     * @see contextTypes
+     */
     enum class ContextType(val jdaContextType: Command.Type) {
         MESSAGE(Command.Type.MESSAGE),
         USER(Command.Type.USER);
