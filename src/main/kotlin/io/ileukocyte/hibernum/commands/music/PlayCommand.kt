@@ -7,6 +7,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.BasicAudioPlaylist
 
+import io.ileukocyte.hibernum.Immutable
 import io.ileukocyte.hibernum.audio.*
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.NoArgumentsException
@@ -96,15 +97,17 @@ class PlayCommand : TextCommand {
                     //musicManager.player.volume = player.volume
                     musicManager.scheduler.loopMode = player.loopMode
 
-                    if (!musicManager.player.playingTrack.info.isStream
-                            && (player.pitchOffset != 0 || player.speedRate != 1.0)) {
-                        musicManager.player.setFilterFactory { _, format, output ->
-                            val filter = TimescalePcmAudioFilter(output, format.channelCount, format.sampleRate)
+                    if (Immutable.ENABLE_AUDIO_FILTERS_HANDLING) {
+                        if (!musicManager.player.playingTrack.info.isStream
+                                && (player.pitchOffset != 0 || player.speedRate != 1.0)) {
+                            musicManager.player.setFilterFactory { _, format, output ->
+                                val filter = TimescalePcmAudioFilter(output, format.channelCount, format.sampleRate)
 
-                            filter.speed = player.speedRate
-                            filter.setPitchSemiTones(player.pitchOffset.toDouble())
+                                filter.speed = player.speedRate
+                                filter.setPitchSemiTones(player.pitchOffset.toDouble())
 
-                            listOf(filter)
+                                listOf(filter)
+                            }
                         }
                     }
                 }
@@ -271,15 +274,17 @@ class PlayCommand : TextCommand {
                     //musicManager.player.volume = player.volume
                     musicManager.scheduler.loopMode = player.loopMode
 
-                    if (!musicManager.player.playingTrack.info.isStream
-                            && (player.pitchOffset != 0 || player.speedRate != 1.0)) {
-                        musicManager.player.setFilterFactory { _, format, output ->
-                            val filter = TimescalePcmAudioFilter(output, format.channelCount, format.sampleRate)
+                    if (Immutable.ENABLE_AUDIO_FILTERS_HANDLING) {
+                        if (!musicManager.player.playingTrack.info.isStream
+                                && (player.pitchOffset != 0 || player.speedRate != 1.0)) {
+                            musicManager.player.setFilterFactory { _, format, output ->
+                                val filter = TimescalePcmAudioFilter(output, format.channelCount, format.sampleRate)
 
-                            filter.speed = player.speedRate
-                            filter.setPitchSemiTones(player.pitchOffset.toDouble())
+                                filter.speed = player.speedRate
+                                filter.setPitchSemiTones(player.pitchOffset.toDouble())
 
-                            listOf(filter)
+                                listOf(filter)
+                            }
                         }
                     }
                 }
@@ -428,10 +433,10 @@ class PlayCommand : TextCommand {
             }
         } ?: LoopMode.DISABLED
         val speedRate = player["speed_rate"]?.jsonPrimitive?.doubleOrNull?.takeIf {
-            it in setOf(0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0)
+            it in setOf(0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0) && Immutable.ENABLE_AUDIO_FILTERS_HANDLING
         } ?: 1.0
         val pitchOffset = player["pitch_offset"]?.jsonPrimitive?.intOrNull?.takeIf {
-            it in -12..12
+            it in -12..12 && Immutable.ENABLE_AUDIO_FILTERS_HANDLING
         } ?: 0
 
         suspend fun handleTrack(json: JsonObject) = HibernumTrack(

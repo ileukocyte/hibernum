@@ -35,6 +35,8 @@ object Immutable {
     val EVAL_MODAL_INPUT_BACKUP_CHANNEL_ID: String? =
         System.getenv("EVAL_MODAL_INPUT_BACKUP_CHANNEL_ID")
 
+    const val ENABLE_AUDIO_FILTERS_HANDLING = true
+
     @JvmField
     val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0" //"User-Agent: DiscordBot ($GITHUB_REPOSITORY, $VERSION)"
     @JvmField

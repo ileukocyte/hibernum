@@ -9,6 +9,8 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 
+import io.ileukocyte.hibernum.Immutable
+
 import java.util.concurrent.Executors
 
 import kotlin.coroutines.CoroutineContext
@@ -162,11 +164,14 @@ fun GuildMusicManager.exportQueueAsJson(
     fun exportPlayerAsJson() = JsonObject(mutableMapOf(
         "is_paused" to JsonPrimitive(player.isPaused),
         "looping_mode" to JsonPrimitive(scheduler.loopMode.name.lowercase()),
-        "speed_rate" to JsonPrimitive(scheduler.speedRate.get()),
-        "pitch_offset" to JsonPrimitive(scheduler.pitchOffset.get()),
     ).apply {
         if (includePlayerVolume) {
             this["volume"] = JsonPrimitive(player.volume)
+        }
+
+        if (Immutable.ENABLE_AUDIO_FILTERS_HANDLING) {
+            this["speed_rate"] = JsonPrimitive(scheduler.speedRate.get())
+            this["pitch_offset"] = JsonPrimitive(scheduler.pitchOffset.get())
         }
     })
 
