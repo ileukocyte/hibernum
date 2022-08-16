@@ -400,6 +400,7 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
                 Package("concurrent"),
                 Package("coroutines"),
                 Package("experimental"),
+                Package("math"),
                 Package("properties"),
                 Package("random"),
                 Package("reflect"),

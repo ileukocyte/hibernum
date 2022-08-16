@@ -13,6 +13,7 @@ import kotlin.math.absoluteValue
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+
 import org.jetbrains.kotlin.utils.addToStdlib.applyIf
 
 class SpeedCommand : SlashOnlyCommand {
@@ -31,9 +32,9 @@ class SpeedCommand : SlashOnlyCommand {
             .addChoice("1.75x", 1.75)
             .addChoice("2x", 2.0),
         OptionData(
-            OptionType.INTEGER,
+            OptionType.NUMBER,
             "pitch",
-            "The semitone offset (from –12 through 12, set to 0 for resetting)",
+            "The semitone offset (from –12 through +12, set to 0 for resetting)",
         ).setRequiredRange(-12, 12),
     )
     override val cooldown = 7L
@@ -49,15 +50,15 @@ class SpeedCommand : SlashOnlyCommand {
                     }
 
                     val speed = event.getOption("speed")?.asDouble
-                    val pitch = event.getOption("pitch")?.asInt
+                    val pitch = event.getOption("pitch")?.asDouble
 
                     if (speed === null && pitch === null) {
-                        audioPlayer.scheduler.pitchOffset.set(0)
+                        audioPlayer.scheduler.pitchOffset.set(0.0)
                         audioPlayer.scheduler.speedRate.set(1.0)
 
                         audioPlayer.player.setFilterFactory(null)
 
-                        event.replySuccess("The filters have been reset!").queue()
+                        event.replySuccess("The audio filters have been disabled!").queue()
 
                         return
                     }
@@ -80,9 +81,9 @@ class SpeedCommand : SlashOnlyCommand {
                     }
 
                     val pitchFormat = audioPlayer.scheduler.pitchOffset.get().let {
-                        "${it.toDecimalFormat("+#;-#")} semitone"
+                        "${it.toDecimalFormat("+0.##;-0.##")} semitone"
                             .singularOrPlural(it.absoluteValue)
-                            .applyIf(it == 0) { drop(1) }
+                            .applyIf(it == 0.0) { drop(1) }
                     }
 
                     event.replySuccess(

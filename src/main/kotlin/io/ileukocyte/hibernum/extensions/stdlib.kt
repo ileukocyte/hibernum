@@ -67,7 +67,7 @@ fun String.removeLastChar() = substring(0, length.dec())
 fun String.replaceLastChar(charSequence: CharSequence) = removeLastChar() + charSequence
 fun String.replaceLastChar(char: Char) = removeLastChar() + char
 
-fun <N : Number> String.singularOrPlural(number: N) = applyIf(number.toLong() != 1L) { "${this}s" }
+fun <N : Number> String.singularOrPlural(number: N) = applyIf(number.toDouble() != 1.0) { "${this}s" }
 
 fun String.surroundWith(charSequence: CharSequence) = "$charSequence$this$charSequence"
 fun String.surroundWith(prefix: CharSequence, suffix: CharSequence) = "$prefix$this$suffix"

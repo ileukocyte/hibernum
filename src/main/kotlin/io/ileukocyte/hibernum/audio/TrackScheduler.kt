@@ -13,7 +13,6 @@ import io.ileukocyte.hibernum.extensions.*
 
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
 
 import kotlin.time.Duration.Companion.minutes
 
@@ -27,7 +26,7 @@ import net.dv8tion.jda.api.interactions.InteractionType
 class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
     var queue = ConcurrentLinkedQueue<AudioTrack>()
     var loopMode = LoopMode.DISABLED
-    var pitchOffset = AtomicInteger(0)
+    var pitchOffset = AtomicDouble(0.0)
     var speedRate = AtomicDouble(1.0)
 
     operator fun plusAssign(track: AudioTrack) {
@@ -78,7 +77,7 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
         if (track.info.isStream) {
             player.setFilterFactory(null)
 
-            pitchOffset.set(0)
+            pitchOffset.set(0.0)
             speedRate.set(1.0)
         }
 

@@ -235,9 +235,9 @@ class NowPlayingCommand : TextCommand {
         field {
             title = "Pitch Offset"
             description = musicManager.scheduler.pitchOffset.get().let {
-                "${it.toDecimalFormat("+#;-#")} semitone"
+                "${it.toDecimalFormat("+0.##;-0.##")} semitone"
                     .singularOrPlural(it.absoluteValue)
-                    .applyIf(it == 0) { drop(1) }
+                    .applyIf(it == 0.0) { drop(1) }
             }
             isInline = true
         }

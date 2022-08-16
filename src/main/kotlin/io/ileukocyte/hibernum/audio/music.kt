@@ -73,7 +73,7 @@ fun GuildMusicManager.stop() {
     player.volume = 100
     player.setFilterFactory(null)
     scheduler.loopMode = LoopMode.DISABLED
-    scheduler.pitchOffset.set(0)
+    scheduler.pitchOffset.set(0.0)
     scheduler.speedRate.set(1.0)
 
     scheduler.queue.clear()

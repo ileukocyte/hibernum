@@ -44,6 +44,9 @@ interface GenericCommand : Comparable<GenericCommand> {
      * **Note**: the property is always mandatory to override unless the command is a context-menu one;
      * therefore, do not forget to override it yourself in case the command is not context menu only!
      *
+     * **Note**: make sure to override the [interactionName] property in case the main name contains
+     * any hyphens and the command uses any Discord components!
+     *
      * @see interactionName
      * @see [ContextCommand.contextName]
      */
@@ -58,6 +61,7 @@ interface GenericCommand : Comparable<GenericCommand> {
 
     /**
      * A property that provides the functional category of the command
+     * (depends on the name of a command package unless manually overridden)
      */
     val category: CommandCategory
         get() = javaClass.`package`.name.let { CommandCategory[it.split(".").last()] }
