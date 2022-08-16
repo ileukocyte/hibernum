@@ -18,6 +18,7 @@ plugins {
 group = "io.ileukocyte"
 version = Version(major = 3, minor = 9)
 
+@Suppress("DEPRECATION")
 repositories {
     mavenCentral()
 
@@ -25,6 +26,8 @@ repositories {
         name = "m2-dv8tion"
         url = uri("https://m2.dv8tion.net/releases")
     }
+
+    jcenter()
 
     maven {
         name = "jitpack"
@@ -37,7 +40,9 @@ dependencies {
     implementation(group = "com.github.DV8FromtheWorld", name = "JDA", version = "c838479f74") {
         exclude(module = "opus-java")
     }
-    implementation(group = "com.sedmelluq", name = "lavaplayer", version = "1.3.78")
+    //implementation(group = "com.sedmelluq", name = "lavaplayer", version = "1.3.78")
+    implementation(group = "com.github.walkyst", name = "lavaplayer-fork", version = "1.3.98.3")
+    implementation(group = "com.github.natanbc", name = "lavadsp", version = "0.7.7")
 
     // Logging
     implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.2.11")
@@ -84,8 +89,8 @@ dependencies {
 
     // Testing
     testImplementation(kotlin("test-junit", kotlinVersion))
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.0")
 }
 
 fun kotlinx(module: String, version: String) = "org.jetbrains.kotlinx:kotlinx-$module:$version"
@@ -108,6 +113,9 @@ build.apply {
     dependsOn(shadowJar)
 
     jar.mustRunAfter(clean)
+}
+repositories {
+    mavenCentral()
 }
 
 tasks.withType<ShadowJar> {

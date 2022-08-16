@@ -37,6 +37,8 @@ private val musicContextDispatcher = Executors.newFixedThreadPool(3).asCoroutine
 object MusicContext : CoroutineContext by musicContextDispatcher, AutoCloseable by musicContextDispatcher
 
 val PLAYER_MANAGER = DefaultAudioPlayerManager().apply {
+    configuration.isFilterHotSwapEnabled = true
+
     registerSourceManager(YoutubeAudioSourceManager().apply { setPlaylistPageCount(10) })
 
     AudioSourceManagers.registerLocalSource(this)
@@ -67,7 +69,11 @@ fun GuildMusicManager.stop() {
     player.destroy()
     player.isPaused = false
     player.volume = 100
+    player.setFilterFactory(null)
     scheduler.loopMode = LoopMode.DISABLED
+    scheduler.pitchOffset.set(0.0)
+    scheduler.speed.set(1.0)
+
     scheduler.queue.clear()
 }
 

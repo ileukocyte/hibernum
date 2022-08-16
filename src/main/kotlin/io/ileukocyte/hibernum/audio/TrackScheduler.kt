@@ -1,5 +1,6 @@
 package io.ileukocyte.hibernum.audio
 
+import com.google.common.util.concurrent.AtomicDouble
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
@@ -24,6 +25,8 @@ import net.dv8tion.jda.api.interactions.InteractionType
 class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
     var queue = ConcurrentLinkedQueue<AudioTrack>()
     var loopMode = LoopMode.DISABLED
+    var pitchOffset = AtomicDouble(0.0)
+    var speed = AtomicDouble(1.0)
 
     operator fun plusAssign(track: AudioTrack) {
         if (!player.startTrack(track, true)) {
@@ -70,6 +73,13 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
     }
 
     override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {
+        if (track.info.isStream) {
+            player.setFilterFactory(null)
+
+            pitchOffset.set(0.0)
+            speed.set(1.0)
+        }
+
         val userData = track.customUserData
 
         val embed = if (userData.isFirstToPlay && userData.playCount == 0) {
