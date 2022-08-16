@@ -17,6 +17,7 @@ import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asDuration
 
+import kotlin.math.absoluteValue
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
@@ -44,7 +45,7 @@ class QueueCommand : TextCommand {
         OptionData(OptionType.BOOLEAN, "gui-player", "Whether the button player should " +
                 "be added to the queue message (default is true)"),
     )
-    override val staleComponentHandling = StaleComponentHandling.REMOVE_COMPONENTS
+    override val staleComponentHandling = StaleComponentHandling.EXECUTE_COMMAND
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         val audioPlayer = event.guild.audioPlayer ?: return
@@ -447,11 +448,9 @@ class QueueCommand : TextCommand {
         field {
             title = "Pitch Offset"
             description = musicManager.scheduler.pitchOffset.get().let {
-                if (it == 0) {
-                    "0 semitones"
-                } else {
-                    "${it.toDecimalFormat("+#;-#")} semitone".singularOrPlural(it)
-                }
+                "${it.toDecimalFormat("+#;-#")} semitone"
+                    .singularOrPlural(it.absoluteValue)
+                    .applyIf(it == 0) { drop(1) }
             }
             isInline = true
         }

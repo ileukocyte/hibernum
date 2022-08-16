@@ -8,9 +8,12 @@ import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
 import io.ileukocyte.hibernum.extensions.*
 
+import kotlin.math.absoluteValue
+
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
 
 class SpeedCommand : SlashOnlyCommand {
     override val name = "speed"
@@ -77,11 +80,9 @@ class SpeedCommand : SlashOnlyCommand {
                     }
 
                     val pitchFormat = audioPlayer.scheduler.pitchOffset.get().let {
-                        if (it == 0) {
-                            "0 semitones"
-                        } else {
-                            "${it.toDecimalFormat("+#;-#")} semitone".singularOrPlural(it)
-                        }
+                        "${it.toDecimalFormat("+#;-#")} semitone"
+                            .singularOrPlural(it.absoluteValue)
+                            .applyIf(it == 0) { drop(1) }
                     }
 
                     event.replySuccess(
