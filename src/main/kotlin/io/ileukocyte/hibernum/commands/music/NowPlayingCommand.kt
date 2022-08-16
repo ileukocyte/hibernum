@@ -10,9 +10,7 @@ import io.ileukocyte.hibernum.commands.GenericCommand.StaleComponentHandling
 import io.ileukocyte.hibernum.commands.TextCommand
 import io.ileukocyte.hibernum.commands.music.LoopCommand.Companion.getButton
 import io.ileukocyte.hibernum.commands.music.LoopCommand.Companion.getNext
-import io.ileukocyte.hibernum.extensions.bold
-import io.ileukocyte.hibernum.extensions.maskedLink
-import io.ileukocyte.hibernum.extensions.replyConfirmation
+import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.asDuration
 
@@ -227,14 +225,32 @@ class NowPlayingCommand : TextCommand {
         }
 
         field {
-            title = "Looping Mode"
-            description = musicManager.scheduler.loopMode.toString()
+            title = "Volume"
+            description = "${musicManager.player.volume}%"
             isInline = true
         }
 
         field {
-            title = "Volume"
-            description = "${musicManager.player.volume}%"
+            title = "Pitch Offset"
+            description = musicManager.scheduler.pitchOffset.get().let {
+                if (it == 0) {
+                    "0 semitones"
+                } else {
+                    "${it.toDecimalFormat("+#;-#")} semitone".singularOrPlural(it)
+                }
+            }
+            isInline = true
+        }
+
+        field {
+            title = "Speed Rate"
+            description = musicManager.scheduler.speedRate.get().toDecimalFormat("0.##x")
+            isInline = true
+        }
+
+        field {
+            title = "Looping Mode"
+            description = musicManager.scheduler.loopMode.toString()
             isInline = true
         }
 

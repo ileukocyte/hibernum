@@ -438,6 +438,30 @@ class QueueCommand : TextCommand {
                 .takeUnless { track.info.isStream } ?: "(LIVE)")
         }
 
+        field {
+            title = "Volume"
+            description = "${musicManager.player.volume}%"
+            isInline = true
+        }
+
+        field {
+            title = "Pitch Offset"
+            description = musicManager.scheduler.pitchOffset.get().let {
+                if (it == 0) {
+                    "0 semitones"
+                } else {
+                    "${it.toDecimalFormat("+#;-#")} semitone".singularOrPlural(it)
+                }
+            }
+            isInline = true
+        }
+
+        field {
+            title = "Speed Rate"
+            description = musicManager.scheduler.speedRate.get().toDecimalFormat("0.##x")
+            isInline = true
+        }
+
         if (queueIsNotEmpty) {
             field {
                 val tracks = musicManager.scheduler.queue + track
@@ -451,12 +475,6 @@ class QueueCommand : TextCommand {
         field {
             title = "Looping Mode"
             description = musicManager.scheduler.loopMode.toString()
-            isInline = true
-        }
-
-        field {
-            title = "Volume"
-            description = "${musicManager.player.volume}%"
             isInline = true
         }
     }

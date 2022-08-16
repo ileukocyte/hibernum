@@ -71,8 +71,8 @@ fun GuildMusicManager.stop() {
     player.volume = 100
     player.setFilterFactory(null)
     scheduler.loopMode = LoopMode.DISABLED
-    scheduler.pitchOffset.set(0.0)
-    scheduler.speed.set(1.0)
+    scheduler.pitchOffset.set(0)
+    scheduler.speedRate.set(1.0)
 
     scheduler.queue.clear()
 }
@@ -162,6 +162,8 @@ fun GuildMusicManager.exportQueueAsJson(
     fun exportPlayerAsJson() = JsonObject(mutableMapOf(
         "is_paused" to JsonPrimitive(player.isPaused),
         "looping_mode" to JsonPrimitive(scheduler.loopMode.name.lowercase()),
+        "speed_rate" to JsonPrimitive(scheduler.speedRate.get()),
+        "pitch_offset" to JsonPrimitive(scheduler.pitchOffset.get()),
     ).apply {
         if (includePlayerVolume) {
             this["volume"] = JsonPrimitive(player.volume)

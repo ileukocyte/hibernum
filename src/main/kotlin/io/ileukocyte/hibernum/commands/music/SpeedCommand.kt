@@ -18,6 +18,7 @@ class SpeedCommand : SlashOnlyCommand {
     override val name = "speed"
     override val description = "Enables the speed and pitch filters on the player"
     override val fullDescription = "$description (or resets them in case no options are provided)"
+    override val aliases = setOf("pitch")
     override val category = CommandCategory.BETA
     override val options = setOf(
         OptionData(OptionType.NUMBER, "speed", "The speed multiplier")
@@ -27,6 +28,7 @@ class SpeedCommand : SlashOnlyCommand {
             .addChoice("1x", 1.0)
             .addChoice("1.25x", 1.25)
             .addChoice("1.5x", 1.5)
+            .addChoice("1.75x", 1.75)
             .addChoice("2x", 2.0),
         OptionData(
             OptionType.INTEGER,
@@ -49,8 +51,8 @@ class SpeedCommand : SlashOnlyCommand {
                 val pitch = event.getOption("pitch")?.asInt
 
                 if (speed === null && pitch === null) {
-                    audioPlayer.scheduler.pitchOffset.set(0.0)
-                    audioPlayer.scheduler.speed.set(1.0)
+                    audioPlayer.scheduler.pitchOffset.set(0)
+                    audioPlayer.scheduler.speedRate.set(1.0)
 
                     audioPlayer.player.setFilterFactory(null)
 
@@ -60,32 +62,32 @@ class SpeedCommand : SlashOnlyCommand {
                 }
 
                 if (speed !== null) {
-                    audioPlayer.scheduler.speed.set(speed)
+                    audioPlayer.scheduler.speedRate.set(speed)
                 }
 
                 if (pitch !== null) {
-                    audioPlayer.scheduler.pitchOffset.set(pitch.toDouble())
+                    audioPlayer.scheduler.pitchOffset.set(pitch)
                 }
 
                 audioPlayer.player.setFilterFactory { _, format, output ->
                     val filter = TimescalePcmAudioFilter(output, format.channelCount, format.sampleRate)
 
-                    filter.speed = audioPlayer.scheduler.speed.get()
-                    filter.setPitchSemiTones(audioPlayer.scheduler.pitchOffset.get())
+                    filter.speed = audioPlayer.scheduler.speedRate.get()
+                    filter.setPitchSemiTones(audioPlayer.scheduler.pitchOffset.get().toDouble())
 
                     listOf(filter)
                 }
 
                 val pitchFormat = audioPlayer.scheduler.pitchOffset.get().let {
-                    if (it.toInt() == 0) {
+                    if (it == 0) {
                         "0 semitones"
                     } else {
-                        "${it.toDecimalFormat("+#;-#")} semitone".singularOrPlural(it.toInt())
+                        "${it.toDecimalFormat("+#;-#")} semitone".singularOrPlural(it)
                     }
                 }
 
                 event.replySuccess(
-                    "The speed has been set to ${audioPlayer.scheduler.speed.get().toDecimalFormat("0.##x")} " +
+                    "The speed has been set to ${audioPlayer.scheduler.speedRate.get().toDecimalFormat("0.##x")} " +
                             "and the pitch offset has been set to $pitchFormat!"
                 ).queue()
             } else {
