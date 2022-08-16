@@ -13,12 +13,14 @@ import io.ileukocyte.hibernum.commands.defaultUsageGroupOf
 import io.ileukocyte.hibernum.extensions.*
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.utils.YOUTUBE_LINK_REGEX
+import io.ileukocyte.hibernum.utils.awaitEvent
 
 import kotlinx.coroutines.future.await
 import kotlinx.serialization.json.*
 
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.User
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
@@ -79,7 +81,13 @@ class PlayCommand : TextCommand {
                             "or the current voice channel is empty!")
                 }
 
-                channel?.let { event.guild.audioManager.openAudioConnection(channel) }
+                channel?.let {
+                    event.guild.audioManager.openAudioConnection(channel)
+
+                    event.jda.awaitEvent<GuildVoiceJoinEvent> { e ->
+                        e.channelJoined == channel && e.member.idLong == event.jda.selfUser.idLong
+                    }
+                }
 
                 queue.player?.let { player ->
                     musicManager.player.isPaused = player.isPaused
@@ -89,6 +97,12 @@ class PlayCommand : TextCommand {
 
                 if (queue.tracks.size > 1) {
                     val items = queue.tracks.mapNotNull { track ->
+                        if (event.guild.selfMember.voiceState?.inAudioChannel() == false) {
+                            musicManager.stop()
+
+                            return
+                        }
+
                         try {
                             PLAYER_MANAGER.loadItemAsync(musicManager, track.url) to (track.thumbnail to track.requester)
                         } catch (_: FriendlyException) {
@@ -106,12 +120,6 @@ class PlayCommand : TextCommand {
                     )
 
                     for (track in playlist.tracks) {
-                        if (event.guild.selfMember.voiceState?.inAudioChannel() == false) {
-                            musicManager.stop()
-
-                            return
-                        }
-
                         val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
                             ?.let { id -> "https://i3.ytimg.com/vi/$id/hqdefault.jpg" }
 
@@ -236,7 +244,13 @@ class PlayCommand : TextCommand {
 
                 val deferred = event.deferReply().await()
 
-                channel?.let { guild.audioManager.openAudioConnection(channel) }
+                channel?.let {
+                    guild.audioManager.openAudioConnection(channel)
+
+                    event.jda.awaitEvent<GuildVoiceJoinEvent> { e ->
+                        e.channelJoined == channel && e.member.idLong == event.jda.selfUser.idLong
+                    }
+                }
 
                 queue.player?.let { player ->
                     musicManager.player.isPaused = player.isPaused
@@ -246,6 +260,14 @@ class PlayCommand : TextCommand {
 
                 if (queue.tracks.size > 1) {
                     val items = queue.tracks.mapNotNull { track ->
+                        if (guild.selfMember.voiceState?.inAudioChannel() == false) {
+                            musicManager.stop()
+
+                            deferred.deleteOriginal().queue(null) {}
+
+                            return
+                        }
+
                         try {
                             PLAYER_MANAGER.loadItemAsync(musicManager, track.url) to (track.thumbnail to track.requester)
                         } catch (_: FriendlyException) {
@@ -263,14 +285,6 @@ class PlayCommand : TextCommand {
                     )
 
                     for (track in playlist.tracks) {
-                        if (guild.selfMember.voiceState?.inAudioChannel() == false) {
-                            musicManager.stop()
-
-                            deferred.deleteOriginal().queue(null) {}
-
-                            return
-                        }
-
                         val thumbnail = YOUTUBE_LINK_REGEX.find(track.info.uri)?.groups?.get(3)?.value
                             ?.let { id -> "https://i3.ytimg.com/vi/$id/hqdefault.jpg" }
 
