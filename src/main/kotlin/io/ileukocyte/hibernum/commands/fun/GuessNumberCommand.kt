@@ -65,7 +65,7 @@ class GuessNumberCommand : TextCommand {
 
         val message = event.channel.sendEmbed {
             color = Immutable.SUCCESS
-            description = "Now try to guess the number between" +
+            description = "Now try to guess the number between " +
                     "${min.toDecimalFormat("#,###")} and ${max.toDecimalFormat("#,###")}!"
 
             author { name = "Attempt #1" }
@@ -103,7 +103,7 @@ class GuessNumberCommand : TextCommand {
 
         val message = event.replyEmbed {
             color = Immutable.SUCCESS
-            description = "Now try to guess the number between" +
+            description = "Now try to guess the number between " +
                     "${min.toDecimalFormat("#,###")} and ${max.toDecimalFormat("#,###")}!"
 
             author { name = "Attempt #1" }
