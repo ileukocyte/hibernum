@@ -20,7 +20,6 @@ class SpeedCommand : SlashOnlyCommand {
     override val name = "speed"
     override val description = "Enables the speed and pitch filters on the player"
     override val fullDescription = "$description (or resets them in case no options are provided)"
-    override val aliases = setOf("pitch")
     override val options = setOf(
         OptionData(OptionType.NUMBER, "speed", "The speed multiplier")
             .addChoice("0.25x", 0.25)
