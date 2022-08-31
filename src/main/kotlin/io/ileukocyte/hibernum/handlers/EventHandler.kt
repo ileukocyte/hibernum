@@ -1,5 +1,9 @@
 package io.ileukocyte.hibernum.handlers
 
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
+import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack
+
 import io.ileukocyte.hibernum.audio.*
 import io.ileukocyte.hibernum.commands.`fun`.AkinatorCommand
 import io.ileukocyte.hibernum.commands.`fun`.ChomskyCommand
@@ -12,6 +16,7 @@ import io.ileukocyte.hibernum.utils.kill
 import java.util.concurrent.TimeUnit
 
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.selects.select
@@ -57,6 +62,39 @@ object EventHandler : ListenerAdapter() {
 
     override fun onUserContextInteraction(event: UserContextInteractionEvent) =
         CommandHandler(event)
+
+    override fun onGuildVoiceJoin(event: GuildVoiceJoinEvent) {
+        if (event.guild.selfMember.idLong == event.member.idLong) {
+            val player = event.guild.audioPlayer ?: return
+
+            if (player.player.playingTrack === null) {
+                CoroutineScope(MusicContext).launch {
+                    val deferred = CompletableDeferred<Unit>()
+
+                    val listener = object : AudioEventAdapter() {
+                        override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {
+                            player.removeListener(this)
+
+                            deferred.complete(Unit)
+                        }
+                    }
+
+                    player.player.addListener(listener)
+
+                    try {
+                        withTimeout((90).seconds) { deferred.await() }
+                    } catch (_: TimeoutCancellationException) {
+                        player.player.removeListener(listener)
+                        player.stop()
+
+                        if (event.member.voiceState?.inAudioChannel() == true) {
+                            event.guild.audioManager.closeAudioConnection()
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun onGuildVoiceLeave(event: GuildVoiceLeaveEvent) {
