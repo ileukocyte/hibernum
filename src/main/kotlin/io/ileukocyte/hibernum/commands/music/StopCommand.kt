@@ -59,18 +59,12 @@ class StopCommand : TextCommand {
         if (event.user.id == id.first()) {
             when (id.last()) {
                 "stop" -> {
-                    val embed = defaultEmbed("The playback has been stopped!", EmbedType.SUCCESS) {
-                        text = "This message will self-delete in 5 seconds"
-                    }
+                    val embed = defaultEmbed("The playback has been stopped!", EmbedType.SUCCESS)
 
                     event.guild?.audioPlayer?.stop()
 
-                    event.editComponents().setEmbeds(embed).queue({
-                        it.deleteOriginal().queueAfter(5, TimeUnit.SECONDS,null) {}
-                    }) { _ ->
-                        event.channel.sendMessageEmbeds(embed).queue {
-                            it.delete().queueAfter(5, TimeUnit.SECONDS, null) {}
-                        }
+                    event.editComponents().setEmbeds(embed).queue(null) {
+                        event.channel.sendMessageEmbeds(embed).queue()
                     }
 
                     id[1].toLongOrNull()?.let { playerMessageId ->
