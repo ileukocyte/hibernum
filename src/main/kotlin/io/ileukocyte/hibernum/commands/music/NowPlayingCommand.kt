@@ -273,7 +273,7 @@ class NowPlayingCommand : TextCommand {
 
                 val trackTitle = next.info.uri.maskedLink(
                     next.info.title
-                        .limitTo(32)
+                        .limitTo(256)
                         .replace('[', '(')
                         .replace(']', ')')
                 )
