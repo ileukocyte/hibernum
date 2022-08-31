@@ -83,7 +83,7 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
 
         val userData = track.customUserData
 
-        val embed = if (userData.isFirstToPlay && userData.playCount == 0) {
+        val embed = if (userData.isFirstToPlay) {
             defaultEmbed(
                 desc = "[${track.info.title}](${track.info.uri}) is playing now!",
                 type = EmbedType.SUCCESS,
@@ -98,7 +98,7 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
         val consumer = { message: Message ->
             track.userData = userData.copy(
                 announcement = message,
-                playCount = userData.playCount.inc(),
+                isFirstToPlay = false,
             )
         }
 

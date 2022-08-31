@@ -41,7 +41,6 @@ class RequeueCommand : TextCommand {
                         requester = event.author,
                         channel = event.guildChannel,
                         isFirstToPlay = false,
-                        playCount = 0,
                     )
                 }
             } else {
@@ -69,7 +68,6 @@ class RequeueCommand : TextCommand {
                         requester = event.user,
                         channel = event.guildChannel,
                         isFirstToPlay = false,
-                        playCount = 0,
                     )
                 }
             } else {

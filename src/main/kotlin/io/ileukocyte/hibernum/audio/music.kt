@@ -119,7 +119,6 @@ data class TrackUserData(
     val announceQueueing: Boolean = false,
     val isFirstToPlay: Boolean = false,
     val ifFromSlashCommand: InteractionHook? = null,
-    val playCount: Int = 0,
 )
 
 fun GuildMusicManager.exportQueueAsJson(
@@ -137,7 +136,6 @@ fun GuildMusicManager.exportQueueAsJson(
         val announcement = data.announcement?.idLong
         val announceQueueing = data.announceQueueing
         val isFirstToPlay = data.isFirstToPlay
-        val playCount = data.playCount
 
         val map = mutableMapOf(
             "title" to JsonPrimitive(title),
@@ -150,7 +148,6 @@ fun GuildMusicManager.exportQueueAsJson(
             map["first_to_play"] = JsonPrimitive(isFirstToPlay)
             map["announce_queueing"] = JsonPrimitive(announceQueueing)
             map["announcement_id"] = JsonPrimitive(announcement)
-            map["play_count"] = JsonPrimitive(playCount)
             map["channel_id"] = JsonPrimitive(channel)
 
             if (isCurrent) {
