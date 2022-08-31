@@ -265,6 +265,30 @@ class NowPlayingCommand : TextCommand {
                 .takeUnless { track.info.isStream } ?: "(LIVE)")
         }
 
+        if (musicManager.scheduler.queue.isNotEmpty()) {
+            val next = musicManager.scheduler.queue.first()
+
+            field {
+                val userData = next.customUserData
+
+                val trackTitle = next.info.uri.maskedLink(
+                    next.info.title
+                        .limitTo(32)
+                        .replace('[', '(')
+                        .replace(']', ')')
+                )
+
+                val trackDuration = if (next.info.isStream) {
+                    "LIVE"
+                } else {
+                    asDuration(next.duration)
+                }
+
+                title = "Next Song"
+                description = "$trackTitle ($trackDuration, ${userData.requester?.asMention ?: "unknown requester"})"
+            }
+        }
+
         author {
             name = "HiberPlayer"
             iconUrl = jda.selfUser.effectiveAvatarUrl
