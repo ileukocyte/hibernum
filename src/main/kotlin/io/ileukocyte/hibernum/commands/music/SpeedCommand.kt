@@ -51,44 +51,44 @@ class SpeedCommand : SlashOnlyCommand {
                     val speed = event.getOption("speed")?.asDouble
                     val pitch = event.getOption("pitch")?.asDouble
 
-                    if ((speed === null && pitch === null) || (speed == 1.0 && pitch == 0.0)) {
+                    if (speed === null && pitch === null) {
                         audioPlayer.scheduler.pitchOffset.set(0.0)
                         audioPlayer.scheduler.speedRate.set(1.0)
 
                         audioPlayer.player.setFilterFactory(null)
+                    } else {
+                        if (speed !== null) {
+                            audioPlayer.scheduler.speedRate.set(speed)
+                        }
 
+                        if (pitch !== null) {
+                            audioPlayer.scheduler.pitchOffset.set(pitch)
+                        }
+
+                        audioPlayer.player.setFilterFactory { _, format, output ->
+                            val filter = TimescalePcmAudioFilter(output, format.channelCount, format.sampleRate)
+
+                            filter.speed = audioPlayer.scheduler.speedRate.get()
+                            filter.setPitchSemiTones(audioPlayer.scheduler.pitchOffset.get())
+
+                            listOf(filter)
+                        }
+                    }
+
+                    if (audioPlayer.scheduler.speedRate.get() == 1.0
+                            && audioPlayer.scheduler.pitchOffset.get() == 0.0) {
                         event.replySuccess("The audio filters have been disabled!").queue()
+                    } else {
+                        val pitchFormat = audioPlayer.scheduler.pitchOffset.get().let {
+                            "${it.toDecimalFormat("+0.##;-0.##")} semitone"
+                                .singularOrPlural(it.absoluteValue)
+                                .applyIf(it == 0.0) { drop(1) }
+                        }
 
-                        return
+                        event.replySuccess("The speed has been set to ${
+                            audioPlayer.scheduler.speedRate.get().toDecimalFormat("0.##x")
+                        } and the pitch offset has been set to $pitchFormat!").queue()
                     }
-
-                    if (speed !== null) {
-                        audioPlayer.scheduler.speedRate.set(speed)
-                    }
-
-                    if (pitch !== null) {
-                        audioPlayer.scheduler.pitchOffset.set(pitch)
-                    }
-
-                    audioPlayer.player.setFilterFactory { _, format, output ->
-                        val filter = TimescalePcmAudioFilter(output, format.channelCount, format.sampleRate)
-
-                        filter.speed = audioPlayer.scheduler.speedRate.get()
-                        filter.setPitchSemiTones(audioPlayer.scheduler.pitchOffset.get())
-
-                        listOf(filter)
-                    }
-
-                    val pitchFormat = audioPlayer.scheduler.pitchOffset.get().let {
-                        "${it.toDecimalFormat("+0.##;-0.##")} semitone"
-                            .singularOrPlural(it.absoluteValue)
-                            .applyIf(it == 0.0) { drop(1) }
-                    }
-
-                    event.replySuccess(
-                        "The speed has been set to ${audioPlayer.scheduler.speedRate.get().toDecimalFormat("0.##x")} " +
-                                "and the pitch offset has been set to $pitchFormat!"
-                    ).queue()
                 } else {
                     throw CommandException("You are not connected to the required voice channel!")
                 }
