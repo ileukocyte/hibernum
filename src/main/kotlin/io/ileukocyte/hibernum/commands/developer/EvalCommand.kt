@@ -394,6 +394,7 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
                 Entity("util.Base64"),
                 Entity("util.Date"),
                 Entity("util.EnumSet"),
+                Entity("util.Locale"),
                 Entity("util.Queue"),
             ),
             "kotlin" to setOf(

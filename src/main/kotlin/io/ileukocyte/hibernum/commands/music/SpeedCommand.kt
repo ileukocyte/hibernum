@@ -74,7 +74,7 @@ class SpeedCommand : SlashOnlyCommand {
                         val filter = TimescalePcmAudioFilter(output, format.channelCount, format.sampleRate)
 
                         filter.speed = audioPlayer.scheduler.speedRate.get()
-                        filter.setPitchSemiTones(audioPlayer.scheduler.pitchOffset.get().toDouble())
+                        filter.setPitchSemiTones(audioPlayer.scheduler.pitchOffset.get())
 
                         listOf(filter)
                     }

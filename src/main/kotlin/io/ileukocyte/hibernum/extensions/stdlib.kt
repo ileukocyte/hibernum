@@ -2,6 +2,7 @@
 package io.ileukocyte.hibernum.extensions
 
 import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
 import java.util.SortedSet
 
 import org.jetbrains.kotlin.utils.addToStdlib.applyIf
@@ -24,7 +25,7 @@ inline fun <T, R : Comparable<R>> Iterable<T>.toSetSortedBy(crossinline selector
     toSortedSet(compareBy(selector))
 
 // kotlin.Number
-fun <N : Number> N.toDecimalFormat(format: String): String =
+fun <N : Number> N.toDecimalFormat(format: String, symbols: DecimalFormatSymbols = DecimalFormatSymbols()): String =
     DecimalFormat(format).format(this)
 
 // kotlin.String

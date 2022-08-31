@@ -15,6 +15,8 @@ import io.ileukocyte.hibernum.extensions.await
 import io.ileukocyte.hibernum.handlers.CommandHandler
 import io.ileukocyte.hibernum.handlers.EventHandler
 
+import java.util.Locale
+
 import kotlin.reflect.full.createInstance
 
 import kotlinx.coroutines.coroutineScope
@@ -34,6 +36,8 @@ private inline fun <reified T> Reflections.getSubtypesOf() =
     getSubTypesOf(T::class.java)
 
 suspend fun main() = coroutineScope {
+    Locale.setDefault(Locale.US)
+
     // initializing Discord
     val discord = buildJDA {
         token = DISCORD_TOKEN
