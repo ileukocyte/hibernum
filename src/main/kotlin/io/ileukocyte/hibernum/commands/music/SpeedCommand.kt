@@ -51,7 +51,7 @@ class SpeedCommand : SlashOnlyCommand {
                     val speed = event.getOption("speed")?.asDouble
                     val pitch = event.getOption("pitch")?.asDouble
 
-                    if (speed === null && pitch === null) {
+                    if ((speed === null && pitch === null) || (speed == 1.0 && pitch == 0.0)) {
                         audioPlayer.scheduler.pitchOffset.set(0.0)
                         audioPlayer.scheduler.speedRate.set(1.0)
 
