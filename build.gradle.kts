@@ -16,7 +16,7 @@ plugins {
 }
 
 group = "io.ileukocyte"
-version = Version(major = 3, minor = 9)
+version = Version(major = 3, minor = 9, patch = 1)
 
 @Suppress("DEPRECATION")
 repositories {
@@ -41,7 +41,7 @@ dependencies {
         exclude(module = "opus-java")
     }
     //implementation(group = "com.sedmelluq", name = "lavaplayer", version = "1.3.78")
-    implementation(group = "com.github.walkyst", name = "lavaplayer-fork", version = "1.3.98.3")
+    implementation(group = "com.github.walkyst", name = "lavaplayer-fork", version = "1.3.98.4")
     implementation(group = "com.github.natanbc", name = "lavadsp", version = "0.7.7")
 
     // Logging
@@ -53,14 +53,14 @@ dependencies {
     implementation(group = "com.github.ileukocyte", name = "openweather-kt", version = "1.1.1")
     implementation(group = "org.reflections", name = "reflections", version = "0.10.2")
     implementation(group = "org.json", name = "json", version = "20220320")
-    implementation(group = "com.google.api-client", name = "google-api-client", version = "1.35.1")
+    implementation(group = "com.google.api-client", name = "google-api-client", version = "2.0.0")
     implementation(group = "com.google.oauth-client", name = "google-oauth-client-jetty", version = "1.34.1")
-    implementation(group = "com.google.apis", name = "google-api-services-youtube", version = "v3-rev20220612-1.32.1")
+    implementation(group = "com.google.apis", name = "google-api-services-youtube", version = "v3-rev20220719-2.0.0")
     implementation(group = "com.google.guava", name = "guava", version = "31.1-jre")
-    implementation(group = "org.jsoup", name = "jsoup", version = "1.14.3")
+    implementation(group = "org.jsoup", name = "jsoup", version = "1.15.3")
     implementation(group = "commons-validator", name = "commons-validator", version = "1.7")
     implementation(group = "com.github.kenglxn.QRGen", name = "javase", version = "2.6.0")
-    implementation(group = "se.michaelthelin.spotify", name = "spotify-web-api-java", version = "7.1.0")
+    implementation(group = "se.michaelthelin.spotify", name = "spotify-web-api-java", version = "7.2.0")
     implementation(group = "com.github.SvenWoltmann", name = "color-thief-java", version = "v1.1.2")
     implementation(group = "org.ocpsoft.prettytime", name = "prettytime", version = "5.0.3.Final")
     implementation(group = "io.arrow-kt", name = "arrow-fx-coroutines", version = "1.1.2")

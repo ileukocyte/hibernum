@@ -19,7 +19,7 @@ object Immutable {
     const val GITHUB_REPOSITORY = "https://github.com/ileukocyte/hibernum"
 
     @JvmField
-    val VERSION = Version(major = 3, minor = 9)
+    val VERSION = Version(major = 3, minor = 9, patch = 1)
 
     @JvmField
     val LOGGER = KotlinLogging.logger("Hibernum")
