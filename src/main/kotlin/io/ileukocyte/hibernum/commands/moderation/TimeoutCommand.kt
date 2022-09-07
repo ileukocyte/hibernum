@@ -131,9 +131,7 @@ class TimeoutCommand : SlashOnlyCommand, SubcommandHolder, UserContextOnlyComman
 
                                     event.getOption("reason")?.asString?.let { r ->
                                         append(" for the following reason: $r")
-                                    }
-
-                                    append('!')
+                                    } ?: append('!')
                                 }).await()
                             } catch (_: ErrorResponseException) {}
                         }
