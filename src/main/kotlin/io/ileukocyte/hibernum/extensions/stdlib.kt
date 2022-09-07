@@ -26,7 +26,7 @@ inline fun <T, R : Comparable<R>> Iterable<T>.toSetSortedBy(crossinline selector
 
 // kotlin.Number
 fun <N : Number> N.toDecimalFormat(format: String, symbols: DecimalFormatSymbols = DecimalFormatSymbols()): String =
-    DecimalFormat(format).format(this)
+    DecimalFormat(format, symbols).format(this)
 
 // kotlin.String
 val String.isByte get() = toByteOrNull() !== null
@@ -57,7 +57,7 @@ fun String.containsAll(vararg args: Char) = toCharArray().toList().containsAll(a
 
 // Only works with UTF-16 encoding
 fun String.limitTo(limit: Int, trim: Boolean = true) = take(limit).applyIf(length > limit) {
-    (removeLastChar().takeIf { trim }?.trim() ?: removeLastChar()) + '\u2026'
+    removeLastChar().applyIf(trim) { trim() } + '\u2026'
 }
 
 fun String.remove(input: String) = replace(input, "")

@@ -35,7 +35,9 @@ class TimeoutCommand : SlashOnlyCommand, SubcommandHolder, UserContextOnlyComman
             .addOption(OptionType.USER, "member", "The server member to timeout", true)
             .addOption(OptionType.STRING, "period", "The time to time the member out for " +
                     "(up to ${Member.MAX_TIME_OUT_LENGTH} days) (e.g. 5h34m55s)", true)
-            .addOption(OptionType.STRING, "reason", "The reason for timing the member out") to ::add,
+            .addOption(OptionType.STRING, "reason", "The reason for timing the member out")
+            .addOption(OptionType.BOOLEAN, "dm", "Whether the bot should notify the user " +
+                    "about the timeout via the DMs (default is false)") to ::add,
         SubcommandData("remove", "Removes a timeout from the specified member")
             .addOption(OptionType.USER, "member", "The server member to remove a timeout from", true)
             .addOption(OptionType.STRING, "reason", "The reason for removing a timeout from the member") to ::remove,
@@ -47,6 +49,7 @@ class TimeoutCommand : SlashOnlyCommand, SubcommandHolder, UserContextOnlyComman
         val member = event.getOption("member")?.asMember ?: return
         val time = event.getOption("period")?.asString ?: return
         val reason = event.getOption("reason")?.asString?.let { ": $it" }.orEmpty()
+        val dmNotification = event.getOption("dm")?.asBoolean ?: false
 
         val selfMember = event.guild?.selfMember ?: return
 
@@ -102,20 +105,41 @@ class TimeoutCommand : SlashOnlyCommand, SubcommandHolder, UserContextOnlyComman
             val args = buttonEvent.componentId.split("-")
 
             when (args.last()) {
-                "timeout" -> member.timeoutFor(millis, TimeUnit.MILLISECONDS)
-                    .reason("Timed out by ${event.user.asTag}" + reason)
-                    .queue({
+                "timeout" -> {
+                    try {
+                        val textDuration = asText(millis)
+
+                        member.timeoutFor(millis, TimeUnit.MILLISECONDS)
+                            .reason("Timed out by ${event.user.asTag}" + reason)
+                            .await()
                         val embed = defaultEmbed(
-                            "${member.user.asMention} has been successfully timed out for ${asText(millis)}!",
+                            "${member.user.asMention} has been successfully timed out for $textDuration!",
                             EmbedType.SUCCESS,
                         )
 
                         deferred.editOriginalComponents().setEmbeds(embed).queue(null) {
                             event.channel.sendMessageEmbeds(embed).queue()
                         }
-                    }) {
+
+                        if (dmNotification) {
+                            try {
+                                val dm = member.user.openPrivateChannel().await()
+
+                                dm.sendWarning(buildString {
+                                    append("You have been timed out for $textDuration on the server " +
+                                            "\"${event.guild?.name?.escapeMarkdown()}\"")
+
+                                    event.getOption("reason")?.asString?.let { r ->
+                                        append(" for the following reason: $r")
+                                    }
+
+                                    append('!')
+                                }).await()
+                            } catch (_: ErrorResponseException) {}
+                        }
+                    } catch (e: ErrorResponseException) {
                         val embed = defaultEmbed(
-                            "Something went wrong: ${it.message}".limitTo(MessageEmbed.DESCRIPTION_MAX_LENGTH),
+                            "Something went wrong: ${e.message}".limitTo(MessageEmbed.DESCRIPTION_MAX_LENGTH),
                             EmbedType.FAILURE,
                         )
 
@@ -123,6 +147,7 @@ class TimeoutCommand : SlashOnlyCommand, SubcommandHolder, UserContextOnlyComman
                             event.channel.sendMessageEmbeds(embed).queue()
                         }
                     }
+                }
                 "exit" -> deferred.deleteOriginal().queue(null) {}
             }
         } catch (_: TimeoutCancellationException) {
