@@ -62,7 +62,7 @@ dependencies {
     implementation(group = "com.github.kenglxn.QRGen", name = "javase", version = "2.6.0")
     implementation(group = "se.michaelthelin.spotify", name = "spotify-web-api-java", version = "7.2.0")
     implementation(group = "com.github.SvenWoltmann", name = "color-thief-java", version = "v1.1.2")
-    implementation(group = "org.ocpsoft.prettytime", name = "prettytime", version = "5.0.3.Final")
+    implementation(group = "org.ocpsoft.prettytime", name = "prettytime", version = "5.0.4.Final")
     implementation(group = "io.arrow-kt", name = "arrow-fx-coroutines", version = "1.1.2")
     implementation(group = "org.sejda.imageio", name = "webp-imageio", version = "0.1.6")
     implementation(group = "ca.pjer", name = "chatter-bot-api", version = "2.0.1")

@@ -33,14 +33,13 @@ class BattleshipCommand : SlashOnlyCommand {
     )
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
-        if (event.user.processes.any { it.command is BattleshipCommand }) {
-            throw CommandException("You have another Battleship command running somewhere else! " +
-                    "Finish the process first!")
-        }
-
         val opponent = event.getOption("opponent")?.asUser
             ?.takeUnless { it.isBot || it.idLong == event.user.idLong }
             ?: throw CommandException("You cannot play against the specified user!")
+
+        if ((event.user.processes + opponent.processes).any { it.command is BattleshipCommand }) {
+            throw CommandException("Either you have another battleship session running somewhere else or your opponent does!")
+        }
 
         val staticProcessId = generateStaticProcessId(event.jda)
 

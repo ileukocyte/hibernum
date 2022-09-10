@@ -42,8 +42,7 @@ class ChomskyCommand : TextCommand {
 
     override suspend fun invoke(event: MessageReceivedEvent, args: String?) {
         if (event.author.processes.any { it.command is ChomskyCommand }) {
-            throw CommandException("You have another Chomsky command running somewhere else! " +
-                    "Finish the process first!")
+            throw CommandException("You have another Chomsky session running somewhere else at the moment!")
         }
 
         val session = CHATTER_BOT.get()?.createSession() ?: run {

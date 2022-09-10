@@ -559,7 +559,7 @@ class AkinatorCommand : TextCommand {
         event.jda.getProcessByEntitiesIds(playerId, channelId)?.kill(event.jda) // just in case
 
         if (event.jda.getUserProcesses(playerId).any { it.command is AkinatorCommand && it.channel != channelId }) {
-            throw CommandException("You have another Akinator command running somewhere else! Finish the process first!")
+            throw CommandException("You have another Akinator session running somewhere else at the moment!")
         }
 
         val menu = SelectMenu
@@ -614,7 +614,7 @@ class AkinatorCommand : TextCommand {
     ) {
         if (callback is SlashCommandInteractionEvent) {
             if (callback.user.processes.any { it.command is AkinatorCommand && it.channel != callback.messageChannel.idLong }) {
-                throw CommandException("You have another Akinator command running somewhere else! Finish the process first!")
+                throw CommandException("You have another Akinator session running somewhere else at the moment!")
             }
         }
 

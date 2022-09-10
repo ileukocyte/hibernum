@@ -30,14 +30,13 @@ class TicTacToeCommand : SlashOnlyCommand {
         OptionData(OptionType.USER, "opponent", "The user to play tic-tac-toe against", true))
 
     override suspend fun invoke(event: SlashCommandInteractionEvent) {
-        if (event.user.processes.any { it.command is TicTacToeCommand }) {
-            throw CommandException("You have another Tic-Tac-Toe command running somewhere else! " +
-                    "Finish the process first!")
-        }
-
         val opponent = event.getOption("opponent")?.asUser
             ?.takeUnless { it.isBot || it.idLong == event.user.idLong }
             ?: throw CommandException("You cannot play against the specified user!")
+
+        if ((event.user.processes + opponent.processes).any { it.command is TicTacToeCommand }) {
+            throw CommandException("Either you have another tic-tac-toe session running somewhere else or your opponent does!")
+        }
 
         val staticProcessId = generateStaticProcessId(event.jda)
 

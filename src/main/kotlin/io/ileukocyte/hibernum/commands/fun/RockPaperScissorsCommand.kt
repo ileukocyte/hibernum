@@ -5,6 +5,7 @@ import io.ileukocyte.hibernum.builders.buildEmbed
 import io.ileukocyte.hibernum.commands.CommandException
 import io.ileukocyte.hibernum.commands.SlashOnlyCommand
 import io.ileukocyte.hibernum.extensions.*
+import io.ileukocyte.hibernum.utils.processes
 
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.emoji.Emoji
@@ -31,6 +32,10 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
         val opponent = event.getOption("opponent")?.asUser
             ?.takeUnless { it.isBot || it.idLong == event.user.idLong }
             ?: throw CommandException("You cannot play against the specified user!")
+
+        if ((event.user.processes + opponent.processes).any { it.command is RockPaperScissorsCommand }) {
+            throw CommandException("Either you have another rock-paper-scissors running somewhere else or your opponent does!")
+        }
 
         event.replyConfirmation("Do you want to play rock paper scissors against ${event.user.asMention}?")
             .setContent(opponent.asMention)
