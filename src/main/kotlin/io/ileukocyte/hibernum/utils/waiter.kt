@@ -5,6 +5,7 @@ import arrow.fx.coroutines.onCancel
 
 import io.ileukocyte.hibernum.commands.GenericCommand
 import io.ileukocyte.hibernum.extensions.toSetSortedBy
+import java.util.concurrent.ConcurrentHashMap
 
 import java.util.concurrent.Executors.newFixedThreadPool
 import java.util.concurrent.TimeUnit
@@ -133,7 +134,7 @@ data class WaiterProcess internal constructor(
 
     companion object {
         @[JvmField PublishedApi]
-        internal val CURRENTLY_RUNNING = mutableMapOf<WaiterProcess, AwaitableEventListener<*>>()
+        internal val CURRENTLY_RUNNING = ConcurrentHashMap<WaiterProcess, AwaitableEventListener<*>>()
     }
 }
 
@@ -144,7 +145,7 @@ class AwaitableEventListener<E : GenericEvent>(
     private val condition: suspend (E) -> Boolean,
 ) : EventListener {
     init {
-        waiterProcess?.let { WaiterProcess.CURRENTLY_RUNNING += it to this }
+        waiterProcess?.let { WaiterProcess.CURRENTLY_RUNNING[it] = this }
     }
 
     fun kill(jda: JDA, completeWithNull: Boolean = false) {

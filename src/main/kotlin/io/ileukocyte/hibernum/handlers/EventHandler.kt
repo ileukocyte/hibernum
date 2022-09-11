@@ -265,13 +265,13 @@ object EventHandler : ListenerAdapter() {
             event.jda.getChannelById(GuildMessageChannel::class.java, process.channel)
                 ?.sendMessage {
                     embeds += defaultEmbed(description, EmbedType.WARNING) {
-                        text = "This message will self-delete in 5 seconds"
+                        text = "This message will self-delete in 10 seconds"
                     }
 
                     process.users.mapNotNull { event.jda.getUserById(it)?.asMention }.joinToString()
                         .takeUnless { it.isEmpty() }
                         ?.let { content += it }
-                }?.queue({ it.delete().queueAfter(5, TimeUnit.SECONDS, null) {} }) {}
+                }?.queue({ it.delete().queueAfter(10, TimeUnit.SECONDS, null) {} }) {}
         }
     }
 
