@@ -348,7 +348,7 @@ class AkinatorCommand : TextCommand {
                                         DECLINED_GUESSES -= event.user.idLong
                                         GUESS_TYPES -= event.user.idLong
 
-                                        event.jda.getProcessByEntities(event.user, event.messageChannel)?.kill(event.jda) // just in case
+                                        event.jda.getProcessByEntities(event.user, event.channel)?.kill(event.jda) // just in case
                                     }
                                 } ?: event.channel.let { channel ->
                                     AKIWRAPPERS -= event.user.idLong

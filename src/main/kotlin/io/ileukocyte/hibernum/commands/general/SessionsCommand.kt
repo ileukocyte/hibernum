@@ -280,7 +280,7 @@ class SessionsCommand : SlashOnlyCommand {
         event.editMessageEmbeds(defaultEmbed("The session has been aborted!", SUCCESS))
             .setComponents(emptyList())
             .queue(null) {
-                event.messageChannel.sendSuccess("The session has been aborted!").queue()
+                event.channel.sendSuccess("The session has been aborted!").queue()
             }
 
         val description =

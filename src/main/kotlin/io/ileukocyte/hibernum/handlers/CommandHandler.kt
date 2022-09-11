@@ -390,7 +390,7 @@ object CommandHandler : MutableSet<GenericCommand> {
                                     .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
                                     .queue(null) {
                                         event.replyFailure(errorMessage).queue(null) {
-                                            event.messageChannel.sendFailure(errorMessage).queue()
+                                            event.channel.sendFailure(errorMessage).queue()
                                         }
                                     }
 
@@ -474,7 +474,7 @@ object CommandHandler : MutableSet<GenericCommand> {
                                     .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
                                     .queue(null) {
                                         event.replyFailure(errorMessage).queue(null) {
-                                            event.messageChannel.sendFailure(errorMessage).queue()
+                                            event.channel.sendFailure(errorMessage).queue()
                                         }
                                     }
 
@@ -507,7 +507,7 @@ object CommandHandler : MutableSet<GenericCommand> {
                             is CommandException -> event.replyFailure(e.message ?: "CommandException has occurred!")
                                 .setEphemeral(true)
                                 .queue(null) {
-                                    event.messageChannel.sendFailure(e.message ?: "CommandException has occurred!") {
+                                    event.channel.sendFailure(e.message ?: "CommandException has occurred!") {
                                         text = e.footer ?: e.selfDeletion?.let { sd ->
                                             "This message will self-delete in ${asText(sd.delay, sd.unit)}"
                                         }
@@ -531,7 +531,7 @@ object CommandHandler : MutableSet<GenericCommand> {
                                     .setEmbeds(defaultEmbed(errorMessage, EmbedType.FAILURE))
                                     .queue(null) {
                                         event.replyFailure(errorMessage).queue(null) {
-                                            event.messageChannel.sendFailure(errorMessage).queue()
+                                            event.channel.sendFailure(errorMessage).queue()
                                         }
                                     }
 

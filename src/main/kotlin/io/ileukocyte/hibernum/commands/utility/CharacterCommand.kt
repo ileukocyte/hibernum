@@ -76,7 +76,7 @@ class CharacterCommand : TextCommand {
                 .editOriginalEmbeds(charEmbed(input))
                 .queue()
         } catch (_: ErrorResponseException) {
-            event.messageChannel.sendMessageEmbeds(charEmbed(input)).queue()
+            event.channel.sendMessageEmbeds(charEmbed(input)).queue()
         }
     }
 

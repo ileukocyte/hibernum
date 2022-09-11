@@ -98,7 +98,7 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
                         deferred.setFailureEmbed(
                             "The user who initiated the game is no longer available for the bot!",
                         ).queue(null) {
-                            event.messageChannel
+                            event.channel
                                 .sendFailure("The user who initiated the game is no longer available for the bot!")
                                 .queue()
                         }
@@ -158,7 +158,7 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
                         deferred.setFailureEmbed(
                             "One of the players is no longer available for the bot!"
                         ).queue(null) {
-                            event.messageChannel
+                            event.channel
                                 .sendFailure("One of the players is no longer available for the bot!")
                                 .queue()
                         }
@@ -250,7 +250,13 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
                         }
 
                         val embed = buildEmbed {
-                            description = "${winner.asMention} wins!"
+                            val defeated = if (winner.idLong == starter.idLong) {
+                                opponent
+                            } else {
+                                starter
+                            }
+
+                            description = "${winner.asMention} defeats ${defeated.asMention}!"
                             color = Immutable.SUCCESS
 
                             author {
@@ -284,13 +290,13 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
                                 .setEmbeds(embed)
                                 .await()
                         } catch (_: ErrorResponseException) {
-                            event.messageChannel.sendMessageEmbeds(embed).await()
+                            event.channel.sendMessageEmbeds(embed).await()
                         }
                     } catch (_: ErrorResponseException) {
                         deferred.setFailureEmbed(
                             "One of the players is no longer available for the bot!"
                         ).queue(null) {
-                            event.messageChannel
+                            event.channel
                                 .sendFailure("One of the players is no longer available for the bot!")
                                 .queue()
                         }
@@ -312,7 +318,7 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
                         .setEmbeds(embed)
                         .setContent(starter?.asMention.orEmpty())
                         .queue(null) {
-                            event.messageChannel.sendMessageEmbeds(embed)
+                            event.channel.sendMessageEmbeds(embed)
                                 .setContent(starter?.asMention.orEmpty())
                                 .queue()
                         }
@@ -323,7 +329,7 @@ class RockPaperScissorsCommand : SlashOnlyCommand {
                         EmbedType.SUCCESS,
                     )
                 ).queue(null) {
-                    event.messageChannel
+                    event.channel
                         .sendSuccess("The game session has been terminated by ${event.user.asMention}!")
                         .queue()
                 }

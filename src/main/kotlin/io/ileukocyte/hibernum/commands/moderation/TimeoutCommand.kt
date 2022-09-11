@@ -251,13 +251,13 @@ class TimeoutCommand : SlashOnlyCommand, SubcommandHolder, UserContextOnlyComman
                         "by ${event.user.asMention}!"
 
                 event.editComponents().setSuccessEmbed(success).queue(null) {
-                    event.messageChannel.sendSuccess(success).queue()
+                    event.channel.sendSuccess(success).queue()
                 }
             }) {
                 val error = "Something went wrong: ${it.message}".limitTo(MessageEmbed.DESCRIPTION_MAX_LENGTH)
 
                 event.editComponents().setFailureEmbed(error).queue(null) {
-                    event.messageChannel.sendFailure(error).queue()
+                    event.channel.sendFailure(error).queue()
                 }
             }
     }

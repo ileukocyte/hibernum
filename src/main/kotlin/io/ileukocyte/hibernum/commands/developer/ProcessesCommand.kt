@@ -270,7 +270,7 @@ class ProcessesCommand : SlashOnlyCommand {
         event.editMessageEmbeds(defaultEmbed("The process has been terminated!", EmbedType.SUCCESS))
             .setComponents(emptyList())
             .queue(null) {
-                event.messageChannel.sendSuccess("The process has been terminated!").queue()
+                event.channel.sendSuccess("The process has been terminated!").queue()
             }
 
         val description =

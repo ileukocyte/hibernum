@@ -110,7 +110,7 @@ class AboutCommand : TextCommand {
                 deferred.editOriginalEmbeds(statsEmbed(event.jda, appInfo, event.guild ?: return))
                     .await()
             } catch (_: ErrorResponseException) {
-                event.messageChannel.sendMessageEmbeds(statsEmbed(event.jda, appInfo, event.guild ?: return))
+                event.channel.sendMessageEmbeds(statsEmbed(event.jda, appInfo, event.guild ?: return))
                     .queue()
             }
         } else {

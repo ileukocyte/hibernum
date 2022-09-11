@@ -119,7 +119,7 @@ class LoopCommand : TextCommand {
             event.message.editMessageEmbeds(defaultEmbed(description, EmbedType.SUCCESS))
                 .setComponents(emptyList())
                 .queue(null) {
-                    event.messageChannel.sendSuccess(description).queue()
+                    event.channel.sendSuccess(description).queue()
                 }
         }
     }

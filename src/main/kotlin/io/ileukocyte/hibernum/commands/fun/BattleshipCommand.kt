@@ -55,7 +55,7 @@ class BattleshipCommand : SlashOnlyCommand {
         val message = hook.retrieveOriginal().await()
 
         event.jda.awaitEvent<ButtonInteractionEvent>(waiterProcess = waiterProcess {
-            channel = event.messageChannel.idLong
+            channel = event.channel.idLong
             users += setOf(event.user.idLong, opponent.idLong)
             command = this@BattleshipCommand
             invoker = message.idLong
@@ -84,7 +84,7 @@ class BattleshipCommand : SlashOnlyCommand {
 
                         CoroutineScope(WaiterContext).launch {
                             event.jda.awaitEvent<MessageReceivedEvent>(waiterProcess = waiterProcess {
-                                channel = event.messageChannel.idLong
+                                channel = event.channel.idLong
                                 users += setOf(event.user.idLong, opponent.user.idLong)
                                 command = this@BattleshipCommand
                                 this.id = staticProcessId
@@ -145,21 +145,21 @@ class BattleshipCommand : SlashOnlyCommand {
                                 .setActionRow(termination)
                                 .await()
                         } catch (_: ErrorResponseException) {
-                            event.messageChannel.sendSuccess("The session has started!") {
+                            event.channel.sendSuccess("The session has started!") {
                                 text = "Do not delete this message!"
                             }.setActionRow(termination).await()
                         }
 
                         event.jda.getProcessById("%04d".format(staticProcessId))?.kill(event.jda)
 
-                        awaitTurn(battleship, serverMessage, event.messageChannel, staticProcessId)
+                        awaitTurn(battleship, serverMessage, event.channel, staticProcessId)
                     } catch (_: ErrorResponseException) {
                         event.jda.getProcessById("%04d".format(staticProcessId))?.kill(event.jda)
 
                         deferred.setFailureEmbed(
                             "The user who initiated the game is no longer available for the bot!"
                         ).queue(null) {
-                            event.messageChannel
+                            event.channel
                                 .sendFailure("The user who initiated the game is no longer available for the bot!")
                                 .queue()
                         }
@@ -181,7 +181,7 @@ class BattleshipCommand : SlashOnlyCommand {
                         .setEmbeds(embed)
                         .setContent(starter?.asMention.orEmpty())
                         .queue(null) {
-                            event.messageChannel.sendMessageEmbeds(embed)
+                            event.channel.sendMessageEmbeds(embed)
                                 .setContent(starter?.asMention.orEmpty()).queue()
                         }
                 }
@@ -193,8 +193,9 @@ class BattleshipCommand : SlashOnlyCommand {
                     event.editComponents()
                         .setWarningEmbed("The session has been terminated by ${event.user.asMention}!")
                         .queue(null) {
-                            event.messageChannel.sendWarning(
-                                "The session has been terminated by ${event.user.asMention}!").queue()
+                            event.channel
+                                .sendWarning("The session has been terminated by ${event.user.asMention}!")
+                                .queue()
                         }
 
                     val anotherPlayer = try {
@@ -308,7 +309,7 @@ class BattleshipCommand : SlashOnlyCommand {
                             awaitTurn(battleship, guildMessage, guildChannel, processId)
                         } else {
                             val guildEmbed = buildEmbed {
-                                description = "${currentTurn.user.asMention} wins!"
+                                description = "${currentTurn.user.asMention} defeats ${currentTurn.opponent.asMention}!"
                                 color = Immutable.SUCCESS
 
                                 author {

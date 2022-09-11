@@ -52,7 +52,7 @@ class TicTacToeCommand : SlashOnlyCommand {
         val message = hook.retrieveOriginal().await()
 
         event.jda.awaitEvent<ButtonInteractionEvent>(waiterProcess = waiterProcess {
-            channel = event.messageChannel.idLong
+            channel = event.channel.idLong
             users += setOf(event.user.idLong, opponent.idLong)
             command = this@TicTacToeCommand
             invoker = message.idLong
@@ -102,7 +102,7 @@ class TicTacToeCommand : SlashOnlyCommand {
                         deferred.setFailureEmbed(
                             "The user who initiated the game is no longer available for the bot!"
                         ).queue(null) {
-                            event.messageChannel
+                            event.channel
                                 .sendFailure("The user who initiated the game is no longer available for the bot!")
                                 .queue()
                         }
@@ -124,7 +124,7 @@ class TicTacToeCommand : SlashOnlyCommand {
                         .setEmbeds(embed)
                         .setContent(starter?.asMention.orEmpty())
                         .queue(null) {
-                            event.messageChannel.sendMessageEmbeds(embed)
+                            event.channel.sendMessageEmbeds(embed)
                                 .setContent(starter?.asMention.orEmpty())
                                 .queue()
                         }
@@ -171,7 +171,13 @@ class TicTacToeCommand : SlashOnlyCommand {
 
                         if (ttt.isOver) {
                             response.replyEmbed {
-                                description = "${ttt.currentTurn.asMention} wins!"
+                                val defeated = if (ttt.currentTurn.idLong == ttt.starter.idLong) {
+                                    ttt.opponent
+                                } else {
+                                    ttt.starter
+                                }
+
+                                description = "${ttt.currentTurn.asMention} defeats ${defeated.asMention}!"
                                 color = Immutable.SUCCESS
 
                                 author {

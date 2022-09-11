@@ -70,7 +70,7 @@ class TextToImageCommand : TextCommand, MessageContextOnlyCommand {
         try {
             deferred.editOriginalAttachments(file).await()
         } catch (_: ErrorResponseException) {
-            event.messageChannel.sendFiles(file).queue(null) { file.close() }
+            event.channel.sendFiles(file).queue(null) { file.close() }
         }
     }
 

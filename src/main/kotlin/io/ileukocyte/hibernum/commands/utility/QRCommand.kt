@@ -217,7 +217,7 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
                 .setFiles(file)
                 .await()
         } catch (_: ErrorResponseException) {
-            event.messageChannel.sendMessageEmbeds(resultEmbed)
+            event.channel.sendMessageEmbeds(resultEmbed)
                 .setFiles(file)
                 .queue(null) { file.close() }
         }
@@ -331,7 +331,7 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
                                     .setEmbeds(resultEmbed)
                                     .await()
                             } catch (_: ErrorResponseException) {
-                                buttonEvent.messageChannel
+                                buttonEvent.channel
                                     .sendMessageEmbeds(resultEmbed)
                                     .setFiles(file)
                                     .queue(null) { file.close() }
@@ -364,7 +364,7 @@ class QRCommand : TextCommand, SubcommandHolder, MessageContextOnlyCommand {
                                         }
 
                                         deferred.editOriginalEmbeds(resultEmbed).queue(null) {
-                                            buttonEvent.messageChannel.sendMessageEmbeds(resultEmbed).queue()
+                                            buttonEvent.channel.sendMessageEmbeds(resultEmbed).queue()
                                         }
                                     } catch (_: NotFoundException) {
                                         deferred.setFailureEmbed("No QR code has been found in the image!").queue(null) {

@@ -188,50 +188,50 @@ class EvalCommand : TextCommand, MessageContextOnlyCommand {
             if (result !== null) {
                 when (result) {
                     is Message -> deferred.editOriginal(result.toEditData()).queue(null) {
-                        event.messageChannel.sendMessage(result.toCreateData()).queue()
+                        event.channel.sendMessage(result.toCreateData()).queue()
                     }
                     is MessageCreateData -> deferred.editOriginal(result.toEditData()).queue(null) {
-                        event.messageChannel.sendMessage(result).queue()
+                        event.channel.sendMessage(result).queue()
                     }
                     is MessageEditData -> deferred.editOriginal(result).queue(null) {
-                        event.messageChannel.sendMessage(result.toCreateData()).queue()
+                        event.channel.sendMessage(result.toCreateData()).queue()
                     }
                     is MessageEmbed -> deferred.editOriginalEmbeds(result).queue(null) {
-                        event.messageChannel.sendMessageEmbeds(result).queue()
+                        event.channel.sendMessageEmbeds(result).queue()
                     }
                     is RestAction<*> -> result.queue({
                         deferred.editOriginalEmbeds(success).queue(null) {
-                            event.messageChannel.sendMessageEmbeds(success).queue()
+                            event.channel.sendMessageEmbeds(success).queue()
                         }
                     }) { t ->
                         deferred.editOriginalEmbeds(failure(t)).queue(null) {
-                            event.messageChannel.sendMessageEmbeds(failure(t)).queue()
+                            event.channel.sendMessageEmbeds(failure(t)).queue()
                         }
                     }
                     is Array<*> -> deferred.editOriginal(result.contentDeepToString()).queue(null) {
-                        event.messageChannel.sendMessage(result.contentDeepToString()).queue()
+                        event.channel.sendMessage(result.contentDeepToString()).queue()
                     }
                     is JSONObject -> deferred.editOriginal(result.toString(2)).queue(null) {
-                        event.messageChannel.sendMessage(result.toString(2)).queue()
+                        event.channel.sendMessage(result.toString(2)).queue()
                     }
                     is Forecast -> deferred.editOriginal(result.toString().remove(result.api.key)).queue(null) {
-                        event.messageChannel.sendMessage(result.toString().remove(result.api.key)).queue()
+                        event.channel.sendMessage(result.toString().remove(result.api.key)).queue()
                     }
                     is OpenWeatherApi -> deferred.editOriginal(result.toString().remove(result.key)).queue(null) {
-                        event.messageChannel.sendMessage(result.toString().remove(result.key)).queue()
+                        event.channel.sendMessage(result.toString().remove(result.key)).queue()
                     }
                     else -> deferred.editOriginal("$result").queue(null) {
-                        event.messageChannel.sendMessage("$result").queue()
+                        event.channel.sendMessage("$result").queue()
                     }
                 }
             } else {
                 deferred.editOriginalEmbeds(success).queue(null) {
-                    event.messageChannel.sendMessageEmbeds(success).queue()
+                    event.channel.sendMessageEmbeds(success).queue()
                 }
             }
         } catch (e: Exception) {
             deferred.editOriginalEmbeds(failure(e)).queue(null) {
-                event.messageChannel.sendMessageEmbeds(failure(e)).queue()
+                event.channel.sendMessageEmbeds(failure(e)).queue()
             }
         }
     }
